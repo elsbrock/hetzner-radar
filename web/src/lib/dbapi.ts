@@ -6,7 +6,8 @@ import type {
 import SQL, { SQLStatement } from 'sql-template-strings';
 
 /**
- * Fetch a file with progress indication
+ * Fetch a file with progress indication. Using XMLHttpRequest instead of fetch
+ * because fetch does not support progress indication for compressed responses.
  * @param url url to the file
  * @param onProgress callback function to call on progress
  * @returns response object
@@ -66,26 +67,14 @@ async function fetchWithProgress(
 type ProgressFn = (loaded: number, total: number) => void;
 
 async function initDB(db: AsyncDuckDB, progress: undefined|ProgressFn) {
-	// const res = await fetch('http://localhost:5173/sb.duckdb');
 	const { hostname, port, protocol } = window.location;
 	const url = `${protocol}//${hostname}:${port}/sb.duckdb.wasm`;
-
 	const res = await fetchWithProgress(url, progress);
 	const buffer = await res.arrayBuffer();
 	await db.registerFileBuffer('sb.duckdb', new Uint8Array(buffer));
 	await db.open({
 		path: 'sb.duckdb'
 	});
-
-	// await conn.query("ATTACH 'http://localhost:5173/sb.duckdb' AS hz (READ_ONLY)");
-	// await conn.query('USE hz');
-	// await conn.query("begin transaction");
-	// await conn.query("select * from 'http://localhost:5173/server.parquet'")
-	// await conn.query("commit");
-	// await conn.query("begin transaction");
-	// await conn.query('CREATE TABLE IF NOT EXISTS "server"(id UBIGINT, information VARCHAR[], cpu VARCHAR, cpu_count INTEGER, is_highio BOOLEAN, traffic VARCHAR, bandwidth INTEGER, ram VARCHAR, ram_size INTEGER, price INTEGER, hdd_arr VARCHAR[], serverDiskData STRUCT(nvme INTEGER[], sata INTEGER[], hdd INTEGER[], general INTEGER[]), is_ecc BOOLEAN, datacenter VARCHAR, specials VARCHAR[], fixed_price BOOLEAN, next_reduce_timestamp INTEGER)');
-	// await conn.query("copy server from 'http://localhost:5173/server.parquet'")
-	// await conn.query("commit");
 }
 
 async function getData(conn: AsyncDuckDBConnection, query: SQLStatement) {

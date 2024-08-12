@@ -3,6 +3,7 @@ import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
 import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
 import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
 import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
+import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
     mvp: {
@@ -15,7 +16,6 @@ const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
     },
 };
 
-import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 let db: AsyncDuckDB | null = null;
 let worker: Worker | null = null;
@@ -31,7 +31,8 @@ export async function createDB() {
     const worker = new Worker(bundle.mainWorker!);
     const logger = new duckdb.ConsoleLogger();
     db = new duckdb.AsyncDuckDB(logger, worker);
-    return db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    return db;
 }
 
 export async function tearDownDB() {
