@@ -25,30 +25,13 @@ export async function createDB() {
 		return db;
 	}
 
-	// // Select a bundle based on browser checks
-    // const bundle = await duckdb.selectBundle(MANUAL_BUNDLES);
-
-    // const worker_url = URL.createObjectURL(
-    //     new Blob([`importScripts("${bundle.mainWorker!}");`], {
-    //         type: 'text/javascript',
-    //     })
-    // );
-	const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
-	const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
-	const worker_url = URL.createObjectURL(
-	  new Blob([`importScripts("${bundle.mainWorker!}");`], {
-		type: "text/javascript",
-	  })
-	);
+	const bundle = await duckdb.selectBundle(MANUAL_BUNDLES);
 
     // Instantiate the asynchronus version of DuckDB-Wasm
-    const worker = new Worker(worker_url);
+    const worker = new Worker(bundle.mainWorker!);
     const logger = new duckdb.ConsoleLogger();
     db = new duckdb.AsyncDuckDB(logger, worker);
-    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-    URL.revokeObjectURL(worker_url);
-
-	return db;
+    return db.instantiate(bundle.mainModule, bundle.pthreadWorker);
 }
 
 export async function tearDownDB() {
