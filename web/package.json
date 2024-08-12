@@ -50,6 +50,7 @@
 		"@fortawesome/free-brands-svg-icons": "^6.6.0",
 		"@fortawesome/free-solid-svg-icons": "^6.6.0",
 		"@fortawesome/svelte-fontawesome": "^0.2.2",
+		"axios": "^1.7.3",
 		"dayjs": "^1.11.12",
 		"filesize": "^10.1.4",
 		"sql-template-strings": "^2.2.2"

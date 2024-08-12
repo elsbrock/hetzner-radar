@@ -4,14 +4,8 @@ import type {
 	AsyncPreparedStatement
 } from '@duckdb/duckdb-wasm';
 import SQL, { SQLStatement } from 'sql-template-strings';
+import axios from 'axios';
 
-/**
- * Fetch a file with progress indication. Using XMLHttpRequest instead of fetch
- * because fetch does not support progress indication for compressed responses.
- * @param url url to the file
- * @param onProgress callback function to call on progress
- * @returns response object
- */
 async function fetchWithProgress(
 	url: string,
 	onProgress: (loaded: number, total: number) => void = (loaded, total) => {
@@ -22,57 +16,24 @@ async function fetchWithProgress(
 		}
 	}
 ): Promise<Response> {
-	return new Promise((resolve, reject) => {
-		const xhr = new XMLHttpRequest();
-
-		xhr.open('GET', url, true);
-
-		xhr.responseType = 'text'; // Use text response type for compatibility
-
-		let loaded = 0;
-		let total = 0;
-
-		xhr.onprogress = function (event) {
-			// Track progress
-			loaded = event.loaded;
-			total = event.total || total;
+	const response = await axios.get(url, {
+		responseType: 'arraybuffer', // Handle binary data
+		onDownloadProgress: (progressEvent) => {
+			const { loaded, total } = progressEvent;
 			onProgress(loaded, total);
-		};
+		},
+	});
 
-		xhr.onload = function () {
-			if (xhr.status >= 200 && xhr.status < 300) {
-				const headers = new Headers();
-				xhr.getAllResponseHeaders()
-					.trim()
-					.split(/[\r\n]+/)
-					.forEach((line) => {
-						const parts = line.split(': ');
-						const header = parts.shift();
-						const value = parts.join(': ');
-						if (header) headers.append(header, value);
-					});
+	// Convert Axios response to the standard Fetch Response
+	const headers = new Headers();
+	Object.entries(response.headers).forEach(([key, value]) => {
+		headers.append(key, value as string);
+	});
 
-				// Convert the text response to a stream (arraybuffer or blob)
-				const text = xhr.responseText;
-				const encoder = new TextEncoder();
-				const buffer = encoder.encode(text).buffer;
-
-				const response = new Response(buffer, {
-					status: xhr.status,
-					statusText: xhr.statusText,
-					headers: headers,
-				});
-				resolve(response);
-			} else {
-				reject(new Error(`HTTP error! status: ${xhr.status}`));
-			}
-		};
-
-		xhr.onerror = function () {
-			reject(new Error('Network error'));
-		};
-
-		xhr.send();
+	return new Response(response.data, {
+		status: response.status,
+		statusText: response.statusText,
+		headers: headers,
 	});
 }
 
