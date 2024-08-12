@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ideas"
+version = "0.1.0"
+description = ""
+authors = ["Simon Elsbrock <simon@iodev.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+duckdb = "^1.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
