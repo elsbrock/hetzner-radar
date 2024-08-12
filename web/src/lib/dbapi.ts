@@ -26,10 +26,17 @@ async function fetchWithProgress(
 		const xhr = new XMLHttpRequest();
 
 		xhr.open('GET', url, true);
-		xhr.responseType = 'arraybuffer';
+
+		xhr.responseType = 'text'; // Use text response type for compatibility
+
+		let loaded = 0;
+		let total = 0;
 
 		xhr.onprogress = function (event) {
-			onProgress(event.loaded, event.total);
+			// Track progress
+			loaded = event.loaded;
+			total = event.total || total;
+			onProgress(loaded, total);
 		};
 
 		xhr.onload = function () {
@@ -45,7 +52,12 @@ async function fetchWithProgress(
 						if (header) headers.append(header, value);
 					});
 
-				const response = new Response(xhr.response, {
+				// Convert the text response to a stream (arraybuffer or blob)
+				const text = xhr.responseText;
+				const encoder = new TextEncoder();
+				const buffer = encoder.encode(text).buffer;
+
+				const response = new Response(buffer, {
 					status: xhr.status,
 					statusText: xhr.statusText,
 					headers: headers,
