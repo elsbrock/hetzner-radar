@@ -1,0 +1,31 @@
+name: Hetzner
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '13 * * * *'
+    
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        uses: dcarbone/install-jq-action@v2.1.0
+
+      - name: Fetch Hetzner Serverboerse Data
+        run: curl 'https://www.hetzner.com/_resources/app/jsondata/live_data_sb.json' | jq .server | gzip > sb-$(date -u +%H%M%S).json.gz
+
+      - name: Partition files
+        run: mkdir -p hetzner-sb/$(date -u +%Y%m%d) && mv sb-*.json.gz hetzner-sb/$(date -u +%Y%m%d)
+
+      - name: Purge old files
+        run: python scripts/purge.py hetzner-sb
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
