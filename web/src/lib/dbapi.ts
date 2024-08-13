@@ -59,7 +59,7 @@ async function fetchWithProgress(
 
 type ProgressFn = (loaded: number, total: number) => void;
 
-async function initDB(db: AsyncDuckDB, progress: undefined|ProgressFn) {
+async function initDB(db: AsyncDuckDB, progress: undefined | ProgressFn) {
 	const { hostname, port, protocol } = window.location;
 	const url = `${protocol}//${hostname}:${port}/sb.duckdb.wasm`;
 	const res = await fetchWithProgress(url, progress);
@@ -269,7 +269,10 @@ async function getCPUModels(conn: AsyncDuckDBConnection, filter: any): Promise<a
 	return getData(conn, cpumodel_query);
 }
 
-async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
+async function getRamPriceStats(
+	conn: AsyncDuckDBConnection,
+	withECC?: boolean
+): Promise<any> {
 	const query = SQL`
 		select
 			x, min(price_per_gb) as y
@@ -278,13 +281,18 @@ async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
 				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
 				price / ram_size as price_per_gb
 			from
-				server
-		)
-		group by
+				server`;
+	if (withECC !== undefined) {
+		query.append(SQL`
+			where
+				is_ecc = ${withECC}`);
+	}
+	query.append(SQL`
+		) group by
 			x
 		order by
 			x
-	`;
+	`);
 	return getData(conn, query);
 }
 
@@ -307,11 +315,10 @@ async function getDiskPriceStats(conn: AsyncDuckDBConnection, diskType: string):
 			order by
 				x
 		`,
-		values: [],
+		values: []
 	};
 	return getData(conn, query as any);
 }
-
 
 async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
 	const query = SQL`
@@ -343,5 +350,5 @@ export {
 	getCPUModels,
 	getRamPriceStats,
 	getDiskPriceStats,
-	getGPUPriceStats,
+	getGPUPriceStats
 };

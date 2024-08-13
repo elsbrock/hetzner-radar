@@ -3,8 +3,7 @@
 	import { getRamPriceStats, getDiskPriceStats, getGPUPriceStats, initDB, withDbConnections } from '$lib/dbapi';
 	import { dbStore, initializedStore, progressStore } from '../../stores/db';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
-	import { onDestroy, onMount } from 'svelte';
-	
+
 	export let db: AsyncDuckDB;
 
 	let progress = 0;
@@ -12,6 +11,8 @@
 	let loading = true;
 
 	let ramPriceStats = [];
+	let ramWithECCPriceStats = [];
+	let ramWithoutECCPriceStats = [];
 	let hddPriceStats = [];
 	let nvmePriceStats = [];
 	let sataPriceStats = [];
@@ -27,12 +28,22 @@
 
 		await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
 			try {
-				[ramPriceStats, hddPriceStats, nvmePriceStats, sataPriceStats, gpuPriceStats] = await Promise.all([
+				[
+					ramPriceStats,
+					ramWithECCPriceStats,
+					ramWithoutECCPriceStats,
+					hddPriceStats,
+					nvmePriceStats,
+					sataPriceStats,
+					gpuPriceStats
+				] = await Promise.all([
 					getRamPriceStats(conn1),
+					getRamPriceStats(conn1, true),
+					getRamPriceStats(conn1, false),
 					getDiskPriceStats(conn2, 'hdd'),
 					getDiskPriceStats(conn3, 'nvme'),
 					getDiskPriceStats(conn4, 'sata'),
-					getGPUPriceStats(conn5),
+					getGPUPriceStats(conn5)
 				]);
 				queryTime = performance.now() - queryTime;
 			} catch (error) {
@@ -70,7 +81,7 @@
 			invest in memory-intensive servers.
 		</p>
 		<div class="relative z-0 h-80 w-full">
-			<LineChart data={ramPriceStats} />
+			<LineChart data={[ramPriceStats, ramWithECCPriceStats, ramWithoutECCPriceStats]} />
 		</div>
 	</h3>
 
@@ -90,37 +101,15 @@
 	<h3
 		class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
 	>
-		SSD (NVMe) Price Over Time
+		SSD Price Over Time
 		<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
 			See how SSD prices have changed over time, allowing you to plan your purchases for
-			configurations that rely on fast storage solutions.
+			configurations that rely on fast storage solutions. The blue line is SATA SSDs, while the
+			orange line represents NVMe SSDs.
 		</p>
 		<div class="relative z-0 h-80 w-full">
-			<LineChart data={nvmePriceStats} />
+			<LineChart data={[nvmePriceStats, sataPriceStats]} />
 		</div>
-	</h3>
-
-	<h3
-		class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
-	>
-		SSD (SATA) Price Over Time
-		<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-			See how SSD prices have changed over time, allowing you to plan your purchases for
-			configurations that rely on fast storage solutions.
-		</p>
-		<div class="relative z-0 h-80 w-full">
-			<LineChart data={sataPriceStats} />
-		</div>
-	</h3>
-
-	<h3
-		class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
-	>
-		ECC vs. Non-ECC RAM
-		<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-			Compare the availability and pricing of ECC (Error-Correcting Code) RAM versus non-ECC RAM in
-			server configurations. This helps you decide if ECC is worth the investment for your needs.
-		</p>
 	</h3>
 
 	<h3
