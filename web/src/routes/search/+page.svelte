@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { initDB, getCPUModels, getDatacenters, getConfigurations, getPrices } from '$lib/dbapi';
+	import { initDB, getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections } from '$lib/dbapi';
 	import { Progressbar } from 'flowbite-svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import ServerTable from '$lib/components/ServerTable.svelte';
@@ -62,29 +62,21 @@
 			return;
 		}
 
-		let [conn1, conn2, conn3, conn4] = await Promise.all([
-			db.connect(),
-			db.connect(),
-			db.connect(),
-			db.connect()
-		]);
-
 		let queryTime = performance.now();
 		loading = true;
-		try {
-			[cpuModels, datacenters, serverPrices, serverList] = await Promise.all([
-				getCPUModels(conn1, filter),
-				getDatacenters(conn2, filter),
-				getPrices(conn3, filter),
-				getConfigurations(conn4, filter)
-			]);
-		} catch (error) {
-			console.error('Error fetching data:', error);
-		} finally {
-			loading = false;
-			queryTime = performance.now() - queryTime;
-			if (umami) {
-					umami.track((props) => ({
+
+		await withDbConnections(db, async (conn1, conn2, conn3, conn4) => {
+			try {
+				[cpuModels, datacenters, serverPrices, serverList] = await Promise.all([
+					getCPUModels(conn1, filter),
+					getDatacenters(conn2, filter),
+					getPrices(conn3, filter),
+					getConfigurations(conn4, filter)
+				]);
+
+				queryTime = performance.now() - queryTime;
+
+				umami.track((props) => ({
 					...props,
 					name: 'search-result',
 					data: {
@@ -93,9 +85,12 @@
 						queryTime
 					},
 				}));
+			} catch (error) {
+				console.error('Error fetching data:', error);
+			} finally {
+				loading = false;
 			}
-			return Promise.all([conn1.close(), conn2.close(), conn3.close(), conn4.close()]);
-		}
+		});
 	}
 
 	onMount(async () => {

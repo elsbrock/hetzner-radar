@@ -70,6 +70,28 @@ async function initDB(db: AsyncDuckDB, progress: undefined|ProgressFn) {
 	});
 }
 
+async function withDbConnections(
+	db: AsyncDuckDB,
+	callback: (...connections: AsyncDuckDBConnection[]) => Promise<void>
+) {
+	const maxConnections = callback.length; // Determines how many connections are needed based on the number of parameters in the callback
+	const connections = await Promise.all(
+		Array(maxConnections)
+			.fill()
+			.map(() => db.connect())
+	);
+
+	try {
+		// Spread the connections array as arguments to the callback function
+		await callback(...connections);
+	} catch (error) {
+		console.error('Error during database operations:', error);
+	} finally {
+		// Ensure all connections are closed
+		await Promise.all(connections.map((conn) => conn.close()));
+	}
+}
+
 async function getData(conn: AsyncDuckDBConnection, query: SQLStatement) {
 	console.debug(query.sql, query.values);
 	let stmt: AsyncPreparedStatement;
@@ -247,4 +269,79 @@ async function getCPUModels(conn: AsyncDuckDBConnection, filter: any): Promise<a
 	return getData(conn, cpumodel_query);
 }
 
-export { initDB, getPrices, getConfigurations, getDatacenters, getCPUModels };
+async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
+	const query = SQL`
+		select
+			x, min(price_per_gb) as y
+		from (
+			select
+				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				price / ram_size as price_per_gb
+			from
+				server
+		)
+		group by
+			x
+		order by
+			x
+	`;
+	return getData(conn, query);
+}
+
+async function getDiskPriceStats(conn: AsyncDuckDBConnection, diskType: string): Promise<any> {
+	const query = {
+		sql: `
+			select
+				x, min(price_per_tb) as y
+			from (
+				select
+					(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+					price / (${diskType}_size/1024) as price_per_tb
+				from
+					server
+				where
+					${diskType}_size > 0
+			)
+			group by
+				x
+			order by
+				x
+		`,
+		values: [],
+	};
+	return getData(conn, query as any);
+}
+
+
+async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
+	const query = SQL`
+		select
+			x, min(price) as y
+		from (
+			select
+				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				price
+			from
+				server
+			where
+				with_gpu = true
+		)
+		group by
+			x
+		order by
+			x
+	`;
+	return getData(conn, query);
+}
+
+export {
+	initDB,
+	withDbConnections,
+	getPrices,
+	getConfigurations,
+	getDatacenters,
+	getCPUModels,
+	getRamPriceStats,
+	getDiskPriceStats,
+	getGPUPriceStats,
+};
