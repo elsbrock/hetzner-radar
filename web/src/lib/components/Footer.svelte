@@ -1,6 +1,6 @@
 <script>
 	import { Footer, FooterCopyright, FooterLinkGroup, FooterLink } from 'flowbite-svelte';
-    import { buildDate } from '$lib/build-info';
+    const buildDate = __BUILD_STAMP__;
 </script>
 
 <Footer class="border-t">
