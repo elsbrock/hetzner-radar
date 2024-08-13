@@ -11,7 +11,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         fhs = pkgs.buildFHSUserEnv {
           name = "fhs-shell";
-          targetPkgs = pkgs: [pkgs.gcc pkgs.libtool pkgs.python311];
+          targetPkgs = pkgs: [pkgs.gcc pkgs.libtool pkgs.python311 pkgs.duckdb pkgs.nodejs_22];
         };
       in
         {
