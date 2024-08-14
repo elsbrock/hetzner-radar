@@ -94,6 +94,17 @@
 		});
 	}
 
+	async function handleServerDetails(event: any) {
+		console.log('Server details requested:', serverList[event.detail]);
+		// umami.track((props) => ({
+		// 	...props,
+		// 	name: 'server-details',
+		// 	data: {
+		// 		server: serverList[index]
+		// 	},
+		// }));
+	};
+
 	dbStore.subscribe(value => {
 		db = value;
 	});
@@ -121,7 +132,7 @@
 
 		<main class="flex-grow overflow-y-auto pt-3">
 			<ServerPriceChart data={serverPrices} {loading} />
-			<ServerTable data={serverList} {loading} />
+			<ServerTable data={serverList} on:serverDetails={handleServerDetails} {loading} />
 		</main>
 	</div>
 {/if}
