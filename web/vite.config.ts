@@ -5,12 +5,10 @@ const date = new Date();
 const formattedDate = date.toLocaleDateString('de-DE', {
   day: '2-digit',
   month: '2-digit',
-  year: 'numeric'
-});
-
-const formattedTime = date.toLocaleTimeString('de-DE', {
+  year: 'numeric',
   hour: '2-digit',
-  minute: '2-digit'
+  minute: '2-digit',
+  timeZone: 'Europe/Berlin'
 });
 
 export default defineConfig({
@@ -19,6 +17,6 @@ export default defineConfig({
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	},
 	define: {
-		__BUILD_STAMP__: JSON.stringify(`${formattedDate} ${formattedTime}`)
+		__BUILD_STAMP__: JSON.stringify(`${formattedDate}`)
 	}
 });
