@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { onMount, onDestroy, tick } from 'svelte';
     import * as d3 from 'd3';
   
