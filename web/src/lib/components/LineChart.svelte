@@ -1,7 +1,6 @@
 <script>
     import { onMount, onDestroy, tick } from 'svelte';
     import * as d3 from 'd3';
-	import Filter from './Filter.svelte';
   
     export let data = [];
   
@@ -9,7 +8,7 @@
     let svg;
     let width = 0;
     let height = 0;
-    let resizeObserver;
+    let resizeObserver: ResizeObserver;
   
     let margin = { top: 20, right: 30, bottom: 50, left: 40 };
 

@@ -314,15 +314,15 @@
 		resizeObserver?.disconnect();
 	});
 
-	// $: noResults = Array.isArray(data) && data.length === 0;
-	// $: totalOffers = Array.isArray(data) ? data.length : 0;
+	$: noResults = Array.isArray(data) && data.length === 0;
+	$: totalOffers = Array.isArray(data) ? data.length : 0;
 
-	// $: (async function () {
-	//   await tick();
-	//   if (Array.isArray(data) && data.length > 0) {
-	//     renderChart();
-	//   }
-	// })();
+	$: (async function () {
+	  await tick();
+	  if (Array.isArray(data) && data.length > 0) {
+	    renderChart();
+	  }
+	})();
 </script>
 
 <div class="container w-full">
