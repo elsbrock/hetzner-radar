@@ -14,54 +14,84 @@
 
 	function renderChart() {
 		if (!container) {
-			console.error('chart container cannot be found');
+			console.error('Chart container cannot be found');
 			return;
 		}
 
 		// Clear previous chart
-		d3.select(svg).selectAll('*').remove();
+		clearChart();
 
 		// Calculate width and height from the parent container
-		width = container.clientWidth;
-		height = container.clientHeight;
+		setDimensions();
 
 		const parseTime = d3.timeParse('%s');
 		const formatDate = d3.timeFormat('%d.%m.');
 
 		// Check if data is multi-line or single-line and normalize accordingly
-		const isMultiLine = Array.isArray(data[0]);
-
-		const datasets = isMultiLine ? data : [data];
+		const datasets = normalizeData();
 
 		// Parse timestamps and find global x and y extents
+		parseTimestamps(datasets, parseTime);
+
+		const x = createXScale(datasets);
+		const y = createYScale(datasets);
+
+		const line = createLineGenerator(x, y);
+
+		renderAxes(x, y, formatDate);
+		renderLines(datasets, line);
+	}
+
+	function clearChart() {
+		d3.select(svg).selectAll('*').remove();
+	}
+
+	function setDimensions() {
+		width = container.clientWidth;
+		height = container.clientHeight;
+	}
+
+	function normalizeData() {
+		return Array.isArray(data[0]) ? data : [data];
+	}
+
+	function parseTimestamps(datasets, parseTime) {
 		datasets.forEach((dataset) => {
 			dataset.forEach((d) => {
 				d.x = parseTime(d.x);
 			});
 		});
+	}
 
-		const x = d3
+	function createXScale(datasets) {
+		return d3
 			.scaleTime()
 			.domain([
 				d3.min(datasets, (dataset) => d3.min(dataset, (d) => d.x)),
 				d3.max(datasets, (dataset) => d3.max(dataset, (d) => d.x))
 			])
 			.range([margin.left, width - margin.right]);
+	}
 
-		const y = d3
+	function createYScale(datasets) {
+		return d3
 			.scaleLinear()
 			.domain([
 				d3.min(datasets, (dataset) => d3.min(dataset, (d) => d.y)) * 0.95,
 				d3.max(datasets, (dataset) => d3.max(dataset, (d) => d.y)) * 1.05
 			])
 			.range([height - margin.bottom, margin.top]);
+	}
 
-		const line = d3
+	function createLineGenerator(x, y) {
+		return d3
 			.line()
 			.x((d) => x(d.x))
 			.y((d) => y(d.y))
 			.curve(d3.curveCatmullRom);
+	}
 
+	function renderAxes(x, y, formatDate) {
 		const xAxis = (g) =>
 			g
 				.attr('transform', `translate(0,${height - margin.bottom})`)
@@ -83,13 +113,13 @@
 				.call((g) => g.select('.domain').remove());
 
 		d3.select(svg).attr('width', width).attr('height', height);
-
 		d3.select(svg).append('g').call(xAxis);
 		d3.select(svg).append('g').call(yAxis);
+	}
 
+	function renderLines(datasets, line) {
 		const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-		// Loop through datasets and plot each line
 		datasets.forEach((dataset, i) => {
 			d3.select(svg)
 				.append('path')
@@ -98,17 +128,6 @@
 				.attr('stroke', color(i))
 				.attr('stroke-width', 1.5)
 				.attr('d', line);
-
-			// Draw circles for each data point in the line
-			// d3.select(svg)
-			// 	.selectAll(`.dot-${i}`)
-			// 	.data(dataset)
-			// 	.join('circle')
-			// 	.attr('class', `dot-${i}`)
-			// 	.attr('cx', (d) => x(d.x))
-			// 	.attr('cy', (d) => y(d.y))
-			// 	.attr('r', 3)
-			// 	.attr('fill', color(i));
 		});
 	}
 

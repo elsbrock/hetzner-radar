@@ -1,7 +1,14 @@
 <script lang="ts">
 	import LineChart from '$lib/components/LineChart.svelte';
-	import { getRamPriceStats, getDiskPriceStats, getGPUPriceStats, initDB, withDbConnections } from '$lib/dbapi';
 	import { dbStore, initializedStore, progressStore } from '../../stores/db';
+	import {
+		getRamPriceStats,
+		getDiskPriceStats,
+		getGPUPriceStats,
+		getCPUVendorPriceStats,
+		getVolumeStats,
+		withDbConnections
+	} from '$lib/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 	export let db: AsyncDuckDB;
@@ -17,6 +24,9 @@
 	let nvmePriceStats = [];
 	let sataPriceStats = [];
 	let gpuPriceStats = [];
+	let cpuVendorAMDStats = [];
+	let cpuVendorIntelStats = [];
+	let volumeStats = [];
 
 	async function fetchData() {
 		if (!initialized) {
@@ -35,15 +45,21 @@
 					hddPriceStats,
 					nvmePriceStats,
 					sataPriceStats,
-					gpuPriceStats
+					gpuPriceStats,
+					cpuVendorAMDStats,
+					cpuVendorIntelStats,
+					volumeStats,
 				] = await Promise.all([
 					getRamPriceStats(conn1),
-					getRamPriceStats(conn1, true),
-					getRamPriceStats(conn1, false),
-					getDiskPriceStats(conn2, 'hdd'),
-					getDiskPriceStats(conn3, 'nvme'),
-					getDiskPriceStats(conn4, 'sata'),
-					getGPUPriceStats(conn5)
+					getRamPriceStats(conn2, true),
+					getRamPriceStats(conn3, false),
+					getDiskPriceStats(conn4, 'hdd'),
+					getDiskPriceStats(conn5, 'nvme'),
+					getDiskPriceStats(conn1, 'sata'),
+					getGPUPriceStats(conn1),
+					getCPUVendorPriceStats(conn2, 'AMD'),
+					getCPUVendorPriceStats(conn2, 'Intel'),
+					getVolumeStats(conn3),
 				]);
 				queryTime = performance.now() - queryTime;
 			} catch (error) {
@@ -145,6 +161,9 @@
 				Per Country: Breakdown of server volumes by country, helping you choose based on location.
 			</li>
 		</ul>
+		<div class="relative z-0 h-80 w-full">
+			<LineChart data={[volumeStats]} />
+		</div>
 	</h3>
 
 	<h3
@@ -162,5 +181,8 @@
 				your workload.
 			</li>
 		</ul>
+		<div class="relative z-0 h-80 w-full">
+			<LineChart data={[cpuVendorAMDStats,cpuVendorIntelStats]} />
+		</div>
 	</h3>
 </div>

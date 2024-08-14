@@ -341,6 +341,46 @@ async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
 	return getData(conn, query);
 }
 
+async function getCPUVendorPriceStats(conn: AsyncDuckDBConnection, vendor: string): Promise<any> {
+	const query = SQL`
+		select
+			x, min(price) as y
+		from (
+			select
+				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				price
+			from
+				server
+			where
+				cpu_vendor = ${vendor}
+		)
+		group by
+			x
+		order by
+			x
+	`;
+	return getData(conn, query);
+}
+
+async function getVolumeStats(conn: AsyncDuckDBConnection): Promise<any> {
+	const query = SQL`
+		select
+			x, count(distinct id)::int as y
+		from (
+			select
+				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				id
+			from
+				server
+		)
+		group by
+			x
+		order by
+			x
+	`;
+	return getData(conn, query);
+}
+
 export {
 	initDB,
 	withDbConnections,
@@ -350,5 +390,7 @@ export {
 	getCPUModels,
 	getRamPriceStats,
 	getDiskPriceStats,
-	getGPUPriceStats
+	getGPUPriceStats,
+	getCPUVendorPriceStats,
+	getVolumeStats
 };
