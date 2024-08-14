@@ -17,6 +17,9 @@
 	let resizeObserver: ResizeObserver;
 
 	function renderChart() {
+		if (!Array.isArray(data) || data.length === 0) {
+			return;
+		}
 		clearChart();
 		const { width, height } = getDimensions();
 		const timestamps = getTimestamps(data);
