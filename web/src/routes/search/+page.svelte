@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { initDB, getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections } from '$lib/dbapi';
+	import { dbStore, initializedStore, progressStore } from '../../stores/db';
+	import { getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections } from '$lib/dbapi';
 	import { Progressbar } from 'flowbite-svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import ServerTable from '$lib/components/ServerTable.svelte';
@@ -93,21 +94,21 @@
 		});
 	}
 
-	onMount(async () => {
-		db = await createDB();
-		await initDB(db, (loaded, total) => {
-			progress = Math.round((loaded / total) * 100);
-		});
-		initialized = true;
-		return fetchData();
+	dbStore.subscribe(value => {
+		db = value;
 	});
 
-	onDestroy(async () => {
-		initialized = false;
-		return tearDownDB();
+	initializedStore.subscribe(value => {
+		initialized = value;
 	});
 
-	$: fetchData(filter);
+	progressStore.subscribe(value => {
+		progress = value;
+	});
+
+	$: if (initialized && db) {
+		fetchData(filter);
+	}
 </script>
 
 {#if !Number.isNaN(progress) && progress < 100}

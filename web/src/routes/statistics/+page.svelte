@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LineChart from '$lib/components/LineChart.svelte';
 	import { getRamPriceStats, getDiskPriceStats, getGPUPriceStats, initDB, withDbConnections } from '$lib/dbapi';
-	import { createDB, tearDownDB } from '$lib/duckdb';
+	import { dbStore, initializedStore, progressStore } from '../../stores/db';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 	import { onDestroy, onMount } from 'svelte';
 	
@@ -43,21 +43,21 @@
 		});
 	}
 
-	onMount(async () => {
-		db = await createDB();
-		await initDB(db, (loaded, total) => {
-			progress = Math.round((loaded / total) * 100);
-		});
-		initialized = true;
-		return fetchData();
+	dbStore.subscribe(value => {
+		db = value;
 	});
 
-	onDestroy(async () => {
-		initialized = false;
-		return tearDownDB();
+	initializedStore.subscribe(value => {
+		initialized = value;
 	});
 
-	$: fetchData();
+	progressStore.subscribe(value => {
+		progress = value;
+	});
+
+	$: if (initialized && db) {
+		fetchData();
+	}
 </script>
 
 <div class="mx-auto max-w-3xl p-8">
