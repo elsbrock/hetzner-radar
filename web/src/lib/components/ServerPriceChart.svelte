@@ -1,51 +1,80 @@
 <script lang="ts">
 	import * as d3 from 'd3';
 	import { Spinner } from 'flowbite-svelte';
-	import { tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 
-	export let data = null;
+	export let data: any = null;
+
 	export let loading = true;
 	let noResults = false;
 
-	let svgId = 'svg-' + Math.random().toString(36).slice(2, 9);
+	let totalOffers = 0;
 
-	function initializeChart(svgId, data) {
-		const container = d3.select(`#${svgId}`);
+	const margin = { top: 10, right: 50, bottom: 50, left: 50 };
 
-		if (!container.node()) {
-			console.error('chart container cannot be found');
-			return;
-		}
+	let container: HTMLElement;
+	let svg: SVGSVGElement;
+	let resizeObserver: ResizeObserver;
 
-		const height = container.node().clientHeight;
-		const width = container.node().clientWidth;
-		const margin = { top: 20, right: 50, bottom: 70, left: 40 };
+	function renderChart() {
+		clearChart();
+		const { width, height } = getDimensions();
+		const timestamps = getTimestamps(data);
+		const xScale = createXScale(timestamps, width, margin);
+		const yScale = createYScale(data, height, margin);
+		const yVolumeScale = createYVolumeScale(data, height, margin);
+		setupSVG(width, height);
+		renderAxes(xScale, yScale, yVolumeScale, width, height, margin, timestamps);
+		renderVolumeBars(data, xScale, yVolumeScale, width, height, margin);
+		renderAreasAndLines(data, xScale, yScale);
+		setupCrosshair(width, height, margin);
+	}
 
-		const svg = container
-			.append('svg')
-			.attr('width', width)
-			.attr('height', height + margin.top + margin.bottom)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
+	function clearChart() {
+		d3.select(svg).selectAll('*').remove();
+	}
 
-		// Convert timestamps to Date objects
-		const timestamps = [...new Set(data.map((d) => new Date(d.next_reduce_timestamp * 1000)))];
+	function getDimensions() {
+		const width = container.clientWidth;
+		const height = container.clientHeight;
+		return { width, height, margin };
+	}
 
-		// Use scaleTime for xScale
-		const xScale = d3
+	function getTimestamps(data) {
+		return [...new Set(data.map((d) => new Date(d.next_reduce_timestamp * 1000)))];
+	}
+
+	function createXScale(timestamps, width, margin) {
+		return d3
 			.scaleTime()
 			.domain(d3.extent(timestamps))
-			.range([0, width - margin.left - margin.right]);
+			.range([margin.left, width - margin.right]);
+	}
 
-		const yScale = d3
+	function createYScale(data, height, margin) {
+		return d3
 			.scaleLinear()
 			.domain([d3.min(data, (d) => d.min_price) * 0.1, d3.max(data, (d) => d.max_price)])
-			.range([height - margin.top - margin.bottom, 0]);
+			.range([height - margin.bottom, margin.top]);
+	}
 
-		// Append axes
-		const xAxis = svg
+	function createYVolumeScale(data, height, margin) {
+		return d3
+			.scaleLinear()
+			.domain([0, d3.max(data, (d) => d.count)])
+			.range([height - margin.bottom, margin.top]);
+	}
+
+	function setupSVG(width, height) {
+		d3.select(svg).attr('width', width).attr('height', height);
+	}
+
+	function renderAxes(xScale, yScale, yVolumeScale, width, height, margin, timestamps) {
+		// X Axis
+		const xAxis = d3
+			.select(svg)
 			.append('g')
-			.attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
+			.attr('transform', `translate(0,${height - margin.bottom})`)
 			.call(
 				d3
 					.axisBottom(xScale)
@@ -55,101 +84,67 @@
 					)
 			);
 
-		// Define the y-scale for the volume
-		const yVolumeScale = d3
-			.scaleLinear()
-			.domain([0, d3.max(data, (d) => d.count)])
-			.range([height - margin.top - margin.bottom, 0]);
+		xAxis.selectAll('text').attr('transform', 'rotate(-45)').style('text-anchor', 'end');
 
-		// Add the volume axis on the right
-		const volumeAxis = svg
+		// Left Y Axis (Price)
+		const yAxis = d3
+			.select(svg)
 			.append('g')
-			.attr('transform', `translate(${width - margin.left - margin.right}, 0)`)
+			.attr('transform', `translate(${margin.left},0)`)
+			.call(d3.axisLeft(yScale));
+
+		yAxis
+			.append('text')
+			.attr('class', 'y-axis-label')
+			.attr('transform', 'rotate(-90)')
+			.attr('y', 0 - margin.left + 20) // Adjusted to ensure visibility
+			.attr('x', 0 - (height - margin.top - margin.bottom) / 2) // Adjusted to center label correctly
+			.attr('dy', '1em')
+			.style('text-anchor', 'middle')
+			.text('Price (EUR)');
+
+		// Right Y Axis (Volume)
+		const volumeAxis = d3
+			.select(svg)
+			.append('g')
+			.attr('transform', `translate(${width - margin.right}, 0)`)
 			.call(d3.axisRight(yVolumeScale));
+
 		volumeAxis
 			.append('text')
 			.attr('class', 'volume-axis-label')
 			.attr('transform', 'rotate(-90)')
-			.attr('y', -margin.right + 10)
-			.attr('x', -height / 2)
+			.attr('y', 0 - margin.right + 20) // Adjusted to ensure visibility
+			.attr('x', 0 - (height - margin.top - margin.bottom) / 2) // Adjusted to center label correctly
 			.attr('dy', '1em')
 			.style('text-anchor', 'middle')
 			.text('Volume (units)');
+	}
 
-		// Define the width of the bars manually
+	function renderVolumeBars(data, xScale, yVolumeScale, width, height, margin) {
 		const barWidth = ((width - margin.left - margin.right) / data.length) * 0.5;
 
-		// Append the volume bars before the lines
-		svg
+		d3.select(svg)
 			.selectAll('.volume-bar')
 			.data(data)
 			.enter()
 			.append('rect')
 			.attr('class', 'volume-bar')
-			.attr('x', (d) => xScale(new Date(d.next_reduce_timestamp * 1000)) - barWidth / 2)
+			.attr('x', (d, i) => {
+				const xPos = xScale(new Date(d.next_reduce_timestamp * 1000)) - barWidth / 2;
+				// Ensure bars don't exceed the plot area
+				return Math.max(margin.left, Math.min(xPos, width - margin.right - barWidth));
+			})
 			.attr('y', (d) => yVolumeScale(d.count))
 			.attr('width', barWidth)
-			.attr('height', (d) => height - margin.top - margin.bottom - yVolumeScale(d.count))
+			.attr('height', (d) => height - margin.bottom - yVolumeScale(d.count))
 			.attr('fill', 'lightgray')
 			.attr('opacity', 0.5);
+	}
 
-		xAxis.selectAll('text').attr('transform', 'rotate(-45)').style('text-anchor', 'end');
+	function renderAreasAndLines(data, xScale, yScale) {
+		const defs = createGradients();
 
-		const yAxis = svg.append('g').call(d3.axisLeft(yScale));
-		yAxis
-			.append('text')
-			.attr('class', 'y-axis-label')
-			.attr('transform', 'rotate(-90)')
-			.attr('y', -margin.left + 10)
-			.attr('x', -height / 2)
-			.attr('dy', '1em')
-			.style('text-anchor', 'middle')
-			.text('Price (EUR)');
-
-		// Define gradients
-		const defs = svg.append('defs');
-
-		const gradientGreen = defs
-			.append('linearGradient')
-			.attr('id', 'gradientGreen')
-			.attr('x1', '0%')
-			.attr('y1', '0%')
-			.attr('x2', '0%')
-			.attr('y2', '100%');
-
-		gradientGreen
-			.append('stop')
-			.attr('offset', '0%')
-			.attr('stop-color', 'green')
-			.attr('stop-opacity', 0);
-
-		gradientGreen
-			.append('stop')
-			.attr('offset', '100%')
-			.attr('stop-color', 'green')
-			.attr('stop-opacity', 0.5);
-
-		const gradientRed = defs
-			.append('linearGradient')
-			.attr('id', 'gradientRed')
-			.attr('x1', '0%')
-			.attr('y1', '0%')
-			.attr('x2', '0%')
-			.attr('y2', '100%');
-
-		gradientRed
-			.append('stop')
-			.attr('offset', '0%')
-			.attr('stop-color', 'red')
-			.attr('stop-opacity', 0);
-
-		gradientRed
-			.append('stop')
-			.attr('offset', '100%')
-			.attr('stop-color', 'red')
-			.attr('stop-opacity', 0.4);
-
-		// Define area and line generators
 		const areaMinMean = d3
 			.area()
 			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
@@ -180,61 +175,115 @@
 			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
 			.y((d) => yScale(d.max_price));
 
-		// Append areas and lines
-		svg.append('path').datum(data).attr('fill', 'url(#gradientGreen)').attr('d', areaMinMean);
-		svg.append('path').datum(data).attr('fill', 'url(#gradientRed)').attr('d', areaMeanMax);
+		d3.select(svg)
+			.append('path')
+			.datum(data)
+			.attr('fill', 'url(#gradientGreen)')
+			.attr('d', areaMinMean);
+		d3.select(svg)
+			.append('path')
+			.datum(data)
+			.attr('fill', 'url(#gradientRed)')
+			.attr('d', areaMeanMax);
 
-		svg
+		d3.select(svg)
 			.append('path')
 			.datum(data)
 			.attr('fill', 'none')
 			.attr('stroke', 'lightgreen')
 			.attr('stroke-width', 0.8)
 			.attr('d', lineMean);
-
-		svg
+		d3.select(svg)
 			.append('path')
 			.datum(data)
 			.attr('fill', 'none')
 			.attr('stroke', 'green')
 			.attr('stroke-width', 2)
-			// .attr('stroke-dasharray', '4,4')
 			.attr('d', lineMin);
-
-		svg
+		d3.select(svg)
 			.append('path')
 			.datum(data)
 			.attr('fill', 'none')
 			.attr('stroke', 'red')
 			.attr('stroke-width', 0.5)
-			// .attr('stroke-dasharray', '4,4')
 			.attr('d', lineMax);
+	}
 
-		// Append a vertical line for the crosshair
-		const verticalLine = svg
+	function createGradients() {
+		const defs = d3.select(svg).append('defs');
+
+		const gradientGreen = defs
+			.append('linearGradient')
+			.attr('id', 'gradientGreen')
+			.attr('x1', '0%')
+			.attr('y1', '0%')
+			.attr('x2', '0%')
+			.attr('y2', '100%');
+
+		gradientGreen
+			.append('stop')
+			.attr('offset', '0%')
+			.attr('stop-color', 'green')
+			.attr('stop-opacity', 0);
+		gradientGreen
+			.append('stop')
+			.attr('offset', '100%')
+			.attr('stop-color', 'green')
+			.attr('stop-opacity', 0.5);
+
+		const gradientRed = defs
+			.append('linearGradient')
+			.attr('id', 'gradientRed')
+			.attr('x1', '0%')
+			.attr('y1', '0%')
+			.attr('x2', '0%')
+			.attr('y2', '100%');
+
+		gradientRed
+			.append('stop')
+			.attr('offset', '0%')
+			.attr('stop-color', 'red')
+			.attr('stop-opacity', 0);
+		gradientRed
+			.append('stop')
+			.attr('offset', '100%')
+			.attr('stop-color', 'red')
+			.attr('stop-opacity', 0.4);
+
+		return defs;
+	}
+
+	function setupCrosshair(width, height, margin) {
+		// Create the vertical line and adjust y-coordinates to consider the margin
+		const verticalLine = d3
+			.select(svg)
 			.append('line')
 			.attr('class', 'crosshair')
 			.attr('stroke', 'black')
-			.attr('stroke-width', 1)
-			.attr('y1', 0)
-			.attr('y2', height - margin.top - margin.bottom)
+			.attr('stroke-width', 0.5)
+			.attr('stroke-dasharray', '4,4')
+			.attr('y1', margin.top)
+			.attr('y2', height - margin.bottom)
 			.style('display', 'none');
 
-		// Append a horizontal line for the crosshair
-		const horizontalLine = svg
+		// Create the horizontal line and adjust x-coordinates to consider the margin
+		const horizontalLine = d3
+			.select(svg)
 			.append('line')
 			.attr('class', 'crosshair')
 			.attr('stroke', 'black')
-			.attr('stroke-width', 1)
-			.attr('x1', 0)
-			.attr('x2', width - margin.left - margin.right)
+			.attr('stroke-width', 0.5)
+			.attr('stroke-dasharray', '4,4')
+			.attr('x1', margin.left)
+			.attr('x2', width - margin.right)
 			.style('display', 'none');
 
-		// Add an overlay rectangle to capture mouse movements
-		svg
+		// Add a transparent rectangle for capturing mouse events
+		d3.select(svg)
 			.append('rect')
 			.attr('width', width - margin.left - margin.right)
 			.attr('height', height - margin.top - margin.bottom)
+			.attr('transform', `translate(${margin.left},${margin.top})`)
 			.style('fill', 'none')
 			.style('pointer-events', 'all')
 			.on('mouseover', () => {
@@ -247,79 +296,62 @@
 			})
 			.on('mousemove', (event) => {
 				const [mouseX, mouseY] = d3.pointer(event);
-				verticalLine.attr('x1', mouseX).attr('x2', mouseX);
-				horizontalLine.attr('y1', mouseY).attr('y2', mouseY);
+				// Adjust the position of the crosshair lines to account for margins
+				verticalLine.attr('x1', mouseX + margin.left).attr('x2', mouseX + margin.left);
+				horizontalLine.attr('y1', mouseY + margin.top).attr('y2', mouseY + margin.top);
 			});
-
-		// Make the chart responsive to window resize
-		window.addEventListener('resize', () => {
-			const newWidth = container.node().clientWidth;
-			const newHeight = container.node().clientHeight * 0.9;
-
-			svg.attr('width', newWidth).attr('height', newHeight + margin.top + margin.bottom);
-
-			xScale.range([0, newWidth - margin.left - margin.right]);
-			yScale.range([newHeight - margin.top - margin.bottom, 0]);
-
-			xAxis.call(
-				d3
-					.axisBottom(xScale)
-					.tickFormat(d3.timeFormat('%d.%m.'))
-					.tickValues(
-						timestamps.filter((d, i) => !(i % Math.ceil(timestamps.length / (newWidth / 50))))
-					)
-			);
-			xAxis.selectAll('text').attr('transform', 'rotate(-45)').style('text-anchor', 'end');
-
-			yAxis.call(d3.axisLeft(yScale));
-
-			svg.selectAll('.areaMinMean').attr('d', areaMinMean);
-			svg.selectAll('.areaMeanMax').attr('d', areaMeanMax);
-			svg.selectAll('.lineMean').attr('d', lineMean);
-			svg.selectAll('.lineMin').attr('d', lineMin);
-			svg.selectAll('.lineMax').attr('d', lineMax);
-		});
 	}
 
-	$: noResults = data.length === 0;
+	onMount(() => {
+		renderChart();
+		resizeObserver = new ResizeObserver(() => {
+			renderChart();
+		});
+		resizeObserver.observe(container);
+	});
 
-	$: (async function () {
-		await tick();
-		if (Array.isArray(data) && data.length > 0) {
-			d3.select(`#${svgId}`).selectAll('*').remove();
-			initializeChart(svgId, data);
-		}
-	})();
+	onDestroy(() => {
+		resizeObserver?.disconnect();
+	});
+
+	// $: noResults = Array.isArray(data) && data.length === 0;
+	// $: totalOffers = Array.isArray(data) ? data.length : 0;
+
+	// $: (async function () {
+	//   await tick();
+	//   if (Array.isArray(data) && data.length > 0) {
+	//     renderChart();
+	//   }
+	// })();
 </script>
 
 <div class="container w-full">
 	<h3
-		class="px-5 pb-5 text-lg font-semibold text-left text-gray-900 bg-white dark:text-white dark:bg-gray-800"
+		class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
 	>
 		Pricing
 		<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
 			View the minimum, median and maximum server prices observed for the given configuration over
-			the last three months. {#if data.length > 0}A total of {data.reduce(
-					(sum, item) => sum + (item.count || 0),
-					0
-				)} offers have been seen.{/if}
+			the last three months. {#if totalOffers > 0}A total of {totalOffers} offers have been seen.{/if}
 		</p>
 	</h3>
-	<div class="w-full h-80 relative z-0">
+	<div class="relative z-0 h-80 w-full">
 		{#if loading}
-			<div class="absolute inset-0 flex justify-center items-center z-10">
+			<div class="absolute inset-0 z-10 flex items-center justify-center">
 				<Spinner />
 			</div>
 		{:else if noResults}
-			<div class="absolute inset-0 flex justify-center items-center z-10">
+			<div class="absolute inset-0 z-10 flex items-center justify-center">
 				<p class="text-2xl">No results.</p>
 			</div>
 		{/if}
 		<div
-			id={svgId}
+			bind:this={container}
 			class:blur-sm={loading || noResults}
 			class:pointer-events-none={loading || noResults}
-			class="w-full h-full rounded-lg"
-		></div>
+			style="width: 100%; height: 100%"
+		>
+			<svg bind:this={svg}></svg>
+		</div>
 	</div>
 </div>
