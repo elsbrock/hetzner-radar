@@ -21,6 +21,6 @@
 	<NavUl class="order-1">
 		<NavLi href="/">Home</NavLi>
 		<NavLi href="/search">Search</NavLi>
-		<NavLi href="/search">Statistics</NavLi>
+		<NavLi href="/statistics">Statistics</NavLi>
 	</NavUl>
 </Navbar>
