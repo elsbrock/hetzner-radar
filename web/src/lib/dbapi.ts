@@ -28,7 +28,8 @@ async function fetchWithProgress(
 		xhr.onload = function () {
 			if (xhr.status >= 200 && xhr.status < 300) {
 				const headers = new Headers();
-				xhr.getAllResponseHeaders()
+				xhr
+					.getAllResponseHeaders()
 					.trim()
 					.split(/[\r\n]+/)
 					.forEach((line) => {
@@ -41,7 +42,7 @@ async function fetchWithProgress(
 				const response = new Response(xhr.response, {
 					status: xhr.status,
 					statusText: xhr.statusText,
-					headers: headers,
+					headers: headers
 				});
 				resolve(response);
 			} else {
@@ -59,7 +60,7 @@ async function fetchWithProgress(
 
 type ProgressFn = (loaded: number, total: number) => void;
 
-async function initDB(db: AsyncDuckDB, progress: undefined|ProgressFn) {
+async function initDB(db: AsyncDuckDB, progress: undefined | ProgressFn) {
 	const { hostname, port, protocol } = window.location;
 	const url = `${protocol}//${hostname}:${port}/sb.duckdb.wasm`;
 	const res = await fetchWithProgress(url, progress);
@@ -92,31 +93,69 @@ async function withDbConnections(
 	}
 }
 
-async function getData(conn: AsyncDuckDBConnection, query: SQLStatement) {
+async function getData<T>(conn: AsyncDuckDBConnection, query: SQLStatement): Promise<T[]> {
 	console.debug(query.sql, query.values);
 	let stmt: AsyncPreparedStatement;
+	let results: T[] = [];
 	try {
 		const startTime = performance.now();
 
 		stmt = await conn.prepare(query.sql);
 		const arrowResult = await stmt.query(...query.values);
-		const results = arrowResult.toArray().map((row: any) => row.toJSON());
+		results = arrowResult.toArray().map((row: any) => row.toJSON());
 
 		const endTime = performance.now();
 		const timing = (endTime - startTime) / 1000;
 
 		console.debug(`${results.length} results in ${timing.toFixed(4)}s`);
-		return results;
 	} catch (e) {
 		console.error('error executing query', e);
 	} finally {
-		if (stmt) {
-			stmt.close();
-		}
+		stmt?.close();
 	}
+	return results;
 }
 
-function generateFilterQuery(filter: any, withCPU: boolean, withDatacenters: boolean) {
+type ServerFilter = {
+	locationGermany: boolean;
+	locationFinland: boolean;
+
+	cpuCount: number;
+	cpuIntel: boolean;
+	cpuAMD: boolean;
+
+	ramInternalSizeLower: number;
+	ramInternalSizeUpper: number;
+
+	ssdNvmeCountLower: number;
+	ssdNvmeCountUpper: number;
+	ssdNvmeInternalSizeLower: number;
+	ssdNvmeInternalSizeUpper: number;
+
+	ssdSataCountLower: number;
+	ssdSataCountUpper: number;
+	ssdSataInternalSizeLower: number;
+	ssdSataInternalSizeUpper: number;
+
+	hddCountLower: number;
+	hddCountUpper: number;
+	hddInternalSizeLower: number;
+	hddInternalSizeUpper: number;
+
+	selectedDatacenters: string[];
+	selectedCpuModels: string[];
+
+	extrasECC: boolean | null;
+	extrasINIC: boolean | null;
+	extrasHWR: boolean | null;
+	extrasGPU: boolean | null;
+};
+
+function generateFilterQuery(
+	filter: ServerFilter,
+	withCPU: boolean,
+	withDatacenters: boolean
+): SQLStatement {
 	let query = SQL` cpu_count >= ${filter.cpuCount} and (`;
 
 	// location filtering
@@ -206,7 +245,19 @@ function generateFilterQuery(filter: any, withCPU: boolean, withDatacenters: boo
 	return query;
 }
 
-async function getPrices(conn: AsyncDuckDBConnection, filter: any): Promise<any> {
+/*
+ * Server Price and Configurations
+ */
+
+type ServerPriceStat = {
+	min_price: number;
+	max_price: number;
+	count: number;
+	mean_price: number;
+	next_reduce_timestamp: number;
+};
+
+async function getPrices(conn: AsyncDuckDBConnection, filter: ServerFilter): Promise<ServerPriceStat[]> {
 	let prices_filter_query = generateFilterQuery(filter, true, true);
 	let prices_query = SQL`
         select
@@ -221,10 +272,26 @@ async function getPrices(conn: AsyncDuckDBConnection, filter: any): Promise<any>
 	prices_query.append(prices_filter_query)
 		.append(SQL` group by (next_reduce_timestamp // (3600*24)) * (3600*24)
             order by next_reduce_timestamp`);
-	return getData(conn, prices_query);
+	return getData<ServerPriceStat>(conn, prices_query);
 }
 
-async function getConfigurations(conn: AsyncDuckDBConnection, filter: any) {
+type ServerConfiguration = {
+	cpu: string;
+	ram: string[];
+	ram_size: number;
+	is_ecc: boolean;
+	hdd_arr: string[];
+	nvme_size: number | null;
+	nvme_drives: number[];
+	sata_size: number | null;
+	sata_drives: number[];
+	hdd_size: number | null;
+};
+
+async function getConfigurations(
+	conn: AsyncDuckDBConnection,
+	filter: ServerFilter
+): Promise<ServerConfiguration[]> {
 	let configurations_filter_query = generateFilterQuery(filter, true, true);
 	let configurations_query = SQL`
         select
@@ -249,27 +316,114 @@ async function getConfigurations(conn: AsyncDuckDBConnection, filter: any) {
 			nvme_size, nvme_drives, sata_size, sata_drives, hdd_size, hdd_drives,
 			with_gpu, with_inic, with_hwr
         order by min(price)`);
-	return getData(conn, configurations_query);
+	return getData<ServerConfiguration>(conn, configurations_query);
 }
 
-async function getDatacenters(conn: AsyncDuckDBConnection, filter: any): Promise<any> {
+type ServerDetail = {
+	information: string;
+	fixed_price: boolean;
+};
+
+async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfiguration): Promise<ServerDetail[]> {
+	const query = SQL`
+		SELECT
+			distinct
+			information::json as information,
+			fixed_price
+		FROM
+			(
+				select distinct 
+						information, cpu, ram, ram_size, is_ecc,
+						hdd_arr::JSON as hdd_arr,
+						nvme_size,
+						nvme_drives::JSON as nvme_drives,
+						sata_size,
+						sata_drives::JSON as sata_drives,
+						hdd_size,
+						hdd_drives::JSON as sata_drives,
+						with_gpu, with_inic, with_hwr,
+						fixed_price
+				FROM
+					server
+				WHERE
+					cpu = ${config.cpu}
+					AND ram_size = ${config.ram_size}
+					AND ram::json = ${config.ram}
+					AND is_ecc = ${config.is_ecc}
+					AND hdd_arr::json = ${config.hdd_arr}
+					AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
+					AND coalesce(sata_size, 0) = coalesce(${config.sata_size}, 0)
+					AND coalesce(hdd_size, 0) = coalesce(${config.hdd_size}, 0)
+					AND with_gpu = ${config.with_gpu}
+					AND with_inic = ${config.with_inic}
+					AND with_hwr = ${config.with_hwr}
+			)
+	`;
+	return getData<ServerDetail>(conn, query);
+}
+
+async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: ServerConfiguration): Promise<ServerPriceStat[]> {
+	const query = SQL`
+		SELECT
+			min(price) as min_price,
+			max(price) as max_price,
+			count(distinct id)::int as count,
+			round(mean(price))::int as mean_price,
+			(next_reduce_timestamp // (3600*24)) * (3600*24) as next_reduce_timestamp
+		FROM
+			server
+		WHERE
+			cpu = ${config.cpu}
+			AND ram_size = ${config.ram_size}
+			AND ram::json = ${config.ram}
+			AND is_ecc = ${config.is_ecc}
+			AND hdd_arr::json = ${config.hdd_arr}
+			AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
+			AND coalesce(sata_size, 0) = coalesce(${config.sata_size}, 0)
+			AND coalesce(hdd_size, 0) = coalesce(${config.hdd_size}, 0)
+			AND with_gpu = ${config.with_gpu}
+			AND with_inic = ${config.with_inic}
+			AND with_hwr = ${config.with_hwr}
+		GROUP BY
+			(next_reduce_timestamp // (3600*24)) * (3600*24)
+        ORDER BY
+			next_reduce_timestamp
+	`;
+	return getData<ServerPriceStat>(conn, query);
+}
+
+/*
+ * Statistics
+ */
+
+type NameValuePair = {
+	name: string;
+	value: string;
+};
+
+async function getDatacenters(conn: AsyncDuckDBConnection, filter: ServerFilter): Promise<NameValuePair[]> {
 	let datacenter_filter_query = generateFilterQuery(filter, true, false);
 	let datacenters_query =
 		SQL`select distinct datacenter as name, datacenter as value from server where`
 			.append(datacenter_filter_query)
 			.append(SQL` order by datacenter`);
-	return getData(conn, datacenters_query);
+	return getData<NameValuePair>(conn, datacenters_query);
 }
 
-async function getCPUModels(conn: AsyncDuckDBConnection, filter: any): Promise<any> {
+async function getCPUModels(conn: AsyncDuckDBConnection, filter: ServerFilter): Promise<NameValuePair[]> {
 	let cpumodel_filter_query = generateFilterQuery(filter, false, true);
 	let cpumodel_query = SQL`select distinct cpu as name, cpu as value from server where`
 		.append(cpumodel_filter_query)
 		.append(SQL` order by cpu`);
-	return getData(conn, cpumodel_query);
+	return getData<NameValuePair>(conn, cpumodel_query);
 }
 
-async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
+type TemporalStat = {
+	x: number;
+	y: number;
+};
+
+async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
 	const query = SQL`
 		select
 			x, min(price_per_gb) as y
@@ -285,10 +439,13 @@ async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
 		order by
 			x
 	`;
-	return getData(conn, query);
+	return getData<TemporalStat>(conn, query);
 }
 
-async function getDiskPriceStats(conn: AsyncDuckDBConnection, diskType: string): Promise<any> {
+async function getDiskPriceStats(
+	conn: AsyncDuckDBConnection,
+	diskType: string
+): Promise<TemporalStat[]> {
 	const query = {
 		sql: `
 			select
@@ -307,13 +464,12 @@ async function getDiskPriceStats(conn: AsyncDuckDBConnection, diskType: string):
 			order by
 				x
 		`,
-		values: [],
+		values: []
 	};
-	return getData(conn, query as any);
+	return getData<TemporalStat>(conn, query as any);
 }
 
-
-async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
+async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
 	const query = SQL`
 		select
 			x, min(price) as y
@@ -331,17 +487,31 @@ async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<any> {
 		order by
 			x
 	`;
-	return getData(conn, query);
+	return getData<TemporalStat>(conn, query);
 }
+
+export type {
+	ServerFilter,
+	ServerPriceStat,
+	ServerConfiguration,
+	ServerDetail,
+	NameValuePair,
+	TemporalStat
+};
 
 export {
 	initDB,
 	withDbConnections,
+	
 	getPrices,
 	getConfigurations,
+	getServerDetails,
+	getServerDetailPrices,
+
 	getDatacenters,
 	getCPUModels,
+	
 	getRamPriceStats,
 	getDiskPriceStats,
-	getGPUPriceStats,
+	getGPUPriceStats
 };

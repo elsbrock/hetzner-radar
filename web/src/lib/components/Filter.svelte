@@ -1,6 +1,6 @@
 <script lang="ts">
+	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
 	import { filesize, type FileSizeOptions } from 'filesize';
-
 	import { Label } from 'flowbite-svelte';
 	import { Range } from 'flowbite-svelte';
 	import { MultiSelect } from 'flowbite-svelte';
@@ -12,9 +12,9 @@
 		round: 0
 	};
 
-	export let filter;
-	export let datacenters;
-	export let cpuModels;
+	export let filter: ServerFilter;
+	export let datacenters: NameValuePair[];
+	export let cpuModels: NameValuePair[];
 
 	$: ramSizeLower = filesize(
 		Math.pow(2, filter.ramInternalSizeLower) * Math.pow(1024, 3),
