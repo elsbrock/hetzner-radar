@@ -328,7 +328,7 @@
 	})();
 </script>
 
-<div class="container w-full">
+<div class="w-full">
 	<h3
 		class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
 	>
