@@ -1,14 +1,13 @@
 <script lang="ts">
+	import type { ServerPriceStat } from '$lib/dbapi';
 	import * as d3 from 'd3';
 	import { Spinner } from 'flowbite-svelte';
 	import { onDestroy, onMount, tick } from 'svelte';
 
-	export let data: any = null;
+	export let data: ServerPriceStat[] | null = null;
 
-	export let loading = true;
+	export let loading: boolean = true;
 	let noResults = false;
-
-	let totalOffers = 0;
 
 	const margin = { top: 10, right: 50, bottom: 50, left: 50 };
 
@@ -43,7 +42,7 @@
 		return { width, height, margin };
 	}
 
-	function getTimestamps(data) {
+	function getTimestamps(data: ServerPriceStat) {
 		return [...new Set(data.map((d) => new Date(d.next_reduce_timestamp * 1000)))];
 	}
 
@@ -318,7 +317,6 @@
 	});
 
 	$: noResults = Array.isArray(data) && data.length === 0;
-	$: totalOffers = Array.isArray(data) ? data.length : 0;
 
 	$: (async function () {
 	  await tick();
@@ -328,33 +326,22 @@
 	})();
 </script>
 
-<div class="w-full">
-	<h3
-		class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
-	>
-		Pricing
-		<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-			View the minimum, median and maximum server prices observed for the given configuration over
-			the last three months. {#if totalOffers > 0}A total of {totalOffers} offers have been seen.{/if}
-		</p>
-	</h3>
-	<div class="relative z-0 h-80 w-full">
-		{#if loading}
-			<div class="absolute inset-0 z-10 flex items-center justify-center">
-				<Spinner />
-			</div>
-		{:else if noResults}
-			<div class="absolute inset-0 z-10 flex items-center justify-center">
-				<p class="text-2xl">No results.</p>
-			</div>
-		{/if}
-		<div
-			bind:this={container}
-			class:blur-sm={loading || noResults}
-			class:pointer-events-none={loading || noResults}
-			style="width: 100%; height: 100%"
-		>
-			<svg bind:this={svg}></svg>
+<div class="relative z-0 h-80 w-full">
+	{#if loading}
+		<div class="absolute inset-0 z-10 flex items-center justify-center">
+			<Spinner />
 		</div>
+	{:else if noResults}
+		<div class="absolute inset-0 z-10 flex items-center justify-center">
+			<p class="text-2xl">No results.</p>
+		</div>
+	{/if}
+	<div
+		bind:this={container}
+		class:blur-sm={loading || noResults}
+		class:pointer-events-none={loading || noResults}
+		style="width: 100%; height: 100%"
+	>
+		<svg bind:this={svg}></svg>
 	</div>
 </div>

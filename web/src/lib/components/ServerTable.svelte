@@ -2,34 +2,51 @@
 	import { createEventDispatcher } from 'svelte';
 
 	import {
+		Badge,
+		ImagePlaceholder,
 		Table,
-		TableHead,
-		TableHeadCell,
 		TableBody,
-		TableBodyRow,
 		TableBodyCell,
-		ImagePlaceholder
+		TableBodyRow,
+		TableHead,
+		TableHeadCell
 	} from 'flowbite-svelte';
+
+	import type { ServerConfiguration, ServerDetail, ServerPriceStat } from '$lib/dbapi';
 
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
-
+	import { slide } from 'svelte/transition';
+	import ServerPriceChart from './ServerPriceChart.svelte';
 	dayjs.extend(relativeTime);
 
-	const dispatch = createEventDispatcher();
-
-	export let data;
-	export let loading;
+	export let data: ServerConfiguration[] = [];
+	export let serverDetails: null | ServerDetail[] = null;
+	export let serverDetailPrices: null | ServerPriceStat[] = null;
+	export let loading: boolean = true;
 
 	function pricePerTB(price: number, capacity: number) {
 		return capacity > 0 ? (price / (capacity / 1000)).toFixed(2) : 0;
 	}
 
+	function getAverageSupply(serverDetailPrices: null | ServerPriceStat[]) {
+		if (serverDetailPrices === null) {
+			return 0;
+		}
+		return (
+			serverDetailPrices.reduce((acc, curr) => acc + curr.count, 0) / serverDetailPrices.length
+		);
+	}
+
+	$: serverDetailAverageVolume = getAverageSupply(serverDetailPrices);
+
+	const dispatch = createEventDispatcher();
 	let openRow: number | null = null;
 	const toggleRow = (i: number) => {
 		openRow = openRow === i ? null : i;
+		serverDetails = null;
 		dispatch('serverDetails', i);
-	}
+	};
 </script>
 
 <h3
@@ -59,15 +76,19 @@
 	<TableBody>
 		{#if loading}
 			<TableBodyRow>
-				<TableBodyCell colspan="10">Loading data…</TableBodyCell>
+				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
+					>Loading data…</TableBodyCell
+				>
 			</TableBodyRow>
 		{:else if data.length === 0}
 			<TableBodyRow>
-				<TableBodyCell colspan="10">No servers matching configuration found.</TableBodyCell>
+				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
+					>No servers matching configuration found.</TableBodyCell
+				>
 			</TableBodyRow>
 		{:else}
 			<TableBodyRow>
-				<TableBodyCell colspan="10"
+				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
 					>We have observed {data.length} unique server configurations matching your criteria.</TableBodyCell
 				>
 			</TableBodyRow>
@@ -111,10 +132,34 @@
 					<TableBodyCell>{dayjs.unix(device.last_seen).fromNow()}</TableBodyCell>
 				</TableBodyRow>
 				{#if openRow === i}
-					<TableBodyRow>
-						<TableBodyCell colspan="9" class="p-0">
-							<div class="px-2 py-3" transition:slide={{ duration: 300, axis: 'y' }}>
-								<ImagePlaceholder />
+					<TableBodyRow style="background-color: initial; color: inherit">
+						<TableBodyCell colspan="10" class="border-l-8 border-l-[5px] p-1">
+							<div class="grid grid-cols-[500px_1fr]">
+								{#if serverDetails === null}
+									<div class="px-2 py-3" transition:slide={{ duration: 300, axis: 'y' }}>
+										<ImagePlaceholder />
+									</div>
+								{:else if serverDetails.length === 0}
+									<p><strong>Error:</strong> Could not find server details.</p>
+								{:else}
+									<div class="height: 200px">
+										<ServerPriceChart data={serverDetailPrices} loading={false} />
+									</div>
+									<div>
+										<h3>Details</h3>
+										{#each serverDetails as detail}
+											{#each JSON.parse(detail.information) as config}
+												<p>{config}</p>
+												{/each}
+											{#if serverDetailAverageVolume < 5}
+												<Badge>rare</Badge>
+											{/if}
+											{#if detail.fixed_price}
+												<Badge color="blue">fixed price</Badge>
+											{/if}
+										{/each}
+									</div>
+								{/if}
 							</div>
 						</TableBodyCell>
 					</TableBodyRow>

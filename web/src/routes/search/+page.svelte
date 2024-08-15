@@ -1,20 +1,19 @@
 <script lang="ts">
 	import { dbStore, initializedStore, progressStore } from '../../stores/db';
-	import { getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections } from '$lib/dbapi';
+	import type { NameValuePair, ServerConfiguration, ServerDetails, ServerFilter, ServerPriceStat } from '$lib/dbapi';
+	import { getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections, getServerDetails, getServerDetailPrices } from '$lib/dbapi';
 	import { Progressbar } from 'flowbite-svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import ServerTable from '$lib/components/ServerTable.svelte';
 	import ServerPriceChart from '$lib/components/ServerPriceChart.svelte';
-	import { onDestroy, onMount } from 'svelte';
 	import { AsyncDuckDB } from '@duckdb/duckdb-wasm';
-	import { createDB, tearDownDB } from '$lib/duckdb';
 
 	declare var umami: any;
 
 	let progress = 0;
-	let db: AsyncDuckDB;
+	let db: AsyncDuckDB | null = null;
 
-	let filter = {
+	let filter: ServerFilter = {
 		locationGermany: true,
 		locationFinland: true,
 
@@ -51,10 +50,12 @@
 
 	let initialized = false;
 
-	let serverList: any[] = [];
-	let serverPrices: any[] = [];
-	let cpuModels: any[] = [];
-	let datacenters: any[] = [];
+	let serverList: ServerConfiguration[] = [];
+	let serverPrices: ServerPriceStat[] = [];
+	let cpuModels: NameValuePair[] = [];
+	let datacenters: NameValuePair[] = [];
+	let serverDetails: ServerDetails[];
+	let serverDetailPrices: ServerPriceStat[];
 
 	let loading = true;
 
@@ -66,7 +67,7 @@
 		let queryTime = performance.now();
 		loading = true;
 
-		await withDbConnections(db, async (conn1, conn2, conn3, conn4) => {
+		await withDbConnections(db!, async (conn1, conn2, conn3, conn4) => {
 			try {
 				[cpuModels, datacenters, serverPrices, serverList] = await Promise.all([
 					getCPUModels(conn1, filter),
@@ -96,13 +97,12 @@
 
 	async function handleServerDetails(event: any) {
 		console.log('Server details requested:', serverList[event.detail]);
-		// umami.track((props) => ({
-		// 	...props,
-		// 	name: 'server-details',
-		// 	data: {
-		// 		server: serverList[index]
-		// 	},
-		// }));
+		return withDbConnections(db!, async (conn1, conn2) => {
+			[serverDetails, serverDetailPrices]  = await Promise.all([
+				getServerDetails(conn1, serverList[event.detail]),
+				getServerDetailPrices(conn2, serverList[event.detail]),
+			]);
+		});
 	};
 
 	dbStore.subscribe(value => {
@@ -117,9 +117,12 @@
 		progress = value;
 	});
 
-	$: if (initialized && db) {
-		fetchData(filter);
+	$: if (initialized && db && filter) {
+		fetchData();
 	}
+
+	let totalOffers = 0;
+	$: totalOffers = Array.isArray(serverPrices) ? serverPrices.reduce((acc, val) => acc + val.count, 0) : 0;
 </script>
 
 {#if !Number.isNaN(progress) && progress < 100}
@@ -131,8 +134,19 @@
 		<Filter bind:filter {datacenters} {cpuModels} />
 
 		<main class="flex-grow overflow-y-auto pt-3">
-			<ServerPriceChart data={serverPrices} {loading} />
-			<ServerTable data={serverList} on:serverDetails={handleServerDetails} {loading} />
+			<div class="w-full">
+				<h3
+					class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
+				>
+					Pricing
+					<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
+						View the minimum, median and maximum server prices observed for the given configuration over
+						the last three months. {#if totalOffers > 0}A total of {totalOffers} offers have been seen.{/if}
+					</p>
+				</h3>
+				<ServerPriceChart data={serverPrices} {loading} />
+			</div>
+			<ServerTable data={serverList} on:serverDetails={handleServerDetails} {serverDetails} {serverDetailPrices} {loading} />
 		</main>
 	</div>
 {/if}
