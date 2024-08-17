@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { dbStore, initializedStore, progressStore } from '../../stores/db';
-	import type { NameValuePair, ServerConfiguration, ServerDetails, ServerFilter, ServerPriceStat } from '$lib/dbapi';
-	import { getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections, getServerDetails, getServerDetailPrices } from '$lib/dbapi';
+	import type { NameValuePair, ServerConfiguration, ServerDetails, ServerFilter, ServerLowestPriceStat, ServerPriceStat } from '$lib/dbapi';
+	import { getCPUModels, getDatacenters, getConfigurations, getPrices, withDbConnections, getServerDetails, getServerDetailPrices, getLowestServerDetailPrices } from '$lib/dbapi';
 	import { Progressbar } from 'flowbite-svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import ServerTable from '$lib/components/ServerTable.svelte';
@@ -56,6 +56,7 @@
 	let datacenters: NameValuePair[] = [];
 	let serverDetails: ServerDetails[];
 	let serverDetailPrices: ServerPriceStat[];
+	let lowestServerDetailPrices: ServerLowestPriceStat[];
 
 	let loading = true;
 
@@ -97,10 +98,11 @@
 
 	async function handleServerDetails(event: any) {
 		console.log('Server details requested:', serverList[event.detail]);
-		return withDbConnections(db!, async (conn1, conn2) => {
-			[serverDetails, serverDetailPrices]  = await Promise.all([
+		return withDbConnections(db!, async (conn1, conn2, conn3) => {
+			[serverDetails, serverDetailPrices, lowestServerDetailPrices]  = await Promise.all([
 				getServerDetails(conn1, serverList[event.detail]),
 				getServerDetailPrices(conn2, serverList[event.detail]),
+				getLowestServerDetailPrices(conn3, serverList[event.detail]),
 			]);
 		});
 	};
@@ -140,13 +142,13 @@
 				>
 					Pricing
 					<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-						View the minimum, median and maximum server prices observed for the given configuration over
+						View the minimum, Volume-Weighted Average (VWAP), and maximum server prices observed for the given configuration over
 						the last three months. {#if totalOffers > 0}A total of {totalOffers} offers have been seen.{/if}
 					</p>
 				</h3>
 				<ServerPriceChart data={serverPrices} {loading} />
 			</div>
-			<ServerTable data={serverList} on:serverDetails={handleServerDetails} {serverDetails} {serverDetailPrices} {loading} />
+			<ServerTable data={serverList} on:serverDetails={handleServerDetails} {serverDetails} {serverDetailPrices} {lowestServerDetailPrices} {loading} />
 		</main>
 	</div>
 {/if}

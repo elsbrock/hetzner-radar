@@ -94,7 +94,9 @@ insert into server_raw
     price,
     fixed_price,
     
-    next_reduce_timestamp - next_reduce as next_reduce_timestamp
+    next_reduce_timestamp - next_reduce as next_reduce_timestamp,
+    --TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen
+
   from read_json('%s', format = 'auto', columns = {
     id: 'UBIGINT',
     information: 'VARCHAR[]',

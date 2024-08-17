@@ -56,7 +56,7 @@
 	function createYScale(data, height, margin) {
 		return d3
 			.scaleLinear()
-			.domain([d3.min(data, (d) => d.min_price) * 0.1, d3.max(data, (d) => d.max_price)])
+			.domain([d3.min(data, (d) => d.min_price) * 0.9, d3.max(data, (d) => d.max_price)*1.1])
 			.range([height - margin.bottom, margin.top]);
 	}
 

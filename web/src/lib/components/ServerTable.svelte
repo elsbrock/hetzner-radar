@@ -9,7 +9,12 @@
 		TableBodyCell,
 		TableBodyRow,
 		TableHead,
-		TableHeadCell
+		TableHeadCell,
+		Timeline,
+		TimelineItem,
+
+		Tooltip
+
 	} from 'flowbite-svelte';
 
 	import type { ServerConfiguration, ServerDetail, ServerPriceStat } from '$lib/dbapi';
@@ -23,6 +28,7 @@
 	export let data: ServerConfiguration[] = [];
 	export let serverDetails: null | ServerDetail[] = null;
 	export let serverDetailPrices: null | ServerPriceStat[] = null;
+	export let lowestServerDetailPrices: null | ServerPriceStat[] = null;
 	export let loading: boolean = true;
 
 	function pricePerTB(price: number, capacity: number) {
@@ -39,6 +45,11 @@
 	}
 
 	$: serverDetailAverageVolume = getAverageSupply(serverDetailPrices);
+	$: if (data) {
+		openRow = null;
+		serverDetails = null;
+		serverDetailPrices = null;
+	}
 
 	const dispatch = createEventDispatcher();
 	let openRow: number | null = null;
@@ -68,7 +79,6 @@
 		<TableHeadCell>per TB HDD</TableHeadCell>
 		<TableHeadCell>CPU</TableHeadCell>
 		<TableHeadCell>RAM Size</TableHeadCell>
-		<TableHeadCell>RAM Info</TableHeadCell>
 		<TableHeadCell>Storage</TableHeadCell>
 		<TableHeadCell>Extras</TableHeadCell>
 		<TableHeadCell>Last Seen</TableHeadCell>
@@ -104,13 +114,6 @@
 					<TableBodyCell>{device.ram_size}GB</TableBodyCell>
 					<TableBodyCell>
 						<ul>
-							{#each JSON.parse(device.ram) as ram}
-								<li>{ram}</li>
-							{/each}
-						</ul>
-					</TableBodyCell>
-					<TableBodyCell>
-						<ul>
 							{#each JSON.parse(device.hdd_arr) as drive}
 								<li>{drive}</li>
 							{/each}
@@ -129,35 +132,60 @@
 							{/if}
 						</ul>
 					</TableBodyCell>
-					<TableBodyCell>{dayjs.unix(device.last_seen).fromNow()}</TableBodyCell>
+					<TableBodyCell>
+						{dayjs.unix(device.last_seen).fromNow()}<br/>
+						<span class="text-xs light-gray">{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}</span>
+					</TableBodyCell>
 				</TableBodyRow>
 				{#if openRow === i}
 					<TableBodyRow style="background-color: initial; color: inherit">
-						<TableBodyCell colspan="10" class="border-l-8 border-l-[5px] p-1">
-							<div class="grid grid-cols-[500px_1fr]">
+						<TableBodyCell colspan="9" class="border-l-8 border-l-[5px] p-1">
+							<div class="grid grid-cols-[1fr_2fr_2fr] gap-3 p-3 pr-3 md:grid-cols-[1fr_2fr_3fr] y-overflow">
 								{#if serverDetails === null}
-									<div class="px-2 py-3" transition:slide={{ duration: 300, axis: 'y' }}>
+									<div class="px-2 py-3">
 										<ImagePlaceholder />
 									</div>
 								{:else if serverDetails.length === 0}
 									<p><strong>Error:</strong> Could not find server details.</p>
 								{:else}
-									<div class="height: 200px">
-										<ServerPriceChart data={serverDetailPrices} loading={false} />
+									<div>
+										<span class="mb-2 text-base">Smart Price Insights</span>
+										<Timeline>
+											{#each lowestServerDetailPrices as lowestPrice}
+												<TimelineItem
+													classLi="text-base mb-2"
+													title="{lowestPrice.price} €"
+													date={dayjs.unix(lowestPrice.seen).format('YYYY-MM-DD HH:mm')}
+												/>
+											{/each}
+											{#if lowestServerDetailPrices.length === 0}
+												<!-- <TimelineItem
+													classLi="text-base mb-2"
+													title="{device.min_price} €"
+													date="{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}"
+												/> -->
+												nuttin
+											{/if}
+										</Timeline>
 									</div>
 									<div>
-										<h3>Details</h3>
-										{#each serverDetails as detail}
-											{#each JSON.parse(detail.information) as config}
-												<p>{config}</p>
+										{#each serverDetails as detail, i}
+											<p class="flex items-center justify-between">
+												<span class="mb-2 text-base">Configuration #{i + 1}</span>
+												<span class="flex space-x-2">
+													{#if serverDetailAverageVolume < 5}
+														<Badge>rare</Badge>
+													{/if}
+											</p>
+											<ul class="ml-4 list-inside list-disc pb-4">
+												{#each JSON.parse(detail.information) as config}
+													<li>{config}</li>
 												{/each}
-											{#if serverDetailAverageVolume < 5}
-												<Badge>rare</Badge>
-											{/if}
-											{#if detail.fixed_price}
-												<Badge color="blue">fixed price</Badge>
-											{/if}
+											</ul>
 										{/each}
+									</div>
+									<div>
+										<ServerPriceChart data={serverDetailPrices} loading={false} />
 									</div>
 								{/if}
 							</div>

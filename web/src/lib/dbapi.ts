@@ -93,8 +93,23 @@ async function withDbConnections(
 	}
 }
 
+function getRawQuery(query: SQLStatement): string {
+	let index = 0;
+	const sqlWithValues = query.sql.replace(/\?/g, () => {
+		const value = query.values[index++];
+		if (typeof value === 'string') {
+			return `'${value.replace(/'/g, "''")}'`; // Escaping single quotes in strings
+		} else if (value === null) {
+			return 'NULL';
+		} else {
+			return value;
+		}
+	});
+	return sqlWithValues;
+}
+
 async function getData<T>(conn: AsyncDuckDBConnection, query: SQLStatement): Promise<T[]> {
-	console.debug(query.sql, query.values);
+	console.debug(getRawQuery(query));
 	let stmt: AsyncPreparedStatement;
 	let results: T[] = [];
 	try {
@@ -276,6 +291,9 @@ async function getPrices(conn: AsyncDuckDBConnection, filter: ServerFilter): Pro
 }
 
 type ServerConfiguration = {
+	with_hwr: any;
+	with_gpu: any;
+	with_inic: any;
 	cpu: string;
 	ram: string[];
 	ram_size: number;
@@ -295,7 +313,7 @@ async function getConfigurations(
 	let configurations_filter_query = generateFilterQuery(filter, true, true);
 	let configurations_query = SQL`
         select
-			cpu, ram, ram_size, is_ecc,
+			cpu, ram_size, is_ecc,
 			hdd_arr::JSON as hdd_arr,
 			nvme_size,
 			nvme_drives::JSON as nvme_drives,
@@ -312,7 +330,7 @@ async function getConfigurations(
         where`;
 	configurations_query.append(configurations_filter_query).append(SQL`
 		group by
-            cpu, ram, ram_size, is_ecc, hdd_arr,
+            cpu, ram_size, is_ecc, hdd_arr,
 			nvme_size, nvme_drives, sata_size, sata_drives, hdd_size, hdd_drives,
 			with_gpu, with_inic, with_hwr
         order by min(price)`);
@@ -321,7 +339,7 @@ async function getConfigurations(
 
 type ServerDetail = {
 	information: string;
-	fixed_price: boolean;
+	last_seen: number;
 };
 
 async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfiguration): Promise<ServerDetail[]> {
@@ -329,26 +347,25 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 		SELECT
 			distinct
 			information::json as information,
-			fixed_price
+			last_seen
 		FROM
 			(
 				select distinct 
 						information, cpu, ram, ram_size, is_ecc,
-						hdd_arr::JSON as hdd_arr,
+						hdd_arr,
 						nvme_size,
-						nvme_drives::JSON as nvme_drives,
+						nvme_drives,
 						sata_size,
-						sata_drives::JSON as sata_drives,
+						sata_drives,
 						hdd_size,
-						hdd_drives::JSON as sata_drives,
+						hdd_drives,
 						with_gpu, with_inic, with_hwr,
-						fixed_price
+						max(next_reduce_timestamp) as last_seen
 				FROM
 					server
 				WHERE
 					cpu = ${config.cpu}
 					AND ram_size = ${config.ram_size}
-					AND ram::json = ${config.ram}
 					AND is_ecc = ${config.is_ecc}
 					AND hdd_arr::json = ${config.hdd_arr}
 					AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
@@ -357,6 +374,16 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 					AND with_gpu = ${config.with_gpu}
 					AND with_inic = ${config.with_inic}
 					AND with_hwr = ${config.with_hwr}
+				GROUP BY
+					information, cpu, ram, ram_size, is_ecc,
+					hdd_arr,
+					nvme_size,
+					nvme_drives,
+					sata_size,
+					sata_drives,
+					hdd_size,
+					hdd_drives,
+					with_gpu, with_inic, with_hwr
 			)
 	`;
 	return getData<ServerDetail>(conn, query);
@@ -375,7 +402,6 @@ async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: Server
 		WHERE
 			cpu = ${config.cpu}
 			AND ram_size = ${config.ram_size}
-			AND ram::json = ${config.ram}
 			AND is_ecc = ${config.is_ecc}
 			AND hdd_arr::json = ${config.hdd_arr}
 			AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
@@ -390,6 +416,85 @@ async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: Server
 			next_reduce_timestamp
 	`;
 	return getData<ServerPriceStat>(conn, query);
+}
+
+type ServerLowestPriceStat = {
+	id: number;
+	seen: number;
+	price: number;
+};
+
+async function getLowestServerDetailPrices(conn: AsyncDuckDBConnection, config: ServerConfiguration): Promise<ServerLowestPriceStat[]> {
+	const query = SQL`
+		  WITH price_data AS (
+			SELECT 
+				price,
+				to_timestamp(next_reduce_timestamp)::timestamp as seen
+			FROM server
+			WHERE
+				cpu = ${config.cpu}
+				AND ram_size = ${config.ram_size}
+				AND is_ecc = ${config.is_ecc}
+				AND hdd_arr::json = ${config.hdd_arr}
+				AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
+				AND coalesce(sata_size, 0) = coalesce(${config.sata_size}, 0)
+				AND coalesce(hdd_size, 0) = coalesce(${config.hdd_size}, 0)
+				AND with_gpu = ${config.with_gpu}
+				AND with_inic = ${config.with_inic}
+				AND with_hwr = ${config.with_hwr}
+			ORDER BY seen
+		),
+		
+		moving_averages AS (
+			SELECT 
+				seen,
+				price,
+				AVG(price) OVER (ORDER BY seen RANGE BETWEEN INTERVAL '3 days' PRECEDING AND CURRENT ROW) AS short_term_avg,
+				AVG(price) OVER (ORDER BY seen RANGE BETWEEN INTERVAL '14 days' PRECEDING AND CURRENT ROW) AS long_term_avg
+			FROM price_data
+		),
+		
+		interesting_points AS (
+			SELECT 
+				seen,
+				price,
+				short_term_avg,
+				long_term_avg,
+				LAG(price) OVER (ORDER BY seen) AS prev_price,
+				LAG(short_term_avg) OVER (ORDER BY seen) AS prev_short_term_avg,
+				LAG(long_term_avg) OVER (ORDER BY seen) AS prev_long_term_avg
+			FROM moving_averages
+		),
+		
+		filtered_interesting_points AS (
+			SELECT
+				seen,
+				price,
+				ROW_NUMBER() OVER (ORDER BY seen) AS rn,
+				LAG(seen) OVER (ORDER BY seen) AS prev_seen
+			FROM interesting_points
+			WHERE 
+				(price > short_term_avg AND prev_price < prev_short_term_avg) OR  -- Price rises above short-term average
+				(price < short_term_avg AND prev_price > prev_short_term_avg) OR  -- Price drops below short-term average
+				(short_term_avg > long_term_avg AND prev_short_term_avg <= prev_long_term_avg) OR  -- Short-term MA crosses above long-term MA
+				(short_term_avg < long_term_avg AND prev_short_term_avg >= prev_long_term_avg)  -- Short-term MA crosses below long-term MA
+		),
+		
+		distinct_dates AS (
+			SELECT 
+				epoch(seen) as seen,
+				price,
+				rn
+			FROM filtered_interesting_points
+			WHERE prev_seen IS NULL OR seen >= prev_seen + INTERVAL '7 days'
+		)
+		
+		SELECT seen, price
+		FROM distinct_dates
+		ORDER BY seen
+		LIMIT 5;		
+	`;
+	return getData<ServerLowestPriceStat>(conn, query);
 }
 
 /*
@@ -496,7 +601,8 @@ export type {
 	ServerConfiguration,
 	ServerDetail,
 	NameValuePair,
-	TemporalStat
+	TemporalStat,
+	ServerLowestPriceStat,
 };
 
 export {
@@ -505,8 +611,10 @@ export {
 	
 	getPrices,
 	getConfigurations,
+
 	getServerDetails,
 	getServerDetailPrices,
+	getLowestServerDetailPrices,
 
 	getDatacenters,
 	getCPUModels,
