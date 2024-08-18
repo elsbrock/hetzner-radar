@@ -14,15 +14,16 @@
 <main class="min-h-screen p-8">
 	<!-- Hero Section -->
 	<section class="mx-auto my-12 max-w-7xl text-center">
-		<h2 class="mb-4 text-5xl font-extrabold">Find the Best Deal on Hetzner Dedicated Servers</h2>
-		<p class="text-lg text-gray-400">
+		<h2 class="mb-20 text-5xl font-extrabold">Find the Best Deal on
+			<br/>Hetzner Dedicated Servers</h2>
+		<p class="text-lg text-gray-400 mb-10">
 			Server Radar monitors the prices of Hetzner Auctions, offering valuable insights to help you
 			navigate the marketplace with confidence. By tracking daily price updates and analyzing server
 			configurations, Server Radar equips you with the knowledge needed to make informed decisions.
 			Whether you’re looking for the best deal or specific server specs, our tool ensures you stay
 			ahead of the curve without missing out on opportunities.
 		</p>
-		<Button color="primary" href="/analyze" class="mt-8 px-8 py-4 text-xl">Start Analyzing</Button>
+		<Button color="primary" href="/analyze" class="my-8 px-8 py-4 text-xl">Start Analyzing</Button>
 	</section>
 
 	<!-- Features Section -->
