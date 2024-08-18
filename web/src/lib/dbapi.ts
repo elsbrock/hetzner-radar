@@ -60,7 +60,7 @@ async function fetchWithProgress(
 
 type ProgressFn = (loaded: number, total: number) => void;
 
-async function initDB(db: AsyncDuckDB, progress: undefined | ProgressFn) {
+async function initDB(db: AsyncDuckDB, progress?: ProgressFn) {
 	const { hostname, port, protocol } = window.location;
 	const url = `${protocol}//${hostname}:${port}/sb.duckdb.wasm`;
 	const res = await fetchWithProgress(url, progress);
@@ -528,7 +528,7 @@ type TemporalStat = {
 	y: number;
 };
 
-async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
+async function getRamPriceStats(conn: AsyncDuckDBConnection, withECC?: boolean, country?: string): Promise<TemporalStat[]> {
 	const query = SQL`
 		select
 			x, min(price_per_gb) as y
@@ -537,13 +537,22 @@ async function getRamPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalSt
 				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
 				price / ram_size as price_per_gb
 			from
-				server
-		)
-		group by
+				server`;
+	if (withECC !== undefined || country) {
+		query.append(SQL` where 1 = 1`);
+		if (withECC !== undefined) {
+			query.append(SQL` and is_ecc = ${withECC}`);
+		}
+		if (country) {
+			query.append(SQL` and country = ${country}`);
+		}
+	}
+	query.append(SQL`
+		) group by
 			x
 		order by
 			x
-	`;
+	`);
 	return getData<TemporalStat>(conn, query);
 }
 
@@ -595,31 +604,72 @@ async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalSt
 	return getData<TemporalStat>(conn, query);
 }
 
-export type {
-	ServerFilter,
-	ServerPriceStat,
-	ServerConfiguration,
-	ServerDetail,
-	NameValuePair,
-	TemporalStat,
-	ServerLowestPriceStat,
-};
+async function getCPUVendorPriceStats(conn: AsyncDuckDBConnection, vendor: string, country?: string): Promise<TemporalStat[]> {
+	const query = SQL`
+		select
+			x, min(price) as y
+		from (
+			select
+				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				price
+			from
+				server
+			where
+				cpu_vendor = ${vendor}
+	`;
+	if (country) {
+		query.append(SQL` and country = ${country}`);
+	}
+	query.append(SQL`)
+		group by
+			x
+		order by
+			x
+	`);
+	return getData<TemporalStat>(conn, query);
+}
 
-export {
-	initDB,
-	withDbConnections,
-	
-	getPrices,
-	getConfigurations,
+async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Promise<TemporalStat[]> {
+	const query = SQL`
+		select
+			x, count(distinct id)::int as y
+		from (
+			select
+				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				id
+			from
+				server
+	`;
+	if (country) {
+		query.append(SQL`where location = ${country}`);
+	}
+	query.append(SQL`
+		)
+		group by
+			x
+		order by
+			x
+	`);
+	return getData<TemporalStat>(conn, query);
+}
 
-	getServerDetails,
-	getServerDetailPrices,
-	getLowestServerDetailPrices,
+	export {
+		initDB,
+		withDbConnections,
 
-	getDatacenters,
-	getCPUModels,
-	
-	getRamPriceStats,
-	getDiskPriceStats,
-	getGPUPriceStats
-};
+		getPrices,
+		getConfigurations,
+
+		getServerDetails,
+		getServerDetailPrices,
+		getLowestServerDetailPrices,
+
+		getDatacenters,
+		getCPUModels,
+
+		getRamPriceStats,
+		getDiskPriceStats,
+		getGPUPriceStats,
+		getCPUVendorPriceStats,
+		getVolumeStats, type NameValuePair, type TemporalStat
+	};

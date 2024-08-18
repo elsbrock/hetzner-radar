@@ -2,6 +2,8 @@
 	import { Button, Navbar, NavBrand, NavHamburger, NavLi, NavUl } from 'flowbite-svelte';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
   	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { page } from '$app/stores';
+	$: activeUrl = $page.url.pathname;
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -18,9 +20,10 @@
 		</Button>
 		<NavHamburger />
 	</div>
-	<NavUl class="order-1">
+	<NavUl class="order-1" {activeUrl}>
 		<NavLi href="/">Home</NavLi>
 		<NavLi href="/about">About</NavLi>
-		<NavLi href="/search">Search</NavLi>
+		<NavLi href="/analyze">Analyze</NavLi>
+		<NavLi href="/statistics">Statistics</NavLi>
 	</NavUl>
 </Navbar>
