@@ -3,7 +3,7 @@ import type {
 	AsyncDuckDBConnection,
 	AsyncPreparedStatement
 } from '@duckdb/duckdb-wasm';
-import SQL, { SQLStatement } from 'sql-template-strings';
+import SQL, { type SQLStatement } from 'sql-template-strings';
 
 async function fetchWithProgress(
 	url: string,
