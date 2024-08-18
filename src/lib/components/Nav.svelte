@@ -3,6 +3,7 @@
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
   	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { page } from '$app/stores';
+  import { faChartSimple, faMagnifyingGlassChart } from '@fortawesome/free-solid-svg-icons';
 	$: activeUrl = $page.url.pathname;
 </script>
 
@@ -23,7 +24,9 @@
 	<NavUl class="order-1" {activeUrl}>
 		<NavLi href="/">Home</NavLi>
 		<NavLi href="/about">About</NavLi>
-		<NavLi href="/analyze">Analyze</NavLi>
+		<NavLi href="/analyze">
+			<FontAwesomeIcon class="me-2" icon={faChartSimple} />Analyze
+		</NavLi>
 		<NavLi href="/statistics">Statistics</NavLi>
 	</NavUl>
 </Navbar>
