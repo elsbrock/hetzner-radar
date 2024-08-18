@@ -32,7 +32,7 @@ poetry shell
 # Add the `data` branch under /data
 git worktree add data data
 # Build the DuckDB database
-python scripts/import.py data web/static/sb.duckdb.wasm
+python scripts/import.py data static/sb.duckdb.wasm
 ```
 
 ### Running the Website
@@ -55,4 +55,7 @@ I'm happy to review and merge any meaningful contributions that improve the proj
 
 This project was created by a satisfied Hetzner customer and is intended in good faith. The project is designed to be beneficial for all parties involved. If you have any concerns, please reach out.
 
-Please note that this is an independent project and is not officially affiliated with Hetzner. "Hetzner" is a trademark owned by its respective owners. This project does not claim any official endorsement by Hetzner. Use at your own risk.
+Please note that this is an independent project and is not officially affiliated
+with Hetzner. "Hetzner" is a trademark owned by its respective owners. This
+project does not claim any official endorsement by Hetzner. Use at your own
+risk.
