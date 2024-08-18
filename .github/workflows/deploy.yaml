@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: "main"
-    paths:
-      - 'web/**'
   schedule:
     - cron:  '0 0 * * *'
 
