@@ -14,8 +14,8 @@
           targetPkgs = pkgs: [pkgs.gcc pkgs.libtool pkgs.python311 pkgs.duckdb pkgs.nodejs_22];
         };
       in
-        {
-          devShells.${system}.default = fhs.env;
-        }
+      {
+        devShells.default = fhs.env;
+      }
     );
 }
