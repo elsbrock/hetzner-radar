@@ -11,17 +11,16 @@
 		TableHead,
 		TableHeadCell,
 		Timeline,
-		TimelineItem,
-
-		Tooltip
-
+		TimelineItem
 	} from 'flowbite-svelte';
 
 	import type { ServerConfiguration, ServerDetail, ServerPriceStat } from '$lib/dbapi';
 
+	import { faLightbulb, faServer } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
-	import { slide } from 'svelte/transition';
 	import ServerPriceChart from './ServerPriceChart.svelte';
 	dayjs.extend(relativeTime);
 
@@ -133,14 +132,18 @@
 						</ul>
 					</TableBodyCell>
 					<TableBodyCell>
-						{dayjs.unix(device.last_seen).fromNow()}<br/>
-						<span class="text-xs light-gray">{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}</span>
+						{dayjs.unix(device.last_seen).fromNow()}<br />
+						<span class="light-gray text-xs"
+							>{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}</span
+						>
 					</TableBodyCell>
 				</TableBodyRow>
 				{#if openRow === i}
 					<TableBodyRow style="background-color: initial; color: inherit">
 						<TableBodyCell colspan="9" class="border-l-8 border-l-[5px] p-1">
-							<div class="grid grid-cols-[1fr_2fr_2fr] gap-3 p-3 pr-3 md:grid-cols-[1fr_2fr_3fr] y-overflow">
+							<div
+								class="y-overflow grid grid-cols-[1fr_2fr_2fr] gap-3 p-3 pr-3 md:grid-cols-[1fr_2fr_3fr]"
+							>
 								{#if serverDetails === null}
 									<div class="px-2 py-3">
 										<ImagePlaceholder />
@@ -149,7 +152,10 @@
 									<p><strong>Error:</strong> Could not find server details.</p>
 								{:else}
 									<div>
-										<span class="mb-2 text-base">Smart Price Insights</span>
+										<div class="mb-2 text-base">
+											<FontAwesomeIcon class="h-4 w-4" icon={faLightbulb} />
+											Smart Price Insights
+										</div>
 										<Timeline>
 											{#each lowestServerDetailPrices as lowestPrice}
 												<TimelineItem
@@ -159,23 +165,26 @@
 												/>
 											{/each}
 											{#if lowestServerDetailPrices.length === 0}
-												<!-- <TimelineItem
+												<TimelineItem
 													classLi="text-base mb-2"
 													title="{device.min_price} €"
-													date="{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}"
-												/> -->
-												nuttin
+													date={dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}
+												/>
 											{/if}
 										</Timeline>
 									</div>
 									<div>
 										{#each serverDetails as detail, i}
 											<p class="flex items-center justify-between">
-												<span class="mb-2 text-base">Configuration #{i + 1}</span>
+												<span class="mb-2 text-base">
+													<FontAwesomeIcon class="me-1 h-4 w-4" icon={faServer} />
+													Configuration #{i + 1}
+												</span>
 												<span class="flex space-x-2">
 													{#if serverDetailAverageVolume < 5}
 														<Badge>rare</Badge>
 													{/if}
+												</span>
 											</p>
 											<ul class="ml-4 list-inside list-disc pb-4">
 												{#each JSON.parse(detail.information) as config}
