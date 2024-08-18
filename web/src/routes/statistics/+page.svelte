@@ -3,7 +3,6 @@
 	import { getRamPriceStats, getDiskPriceStats, getGPUPriceStats, initDB, withDbConnections } from '$lib/dbapi';
 	import { dbStore, initializedStore, progressStore } from '../../stores/db';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
-	import { onDestroy, onMount } from 'svelte';
 	
 	export let db: AsyncDuckDB;
 

@@ -20,6 +20,7 @@
 	</div>
 	<NavUl class="order-1">
 		<NavLi href="/">Home</NavLi>
+		<NavLi href="/about">About</NavLi>
 		<NavLi href="/search">Search</NavLi>
 	</NavUl>
 </Navbar>
