@@ -22,7 +22,7 @@
 			Whether you’re looking for the best deal or specific server specs, our tool ensures you stay
 			ahead of the curve without missing out on opportunities.
 		</p>
-		<Button color="primary" href="/search" class="mt-8 px-8 py-4 text-xl">Start Analyzing</Button>
+		<Button color="primary" href="/analyze" class="mt-8 px-8 py-4 text-xl">Start Analyzing</Button>
 	</section>
 
 	<!-- Features Section -->
