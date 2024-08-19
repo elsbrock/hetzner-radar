@@ -14,7 +14,7 @@
 		TimelineItem
 	} from 'flowbite-svelte';
 
-	import type { ServerConfiguration, ServerDetail, ServerPriceStat } from '$lib/dbapi';
+	import type { ServerConfiguration, ServerDetail, ServerPriceStat, ServerLowestPriceStat	} from '$lib/dbapi';
 
 	import { faLightbulb, faServer } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -27,7 +27,7 @@
 	export let data: ServerConfiguration[] = [];
 	export let serverDetails: null | ServerDetail[] = null;
 	export let serverDetailPrices: null | ServerPriceStat[] = null;
-	export let lowestServerDetailPrices: null | ServerPriceStat[] = null;
+	export let lowestServerDetailPrices: null | ServerLowestPriceStat[] = null;
 	export let loading: boolean = true;
 
 	function pricePerTB(price: number, capacity: number) {

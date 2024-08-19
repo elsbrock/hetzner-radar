@@ -1,6 +1,6 @@
 <script lang="ts">
 	import LineChart from '$lib/components/LineChart.svelte';
-	import { dbStore, initializedStore, progressStore } from '../../stores/db';
+	import { db } from '../../stores/db';
 	import {
 		getRamPriceStats,
 		getDiskPriceStats,
@@ -12,10 +12,6 @@
 	} from '$lib/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
-	export let db: AsyncDuckDB;
-
-	let progress = 0;
-	let initialized = false;
 	let loading = true;
 
 	let ramPriceStats: TemporalStat[] = [];
@@ -31,11 +27,7 @@
 	let volumeFinlandStats: TemporalStat[] = [];
 	let volumeGermanyStats: TemporalStat[] = [];
 
-	async function fetchData() {
-		if (!initialized) {
-			return;
-		}
-
+	async function fetchData(db: AsyncDuckDB) {
 		let queryTime = performance.now();
 		loading = true;
 
@@ -77,20 +69,8 @@
 		});
 	}
 
-	dbStore.subscribe((value) => {
-		db = value;
-	});
-
-	initializedStore.subscribe((value) => {
-		initialized = value;
-	});
-
-	progressStore.subscribe((value) => {
-		progress = value;
-	});
-
-	$: if (initialized && db) {
-		fetchData();
+	$: if (!!$db) {
+		fetchData($db);
 	}
 </script>
 

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
+	import { faShareNodes } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { filesize, type FileSizeOptions } from 'filesize';
-	import { Label } from 'flowbite-svelte';
+	import { Label, Tooltip } from 'flowbite-svelte';
 	import { Range } from 'flowbite-svelte';
 	import { MultiSelect } from 'flowbite-svelte';
 	import { Toggle } from 'flowbite-svelte';
 	import { ButtonGroup, Button } from 'flowbite-svelte';
+	import queryString from 'query-string';
 
 	const filesizeOptions: FileSizeOptions = {
 		base: 2,
@@ -15,6 +18,17 @@
 	export let filter: ServerFilter;
 	export let datacenters: NameValuePair[];
 	export let cpuModels: NameValuePair[];
+
+	function generateShareLink(filter: ServerFilter) {
+		console.log("click")
+		const queryStringified = queryString.stringify(filter, {
+			arrayFormat: "bracket",
+			skipNull: true,
+		});
+		// copy to clipboard
+		console.log(queryStringified);
+		navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + queryStringified);
+	}
 
 	$: ramSizeLower = filesize(
 		Math.pow(2, filter.ramInternalSizeLower) * Math.pow(1024, 3),
@@ -53,9 +67,24 @@
 <aside
 	class="border-r border-gray-200 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto"
 >
-	<div class="h-full bg-white px-3 py-4 dark:bg-gray-800">
+	<div class="h-full bg-white px-3 py-2 dark:bg-gray-800">
+		<!-- float right-->
 		<ul class="space-y-2 font-medium">
-			<li><h2>Location</h2></li>
+			<li class="flex justify-between items-center">
+				<h2>Location</h2>
+				<Tooltip triggeredBy="#share-filter" placement="bottom" trigger="hover">Copy link to clipboard</Tooltip>
+				<button
+					id="share-filter"
+					class="ml-2 text-right p-2 rounded cursor-pointer hover:scale-110 active:scale-95 transition transform duration-150 ease-in-out"
+					on:click={() => generateShareLink(filter)}
+					aria-label="Share Filter"
+				>
+					<FontAwesomeIcon
+						class="w-5 h-5 text-black dark:text-white transition-colors duration-150 ease-in-out"
+						icon={faShareNodes}
+					/>
+				</button>
+			</li>			
 			<li>
 				<Toggle bind:checked={filter.locationGermany} value={filter.locationGermany ? 'on' : 'off'}
 					>Germany</Toggle

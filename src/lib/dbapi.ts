@@ -671,5 +671,13 @@ async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Pr
 		getDiskPriceStats,
 		getGPUPriceStats,
 		getCPUVendorPriceStats,
-		getVolumeStats, type NameValuePair, type TemporalStat
+		getVolumeStats,
+
+		type NameValuePair,
+		type TemporalStat,
+		type ServerConfiguration,
+		type ServerLowestPriceStat,
+		type ServerPriceStat,
+		type ServerFilter,
+		type ServerDetail,
 	};
