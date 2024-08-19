@@ -120,7 +120,7 @@ insert into server_raw
 """
 
 remove_duplicates_query = """
-CREATE TABLE server AS
+CREATE OR REPLACE TABLE server AS
 WITH CTE AS (
     SELECT
         *,
