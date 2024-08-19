@@ -79,15 +79,7 @@
 
 				queryTime = performance.now() - queryTime;
 
-				umami.track((props) => ({
-					...props,
-					name: 'search-result',
-					data: {
-						filter: { ...filter },
-						results: serverList.length,
-						queryTime
-					},
-				}));
+				umami.track('search-result');
 			} catch (error) {
 				console.error('Error fetching data:', error);
 			} finally {
