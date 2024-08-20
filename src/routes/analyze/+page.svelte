@@ -1,5 +1,6 @@
 <script context="module" lang="ts">
 	declare let umami: any;
+	declare let pirsch: any;
 </script>
 
 <script lang="ts">
@@ -82,7 +83,10 @@
 		if (typeof umami !== "undefined") {
 			umami.track("search");
 		}
-
+		if (typeof pirsch !== "undefined") {
+			pirsch("search", {});
+		}
+		
 		await withDbConnections(db, async (conn1, conn2, conn3, conn4) => {
 			try {
 				[cpuModels, datacenters, serverPrices, serverList] = await Promise.all([

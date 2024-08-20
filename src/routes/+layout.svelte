@@ -21,6 +21,10 @@
 		src="https://cloud.umami.is/script.js"
 		data-website-id="896771fd-d90c-4650-b14d-2a0e6218a7aa"
 	></script>
+	<script defer src="https://api.pirsch.io/pa.js"
+		id="pianjs"
+		data-code="R5X9PYTQxsNNMIjmLKGTsfFKf4il1nGW"
+	></script>
 </svelte:head>
 
 <Nav />
