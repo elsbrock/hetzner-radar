@@ -78,7 +78,6 @@
 	async function fetchData(db: AsyncDuckDB, filter: ServerFilter) {
 		console.log("Fetching data with filter:", filter);
 		let queryTime = performance.now();
-		loading = true;
 
 		if (typeof umami !== "undefined") {
 			umami.track("search");
@@ -130,8 +129,18 @@
 		}
 	});
 
+	function debounce(fn: func, delay: number) {
+		let timeoutID: number;
+		return function(...args: any) {
+			clearTimeout(timeoutID);
+			loading = true;
+			timeoutID = setTimeout(() => fn(...args), timeoutID ? delay : 0);
+		};
+	}
+
+	const debouncedFetchData = debounce(fetchData, 500);
 	$: if (!!$db) {
-		fetchData($db, filter);
+		debouncedFetchData($db, filter);
 	}
 
 	let totalOffers = 0;
