@@ -6,6 +6,8 @@ on:
     branches: "main"
   schedule:
     - cron:  '0 0 * * *'
+  pull_request:
+    branches: "main"
 
 jobs:
   build_site:
@@ -50,12 +52,14 @@ jobs:
           npm run build
 
       - name: Upload Artifacts
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           # this should match the `pages` option in your adapter-static options
           path: "build/"
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build_site
     runs-on: ubuntu-latest
 

@@ -1,6 +1,18 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "groupName": "all-minor-patch",
+      "groupSlug": "all-minor-patch",
+      "matchUpdateTypes": ["minor", "patch"],
+      "separateMinorPatch": false
+    }
+  ],
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "auto",
+  "automergeComment": "Merging this PR automatically because all checks are green.",
+  "prCreation": "not-pending",
+  "rebaseWhen": "behind-base-branch"
 }
