@@ -2,6 +2,8 @@
 
 Hetzner Radar is a tool that tracks the prices of Hetzner's [Dedicated Server Auction](https://www.hetzner.com/sb/) over time, helping customers identify the best configurations and prices. While Hetzner's auction site allows filtering by certain criteria, it only provides a snapshot at a given moment. Hetzner Radar aims to enhance this by offering advanced filtering and a comprehensive pricing history. Additionally, we track server volumes and other relevant statistics.
 
+https://github.com/user-attachments/assets/cb49e923-0315-49aa-a3c2-2dbef2ee0596
+
 ## Features
 
 * Track server prices and volumes over time.
