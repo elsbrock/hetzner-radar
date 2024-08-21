@@ -5,8 +5,7 @@
       "matchPackagePatterns": ["*"],
       "groupName": "all-minor-patch",
       "groupSlug": "all-minor-patch",
-      "matchUpdateTypes": ["minor", "patch"],
-      "separateMinorPatch": false
+      "matchUpdateTypes": ["minor", "patch"]
     }
   ],
   "automerge": true,
