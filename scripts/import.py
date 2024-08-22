@@ -24,19 +24,19 @@ CREATE TEMP TABLE server_raw (
     nvme_count INTEGER,
     nvme_drives INTEGER[],
     nvme_size INTEGER,
-    nvme_minsize INTEGER,
+
     sata_count INTEGER,
     sata_drives INTEGER[],
     sata_size INTEGER,
-    sata_minsize INTEGER,
+
     hdd_count INTEGER,
     hdd_drives INTEGER[],
     hdd_size INTEGER,
-    hdd_minsize INTEGER,
     
     with_inic BOOLEAN,
     with_hwr BOOLEAN,
     with_gpu BOOLEAN,
+    with_rps BOOLEAN,
 
     traffic VARCHAR,
     bandwidth INTEGER,
@@ -44,7 +44,8 @@ CREATE TEMP TABLE server_raw (
     price INTEGER,
     fixed_price BOOLEAN,
     
-    next_reduce_timestamp INTEGER
+    next_reduce_timestamp INTEGER,
+    seen TIMESTAMP
 );
 """
 
@@ -74,19 +75,19 @@ insert into server_raw
     array_length(serverDiskData.nvme) as nvme_count,
     serverDiskData.nvme as nvme_drives,
     list_aggregate(serverDiskData.nvme, 'sum') as nvm_size,
-    list_aggregate(serverDiskData.nvme, 'min') as nvm_minsize,
+
     array_length(serverDiskData.sata) as sata_count,
     serverDiskData.sata as sata_drives,
     list_aggregate(serverDiskData.sata, 'sum') as sata_size,
-    list_aggregate(serverDiskData.sata, 'min') as sata_minsize,
+
     array_length(serverDiskData.hdd) as hdd_count,
     serverDiskData.hdd as hdd_drives,
     list_aggregate(serverDiskData.hdd, 'sum') as hdd_size,
-    list_aggregate(serverDiskData.hdd, 'min') as hdd_minsize,
 
     array_contains(specials, 'iNIC') as with_inic,
     array_contains(specials, 'HWR') as with_hwr,
     array_contains(specials, 'GPU') as with_gpu,
+    array_contains(specials, 'RPS') as with_rps,
 
     traffic,
     bandwidth,
@@ -95,7 +96,7 @@ insert into server_raw
     fixed_price,
     
     next_reduce_timestamp - next_reduce as next_reduce_timestamp,
-    --TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen
+    TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen
 
   from read_json('%s', format = 'auto', columns = {
     id: 'UBIGINT',

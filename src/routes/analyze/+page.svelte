@@ -8,7 +8,7 @@
 		NameValuePair,
 		ServerConfiguration,
 		ServerDetail,
-		ServerFilter,
+		ServerFilter as ServerFilterType,
 		ServerLowestPriceStat,
 		ServerPriceStat,
 	} from "$lib/dbapi";
@@ -23,14 +23,14 @@
 		getLowestServerDetailPrices,
 	} from "$lib/dbapi";
 	import { Progressbar } from "flowbite-svelte";
-	import Filter from "$lib/components/Filter.svelte";
+	import ServerFilter from "$lib/components/ServerFilter.svelte";
 	import ServerTable from "$lib/components/ServerTable.svelte";
 	import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
 	import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 	import queryString from "query-string";
 	import { onMount } from "svelte";
 
-	let filter: ServerFilter = {
+	let filter: ServerFilterType = {
 		locationGermany: true,
 		locationFinland: true,
 
@@ -63,6 +63,7 @@
 		extrasINIC: null,
 		extrasHWR: false,
 		extrasGPU: false,
+		extrasRPS: false,
 	};
 
 	let serverList: ServerConfiguration[] = [];
@@ -75,7 +76,7 @@
 
 	let loading = true;
 
-	async function fetchData(db: AsyncDuckDB, filter: ServerFilter) {
+	async function fetchData(db: AsyncDuckDB, filter: ServerFilterType) {
 		console.log("Fetching data with filter:", filter);
 		let queryTime = performance.now();
 
@@ -129,12 +130,12 @@
 		}
 	});
 
-	function debounce(fn: func, delay: number) {
+	function debounce(fn: any, delay: number) {
 		let timeoutID: number;
 		return function(...args: any) {
 			clearTimeout(timeoutID);
 			loading = true;
-			timeoutID = setTimeout(() => fn(...args), timeoutID ? delay : 0);
+			timeoutID = setTimeout(() => fn(...args), timeoutID ? delay : 0) as any;
 		};
 	}
 
@@ -159,7 +160,7 @@
 	<div
 		class="grid min-h-screen grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]"
 	>
-		<Filter bind:filter {datacenters} {cpuModels} />
+		<ServerFilter bind:filter {datacenters} {cpuModels} />
 
 		<main class="flex-grow overflow-y-auto pt-3">
 			<div class="w-full">
