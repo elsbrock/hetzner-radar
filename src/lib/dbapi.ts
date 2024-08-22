@@ -164,6 +164,7 @@ type ServerFilter = {
 	extrasINIC: boolean | null;
 	extrasHWR: boolean | null;
 	extrasGPU: boolean | null;
+	extrasRPS: boolean | null;
 };
 
 function generateFilterQuery(
@@ -256,6 +257,9 @@ function generateFilterQuery(
 	if (filter.extrasHWR !== null) {
 		query.append(SQL` and with_hwr = ${filter.extrasHWR}`);
 	}
+	if (filter.extrasRPS !== null) {
+		query.append(SQL` and with_rps = ${filter.extrasRPS}`);
+	}
 
 	return query;
 }
@@ -291,9 +295,10 @@ async function getPrices(conn: AsyncDuckDBConnection, filter: ServerFilter): Pro
 }
 
 type ServerConfiguration = {
-	with_hwr: any;
-	with_gpu: any;
-	with_inic: any;
+	with_hwr: null | boolean;
+	with_gpu: null | boolean;
+	with_rps: null | boolean;
+	with_inic: null | boolean;
 	cpu: string;
 	ram: string[];
 	ram_size: number;
@@ -321,7 +326,7 @@ async function getConfigurations(
 			sata_drives::JSON as sata_drives,
 			hdd_size,
 			hdd_drives::JSON as sata_drives,
-			with_gpu, with_inic, with_hwr,
+			with_gpu, with_inic, with_hwr, with_rps,
 			min(price) as min_price,
 			count(*) as count,
 			max(next_reduce_timestamp) as last_seen
@@ -332,7 +337,7 @@ async function getConfigurations(
 		group by
             cpu, ram_size, is_ecc, hdd_arr,
 			nvme_size, nvme_drives, sata_size, sata_drives, hdd_size, hdd_drives,
-			with_gpu, with_inic, with_hwr
+			with_gpu, with_inic, with_hwr, with_rps
         order by min(price)`);
 	return getData<ServerConfiguration>(conn, configurations_query);
 }
@@ -359,7 +364,7 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 						sata_drives,
 						hdd_size,
 						hdd_drives,
-						with_gpu, with_inic, with_hwr,
+						with_gpu, with_inic, with_hwr, with_rps,
 						max(next_reduce_timestamp) as last_seen
 				FROM
 					server
@@ -374,6 +379,7 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 					AND with_gpu = ${config.with_gpu}
 					AND with_inic = ${config.with_inic}
 					AND with_hwr = ${config.with_hwr}
+					AND with_rps = ${config.with_rps}
 				GROUP BY
 					information, cpu, ram, ram_size, is_ecc,
 					hdd_arr,
@@ -383,7 +389,7 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 					sata_drives,
 					hdd_size,
 					hdd_drives,
-					with_gpu, with_inic, with_hwr
+					with_gpu, with_inic, with_hwr, with_rps
 			)
 	`;
 	return getData<ServerDetail>(conn, query);
@@ -410,6 +416,7 @@ async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: Server
 			AND with_gpu = ${config.with_gpu}
 			AND with_inic = ${config.with_inic}
 			AND with_hwr = ${config.with_hwr}
+			AND with_rps = ${config.with_rps}
 		GROUP BY
 			(next_reduce_timestamp // (3600*24)) * (3600*24)
         ORDER BY
@@ -442,6 +449,7 @@ async function getLowestServerDetailPrices(conn: AsyncDuckDBConnection, config: 
 				AND with_gpu = ${config.with_gpu}
 				AND with_inic = ${config.with_inic}
 				AND with_hwr = ${config.with_hwr}
+				AND with_rps = ${config.with_rps}
 			ORDER BY seen
 		),
 		

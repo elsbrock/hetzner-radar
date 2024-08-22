@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
-	import { faShareNodes } from '@fortawesome/free-solid-svg-icons';
+	import { faBoxesStacked, faGlobe, faHardDrive, faMemory, faMicrochip, faShareNodes, faTags } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { filesize, type FileSizeOptions } from 'filesize';
 	import { Label, Tooltip } from 'flowbite-svelte';
@@ -71,7 +71,10 @@
 		<!-- float right-->
 		<ul class="space-y-2 font-medium">
 			<li class="flex justify-between items-center">
-				<h2>Location</h2>
+				<h2><FontAwesomeIcon
+					class="w-4 h-4 me-1"
+					icon={faGlobe}
+				/> Location</h2>
 				<Tooltip triggeredBy="#share-filter" placement="bottom" trigger="hover">Copy link to clipboard</Tooltip>
 				<button
 					id="share-filter"
@@ -95,7 +98,10 @@
 					>Finland</Toggle
 				>
 			</li>
-			<li><h2>Datacenter</h2></li>
+			<li><h2><FontAwesomeIcon
+				class="w-4 h-4 me-2"
+				icon={faBoxesStacked}
+			/>Datacenter</h2></li>
 			<li>
 				<MultiSelect
 					class="text-sm"
@@ -108,7 +114,10 @@
 				<hr />
 			</li>
 			<li>
-				<h2>CPU</h2>
+				<h2><FontAwesomeIcon
+					class="w-4 h-4 me-2"
+					icon={faMicrochip}
+				/>CPU</h2>
 			</li>
 			<li><Label>Vendor</Label></li>
 			<li>
@@ -137,7 +146,10 @@
 				<hr />
 			</li>
 			<li>
-				<h2>Memory</h2>
+				<h2><FontAwesomeIcon
+					class="w-4 h-4 me-2"
+					icon={faMemory}
+				/>Memory</h2>
 			</li>
 			<li class="flex justify-between">
 				<Label>Size</Label>
@@ -175,7 +187,10 @@
 				<hr />
 			</li>
 			<li>
-				<h2>Disks</h2>
+				<h2><FontAwesomeIcon
+					class="w-4 h-4 me-2"
+					icon={faHardDrive}
+				/>Disks</h2>
 			</li>
 			<li>
 				<h3>SSDs (NVMe)</h3>
@@ -238,7 +253,10 @@
 				<hr />
 			</li>
 			<li>
-				<h2>Extras</h2>
+				<h2><FontAwesomeIcon
+					class="w-4 h-4 me-2"
+					icon={faTags}
+				/>Extras</h2>
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
@@ -307,6 +325,30 @@
 								size="xs"
 								on:click={() => (filter.extrasGPU = null)}
 								checked={filter.extrasGPU === null}>any</Button
+							>
+						</ButtonGroup>
+					</div>
+				</div>
+			</li>
+			<li>
+				<div class="flex items-center justify-between">
+					<Label>Redundant Power Supply</Label>
+					<div>
+						<ButtonGroup class="flex">
+							<Button
+								size="xs"
+								on:click={() => (filter.extrasRPS = true)}
+								checked={filter.extrasRPS === true}>yes</Button
+							>
+							<Button
+								size="xs"
+								on:click={() => (filter.extrasRPS = false)}
+								checked={filter.extrasRPS === false}>no</Button
+							>
+							<Button
+								size="xs"
+								on:click={() => (filter.extrasRPS = null)}
+								checked={filter.extrasRPS === null}>any</Button
 							>
 						</ButtonGroup>
 					</div>
