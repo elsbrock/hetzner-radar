@@ -19,14 +19,13 @@
 		>.
 	</p>
 
-	<h3 class="mb-2 text-xl font-semibold">1.2. Umami Analytics</h3>
+	<h3 class="mb-2 text-xl font-semibold">1.2. Pirsch Analytics</h3>
 	<p class="mb-4 text-sm text-gray-600">
-		We use Umami, a privacy-focused analytics service, to gather insights into how visitors use our
-		site. Umami does not track personal data or use cookies. The analytics data collected by Umami
-		is stored in Europe, in compliance with GDPR. For more details, please review <a
-			href="https://umami.is/privacy"
-			class="text-blue-500 hover:underline">Umami's privacy policy</a
-		>.
+		We use Pirsch, a privacy-focused analytics service, to gather insights into how visitors use our site.
+		Pirsch is designed to respect user privacy by not using cookies or collecting personal data. The analytics data
+		collected by Pirsch is stored in Germany, in compliance with GDPR. For more details, please review <a
+			href="https://pirsch.io/privacy"
+			class="text-blue-500 hover:underline">Pirsch's privacy policy</a>.
 	</p>
 
 	<h2 class="mb-4 mt-6 text-2xl font-semibold">2. Cookies</h2>
@@ -36,7 +35,7 @@
 
 	<h2 class="mb-4 mt-6 text-2xl font-semibold">3. Data Usage</h2>
 	<p class="mb-4 text-sm text-gray-600">
-		The data collected via GitHub Pages and Umami is used solely to monitor the performance of our
+		The data collected via GitHub Pages and Pirsch is used solely to monitor the performance of our
 		website, understand user interaction, and improve the user experience. We do not use this data
 		for any commercial purposes, nor do we share it with third parties.
 	</p>

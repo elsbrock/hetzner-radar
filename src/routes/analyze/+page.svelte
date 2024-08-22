@@ -1,5 +1,4 @@
 <script context="module" lang="ts">
-	declare let umami: any;
 	declare let pirsch: any;
 </script>
 
@@ -80,13 +79,10 @@
 		console.log("Fetching data with filter:", filter);
 		let queryTime = performance.now();
 
-		if (typeof umami !== "undefined") {
-			umami.track("search");
-		}
 		if (typeof pirsch !== "undefined") {
 			pirsch("search", {});
 		}
-		
+
 		await withDbConnections(db, async (conn1, conn2, conn3, conn4) => {
 			try {
 				[cpuModels, datacenters, serverPrices, serverList] = await Promise.all([
@@ -97,9 +93,9 @@
 				]);
 
 				queryTime = performance.now() - queryTime;
-			} catch (error) {
+			} catch (error: Error | any) {
 				console.error("Error fetching data:", error);
-				umami.track("search-error");
+				pirsch("search-error", { error: error?.message });
 			} finally {
 				loading = false;
 			}
