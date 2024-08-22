@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-
+	import { Pagination } from 'flowbite-svelte';
 	import {
 		Badge,
 		ImagePlaceholder,
@@ -14,7 +14,7 @@
 		TimelineItem
 	} from 'flowbite-svelte';
 
-	import type { ServerConfiguration, ServerDetail, ServerPriceStat, ServerLowestPriceStat	} from '$lib/dbapi';
+	import type { ServerConfiguration, ServerDetail, ServerPriceStat, ServerLowestPriceStat } from '$lib/dbapi';
 
 	import { faLightbulb, faServer } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -28,7 +28,18 @@
 	export let serverDetails: null | ServerDetail[] = null;
 	export let serverDetailPrices: null | ServerPriceStat[] = null;
 	export let lowestServerDetailPrices: null | ServerLowestPriceStat[] = null;
+	let serverDetailAverageVolume: number = 0;
+
 	export let loading: boolean = true;
+	export let itemsPerPage: number = 1;
+
+	const dispatch = createEventDispatcher();
+	let openRow: number | null = null;
+
+	let currentPage: number = 1;
+	let paginatedData: ServerConfiguration[] = [];
+	let totalPages: number = 0;
+	let pages: any = [];
 
 	function pricePerTB(price: number, capacity: number) {
 		return capacity > 0 ? (price / (capacity / 1000)).toFixed(2) : 0;
@@ -43,25 +54,56 @@
 		);
 	}
 
+	function paginateData() {
+		const start = (currentPage - 1) * itemsPerPage;
+		const end = start + itemsPerPage;
+		paginatedData = data.slice(start, end);
+	}
+
+	function previousPage() {
+		if (currentPage > 1) {
+			currentPage--;
+			paginateData();
+		}
+		console.log('Previous page:', currentPage);
+	}
+
+	function nextPage() {
+		if (currentPage * itemsPerPage < data.length) {
+			currentPage++;
+			paginateData();
+		}
+		console.log('Next page:', currentPage);
+	}
+
+	function goToPage(page: number) {
+		console.log('Go to page:', page);
+		currentPage = page;
+		paginateData();
+	}
+
+	function toggleRow(i: number) {
+		openRow = openRow === i ? null : i;
+		serverDetails = null;
+		dispatch('serverDetails', i);
+	}
+
 	$: serverDetailAverageVolume = getAverageSupply(serverDetailPrices);
+
 	$: if (data) {
+		totalPages = Math.ceil(data.length / itemsPerPage);
+		console.log('Total pages:', totalPages);
+		pages = Array.from({ length: totalPages }, (_, i) => ({ name: (i + 1).toString() }));
+		console.log('Pages:', pages);
+		paginateData();
+
 		openRow = null;
 		serverDetails = null;
 		serverDetailPrices = null;
 	}
-
-	const dispatch = createEventDispatcher();
-	let openRow: number | null = null;
-	const toggleRow = (i: number) => {
-		openRow = openRow === i ? null : i;
-		serverDetails = null;
-		dispatch('serverDetails', i);
-	};
 </script>
 
-<h3
-	class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
->
+<h3 class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
 	Configurations
 	<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
 		Below is a list of unique server configurations we have observed over time. It includes their
@@ -70,6 +112,7 @@
 		higher. You can see the bid volume in the chart above.
 	</p>
 </h3>
+
 <Table hoverable={true}>
 	<TableHead>
 		<TableHeadCell>Lowest Price</TableHeadCell>
@@ -85,29 +128,27 @@
 	<TableBody>
 		{#if loading}
 			<TableBodyRow>
-				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
-					>Loading data…</TableBodyCell
-				>
+				<TableBodyCell colspan="10" style="background-color: initial; color: inherit">
+					Loading data…
+				</TableBodyCell>
 			</TableBodyRow>
 		{:else if data.length === 0}
 			<TableBodyRow>
-				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
-					>No servers matching configuration found.</TableBodyCell
-				>
+				<TableBodyCell colspan="10" style="background-color: initial; color: inherit">
+					No servers matching configuration found.
+				</TableBodyCell>
 			</TableBodyRow>
 		{:else}
 			<TableBodyRow>
-				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
-					>We have observed {data.length} unique server configurations matching your criteria.</TableBodyCell
-				>
+				<TableBodyCell colspan="10" style="background-color: initial; color: inherit">
+					We have observed {data.length} unique server configurations matching your criteria.
+				</TableBodyCell>
 			</TableBodyRow>
-			{#each data as device, i}
-				<TableBodyRow on:click={() => toggleRow(i)} class="cursor-pointer">
+			{#each paginatedData as device, i}
+				<TableBodyRow on:click={() => toggleRow(i + (currentPage - 1) * itemsPerPage)} class="cursor-pointer">
 					<TableBodyCell>€{device.min_price}</TableBodyCell>
 					<TableBodyCell>€{(device.min_price / device.ram_size).toFixed(2)}</TableBodyCell>
-					<TableBodyCell
-						>€{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}</TableBodyCell
-					>
+					<TableBodyCell>€{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}</TableBodyCell>
 					<TableBodyCell>€{pricePerTB(device.min_price, device.hdd_size)}</TableBodyCell>
 					<TableBodyCell>{device.cpu}</TableBodyCell>
 					<TableBodyCell>{device.ram_size}GB</TableBodyCell>
@@ -133,17 +174,13 @@
 					</TableBodyCell>
 					<TableBodyCell>
 						{dayjs.unix(device.last_seen).fromNow()}<br />
-						<span class="light-gray text-xs"
-							>{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}</span
-						>
+						<span class="light-gray text-xs">{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}</span>
 					</TableBodyCell>
 				</TableBodyRow>
-				{#if openRow === i}
+				{#if openRow === i + (currentPage - 1) * itemsPerPage}
 					<TableBodyRow style="background-color: initial; color: inherit">
 						<TableBodyCell colspan="9" class="border-l-8 border-l-[5px] p-1">
-							<div
-								class="y-overflow grid grid-cols-[1fr_2fr_2fr] gap-3 p-3 pr-3 md:grid-cols-[1fr_2fr_3fr]"
-							>
+							<div class="y-overflow grid grid-cols-[1fr_2fr_2fr] gap-3 p-3 pr-3 md:grid-cols-[1fr_2fr_3fr]">
 								{#if serverDetails === null}
 									<div class="px-2 py-3">
 										<ImagePlaceholder />
@@ -205,3 +242,12 @@
 		{/if}
 	</TableBody>
 </Table>
+
+{#if !loading && data.length > 0}
+	<Pagination
+		{pages}
+		on:previous={previousPage}
+		on:next={nextPage}
+		on:click={e => goToPage(e.detail)}
+	/>
+{/if}
