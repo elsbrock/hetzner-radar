@@ -110,7 +110,7 @@ function getRawQuery(query: SQLStatement): string {
 
 async function getData<T>(conn: AsyncDuckDBConnection, query: SQLStatement): Promise<T[]> {
 	console.debug(getRawQuery(query));
-	let stmt: AsyncPreparedStatement;
+	let stmt: null|AsyncPreparedStatement = null;
 	let results: T[] = [];
 	try {
 		const startTime = performance.now();
@@ -139,23 +139,16 @@ type ServerFilter = {
 	cpuIntel: boolean;
 	cpuAMD: boolean;
 
-	ramInternalSizeLower: number;
-	ramInternalSizeUpper: number;
+	ramInternalSize: [number, number];
 
-	ssdNvmeCountLower: number;
-	ssdNvmeCountUpper: number;
-	ssdNvmeInternalSizeLower: number;
-	ssdNvmeInternalSizeUpper: number;
+	ssdNvmeCount: [number, number];
+	ssdNvmeInternalSize: [number, number];
 
-	ssdSataCountLower: number;
-	ssdSataCountUpper: number;
-	ssdSataInternalSizeLower: number;
-	ssdSataInternalSizeUpper: number;
+	ssdSataCount: [number, number];
+	ssdSataInternalSize: [number, number];
 
-	hddCountLower: number;
-	hddCountUpper: number;
-	hddInternalSizeLower: number;
-	hddInternalSizeUpper: number;
+	hddCount: [number, number];
+	hddInternalSize: [number, number];
 
 	selectedDatacenters: string[];
 	selectedCpuModels: string[];
@@ -227,24 +220,24 @@ function generateFilterQuery(
 		query.append(SQL` and is_ecc = ${filter.extrasECC}`);
 	}
 
-	query.append(SQL` and ram_size >= ${Math.pow(2, filter.ramInternalSizeLower)}`);
-	query.append(SQL` and ram_size <= ${Math.pow(2, filter.ramInternalSizeUpper)}`);
+	query.append(SQL` and ram_size >= ${Math.pow(2, filter.ramInternalSize[0])}`);
+	query.append(SQL` and ram_size <= ${Math.pow(2, filter.ramInternalSize[1])}`);
 
 	// disk data
-	query.append(SQL` and nvme_count >= ${filter.ssdNvmeCountLower}`);
-	query.append(SQL` and nvme_count <= ${filter.ssdNvmeCountUpper}`);
-	query.append(SQL` and sata_count >= ${filter.ssdSataCountLower}`);
-	query.append(SQL` and sata_count <= ${filter.ssdSataCountUpper}`);
-	query.append(SQL` and hdd_count >= ${filter.hddCountLower}`);
-	query.append(SQL` and hdd_count <= ${filter.hddCountUpper}`);
+	query.append(SQL` and nvme_count >= ${filter.ssdNvmeCount[0]}`);
+	query.append(SQL` and nvme_count <= ${filter.ssdNvmeCount[1]}`);
+	query.append(SQL` and sata_count >= ${filter.ssdSataCount[0]}`);
+	query.append(SQL` and sata_count <= ${filter.ssdSataCount[1]}`);
+	query.append(SQL` and hdd_count >= ${filter.hddCount[0]}`);
+	query.append(SQL` and hdd_count <= ${filter.hddCount[1]}`);
 	query.append(
-		SQL` and array_length(array_filter(nvme_drives, x -> x >= ${Math.pow(2, filter.ssdNvmeInternalSizeLower)} AND x <= ${Math.pow(2, filter.ssdNvmeInternalSizeUpper)})) = array_length(nvme_drives)`
+		SQL` and array_length(array_filter(nvme_drives, x -> x >= ${Math.pow(2, filter.ssdNvmeInternalSize[0])} AND x <= ${Math.pow(2, filter.ssdNvmeInternalSize[1])})) = array_length(nvme_drives)`
 	);
 	query.append(
-		SQL` and array_length(array_filter(sata_drives, x -> x >= ${Math.pow(2, filter.ssdSataInternalSizeLower)} AND x <= ${Math.pow(2, filter.ssdSataInternalSizeUpper)})) = array_length(sata_drives)`
+		SQL` and array_length(array_filter(sata_drives, x -> x >= ${Math.pow(2, filter.ssdSataInternalSize[0])} AND x <= ${Math.pow(2, filter.ssdSataInternalSize[1])})) = array_length(sata_drives)`
 	);
 	query.append(
-		SQL` and array_length(array_filter(hdd_drives, x -> x >= ${Math.pow(2, filter.hddInternalSizeLower)} AND x <= ${Math.pow(2, filter.hddInternalSizeUpper)})) = array_length(hdd_drives)`
+		SQL` and array_length(array_filter(hdd_drives, x -> x >= ${Math.pow(2, filter.hddInternalSize[0])} AND x <= ${Math.pow(2, filter.hddInternalSize[1])})) = array_length(hdd_drives)`
 	);
 
 	// // extras

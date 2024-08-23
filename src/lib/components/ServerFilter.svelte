@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
+	import RangeSlider from "svelte-range-slider-pips";
 	import { faBoxesStacked, faGlobe, faHardDrive, faMemory, faMicrochip, faShareNodes, faTags } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { filesize, type FileSizeOptions } from 'filesize';
 	import { Label, Tooltip } from 'flowbite-svelte';
-	import { Range } from 'flowbite-svelte';
 	import { MultiSelect } from 'flowbite-svelte';
 	import { Toggle } from 'flowbite-svelte';
 	import { ButtonGroup, Button } from 'flowbite-svelte';
@@ -13,6 +13,11 @@
 	const filesizeOptions: FileSizeOptions = {
 		base: 2,
 		round: 0
+	};
+
+	const springValues = {
+		stiffness: 1,
+		damping: 1,
 	};
 
 	export let filter: ServerFilter;
@@ -31,38 +36,51 @@
 	}
 
 	$: ramSizeLower = filesize(
-		Math.pow(2, filter.ramInternalSizeLower) * Math.pow(1024, 3),
+		Math.pow(2, filter.ramInternalSize[0]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: ramSizeUpper = filesize(
-		Math.pow(2, filter.ramInternalSizeUpper) * Math.pow(1024, 3),
+		Math.pow(2, filter.ramInternalSize[1]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: ssdNvmeSizeLower = filesize(
-		Math.pow(2, filter.ssdNvmeInternalSizeLower) * Math.pow(1024, 3),
+		Math.pow(2, filter.ssdNvmeInternalSize[0]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: ssdNvmeSizeUpper = filesize(
-		Math.pow(2, filter.ssdNvmeInternalSizeUpper) * Math.pow(1024, 3),
+		Math.pow(2, filter.ssdNvmeInternalSize[1]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: ssdSataSizeLower = filesize(
-		Math.pow(2, filter.ssdSataInternalSizeLower) * Math.pow(1024, 3),
+		Math.pow(2, filter.ssdSataInternalSize[0]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: ssdSataSizeUpper = filesize(
-		Math.pow(2, filter.ssdSataInternalSizeUpper) * Math.pow(1024, 3),
+		Math.pow(2, filter.ssdSataInternalSize[1]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: hddSizeLower = filesize(
-		Math.pow(2, filter.hddInternalSizeLower) * Math.pow(1024, 3),
+		Math.pow(2, filter.hddInternalSize[0]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 	$: hddSizeUpper = filesize(
-		Math.pow(2, filter.hddInternalSizeUpper) * Math.pow(1024, 3),
+		Math.pow(2, filter.hddInternalSize[1]) * Math.pow(1024, 3),
 		filesizeOptions
 	);
 </script>
+
+<style>
+	:root {
+	  --tw-primary-600: theme('colors.primary.600');
+	}
+
+	:root {
+	  --range-handle-inactive: var(--tw-primary-600);
+	  --range-handle: var(--tw-primary-600);
+	  --range-handle-focus: var(--tw-primary-600);
+	  --range-handle-border: var(--tw-primary-600);
+	}
+</style>
 
 <aside
 	class="border-r border-gray-200 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto"
@@ -119,7 +137,7 @@
 					icon={faMicrochip}
 				/>CPU</h2>
 			</li>
-			<li><Label>Vendor</Label></li>
+			<li><Label class="text-sm">Vendor</Label></li>
 			<li>
 				<Toggle bind:checked={filter.cpuIntel} value={filter.cpuIntel ? 'on' : 'off'}>Intel</Toggle>
 			</li>
@@ -127,7 +145,7 @@
 				<Toggle bind:checked={filter.cpuAMD} value={filter.cpuAMD ? 'on' : 'off'}>AMD</Toggle>
 			</li>
 			<!-- <li class="flex justify-between">
-            <Label>Count</Label>
+            <Label class="text-sm">Count</Label>
             <span class="ml-2 text-right">{filter.cpuCount}</span>
         </li>
         <li>
@@ -152,16 +170,15 @@
 				/>Memory</h2>
 			</li>
 			<li class="flex justify-between">
-				<Label>Size</Label>
+				<Label class="text-sm">Size</Label>
 				<span class="ml-2 text-right">{ramSizeLower} – {ramSizeUpper}</span>
 			</li>
 			<li>
-				<Range min="4" max="10" bind:value={filter.ramInternalSizeLower} />
-				<Range min="4" max="10" bind:value={filter.ramInternalSizeUpper} />
+				<RangeSlider bind:values={filter.ramInternalSize} min={4} max={10} hoverable={false} {springValues} pips />
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
-					<Label>ECC</Label>
+					<Label class="text-sm">ECC</Label>
 					<div>
 						<ButtonGroup class="flex">
 							<Button
@@ -196,58 +213,52 @@
 				<h3>SSDs (NVMe)</h3>
 			</li>
 			<li class="flex justify-between">
-				<Label>Devices</Label>
-				<span class="ml-2 text-right">{filter.ssdNvmeCountLower} – {filter.ssdNvmeCountUpper}</span>
+				<Label class="text-sm">Devices</Label>
+				<span class="ml-2 text-right">{filter.ssdNvmeCount[0]} – {filter.ssdNvmeCount[1]}</span>
 			</li>
 			<li>
-				<Range min="0" max="5" bind:value={filter.ssdNvmeCountLower} step="1" />
-				<Range min="0" max="5" bind:value={filter.ssdNvmeCountUpper} step="1" />
+				<RangeSlider bind:values={filter.ssdNvmeCount} min={0} max={5} hoverable={false} {springValues} pips />
 			</li>
 			<li class="flex justify-between">
-				<Label>Size</Label>
+				<Label class="text-sm">Size</Label>
 				<span class="ml-2 text-right">{ssdNvmeSizeLower} – {ssdNvmeSizeUpper}</span>
 			</li>
 			<li>
-				<Range min="8" max="14" bind:value={filter.ssdNvmeInternalSizeLower} step="1" />
-				<Range min="8" max="14" bind:value={filter.ssdNvmeInternalSizeUpper} step="1" />
+				<RangeSlider bind:values={filter.ssdNvmeInternalSize} min={8} max={14} hoverable={false} {springValues} pips />
 			</li>
 			<li>
 				<h3>SSDs (SATA)</h3>
 			</li>
 			<li class="flex justify-between">
-				<Label>Devices</Label>
-				<span class="ml-2 text-right">{filter.ssdSataCountLower} – {filter.ssdSataCountUpper}</span>
+				<Label class="text-sm">Devices</Label>
+				<span class="ml-2 text-right">{filter.ssdSataCount[0]} – {filter.ssdSataCount[1]}</span>
 			</li>
 			<li>
-				<Range min="0" max="5" bind:value={filter.ssdSataCountLower} step="1" />
-				<Range min="0" max="5" bind:value={filter.ssdSataCountUpper} step="1" />
+				<RangeSlider bind:values={filter.ssdSataCount} min={0} max={5} hoverable={false} {springValues} pips />
 			</li>
 			<li class="flex justify-between">
-				<Label>Size</Label>
+				<Label class="text-sm">Size</Label>
 				<span class="ml-2 text-right">{ssdSataSizeLower} – {ssdSataSizeUpper}</span>
 			</li>
 			<li>
-				<Range min="8" max="14" bind:value={filter.ssdSataInternalSizeLower} step="1" />
-				<Range min="8" max="14" bind:value={filter.ssdSataInternalSizeUpper} step="1" />
+				<RangeSlider bind:values={filter.ssdSataInternalSize} min={8} max={14} hoverable={false} {springValues} pips />
 			</li>
 			<li>
 				<h3>HDDs</h3>
 			</li>
 			<li class="flex justify-between">
-				<Label>Devices</Label>
-				<span class="ml-2 text-right">{filter.hddCountLower} – {filter.hddCountUpper}</span>
+				<Label class="text-sm">Devices</Label>
+				<span class="ml-2 text-right">{filter.hddCount[0]} – {filter.hddCount[1]}</span>
 			</li>
 			<li>
-				<Range min="0" max="5" bind:value={filter.hddCountLower} step="1" />
-				<Range min="0" max="5" bind:value={filter.hddCountUpper} step="1" />
+				<RangeSlider bind:values={filter.hddCount} min={0} max={5} hoverable={false} {springValues} pips />
 			</li>
 			<li class="flex justify-between">
-				<Label>HDD Size</Label>
+				<Label class="text-sm">HDD Size</Label>
 				<span class="ml-2 text-right">{hddSizeLower} – {hddSizeUpper}</span>
 			</li>
 			<li>
-				<Range min="8" max="15" bind:value={filter.hddInternalSizeLower} step="1" />
-				<Range min="8" max="15" bind:value={filter.hddInternalSizeUpper} step="1" />
+				<RangeSlider bind:values={filter.hddInternalSize} min={8} max={14} hoverable={false} {springValues} pips />
 			</li>
 			<li>
 				<hr />
@@ -260,7 +271,7 @@
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
-					<Label>Intel NIC</Label>
+					<Label class="text-sm">Intel NIC</Label>
 					<div>
 						<ButtonGroup class="flex">
 							<Button
@@ -284,7 +295,7 @@
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
-					<Label>Hardware RAID</Label>
+					<Label class="text-sm">Hardware RAID</Label>
 					<div>
 						<ButtonGroup class="flex">
 							<Button
@@ -308,7 +319,7 @@
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
-					<Label>GPU</Label>
+					<Label class="text-sm">GPU</Label>
 					<div>
 						<ButtonGroup class="flex">
 							<Button
@@ -332,7 +343,7 @@
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
-					<Label>Redundant Power Supply</Label>
+					<Label class="text-sm">Redundant Power Supply</Label>
 					<div>
 						<ButtonGroup class="flex">
 							<Button

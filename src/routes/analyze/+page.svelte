@@ -38,23 +38,16 @@
 		cpuIntel: true,
 		cpuAMD: true,
 
-		ramInternalSizeLower: 4,
-		ramInternalSizeUpper: 6,
+		ramInternalSize: [4, 6],
 
-		ssdNvmeCountLower: 2,
-		ssdNvmeCountUpper: 5,
-		ssdNvmeInternalSizeLower: 8,
-		ssdNvmeInternalSizeUpper: 12,
+		ssdNvmeCount: [0, 2],
+		ssdNvmeInternalSize: [8, 12],
 
-		ssdSataCountLower: 0,
-		ssdSataCountUpper: 5,
-		ssdSataInternalSizeLower: 8,
-		ssdSataInternalSizeUpper: 12,
+		ssdSataCount: [0, 5],
+		ssdSataInternalSize: [8, 12],
 
-		hddCountLower: 0,
-		hddCountUpper: 5,
-		hddInternalSizeLower: 8,
-		hddInternalSizeUpper: 12,
+		hddCount: [0, 5],
+		hddInternalSize: [8, 12],
 
 		selectedDatacenters: [],
 		selectedCpuModels: [],
