@@ -125,7 +125,7 @@ CREATE OR REPLACE TABLE server AS
 WITH CTE AS (
     SELECT
         *,
-        ROW_NUMBER() OVER (PARTITION BY id, next_reduce_timestamp ORDER BY id) as row_num
+        ROW_NUMBER() OVER (PARTITION BY id, date_trunc('d', to_timestamp(next_reduce_timestamp)::timestamp) ORDER BY id) as row_num
     FROM
         server_raw
 )
