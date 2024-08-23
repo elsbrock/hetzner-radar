@@ -44,7 +44,6 @@ CREATE TEMP TABLE server_raw (
     price INTEGER,
     fixed_price BOOLEAN,
     
-    next_reduce_timestamp INTEGER,
     seen TIMESTAMP
 );
 """
@@ -95,7 +94,6 @@ insert into server_raw
     price,
     fixed_price,
     
-    next_reduce_timestamp - next_reduce as next_reduce_timestamp,
     TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen
 
   from read_json('%s', format = 'auto', columns = {
@@ -125,7 +123,7 @@ CREATE OR REPLACE TABLE server AS
 WITH CTE AS (
     SELECT
         *,
-        ROW_NUMBER() OVER (PARTITION BY id, date_trunc('d', to_timestamp(next_reduce_timestamp)::timestamp) ORDER BY id) as row_num
+        ROW_NUMBER() OVER (PARTITION BY id, date_trunc('d', seen) ORDER BY id) as row_num
     FROM
         server_raw
 )

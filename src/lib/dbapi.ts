@@ -273,7 +273,7 @@ type ServerPriceStat = {
 	max_price: number;
 	count: number;
 	mean_price: number;
-	next_reduce_timestamp: number;
+	seen: number;
 };
 
 async function getPrices(conn: AsyncDuckDBConnection, filter: ServerFilter): Promise<ServerPriceStat[]> {
@@ -284,13 +284,13 @@ async function getPrices(conn: AsyncDuckDBConnection, filter: ServerFilter): Pro
 			max(price) as max_price,
 			count(distinct id)::int as count,
 			round(mean(price))::int as mean_price,
-			(next_reduce_timestamp // (3600*24)) * (3600*24) as next_reduce_timestamp
+			extract('epoch' from date_trunc('d', seen))::int as seen
         from
         	server
         where`;
 	prices_query.append(prices_filter_query)
-		.append(SQL` group by (next_reduce_timestamp // (3600*24)) * (3600*24)
-            order by next_reduce_timestamp`);
+		.append(SQL` group by extract('epoch' from date_trunc('d', seen))::int
+            order by seen`);
 	return getData<ServerPriceStat>(conn, prices_query);
 }
 
@@ -329,7 +329,7 @@ async function getConfigurations(
 			with_gpu, with_inic, with_hwr, with_rps,
 			min(price) as min_price,
 			count(*) as count,
-			max(next_reduce_timestamp) as last_seen
+			extract('epoch' from max(seen)) as last_seen
         from
         	server
         where`;
@@ -365,7 +365,7 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 						hdd_size,
 						hdd_drives,
 						with_gpu, with_inic, with_hwr, with_rps,
-						max(next_reduce_timestamp) as last_seen
+						max(seen) as last_seen
 				FROM
 					server
 				WHERE
@@ -402,7 +402,7 @@ async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: Server
 			max(price) as max_price,
 			count(distinct id)::int as count,
 			round(mean(price))::int as mean_price,
-			(next_reduce_timestamp // (3600*24)) * (3600*24) as next_reduce_timestamp
+			EXTRACT(epoch FROM date_trunc('d', seen))::int as seen
 		FROM
 			server
 		WHERE
@@ -418,9 +418,9 @@ async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: Server
 			AND with_hwr = ${config.with_hwr}
 			AND with_rps = ${config.with_rps}
 		GROUP BY
-			(next_reduce_timestamp // (3600*24)) * (3600*24)
+			EXTRACT(epoch FROM date_trunc('d', seen))::int
         ORDER BY
-			next_reduce_timestamp
+			EXTRACT(epoch FROM date_trunc('d', seen))::int
 	`;
 	return getData<ServerPriceStat>(conn, query);
 }
@@ -436,7 +436,7 @@ async function getLowestServerDetailPrices(conn: AsyncDuckDBConnection, config: 
 		  WITH price_data AS (
 			SELECT 
 				price,
-				to_timestamp(next_reduce_timestamp)::timestamp as seen
+				seen
 			FROM server
 			WHERE
 				cpu = ${config.cpu}
@@ -542,7 +542,7 @@ async function getRamPriceStats(conn: AsyncDuckDBConnection, withECC?: boolean, 
 			x, min(price_per_gb) as y
 		from (
 			select
-				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
 				price / ram_size as price_per_gb
 			from
 				server`;
@@ -574,7 +574,7 @@ async function getDiskPriceStats(
 				x, min(price_per_tb) as y
 			from (
 				select
-					(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+					EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
 					price / (${diskType}_size/1024) as price_per_tb
 				from
 					server
@@ -597,7 +597,7 @@ async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalSt
 			x, min(price) as y
 		from (
 			select
-				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
 				price
 			from
 				server
@@ -618,7 +618,7 @@ async function getCPUVendorPriceStats(conn: AsyncDuckDBConnection, vendor: strin
 			x, min(price) as y
 		from (
 			select
-				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
 				price
 			from
 				server
@@ -643,7 +643,7 @@ async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Pr
 			x, count(distinct id)::int as y
 		from (
 			select
-				(next_reduce_timestamp // (3600*24)) * (3600*24) as x,
+				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
 				id
 			from
 				server

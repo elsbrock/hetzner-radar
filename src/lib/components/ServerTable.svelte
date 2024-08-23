@@ -134,7 +134,7 @@
 					<TableBodyCell>
 						{dayjs.unix(device.last_seen).fromNow()}<br />
 						<span class="light-gray text-xs"
-							>{dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}</span
+							>{dayjs.unix(device.last_seen).format('MM.DD.YYYY HH:mm')}</span
 						>
 					</TableBodyCell>
 				</TableBodyRow>

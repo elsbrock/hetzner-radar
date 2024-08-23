@@ -43,7 +43,7 @@
 	}
 
 	function getTimestamps(data: ServerPriceStat) {
-		return [...new Set(data.map((d) => new Date(d.next_reduce_timestamp * 1000)))];
+		return [...new Set(data.map((d) => new Date(d.seen * 1000)))];
 	}
 
 	function createXScale(timestamps, width, margin) {
@@ -133,7 +133,7 @@
 			.append('rect')
 			.attr('class', 'volume-bar')
 			.attr('x', (d, i) => {
-				const xPos = xScale(new Date(d.next_reduce_timestamp * 1000)) - barWidth / 2;
+				const xPos = xScale(new Date(d.seen * 1000)) - barWidth / 2;
 				// Ensure bars don't exceed the plot area
 				return Math.max(margin.left, Math.min(xPos, width - margin.right - barWidth));
 			})
@@ -149,32 +149,32 @@
 
 		const areaMinMean = d3
 			.area()
-			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
+			.x((d) => xScale(new Date(d.seen * 1000)))
 			.y0((d) => yScale(d.min_price))
 			.y1((d) => yScale(d.mean_price));
 
 		const areaMeanMax = d3
 			.area()
-			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
+			.x((d) => xScale(new Date(d.seen * 1000)))
 			.y0((d) => yScale(d.mean_price))
 			.y1((d) => yScale(d.max_price));
 
 		const lineMean = d3
 			.line()
 			.curve(d3.curveMonotoneX)
-			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
+			.x((d) => xScale(new Date(d.seen * 1000)))
 			.y((d) => yScale(d.mean_price));
 
 		const lineMin = d3
 			.line()
 			.curve(d3.curveMonotoneX)
-			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
+			.x((d) => xScale(new Date(d.seen * 1000)))
 			.y((d) => yScale(d.min_price));
 
 		const lineMax = d3
 			.line()
 			.curve(d3.curveMonotoneX)
-			.x((d) => xScale(new Date(d.next_reduce_timestamp * 1000)))
+			.x((d) => xScale(new Date(d.seen * 1000)))
 			.y((d) => yScale(d.max_price));
 
 		d3.select(svg)
