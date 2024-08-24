@@ -9,6 +9,7 @@
 		faHandHoldingDollar
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+  import Radar from '$lib/components/Radar.svelte';
 </script>
 
 <main class="min-h-screen p-8">
@@ -25,7 +26,7 @@
 		</p>
 		<Button color="primary" href="/analyze" class="my-8 px-8 py-4 text-xl">Start Analyzing</Button>
 	</section>
-
+	
 	<!-- Features Section -->
 	<section id="features" class="mx-auto my-10 max-w-7xl">
 		<h3 class="mb-10 text-center text-4xl font-semibold">Key Features</h3>
