@@ -257,6 +257,14 @@ function generateFilterQuery(
 	return query;
 }
 
+type LastUpdate = {
+	last_updated: number;
+}
+
+function getLastUpdated(conn: AsyncDuckDBConnection): Promise<LastUpdate[]> {
+	return getData<LastUpdate>(conn, SQL`select extract('epoch' from seen)::int as last_updated from server order by last_updated limit 1`);
+}
+
 /*
  * Server Price and Configurations
  */
@@ -661,6 +669,8 @@ async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Pr
 		getPrices,
 		getConfigurations,
 
+		getLastUpdated,
+
 		getServerDetails,
 		getServerDetailPrices,
 		getLowestServerDetailPrices,
@@ -674,6 +684,7 @@ async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Pr
 		getCPUVendorPriceStats,
 		getVolumeStats,
 
+		type LastUpdate,
 		type NameValuePair,
 		type TemporalStat,
 		type ServerConfiguration,

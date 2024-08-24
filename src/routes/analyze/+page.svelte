@@ -13,6 +13,7 @@
 		ServerPriceStat,
 	} from "$lib/dbapi";
 	import {
+		getLastUpdated,
 		getCPUModels,
 		getDatacenters,
 		getConfigurations,
@@ -29,6 +30,9 @@
 	import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 	import queryString from "query-string";
 	import { onMount } from "svelte";
+	import dayjs from 'dayjs';
+	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+	import { faClockRotateLeft, faStopwatch } from "@fortawesome/free-solid-svg-icons";
 
 	let filter: ServerFilterType = {
 		locationGermany: true,
@@ -59,6 +63,7 @@
 		extrasRPS: false,
 	};
 
+	let lastUpdated: number;
 	let serverList: ServerConfiguration[] = [];
 	let serverPrices: ServerPriceStat[] = [];
 	let cpuModels: NameValuePair[] = [];
@@ -67,11 +72,12 @@
 	let serverDetailPrices: ServerPriceStat[];
 	let lowestServerDetailPrices: ServerLowestPriceStat[];
 
+	let queryTime: number | undefined;
 	let loading = true;
 
 	async function fetchData(db: AsyncDuckDB, filter: ServerFilterType) {
 		console.log("Fetching data with filter:", filter);
-		let queryTime = performance.now();
+		let queryStart = performance.now();
 
 		if (typeof pirsch !== "undefined") {
 			pirsch("search", {});
@@ -86,7 +92,7 @@
 					getConfigurations(conn4, filter),
 				]);
 
-				queryTime = performance.now() - queryTime;
+				queryTime = performance.now() - queryStart;
 			} catch (error: Error | any) {
 				console.error("Error fetching data:", error);
 				pirsch("search-error", { error: error?.message });
@@ -134,6 +140,15 @@
 
 	const debouncedFetchData = debounce(fetchData, 500);
 	$: if (!!$db) {
+		// TODO: generate at build time
+		if (!lastUpdated) {
+			withDbConnections($db, async (conn1) => {
+				let lastUpdate = await getLastUpdated(conn1);
+				if (lastUpdate.length > 0) {
+					lastUpdated = lastUpdate[0].last_updated;
+				}
+			});
+		}
 		debouncedFetchData($db, filter);
 	}
 
@@ -153,7 +168,25 @@
 	<div
 		class="grid min-h-screen grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]"
 	>
-		<ServerFilter bind:filter {datacenters} {cpuModels} />
+		<aside
+		class="border-r border-gray-200 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto">
+			<div class="h-full bg-white px-3 py-2 dark:bg-gray-800">
+				<ServerFilter bind:filter {datacenters} {cpuModels} />
+				<div class="mt-4">
+					<hr class="mb-5" />
+						{#if lastUpdated}
+							<p class="mt-2 text-center text-xs italic text-gray-500 dark:text-gray-400">
+								<FontAwesomeIcon icon={faClockRotateLeft} class="me-1"/>{dayjs.unix(lastUpdated).format('MM.DD.YYYY HH:mm')}
+							</p>
+						{/if}
+						{#if queryTime}
+							<p class="mt-2 text-center text-xs italic text-gray-500 dark:text-gray-400">
+								<FontAwesomeIcon icon={faStopwatch} class="me-1"/>completed in {queryTime.toFixed(0)}ms
+							</p>
+						{/if}
+					</div>
+			</div>
+		</aside>
 
 		<main class="flex-grow overflow-y-auto pt-3">
 			<div class="w-full">
