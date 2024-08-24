@@ -47,11 +47,11 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: conic-gradient(transparent 90%, rgba(80, 255, 0, 0.35));
+    background-image: conic-gradient(transparent 85%, rgba(80, 255, 0, 0.45));
     border-radius: 50%;
     border: 1px solid lightgray;
     animation: spin 3s linear forwards;
-    animation-iteration-count: 3;
+    animation-iteration-count: 2;
     z-index: 3; /* Layer this above the static background */
   }
 
@@ -71,14 +71,14 @@
 
   .radar__dot {
     position: absolute;
-    width: 10%;
-    height: 10%;
+    width: 15%;
+    height: 15%;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background-color: #eb4f27;
     opacity: 0; /* Initially hidden */
-    animation: blink 3s ease-out forwards;
-    animation-iteration-count: 2;
+    animation: blink 3s ease-out infinite;
+    animation-iteration-count: 1;
     animation-fill-mode: forwards; /* Keep the final state after animation ends */
     z-index: 4; /* Ensure dots are on top */
   }
