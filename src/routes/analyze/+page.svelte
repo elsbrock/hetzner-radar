@@ -176,7 +176,7 @@
 					<hr class="mb-5" />
 						{#if lastUpdated}
 							<p class="mt-2 text-center text-xs italic text-gray-500 dark:text-gray-400">
-								<FontAwesomeIcon icon={faClockRotateLeft} class="me-1"/>{dayjs.unix(lastUpdated).format('MM.DD.YYYY HH:mm')}
+								<FontAwesomeIcon icon={faClockRotateLeft} class="me-1"/>{dayjs.unix(lastUpdated).format('DD.MM.YYYY HH:mm')}
 							</p>
 						{/if}
 						{#if queryTime}
