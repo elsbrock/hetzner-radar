@@ -231,13 +231,13 @@ function generateFilterQuery(
 	query.append(SQL` and hdd_count >= ${filter.hddCount[0]}`);
 	query.append(SQL` and hdd_count <= ${filter.hddCount[1]}`);
 	query.append(
-		SQL` and array_length(array_filter(nvme_drives, x -> x >= ${Math.pow(2, filter.ssdNvmeInternalSize[0])} AND x <= ${Math.pow(2, filter.ssdNvmeInternalSize[1])})) = array_length(nvme_drives)`
+		SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * 250} AND x <= ${filter.ssdNvmeInternalSize[1] * 250})) = array_length(nvme_drives)`
 	);
 	query.append(
-		SQL` and array_length(array_filter(sata_drives, x -> x >= ${Math.pow(2, filter.ssdSataInternalSize[0])} AND x <= ${Math.pow(2, filter.ssdSataInternalSize[1])})) = array_length(sata_drives)`
+		SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * 250} AND x <= ${filter.ssdSataInternalSize[1] * 250})) = array_length(sata_drives)`
 	);
 	query.append(
-		SQL` and array_length(array_filter(hdd_drives, x -> x >= ${Math.pow(2, filter.hddInternalSize[0])} AND x <= ${Math.pow(2, filter.hddInternalSize[1])})) = array_length(hdd_drives)`
+		SQL` and array_length(array_filter(hdd_drives, x -> x >= ${filter.hddInternalSize[0] * 500} AND x <= ${filter.hddInternalSize[1] * 500})) = array_length(hdd_drives)`
 	);
 
 	// // extras

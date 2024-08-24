@@ -40,14 +40,14 @@
 
 		ramInternalSize: [4, 6],
 
-		ssdNvmeCount: [0, 2],
-		ssdNvmeInternalSize: [8, 12],
+		ssdNvmeCount: [0, 0],
+		ssdNvmeInternalSize: [1, 12],
 
-		ssdSataCount: [0, 5],
-		ssdSataInternalSize: [8, 12],
+		ssdSataCount: [0, 0],
+		ssdSataInternalSize: [1, 4],
 
-		hddCount: [0, 5],
-		hddInternalSize: [8, 12],
+		hddCount: [0, 2],
+		hddInternalSize: [4, 16],
 
 		selectedDatacenters: [],
 		selectedCpuModels: [],

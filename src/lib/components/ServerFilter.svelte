@@ -10,9 +10,16 @@
 	import { ButtonGroup, Button } from 'flowbite-svelte';
 	import queryString from 'query-string';
 
-	const filesizeOptions: FileSizeOptions = {
-		base: 2,
-		round: 0
+	const fileSizeOptions: FileSizeOptions = {
+		base: 10,
+		round: 0,
+		standard: "si",
+	};
+
+	const diskSizeOptions: FileSizeOptions = {
+		base: 10,
+		round: 2,
+		standard: "si",
 	};
 
 	const springValues = {
@@ -30,43 +37,32 @@
 			arrayFormat: "bracket",
 			skipNull: true,
 		});
-		// copy to clipboard
-		console.log(queryStringified);
 		navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + queryStringified);
 	}
 
-	$: ramSizeLower = filesize(
-		Math.pow(2, filter.ramInternalSize[0]) * Math.pow(1024, 3),
-		filesizeOptions
+	function getFormattedSize(exp: number) {
+	return filesize(
+		Math.pow(2, exp) * Math.pow(1000, 3),
+		fileSizeOptions
 	);
-	$: ramSizeUpper = filesize(
-		Math.pow(2, filter.ramInternalSize[1]) * Math.pow(1024, 3),
-		filesizeOptions
+}
+
+function getFormattedDiskSize(base: number, step: number = 250) {
+	return filesize(
+		base * step * Math.pow(1000, 3),
+		diskSizeOptions
 	);
-	$: ssdNvmeSizeLower = filesize(
-		Math.pow(2, filter.ssdNvmeInternalSize[0]) * Math.pow(1024, 3),
-		filesizeOptions
-	);
-	$: ssdNvmeSizeUpper = filesize(
-		Math.pow(2, filter.ssdNvmeInternalSize[1]) * Math.pow(1024, 3),
-		filesizeOptions
-	);
-	$: ssdSataSizeLower = filesize(
-		Math.pow(2, filter.ssdSataInternalSize[0]) * Math.pow(1024, 3),
-		filesizeOptions
-	);
-	$: ssdSataSizeUpper = filesize(
-		Math.pow(2, filter.ssdSataInternalSize[1]) * Math.pow(1024, 3),
-		filesizeOptions
-	);
-	$: hddSizeLower = filesize(
-		Math.pow(2, filter.hddInternalSize[0]) * Math.pow(1024, 3),
-		filesizeOptions
-	);
-	$: hddSizeUpper = filesize(
-		Math.pow(2, filter.hddInternalSize[1]) * Math.pow(1024, 3),
-		filesizeOptions
-	);
+}
+
+
+	$: ramSizeLower = getFormattedSize(filter.ramInternalSize[0]);
+	$: ramSizeUpper = getFormattedSize(filter.ramInternalSize[1]);
+	$: ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0]);
+	$: ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1]);
+	$: ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0]);
+	$: ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1]);
+	$: hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
+	$: hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
 </script>
 
 <style>
@@ -75,10 +71,10 @@
 	}
 
 	:root {
-	  --range-handle-inactive: var(--tw-primary-600);
 	  --range-handle: var(--tw-primary-600);
+	  --range-range-inactive: rgb(173, 171, 171);
+	  --range-handle-inactive: var(--tw-primary-600);
 	  --range-handle-focus: var(--tw-primary-600);
-	  --range-handle-border: var(--tw-primary-600);
 	}
 </style>
 
@@ -171,10 +167,16 @@
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">Size</Label>
-				<span class="ml-2 text-right">{ramSizeLower} – {ramSizeUpper}</span>
+				<span class="ml-2 text-right">
+					{#if (ramSizeLower === ramSizeUpper)}
+						{ramSizeLower}
+					{:else}
+						{ramSizeLower} – {ramSizeUpper}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.ramInternalSize} min={4} max={10} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.ramInternalSize} min={4} max={10} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li>
 				<div class="flex items-center justify-between">
@@ -214,51 +216,87 @@
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">Devices</Label>
-				<span class="ml-2 text-right">{filter.ssdNvmeCount[0]} – {filter.ssdNvmeCount[1]}</span>
+				<span class="ml-2 text-right">
+					{#if (filter.ssdNvmeCount[0] === filter.ssdNvmeCount[1])}
+						{filter.ssdNvmeCount[0] === 0 ? 'none' : filter.ssdNvmeCount[0]}
+					{:else}
+						{filter.ssdNvmeCount[0]} – {filter.ssdNvmeCount[1]}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.ssdNvmeCount} min={0} max={5} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.ssdNvmeCount} min={0} max={8} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">Size</Label>
-				<span class="ml-2 text-right">{ssdNvmeSizeLower} – {ssdNvmeSizeUpper}</span>
+				<span class="ml-2 text-right">
+					{#if (ssdNvmeSizeLower === ssdNvmeSizeUpper)}
+						{ramSizeLower}
+					{:else}
+						{ssdNvmeSizeLower} – {ssdNvmeSizeUpper}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.ssdNvmeInternalSize} min={8} max={14} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.ssdNvmeInternalSize} min={1} max={18} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li>
 				<h3>SSDs (SATA)</h3>
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">Devices</Label>
-				<span class="ml-2 text-right">{filter.ssdSataCount[0]} – {filter.ssdSataCount[1]}</span>
+				<span class="ml-2 text-right">
+					{#if (filter.ssdSataCount[0] === filter.ssdSataCount[1])}
+						{filter.ssdSataCount[0] === 0 ? 'none' : filter.ssdSataCount[0]}
+					{:else}
+						{filter.ssdSataCount[0]} – {filter.ssdSataCount[1]}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.ssdSataCount} min={0} max={5} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.ssdSataCount} min={0} max={4} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">Size</Label>
-				<span class="ml-2 text-right">{ssdSataSizeLower} – {ssdSataSizeUpper}</span>
+				<span class="ml-2 text-right">
+					{#if (ssdSataSizeLower === ssdSataSizeUpper)}
+						{ssdSataSizeLower}
+					{:else}
+						{ssdSataSizeLower} – {ssdSataSizeUpper}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.ssdSataInternalSize} min={8} max={14} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.ssdSataInternalSize} min={1} max={14} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li>
 				<h3>HDDs</h3>
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">Devices</Label>
-				<span class="ml-2 text-right">{filter.hddCount[0]} – {filter.hddCount[1]}</span>
+				<span class="ml-2 text-right">
+					{#if (filter.hddCount[0] === filter.hddCount[1])}
+						{filter.hddCount[0] === 0 ? 'none' : filter.hddCount[0]}
+					{:else}
+						{filter.hddCount[0]} – {filter.hddCount[1]}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.hddCount} min={0} max={5} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.hddCount} min={0} max={5} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li class="flex justify-between">
 				<Label class="text-sm">HDD Size</Label>
-				<span class="ml-2 text-right">{hddSizeLower} – {hddSizeUpper}</span>
+				<span class="ml-2 text-right">
+					{#if (hddSizeLower === hddSizeUpper)}
+						{hddSizeLower}
+					{:else}
+						{hddSizeLower} – {hddSizeUpper}
+					{/if}
+				</span>
 			</li>
 			<li>
-				<RangeSlider bind:values={filter.hddInternalSize} min={8} max={14} hoverable={false} {springValues} pips />
+				<RangeSlider bind:values={filter.hddInternalSize} min={4} max={44} hoverable={false} {springValues} pips range pushy />
 			</li>
 			<li>
 				<hr />
