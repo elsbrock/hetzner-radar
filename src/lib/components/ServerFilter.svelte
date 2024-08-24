@@ -68,11 +68,14 @@ function getFormattedDiskSize(base: number, step: number = 250) {
 <style>
 	:root {
 	  --tw-primary-600: theme('colors.primary.600');
+	  --tw-primary-400: theme('colors.primary.400');
 	}
 
 	:root {
 	  --range-handle: var(--tw-primary-600);
-	  --range-range-inactive: rgb(173, 171, 171);
+	  --range-range: var(--tw-primary-600);
+	  --range-range-inactive: var(--tw-primary-400);
+	  --range-slider: rgb(237, 237, 237);
 	  --range-handle-inactive: var(--tw-primary-600);
 	  --range-handle-focus: var(--tw-primary-600);
 	}
