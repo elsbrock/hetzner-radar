@@ -262,7 +262,7 @@ type LastUpdate = {
 }
 
 function getLastUpdated(conn: AsyncDuckDBConnection): Promise<LastUpdate[]> {
-	return getData<LastUpdate>(conn, SQL`select extract('epoch' from seen)::int as last_updated from server order by last_updated limit 1`);
+	return getData<LastUpdate>(conn, SQL`select extract('epoch' from seen)::int as last_updated from server order by last_updated desc limit 1`);
 }
 
 /*
