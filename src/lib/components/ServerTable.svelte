@@ -4,6 +4,7 @@
 	import {
 		Badge,
 		ImagePlaceholder,
+		Indicator,
 		Table,
 		TableBody,
 		TableBodyCell,
@@ -16,7 +17,7 @@
 
 	import type { ServerConfiguration, ServerDetail, ServerPriceStat, ServerLowestPriceStat	} from '$lib/dbapi';
 
-	import { faLightbulb, faServer } from '@fortawesome/free-solid-svg-icons';
+	import { faHardDrive, faLightbulb, faMemory, faMicrochip, faServer } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	import dayjs from 'dayjs';
@@ -109,12 +110,12 @@
 						>€{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}</TableBodyCell
 					>
 					<TableBodyCell>€{pricePerTB(device.min_price, device.hdd_size)}</TableBodyCell>
-					<TableBodyCell>{device.cpu}</TableBodyCell>
-					<TableBodyCell>{device.ram_size}GB</TableBodyCell>
+					<TableBodyCell><FontAwesomeIcon icon={faMicrochip} class="me-1" /> {device.cpu}</TableBodyCell>
+					<TableBodyCell><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size}GB</TableBodyCell>
 					<TableBodyCell>
 						<ul>
 							{#each JSON.parse(device.hdd_arr) as drive}
-								<li>{drive}</li>
+								<li><FontAwesomeIcon icon={faHardDrive} class="me-1" />{drive}</li>
 							{/each}
 						</ul>
 					</TableBodyCell>
@@ -132,10 +133,20 @@
 						</ul>
 					</TableBodyCell>
 					<TableBodyCell>
-						{dayjs.unix(device.last_seen).fromNow()}<br />
-						<span class="light-gray text-xs"
-							>{dayjs.unix(device.last_seen).format('DD.MM.YYYY HH:mm')}</span
-						>
+						<span class="inline-flex items-center">
+							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'day')}
+								<Indicator color="green" class="mr-2" />
+							{:else if dayjs.unix(device.last_seen) > dayjs().subtract(7, 'day')}
+								<Indicator color="yellow" class="mr-2" />
+							{:else}
+								<Indicator color="red" class="mr-2" />
+							{/if}
+							{dayjs.unix(device.last_seen).fromNow()}
+						</span>
+						<br />
+						<span class="light-gray text-xs">
+							{dayjs.unix(device.last_seen).format('DD.MM.YYYY HH:mm')}
+						</span>
 					</TableBodyCell>
 				</TableBodyRow>
 				{#if openRow === i}
