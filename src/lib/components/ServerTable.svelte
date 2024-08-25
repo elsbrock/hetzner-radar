@@ -111,17 +111,17 @@
 
 <Table hoverable={true}>
 	<TableHead>
-		<TableHeadCell>Last Price</TableHeadCell>
-		<TableHeadCell>Lowest Price</TableHeadCell>
-		<TableHeadCell>per GB RAM</TableHeadCell>
-		<TableHeadCell>per TB SSD</TableHeadCell>
-		<TableHeadCell>per TB HDD</TableHeadCell>
-		<TableHeadCell>CPU</TableHeadCell>
-		<TableHeadCell>RAM Size</TableHeadCell>
-		<TableHeadCell>Storage</TableHeadCell>
-		<TableHeadCell>Extras</TableHeadCell>
-		<TableHeadCell>Last Seen</TableHeadCell>
-		<TableHeadCell>Link</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">Last Price</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">Lowest Price</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">per GB RAM</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">per TB SSD</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">per TB HDD</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">CPU</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">RAM Size</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">Storage</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">Extras</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">Last Seen</TableHeadCell>
+		<TableHeadCell padding="px-2 py-3">Link</TableHeadCell>
 	</TableHead>
 	<TableBody>
 		{#if loading}
@@ -132,19 +132,19 @@
 			</TableBodyRow>
 		{:else if data.length === 0}
 			<TableBodyRow>
-				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
+				<TableBodyCell colspan="11" style="background-color: initial; color: inherit"
 					>No servers matching configuration found.</TableBodyCell
 				>
 			</TableBodyRow>
 		{:else}
 			<TableBodyRow>
-				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
+				<TableBodyCell colspan="11" style="background-color: initial; color: inherit"
 					>We have observed {data.length} unique server configurations matching your criteria.</TableBodyCell
 				>
 			</TableBodyRow>
 			{#each data as device, i}
 				<TableBodyRow on:click={() => toggleRow(i)} class="cursor-pointer">
-					<TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">
 						{#if device.markup_percentage > 0}
 						<div class="font-medium items-center text-center justify-center px-2.5 py-0.5 bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 rounded text-sm">
 							{device.last_price}€<br/>
@@ -169,24 +169,24 @@
 							{/if}
 						{/if}
 					</TableBodyCell>
-					<TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">
 						{device.min_price}€<br/>
 					</TableBodyCell>
-					<TableBodyCell>€{(device.min_price / device.ram_size).toFixed(2)}</TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">€{(device.min_price / device.ram_size).toFixed(2)}</TableBodyCell>
 					<TableBodyCell
 						>€{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}</TableBodyCell
 					>
-					<TableBodyCell>€{pricePerTB(device.min_price, device.hdd_size)}</TableBodyCell>
-					<TableBodyCell><FontAwesomeIcon icon={faMicrochip} class="me-1" />{device.cpu}</TableBodyCell>
-					<TableBodyCell><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size} GB</TableBodyCell>
-					<TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">€{pricePerTB(device.min_price, device.hdd_size)}</TableBodyCell>
+					<TableBodyCell padding="px-2 py-3"><FontAwesomeIcon icon={faMicrochip} class="me-1" />{device.cpu}</TableBodyCell>
+					<TableBodyCell padding="px-2 py-3"><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size} GB</TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">
 						<ul>
 							{#each device.hdd_arr as drive}
 								<li><FontAwesomeIcon icon={faHardDrive} class="me-1" />{drive}</li>
 							{/each}
 						</ul>
 					</TableBodyCell>
-					<TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">
 						<ul>
 							{#if device.with_inic}
 								<li>Intel NIC</li>
@@ -199,7 +199,7 @@
 							{/if}
 						</ul>
 					</TableBodyCell>
-					<TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">
 						<span class="inline-flex items-center">
 							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'day')}
 								<Indicator color="green" class="mr-2" />
@@ -213,7 +213,7 @@
 							{dayjs.unix(device.last_seen).format('DD.MM.YYYY HH:mm')}
 						</span>
 					</TableBodyCell>
-					<TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">
 						<Button
 							href="{getHetznerLink(device)}"
 							size="sm" variant="primary"
