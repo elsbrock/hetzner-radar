@@ -13,8 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: data
+
+      - name: Checkout data branch
+        run: git fetch origin data --depth 1 && git checkout data
 
       - name: Install jq
         uses: dcarbone/install-jq-action@v2.1.0
