@@ -310,6 +310,12 @@ type ServerConfiguration = {
 	sata_size: number | null;
 	sata_drives: number[];
 	hdd_size: number | null;
+	price: number;
+	min_price: number;
+	last_price: number;
+	markup_percentage: number;
+	last_seen: number;
+	count: number;
 };
 
 async function getConfigurations(
@@ -318,28 +324,45 @@ async function getConfigurations(
 ): Promise<ServerConfiguration[]> {
 	let configurations_filter_query = generateFilterQuery(filter, true, true);
 	let configurations_query = SQL`
+    select
+        cpu, ram_size, is_ecc,
+        hdd_arr::JSON as hdd_arr,
+        nvme_size,
+        nvme_drives::JSON as nvme_drives,
+        sata_size,
+        sata_drives::JSON as sata_drives,
+        hdd_size,
+        hdd_drives::JSON as hdd_drives,
+        with_gpu, with_inic, with_hwr, with_rps,
+        min(price) as min_price,
+        count(*) as count,
+        extract('epoch' from max(seen)) as last_seen,
+        max(last_price) as last_price,
+		round(((max(last_price) - min(price)) / min(price)) * 100, 0) as markup_percentage
+    from (
         select
-			cpu, ram_size, is_ecc,
-			hdd_arr::JSON as hdd_arr,
-			nvme_size,
-			nvme_drives::JSON as nvme_drives,
-			sata_size,
-			sata_drives::JSON as sata_drives,
-			hdd_size,
-			hdd_drives::JSON as sata_drives,
-			with_gpu, with_inic, with_hwr, with_rps,
-			min(price) as min_price,
-			count(*) as count,
-			extract('epoch' from max(seen)) as last_seen
+            *,
+            first_value(price) over (
+                partition by
+                    cpu, ram_size, is_ecc, hdd_arr,
+                    nvme_size, nvme_drives,
+                    sata_size, sata_drives,
+                    hdd_size, hdd_drives,
+                    with_gpu, with_inic, with_hwr, with_rps
+                order by
+                    seen desc
+            ) as last_price
         from
-        	server
+            server
         where`;
-	configurations_query.append(configurations_filter_query).append(SQL`
-		group by
-            cpu, ram_size, is_ecc, hdd_arr,
-			nvme_size, nvme_drives, sata_size, sata_drives, hdd_size, hdd_drives,
-			with_gpu, with_inic, with_hwr, with_rps
-        order by min(price)`);
+configurations_query.append(configurations_filter_query).append(SQL`
+    ) as subquery
+    group by
+        cpu, ram_size, is_ecc, hdd_arr,
+        nvme_size, nvme_drives, sata_size, sata_drives, hdd_size, hdd_drives,
+        with_gpu, with_inic, with_hwr, with_rps
+    order by min(price)`);
+
 	return getData<ServerConfiguration>(conn, configurations_query);
 }
 

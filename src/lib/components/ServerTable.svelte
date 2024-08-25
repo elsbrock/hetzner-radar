@@ -60,19 +60,9 @@
 	};
 </script>
 
-<h3
-	class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
->
-	Configurations
-	<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-		Below is a list of unique server configurations we have observed over time. It includes their
-		minimum prices and the dates the configurations (but not the price) were last seen. Keep in mind
-		that this is not equal to the total number of servers that were offered, which is usually much
-		higher. You can see the bid volume in the chart above.
-	</p>
-</h3>
 <Table hoverable={true}>
 	<TableHead>
+		<TableHeadCell>Last Price</TableHeadCell>
 		<TableHeadCell>Lowest Price</TableHeadCell>
 		<TableHeadCell>per GB RAM</TableHeadCell>
 		<TableHeadCell>per TB SSD</TableHeadCell>
@@ -104,14 +94,41 @@
 			</TableBodyRow>
 			{#each data as device, i}
 				<TableBodyRow on:click={() => toggleRow(i)} class="cursor-pointer">
-					<TableBodyCell>€{device.min_price}</TableBodyCell>
+					<TableBodyCell>
+						{#if device.markup_percentage > 0}
+						<div class="font-medium items-center text-center justify-center px-2.5 py-0.5 bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 rounded text-sm">
+							{device.last_price}€<br/>
+							<span 
+							  class="light-gray text-xs"
+							  style={`color: hsl(${Math.max(0, Math.min(120, 120 * (10 - device.markup_percentage) / 10))}, 70%, 50%);`}
+							>
+							  {device.markup_percentage > 0 ? '+' : ''}{device.markup_percentage}%
+							</span>
+						  </div>
+						{:else}
+							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'day')}
+							<div class="font-medium items-center text-center justify-center px-2.5 py-0.5 bg-green-100 dark:bg-green-900 rounded text-sm">
+								{device.last_price}€<br/>
+								<span class="light-gray text-xs">best</span>
+							</div>
+							{:else}
+							<div class="font-medium items-center text-center justify-center px-2.5 py-0.5 border-yellow-800 bg-yellow-100 dark:bg-neutral-900 rounded text-sm">
+								{device.last_price}€<br/>
+								<span class="light-gray text-xs">gone</span>
+							</div>
+							{/if}
+						{/if}
+					</TableBodyCell>
+					<TableBodyCell>
+						{device.min_price}€<br/>
+					</TableBodyCell>
 					<TableBodyCell>€{(device.min_price / device.ram_size).toFixed(2)}</TableBodyCell>
 					<TableBodyCell
 						>€{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}</TableBodyCell
 					>
 					<TableBodyCell>€{pricePerTB(device.min_price, device.hdd_size)}</TableBodyCell>
-					<TableBodyCell><FontAwesomeIcon icon={faMicrochip} class="me-1" /> {device.cpu}</TableBodyCell>
-					<TableBodyCell><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size}GB</TableBodyCell>
+					<TableBodyCell><FontAwesomeIcon icon={faMicrochip} class="me-1" />{device.cpu}</TableBodyCell>
+					<TableBodyCell><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size} GB</TableBodyCell>
 					<TableBodyCell>
 						<ul>
 							{#each JSON.parse(device.hdd_arr) as drive}
@@ -136,8 +153,6 @@
 						<span class="inline-flex items-center">
 							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'day')}
 								<Indicator color="green" class="mr-2" />
-							{:else if dayjs.unix(device.last_seen) > dayjs().subtract(7, 'day')}
-								<Indicator color="yellow" class="mr-2" />
 							{:else}
 								<Indicator color="red" class="mr-2" />
 							{/if}

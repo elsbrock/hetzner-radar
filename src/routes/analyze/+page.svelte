@@ -202,6 +202,17 @@
 				</h3>
 				<ServerPriceChart data={serverPrices} {loading} />
 			</div>
+			<h3
+				class="bg-white px-5 pb-5 text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
+			>
+				Configurations
+				<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
+					Below is a list of unique server configurations we have observed over time. It includes their
+					minimum prices and the dates the configurations were last seen. Keep in mind that this is not
+					equal to the total number of servers that were offered, which is usually much
+					higher. You can see the bid volume in the chart above.
+				</p>
+			</h3>
 			<ServerTable
 				data={serverList}
 				on:serverDetails={handleServerDetails}
