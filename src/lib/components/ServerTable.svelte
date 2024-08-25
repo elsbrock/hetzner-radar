@@ -3,6 +3,7 @@
 
 	import {
 		Badge,
+		Button,
 		ImagePlaceholder,
 		Indicator,
 		Table,
@@ -17,7 +18,7 @@
 
 	import type { ServerConfiguration, ServerDetail, ServerPriceStat, ServerLowestPriceStat	} from '$lib/dbapi';
 
-	import { faHardDrive, faLightbulb, faMemory, faMicrochip, faServer } from '@fortawesome/free-solid-svg-icons';
+	import { faHardDrive, faLightbulb, faLink, faMemory, faMicrochip, faServer, faShare } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	import dayjs from 'dayjs';
@@ -42,6 +43,54 @@
 		return (
 			serverDetailPrices.reduce((acc, curr) => acc + curr.count, 0) / serverDetailPrices.length
 		);
+	}
+
+	function getHetznerLink(device: ServerConfiguration) {
+		const minDriveLength = Math.min(
+			device.nvme_size ? device.nvme_size / device.nvme_drives.length : Infinity,
+			device.sata_size ? device.sata_size / device.sata_drives.length : Infinity,
+			device.hdd_size ? device.hdd_size / device.hdd_drives.length : Infinity
+		);
+		const maxDriveLength = Math.max(
+			device.nvme_size ? device.nvme_size / device.nvme_drives.length : 0,
+			device.sata_size ? device.sata_size / device.sata_drives.length : 0,
+			device.hdd_size ? device.hdd_size / device.hdd_drives.length : 0
+		);
+		const specials = [];
+		if (device.with_inic) {
+			specials.push("iNIC");
+		}
+		if (device.with_hwr) {
+			specials.push("HWR");
+		}
+		if (device.with_gpu) {
+			specials.push("GPU");
+		}
+		if (device.with_rps) {
+			specials.push("RPS");
+		}
+
+		const filterQ = [
+			`search=${encodeURIComponent(device.cpu)}`,
+			`ram_from=${device.ram_size}`,
+			`ram_to=${device.ram_size}`,
+			`drives_count_from=${device.nvme_drives.length + device.sata_drives.length + device.hdd_drives.length}`,
+		];
+
+		if (minDriveLength < Infinity) {
+			filterQ.push(`drives_size_from=${Math.floor(minDriveLength/500) * 500}`);
+		}
+		if (maxDriveLength > 0) {
+			filterQ.push(`drives_size_to=${Math.floor(minDriveLength/500) * 500}`);
+		}
+		if (device.is_ecc) {
+			filterQ.push("ecc=true");
+		}
+		if (specials.length > 0) {
+			filterQ.push(`additional=${encodeURIComponent(specials.join("+"))}`);
+		}
+
+		return `https://www.hetzner.com/sb/#${filterQ.join("&")}`;
 	}
 
 	$: serverDetailAverageVolume = getAverageSupply(serverDetailPrices);
@@ -72,6 +121,7 @@
 		<TableHeadCell>Storage</TableHeadCell>
 		<TableHeadCell>Extras</TableHeadCell>
 		<TableHeadCell>Last Seen</TableHeadCell>
+		<TableHeadCell>Link</TableHeadCell>
 	</TableHead>
 	<TableBody>
 		{#if loading}
@@ -131,7 +181,7 @@
 					<TableBodyCell><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size} GB</TableBodyCell>
 					<TableBodyCell>
 						<ul>
-							{#each JSON.parse(device.hdd_arr) as drive}
+							{#each device.hdd_arr as drive}
 								<li><FontAwesomeIcon icon={faHardDrive} class="me-1" />{drive}</li>
 							{/each}
 						</ul>
@@ -162,6 +212,14 @@
 						<span class="light-gray text-xs">
 							{dayjs.unix(device.last_seen).format('DD.MM.YYYY HH:mm')}
 						</span>
+					</TableBodyCell>
+					<TableBodyCell>
+						<Button
+							href="{getHetznerLink(device)}"
+							size="sm" variant="primary"
+						>
+							<FontAwesomeIcon icon={faLink} class="me-2" />Find
+						</Button>
 					</TableBodyCell>
 				</TableBodyRow>
 				{#if openRow === i}
@@ -213,7 +271,7 @@
 												</span>
 											</p>
 											<ul class="ml-4 list-inside list-disc pb-4">
-												{#each JSON.parse(detail.information) as config}
+												{#each detail.information as config}
 													<li>{config}</li>
 												{/each}
 											</ul>

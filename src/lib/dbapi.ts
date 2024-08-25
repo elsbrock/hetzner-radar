@@ -310,6 +310,7 @@ type ServerConfiguration = {
 	sata_size: number | null;
 	sata_drives: number[];
 	hdd_size: number | null;
+	hdd_drives: number[];
 	price: number;
 	min_price: number;
 	last_price: number;
@@ -363,7 +364,14 @@ configurations_query.append(configurations_filter_query).append(SQL`
         with_gpu, with_inic, with_hwr, with_rps
     order by min(price)`);
 
-	return getData<ServerConfiguration>(conn, configurations_query);
+	const data = await getData<ServerConfiguration>(conn, configurations_query);
+	return data.map((d: ServerConfiguration) => {
+		d.hdd_arr = JSON.parse(d.hdd_arr as unknown as string);
+		d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
+		d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
+		d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+		return d;
+	});
 }
 
 type ServerDetail = {
@@ -396,7 +404,7 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 					cpu = ${config.cpu}
 					AND ram_size = ${config.ram_size}
 					AND is_ecc = ${config.is_ecc}
-					AND hdd_arr::json = ${config.hdd_arr}
+					AND hdd_arr::json = ${JSON.stringify(config.hdd_arr)}
 					AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
 					AND coalesce(sata_size, 0) = coalesce(${config.sata_size}, 0)
 					AND coalesce(hdd_size, 0) = coalesce(${config.hdd_size}, 0)
@@ -416,7 +424,11 @@ async function getServerDetails(conn: AsyncDuckDBConnection, config: ServerConfi
 					with_gpu, with_inic, with_hwr, with_rps
 			)
 	`;
-	return getData<ServerDetail>(conn, query);
+	const data = await getData<ServerDetail>(conn, query);
+	return data.map((d: ServerDetail) => {
+		d.information = JSON.parse(d.information as unknown as string);
+		return d;
+	});
 }
 
 async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: ServerConfiguration): Promise<ServerPriceStat[]> {
@@ -433,7 +445,7 @@ async function getServerDetailPrices(conn: AsyncDuckDBConnection, config: Server
 			cpu = ${config.cpu}
 			AND ram_size = ${config.ram_size}
 			AND is_ecc = ${config.is_ecc}
-			AND hdd_arr::json = ${config.hdd_arr}
+			AND hdd_arr::json = ${JSON.stringify(config.hdd_arr)}
 			AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
 			AND coalesce(sata_size, 0) = coalesce(${config.sata_size}, 0)
 			AND coalesce(hdd_size, 0) = coalesce(${config.hdd_size}, 0)
@@ -466,7 +478,7 @@ async function getLowestServerDetailPrices(conn: AsyncDuckDBConnection, config: 
 				cpu = ${config.cpu}
 				AND ram_size = ${config.ram_size}
 				AND is_ecc = ${config.is_ecc}
-				AND hdd_arr::json = ${config.hdd_arr}
+				AND hdd_arr::json = ${JSON.stringify(config.hdd_arr)}
 				AND coalesce(nvme_size, 0) = coalesce(${config.nvme_size}, 0)
 				AND coalesce(sata_size, 0) = coalesce(${config.sata_size}, 0)
 				AND coalesce(hdd_size, 0) = coalesce(${config.hdd_size}, 0)
