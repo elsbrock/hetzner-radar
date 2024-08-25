@@ -1,5 +1,6 @@
 <script>
   export let radarBackgroundColor = "rgb(240, 240, 240)"; // Default radar background color
+  export let lineCount = 12; // Default number of lines (8 lines = every 45 degrees)
 </script>
 
 <div
@@ -8,6 +9,12 @@
 >
   <div class="radar__dot"></div>
   <div class="radar__dot"></div>
+  {#each Array(lineCount) as _, i}
+    <div
+    class="radar__line"
+    style="transform: rotate({360 / lineCount * i}deg) translateX(-50%);"
+    ></div>
+  {/each}
   <div class="radar__dot"></div>
 </div>
 
@@ -53,6 +60,18 @@
     animation: spin 3s linear forwards;
     animation-iteration-count: 2;
     z-index: 3; /* Layer this above the static background */
+  }
+
+  /* Line styling */
+  .radar__line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 1px;
+    background-color: rgba(200, 200, 200, 0.2);
+    transform-origin: 0 0;
+    z-index: 2; /* Below dots but above background */
   }
 
   @keyframes spin {
