@@ -1,21 +1,39 @@
-<script>
+<script lang="ts">
+  import { onMount } from "svelte";
+
   export let radarBackgroundColor = "rgb(240, 240, 240)"; // Default radar background color
   export let lineCount = 12; // Default number of lines (8 lines = every 45 degrees)
+
+  function setAnimationEnabled(bool: boolean) {
+    const radar = document.querySelector(".radar");
+    const dots = document.querySelectorAll(".radar__dot");
+
+    radar?.classList.remove("radar--animate");
+    dots.forEach((dot) => dot.classList.remove("radar__dot--animate"));
+    if (bool) {
+      radar?.classList.add("radar--animate");
+      dots.forEach((dot) => dot.classList.add("radar__dot--animate"));
+    }
+  }
 </script>
 
 <div
-  class="radar"
+  class="radar radar--animate"
+  role="button"
+  tabindex="0"
   style="border: 1px solid #ccc; height: 40px; width: 40px; margin-top: -5px; --radar-bg-color: {radarBackgroundColor};"
+  on:mouseenter={() => setAnimationEnabled(true)}
+  on:mouseleave={() => setAnimationEnabled(false)}
 >
-  <div class="radar__dot"></div>
-  <div class="radar__dot"></div>
+  <div class="radar__dot radar__dot--animate"></div>
+  <div class="radar__dot radar__dot--animate"></div>
   {#each Array(lineCount) as _, i}
     <div
     class="radar__line"
     style="transform: rotate({360 / lineCount * i}deg) translateX(-50%);"
     ></div>
   {/each}
-  <div class="radar__dot"></div>
+  <div class="radar__dot radar__dot--animate"></div>
 </div>
 
 <style>
@@ -54,12 +72,17 @@
     content: "";
     position: absolute;
     inset: 0;
+    opacity: 0;
     background-image: conic-gradient(transparent 85%, rgba(80, 255, 0, 0.45));
     border-radius: 50%;
     border: 1px solid lightgray;
-    animation: spin 3s linear forwards;
-    animation-iteration-count: 2;
     z-index: 3; /* Layer this above the static background */
+  }
+
+  .radar--animate::after {
+      opacity: 1;
+      animation: spin 3s linear forwards;
+      animation-iteration-count: 2;
   }
 
   /* Line styling */
@@ -95,11 +118,14 @@
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background-color: #eb4f27;
+    z-index: 4; /* Ensure dots are on top */
+  }
+
+  .radar__dot--animate {
     opacity: 0; /* Initially hidden */
     animation: blink 3s ease-out infinite;
     animation-iteration-count: 1;
     animation-fill-mode: forwards; /* Keep the final state after animation ends */
-    z-index: 4; /* Ensure dots are on top */
   }
 
   @keyframes blink {
