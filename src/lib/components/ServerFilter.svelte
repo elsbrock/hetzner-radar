@@ -31,29 +31,32 @@
 	export let datacenters: NameValuePair[];
 	export let cpuModels: NameValuePair[];
 
-	function generateShareLink(filter: ServerFilter) {
-		console.log("click")
-		const queryStringified = queryString.stringify(filter, {
+	function getFilterString(filter: ServerFilter) {
+		const filterString = queryString.stringify(filter, {
 			arrayFormat: "bracket",
 			skipNull: true,
 		});
+		return filterString;
+	}
+
+	function generateShareLink(filter: ServerFilter) {
+		const queryStringified = getFilterString(filter);
 		navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + queryStringified);
 	}
 
 	function getFormattedSize(exp: number) {
-	return filesize(
-		Math.pow(2, exp) * Math.pow(1000, 3),
-		fileSizeOptions
-	);
-}
+		return filesize(
+			Math.pow(2, exp) * Math.pow(1000, 3),
+			fileSizeOptions
+		);
+	}
 
-function getFormattedDiskSize(base: number, step: number = 250) {
-	return filesize(
-		base * step * Math.pow(1000, 3),
-		diskSizeOptions
-	);
-}
-
+	function getFormattedDiskSize(base: number, step: number = 250) {
+		return filesize(
+			base * step * Math.pow(1000, 3),
+			diskSizeOptions
+		);
+	}
 
 	$: ramSizeLower = getFormattedSize(filter.ramInternalSize[0]);
 	$: ramSizeUpper = getFormattedSize(filter.ramInternalSize[1]);
@@ -63,6 +66,7 @@ function getFormattedDiskSize(base: number, step: number = 250) {
 	$: ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1]);
 	$: hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
 	$: hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
+	$: window.location.hash = getFilterString(filter);
 </script>
 
 <style>

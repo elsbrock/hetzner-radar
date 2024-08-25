@@ -121,7 +121,6 @@
 				arrayFormat: "bracket",
 				parseBooleans: true,
 			});
-			window.history.replaceState({}, document.title, window.location.pathname);
 			filter = {
 				...filter,
 				...deserializedFilter,
