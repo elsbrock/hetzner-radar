@@ -245,14 +245,14 @@
 												<TimelineItem
 													classLi="text-base mb-2"
 													title="{lowestPrice.price} €"
-													date={dayjs.unix(lowestPrice.seen).format('YYYY-MM-DD HH:mm')}
+													date={dayjs.unix(lowestPrice.seen).format('DD.MM.YYYY HH:mm')}
 												/>
 											{/each}
 											{#if lowestServerDetailPrices.length === 0}
 												<TimelineItem
 													classLi="text-base mb-2"
 													title="{device.min_price} €"
-													date={dayjs.unix(device.last_seen).format('YYYY-MM-DD HH:mm')}
+													date={dayjs.unix(device.last_seen).format('DD.MM.YYYY HH:mm')}
 												/>
 											{/if}
 										</Timeline>
