@@ -325,44 +325,54 @@ async function getConfigurations(
 ): Promise<ServerConfiguration[]> {
 	let configurations_filter_query = generateFilterQuery(filter, true, true);
 	let configurations_query = SQL`
-    select
-        cpu, ram_size, is_ecc,
-        hdd_arr::JSON as hdd_arr,
-        nvme_size,
-        nvme_drives::JSON as nvme_drives,
-        sata_size,
-        sata_drives::JSON as sata_drives,
-        hdd_size,
-        hdd_drives::JSON as hdd_drives,
-        with_gpu, with_inic, with_hwr, with_rps,
-        min(price) as min_price,
-        count(*) as count,
-        extract('epoch' from max(seen)) as last_seen,
-        max(last_price) as last_price,
-		round(((max(last_price) - min(price)) / min(price)) * 100, 0) as markup_percentage
-    from (
-        select
-            *,
-            first_value(price) over (
-                partition by
-                    cpu, ram_size, is_ecc, hdd_arr,
-                    nvme_size, nvme_drives,
-                    sata_size, sata_drives,
-                    hdd_size, hdd_drives,
-                    with_gpu, with_inic, with_hwr, with_rps
-                order by
-                    seen desc
-            ) as last_price
-        from
-            server
-        where`;
-configurations_query.append(configurations_filter_query).append(SQL`
-    ) as subquery
-    group by
-        cpu, ram_size, is_ecc, hdd_arr,
-        nvme_size, nvme_drives, sata_size, sata_drives, hdd_size, hdd_drives,
-        with_gpu, with_inic, with_hwr, with_rps
-    order by min(price)`);
+		WITH subquery AS (
+			SELECT
+				cpu,
+				ram_size, is_ecc, hdd_arr,
+				nvme_size, nvme_drives,
+				sata_size, sata_drives,
+				hdd_size, hdd_drives,
+				with_gpu, with_inic, with_hwr, with_rps,
+				price,
+				seen,
+				FIRST_VALUE(price) OVER (PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
+												nvme_size, nvme_drives,
+												sata_size, sata_drives,
+												hdd_size, hdd_drives,
+												with_gpu, with_inic, with_hwr, with_rps
+										ORDER BY seen DESC) AS last_price,
+				MAX(seen) OVER (PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
+										nvme_size, nvme_drives,
+										sata_size, sata_drives,
+										hdd_size, hdd_drives,
+										with_gpu, with_inic, with_hwr, with_rps
+							) AS last_seen
+			FROM
+				server
+			WHERE `;
+	configurations_query.append(configurations_filter_query);
+	configurations_query.append(SQL`
+		)
+		SELECT
+			cpu,
+			ram_size, is_ecc, hdd_arr::JSON as hdd_arr,
+			nvme_size, nvme_drives::JSON as nvme_drives,
+			sata_size, sata_drives::JSON as sata_drives,
+			hdd_size, hdd_drives::JSON as hdd_drives,
+			with_gpu, with_inic, with_hwr, with_rps,
+			MIN(price) AS min_price,
+			MAX(last_price) AS last_price,
+			extract('epoch' from MAX(last_seen)) AS last_seen,
+			-- calculate the markup percentage
+			round((MAX(last_price) - MIN(price)) / MIN(price) * 100, 0) AS markup_percentage
+		FROM
+			subquery
+		GROUP BY
+			cpu, ram_size, is_ecc, hdd_arr,
+			nvme_size, nvme_drives,
+			sata_size, sata_drives,
+			hdd_size, hdd_drives,
+			with_gpu, with_inic, with_hwr, with_rps`);
 
 	const data = await getData<ServerConfiguration>(conn, configurations_query);
 	return data.map((d: ServerConfiguration) => {

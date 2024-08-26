@@ -126,7 +126,7 @@
 	<TableBody>
 		{#if loading}
 			<TableBodyRow>
-				<TableBodyCell colspan="10" style="background-color: initial; color: inherit"
+				<TableBodyCell colspan="11" style="background-color: initial; color: inherit"
 					>Loading data…</TableBodyCell
 				>
 			</TableBodyRow>
