@@ -245,13 +245,14 @@
 					</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">
 						<Button
-							on:click={() => {
+							on:click={(e) => {
 								forwardUrl = getHetznerLink(device);
 								if (clickOutsideModal === false) {
 									clickOutsideModal = true;
 								} else {
 									window.location.href = forwardUrl;
 								}
+								e.stopPropagation();
 							}}
 							size="sm" variant="primary"
 						>
