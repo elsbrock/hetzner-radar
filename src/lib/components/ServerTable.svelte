@@ -177,7 +177,7 @@
 				<TableBodyRow on:click={() => toggleRow(i)} class="cursor-pointer">
 					<TableBodyCell padding="px-2 py-3">
 						{#if device.markup_percentage > 0}
-						<div class="w-18 font-medium items-center text-center justify-center px-2.5 py-0.5 bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 rounded text-sm">
+						<div class="w-[70px] font-medium items-center text-center justify-center px-2.5 py-0.5 bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 rounded text-sm">
 							{device.last_price}€<br/>
 							<span 
 							  class="light-gray text-xs"
@@ -188,12 +188,12 @@
 						  </div>
 						{:else}
 							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'day')}
-							<div class="w-18 font-medium items-center text-center justify-center px-2.5 py-0.5 bg-green-100 dark:bg-green-900 rounded text-sm">
+							<div class="w-[70px] font-medium items-center text-center justify-center px-2.5 py-0.5 bg-green-100 dark:bg-green-900 rounded text-sm">
 								{device.last_price}€<br/>
 								<span class="light-gray text-xs">best</span>
 							</div>
 							{:else}
-							<div class="w-18 font-medium items-center text-center justify-center px-2.5 py-0.5 border-yellow-800 bg-yellow-100 dark:bg-neutral-900 rounded text-sm">
+							<div class="w-[70px] font-medium items-center text-center justify-center px-2.5 py-0.5 border-yellow-800 bg-yellow-100 dark:bg-neutral-900 rounded text-sm">
 								{device.last_price}€<br/>
 								<span class="light-gray text-xs">gone</span>
 							</div>
