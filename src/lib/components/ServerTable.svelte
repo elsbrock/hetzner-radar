@@ -109,12 +109,12 @@
 		dispatch('serverDetails', i);
 	};
 
-	// null: no longer open the modal
-	let clickOutsideModal: null | boolean = false;
-	let forwardUrl: string;
+	let showDisclaimer = false;
+	let accepted = false;
+	let forwardUrl = '';
 </script>
 
-<Modal title="Before You Go…" bind:open={clickOutsideModal} autoclose outsideclose>
+<Modal title="Before You Go…" bind:open={showDisclaimer} autoclose outsideclose>
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
 		You will be forwarded to a preconfigured Hetzner Server Auction search.
 	</p>
@@ -132,8 +132,9 @@
 	</p>
 	<svelte:fragment slot="footer">
 		<Button on:click={() => {
-			clickOutsideModal = null;
-		}} href={forwardUrl}>
+			accepted = true;
+			showDisclaimer = false;
+		}} href="{forwardUrl}">
 			I understand, take me there
 		</Button>
 	</svelte:fragment>
@@ -246,15 +247,14 @@
 					<TableBodyCell padding="px-2 py-3">
 						<Button
 							on:click={(e) => {
-								forwardUrl = getHetznerLink(device);
-								if (clickOutsideModal === false) {
-									clickOutsideModal = true;
-								} else {
-									window.location.href = forwardUrl;
+								if (!accepted) {
+									showDisclaimer = true;
+									forwardUrl = getHetznerLink(device);
+									e.preventDefault();
 								}
 								e.stopPropagation();
 							}}
-							size="sm" variant="primary"
+							href="{getHetznerLink(device)}" size="sm" variant="primary"
 						>
 							<FontAwesomeIcon icon={faLink} class="me-2" />Find
 						</Button>
