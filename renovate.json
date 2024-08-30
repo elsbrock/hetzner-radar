@@ -9,7 +9,7 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "auto",
-      "automergeComment": "Merging this PR automatically because all checks are green.",
+      "automergeComment": "Merging this PR automatically because all checks are green."
     },
     {
       "matchPackagePatterns": ["*"],
