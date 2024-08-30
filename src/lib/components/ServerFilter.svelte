@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
-	import RangeSlider from "svelte-range-slider-pips";
+	import { RangeSlider } from "svelte-range-slider-pips";
 	import { faBoxesStacked, faGlobe, faHardDrive, faMemory, faMicrochip, faShareNodes, faTags } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { filesize, type FileSizeOptions } from 'filesize';
