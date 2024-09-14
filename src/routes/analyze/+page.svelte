@@ -35,6 +35,8 @@
 	import { faClockRotateLeft, faStopwatch } from "@fortawesome/free-solid-svg-icons";
 
 	let filter: ServerFilterType = {
+		recentlySeen: false,
+
 		locationGermany: true,
 		locationFinland: true,
 
