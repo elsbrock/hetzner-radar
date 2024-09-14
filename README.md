@@ -15,7 +15,7 @@ https://github.com/user-attachments/assets/cb49e923-0315-49aa-a3c2-2dbef2ee0596
 
 This is a single-tier, client-only architecture, with the website statically built using SvelteKit. DuckDB is used in the background for querying the database.
 
-We fetch the latest auction data from Hetzner once per hour and rebuild the database and website once per day. The raw data is stored in the `data` branch, where we currently maintain three months of history. We may consider purging older data if the branch becomes too large.
+We fetch the latest auction data from Hetzner once per hour, rebuild the database and update the website. The raw data is stored in the `data` branch, where we currently maintain three months of history. We may consider purging older data if the branch becomes too large.
 
 The project is currently deployed on GitHub Pages.
 

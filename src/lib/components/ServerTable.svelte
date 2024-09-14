@@ -232,7 +232,7 @@
 					</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">
 						<span class="inline-flex items-center">
-							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'day')}
+							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'hour')}
 								<Indicator color="green" class="mr-2" />
 							{:else}
 								<Indicator color="red" class="mr-2" />
