@@ -132,6 +132,8 @@ async function getData<T>(conn: AsyncDuckDBConnection, query: SQLStatement): Pro
 }
 
 type ServerFilter = {
+	recentlySeen: boolean;
+
 	locationGermany: boolean;
 	locationFinland: boolean;
 
@@ -252,6 +254,11 @@ function generateFilterQuery(
 	}
 	if (filter.extrasRPS !== null) {
 		query.append(SQL` and with_rps = ${filter.extrasRPS}`);
+	}
+	
+	// recently seen
+	if (filter.recentlySeen) {
+		query.append(SQL` and last_seen > now() - interval '1 hour'`);
 	}
 
 	return query;

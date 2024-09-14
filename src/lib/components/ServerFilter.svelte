@@ -405,4 +405,15 @@
 			</div>
 		</div>
 	</li>
+
+	<li>
+		<hr />
+	</li>
+	<li>
+			<div class="my-3">
+				<Toggle bind:checked={filter.recentlySeen} value={filter.recentlySeen ? 'on' : 'off'}
+				>Recently Seen</Toggle>
+			</div>
+	</li>
+	<li>
 </ul>
