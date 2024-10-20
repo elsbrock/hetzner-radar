@@ -40,9 +40,8 @@ somewhat neglected at the moment).
 
 ### Preparing the Database
 
-> [!NOTE] 
-> This step is optional if you just want to work on the frontend. You can simply
-> download the latest snapshot from the database:
+This step is optional if you just want to work on the frontend. You can simply
+download the latest snapshot from the database:
 
 ```
 wget https://radar.iodev.org/sb.duckdb.wasm -O static/sb.duckdb.wasm
