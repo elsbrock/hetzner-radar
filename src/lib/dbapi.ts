@@ -165,7 +165,8 @@ type ServerFilter = {
 function generateFilterQuery(
 	filter: ServerFilter,
 	withCPU: boolean,
-	withDatacenters: boolean
+	withDatacenters: boolean,
+	recentlySeen: boolean = true
 ): SQLStatement {
 	let query = SQL` cpu_count >= ${filter.cpuCount} and (`;
 
@@ -257,7 +258,7 @@ function generateFilterQuery(
 	}
 	
 	// recently seen
-	if (filter.recentlySeen) {
+	if (recentlySeen && filter.recentlySeen) {
 		query.append(SQL` and seen > (now()::timestamp - interval '1 hour')::timestamp`);
 	}
 
@@ -285,7 +286,7 @@ type ServerPriceStat = {
 };
 
 async function getPrices(conn: AsyncDuckDBConnection, filter: ServerFilter): Promise<ServerPriceStat[]> {
-	let prices_filter_query = generateFilterQuery(filter, true, true);
+	let prices_filter_query = generateFilterQuery(filter, true, true, false);
 	let prices_query = SQL`
         select
 			min(price) as min_price,
