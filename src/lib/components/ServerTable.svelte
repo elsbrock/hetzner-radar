@@ -203,11 +203,11 @@
 					<TableBodyCell padding="px-2 py-3">
 						{device.min_price}€<br/>
 					</TableBodyCell>
-					<TableBodyCell padding="px-2 py-3">€{(device.last_price / device.ram_size).toFixed(2)}</TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">{(device.last_price / device.ram_size).toFixed(2)}€</TableBodyCell>
 					<TableBodyCell
-						>€{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}</TableBodyCell
+						>{pricePerTB(device.min_price, device.nvme_size + device.sata_size)}€</TableBodyCell
 					>
-					<TableBodyCell padding="px-2 py-3">€{pricePerTB(device.last_price, device.hdd_size)}</TableBodyCell>
+					<TableBodyCell padding="px-2 py-3">{pricePerTB(device.last_price, device.hdd_size)}€</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3"><FontAwesomeIcon icon={faMicrochip} class="me-1" />{device.cpu}</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3"><FontAwesomeIcon icon={faMemory} class="me-1" />{device.ram_size} GB</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">
@@ -282,14 +282,14 @@
 											{#each lowestServerDetailPrices as lowestPrice}
 												<TimelineItem
 													classLi="text-base mb-2"
-													title="{lowestPrice.price} €"
+													title="{lowestPrice.price}€"
 													date={dayjs.unix(lowestPrice.seen).format('DD.MM.YYYY HH:mm')}
 												/>
 											{/each}
 											{#if lowestServerDetailPrices.length === 0}
 												<TimelineItem
 													classLi="text-base mb-2"
-													title="{device.min_price} €"
+													title="{device.min_price}€"
 													date={dayjs.unix(device.last_seen).format('DD.MM.YYYY HH:mm')}
 												/>
 											{/if}
