@@ -35,13 +35,14 @@
 		const filterString = queryString.stringify(filter, {
 			arrayFormat: "bracket",
 			skipNull: true,
+			sort: false,
 		});
 		return filterString;
 	}
 
 	function generateShareLink(filter: ServerFilter) {
 		const queryStringified = getFilterString(filter);
-		navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + queryStringified);
+		navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#filter.v1:' + queryStringified);
 	}
 
 	function getFormattedSize(exp: number) {
@@ -66,7 +67,7 @@
 	$: ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1]);
 	$: hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
 	$: hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
-	$: window.location.hash = getFilterString(filter);
+	$: window.location.hash = "filter.v1:" + getFilterString(filter);
 </script>
 
 <style>

@@ -118,10 +118,11 @@
 	onMount(async () => {
 		if (typeof window !== "undefined") {
 			const hash = window.location.hash.substring(1); // Remove the '#'
-			const params = new URLSearchParams(hash.replace(/^filter.v1=/, ""));
+			const params = new URLSearchParams(hash.replace(/^filter.v1:/, ""));
 			const deserializedFilter = queryString.parse(params.toString(), {
 				arrayFormat: "bracket",
 				parseBooleans: true,
+				parseNumbers: true,
 			});
 			filter = {
 				...filter,
