@@ -1,5 +1,6 @@
 <script>
 	import '../app.css';
+	import Toast from '$lib/components/Toast.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 
@@ -28,3 +29,5 @@
 <Nav />
 <slot></slot>
 <Footer />
+
+<Toast duration={2000} />

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
 	import { RangeSlider } from "svelte-range-slider-pips";
-	import { faBoxesStacked, faGlobe, faHardDrive, faMemory, faMicrochip, faShareNodes, faTags } from '@fortawesome/free-solid-svg-icons';
+	import { faBoxesStacked, faFloppyDisk, faTrash, faGlobe, faHardDrive, faMemory, faMicrochip, faTags } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { filesize, type FileSizeOptions } from 'filesize';
 	import { Label, Tooltip } from 'flowbite-svelte';
@@ -9,6 +9,10 @@
 	import { Toggle } from 'flowbite-svelte';
 	import { ButtonGroup, Button } from 'flowbite-svelte';
 	import queryString from 'query-string';
+	import { createEventDispatcher } from 'svelte';
+
+	// used for filter persistence events
+	const dispatch = createEventDispatcher();
 
 	const fileSizeOptions: FileSizeOptions = {
 		base: 10,
@@ -30,19 +34,15 @@
 	export let filter: ServerFilter;
 	export let datacenters: NameValuePair[];
 	export let cpuModels: NameValuePair[];
+	export let hasStoredFilter: boolean;
 
 	function getFilterString(filter: ServerFilter) {
 		const filterString = queryString.stringify(filter, {
 			arrayFormat: "bracket",
-			skipNull: true,
+			skipNull: false,
 			sort: false,
 		});
 		return filterString;
-	}
-
-	function generateShareLink(filter: ServerFilter) {
-		const queryStringified = getFilterString(filter);
-		navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#filter.v1:' + queryStringified);
 	}
 
 	function getFormattedSize(exp: number) {
@@ -87,24 +87,42 @@
 </style>
 
 <ul class="space-y-2 font-medium">
-	<li class="flex justify-between items-center">
-		<h2><FontAwesomeIcon
-			class="w-4 h-4 me-1"
-			icon={faGlobe}
-		/> Location</h2>
-		<Tooltip triggeredBy="#share-filter" placement="bottom" trigger="hover">Copy link to clipboard</Tooltip>
-		<button
-			id="share-filter"
-			class="ml-2 text-right p-2 rounded cursor-pointer hover:scale-110 active:scale-95 transition transform duration-150 ease-in-out"
-			on:click={() => generateShareLink(filter)}
-			aria-label="Share Filter"
-		>
+	<li class="flex items-center justify-between">
+		<h2 class="flex items-center">
 			<FontAwesomeIcon
-				class="w-5 h-5 text-black dark:text-white transition-colors duration-150 ease-in-out"
-				icon={faShareNodes}
-			/>
-		</button>
-	</li>
+				class="w-4 h-4 me-1"
+				icon={faGlobe}
+			/> Location
+		</h2>
+		<div class="flex items-center ml-auto">
+			<Tooltip triggeredBy="#save-filter" placement="bottom" trigger="hover">Save filter to local storage</Tooltip>
+			<button
+				id="save-filter"
+				class="ml-2 text-right p-2 rounded cursor-pointer hover:scale-110 active:scale-95 transition transform duration-150 ease-in-out"
+				on:click={() => dispatch('saveFilter')}
+				aria-label="Save Filter"
+			>
+				<FontAwesomeIcon
+					class="w-5 h-5 text-black dark:text-white transition-colors duration-150 ease-in-out"
+					icon={faFloppyDisk}
+				/>
+			</button>
+			{#if hasStoredFilter}
+				<Tooltip triggeredBy="#clear-filter" placement="bottom" trigger="hover">Delete filter from local storage</Tooltip>
+				<button
+					id="clear-filter"
+					class="ml-2 text-right p-2 rounded cursor-pointer hover:scale-110 active:scale-95 transition transform duration-150 ease-in-out"
+					on:click={() => dispatch('clearFilter')}
+					aria-label="Clear Filter"
+				>
+					<FontAwesomeIcon
+						class="w-5 h-5 text-black dark:text-white transition-colors duration-150 ease-in-out"
+						icon={faTrash}
+					/>
+				</button>
+			{/if}
+		</div>
+	</li>	
 	<li>
 		<Toggle bind:checked={filter.locationGermany} value={filter.locationGermany ? 'on' : 'off'}
 			>Germany</Toggle

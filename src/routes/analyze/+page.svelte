@@ -28,42 +28,16 @@
 	import ServerTable from "$lib/components/ServerTable.svelte";
 	import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
 	import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-	import queryString from "query-string";
 	import { onMount } from "svelte";
 	import dayjs from 'dayjs';
 	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 	import { faClockRotateLeft, faStopwatch } from "@fortawesome/free-solid-svg-icons";
+	import { addToast } from '$lib/toastStore';
+  import { defaultFilter, getFilterFromURL } from "$lib/filter";
 
-	let filter: ServerFilterType = {
-		recentlySeen: false,
+	let filter: ServerFilterType;
 
-		locationGermany: true,
-		locationFinland: true,
-
-		cpuCount: 1,
-		cpuIntel: true,
-		cpuAMD: true,
-
-		ramInternalSize: [4, 6],
-
-		ssdNvmeCount: [0, 0],
-		ssdNvmeInternalSize: [1, 12],
-
-		ssdSataCount: [0, 0],
-		ssdSataInternalSize: [1, 4],
-
-		hddCount: [0, 2],
-		hddInternalSize: [4, 16],
-
-		selectedDatacenters: [],
-		selectedCpuModels: [],
-
-		extrasECC: null,
-		extrasINIC: null,
-		extrasHWR: false,
-		extrasGPU: false,
-		extrasRPS: false,
-	};
+	let hasStoredFilter = false;
 
 	let lastUpdated: number;
 	let serverList: ServerConfiguration[] = [];
@@ -115,21 +89,43 @@
 		});
 	}
 
-	onMount(async () => {
-		if (typeof window !== "undefined") {
-			const hash = window.location.hash.substring(1); // Remove the '#'
-			const params = new URLSearchParams(hash.replace(/^filter.v1:/, ""));
-			const deserializedFilter = queryString.parse(params.toString(), {
-				arrayFormat: "bracket",
-				parseBooleans: true,
-				parseNumbers: true,
-			});
-			filter = {
-				...filter,
-				...deserializedFilter,
-			};
+	function loadFilter(): ServerFilterType | null {
+		const storedFilter = localStorage.getItem('radar-filter');
+		if (storedFilter) {
+			return JSON.parse(storedFilter);
 		}
-	});
+		return null;
+	}
+
+	function handleSaveFilter(event: CustomEvent<void>) {
+		saveFilter(filter);
+	}
+
+	function saveFilter(filter: ServerFilter) {
+		pirsch("filter-save");
+		localStorage.setItem('radar-filter', JSON.stringify(filter));
+		hasStoredFilter = true;
+		addToast({
+			color: 'green',
+			message: 'Filter saved successfully',
+			icon: 'success',
+		});
+	}
+
+	function handleClearFilter(event: CustomEvent<void>) {
+		hasStoredFilter = false;
+		clearFilter();
+	}
+
+	function clearFilter() {
+		pirsch("filter-clear");
+		localStorage.removeItem('radar-filter');
+		addToast({
+			color: 'red',
+			message: 'Filter cleared successfully',
+			icon: 'error',
+		});
+	}
 
 	function debounce(fn: any, delay: number) {
 		let timeoutID: number;
@@ -141,7 +137,7 @@
 	}
 
 	const debouncedFetchData = debounce(fetchData, 500);
-	$: if (!!$db) {
+	$: if (!!$db && filter) {
 		// TODO: generate at build time
 		if (!lastUpdated) {
 			withDbConnections($db, async (conn1) => {
@@ -153,6 +149,27 @@
 		}
 		debouncedFetchData($db, filter);
 	}
+
+	onMount(async () => {
+		const filterFromURL = getFilterFromURL();
+		const storedFilter = loadFilter();
+		if (filterFromURL) {
+			console.log("using filter from URL");
+			filter = filterFromURL;
+		} else {
+			if (storedFilter) {
+				addToast({
+					color: 'green',
+					message: 'Using stored filter settings',
+					icon: 'success',
+				});
+				filter = storedFilter;
+				hasStoredFilter = true;
+			} else {
+				filter = defaultFilter;
+			}
+		}
+	});
 
 	let totalOffers = 0;
 	$: totalOffers = Array.isArray(serverPrices)
@@ -166,14 +183,15 @@
 			<Progressbar {$dbInitProgress} labelOutside="Loading data…" />
 		</div>
 	</div>
-{:else}
+{:else if filter}
 	<div
 		class="grid min-h-screen grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]"
 	>
 		<aside
 		class="border-r border-gray-200 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto">
 			<div class="h-full bg-white px-3 py-2 dark:bg-gray-800">
-				<ServerFilter bind:filter {datacenters} {cpuModels} />
+				<ServerFilter bind:filter on:saveFilter={handleSaveFilter} on:clearFilter={handleClearFilter} {hasStoredFilter} {datacenters} {cpuModels}
+				/>
 				<div class="mt-4">
 					<hr class="mb-5" />
 						{#if lastUpdated}

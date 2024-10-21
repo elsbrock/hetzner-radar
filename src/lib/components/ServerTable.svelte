@@ -19,7 +19,7 @@
 
 	import type { ServerConfiguration, ServerDetail, ServerPriceStat, ServerLowestPriceStat	} from '$lib/dbapi';
 
-	import { faHardDrive, faLightbulb, faLink, faMemory, faMicrochip, faServer, faShare } from '@fortawesome/free-solid-svg-icons';
+	import { faHardDrive, faLightbulb, faLink, faMemory, faMicrochip, faServer } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	import dayjs from 'dayjs';
@@ -232,7 +232,7 @@
 					</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">
 						<span class="inline-flex items-center">
-							{#if dayjs.unix(device.last_seen) > dayjs().subtract(1, 'hour')}
+							{#if dayjs.unix(device.last_seen) > dayjs().subtract(2, 'hour')}
 								<Indicator color="green" class="mr-2" />
 							{:else}
 								<Indicator color="red" class="mr-2" />
