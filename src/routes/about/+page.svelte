@@ -10,7 +10,7 @@
 	<!-- Introduction Section -->
 	<div class="mb-12 text-center">
 			<p class="text-lg text-gray-600 mb-5">
-					**Server Radar** is your go-to tool for finding the best deals on Hetzner Dedicated Servers. Whether you're a developer, system administrator, or just someone looking to optimize your server purchases, Server Radar provides you with the insights and data you need to make informed decisions.
+					Server Radar is your go-to tool for finding the best deals on Hetzner Dedicated Servers. Whether you're a developer, system administrator, or just someone looking to optimize your server purchases, Server Radar provides you with the insights and data you need to make informed decisions.
 			</p>
 			<p class="text-lg text-gray-600">
 					Built with passion and dedication, Server Radar aims to simplify the process of tracking server prices, analyzing trends, and ensuring you get the best value for your investment.
