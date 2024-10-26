@@ -123,7 +123,7 @@ CREATE OR REPLACE TABLE server AS
 WITH CTE AS (
     SELECT
         *,
-        ROW_NUMBER() OVER (PARTITION BY id, date_trunc('d', seen) ORDER BY id) as row_num
+        ROW_NUMBER() OVER (PARTITION BY id, date_trunc('d', seen) ORDER BY seen DESC) as row_num
     FROM
         server_raw
 )
