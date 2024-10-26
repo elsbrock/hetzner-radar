@@ -55,7 +55,7 @@
 		"@fortawesome/svelte-fontawesome": "^0.2.2",
 		"dayjs": "^1.11.12",
 		"filesize": "^10.1.4",
-		"query-string": "^9.1.0",
+		"lz-string": "^1.5.0",
 		"sql-template-strings": "^2.2.2"
 	}
 }

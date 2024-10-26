@@ -1,4 +1,5 @@
 import type { ServerFilter } from "$lib/dbapi";
+import LZString from 'lz-string';
 
 export const defaultFilter: ServerFilter = {
   recentlySeen: false,
@@ -45,7 +46,8 @@ export function getFilterFromURL(): ServerFilter | null {
   const [, versionNumber, filterString] = match;
   const version = `v${versionNumber}`; // e.g., "v1"
 
-  const deserializedFilter = JSON.parse(decodeURI(filterString)) as ServerFilter;
+  const decodedFilter = LZString.decompressFromEncodedURIComponent(filterString);
+  const deserializedFilter = JSON.parse(decodedFilter) as ServerFilter;
 
   // TODO: Add validation for deserializedFilter if necessary
 

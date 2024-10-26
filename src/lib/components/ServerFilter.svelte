@@ -9,6 +9,8 @@
 	import { Toggle } from 'flowbite-svelte';
 	import { ButtonGroup, Button } from 'flowbite-svelte';
 	import { createEventDispatcher } from 'svelte';
+	import LZString from 'lz-string';
+
 
 	// used for filter persistence events
 	const dispatch = createEventDispatcher();
@@ -36,7 +38,7 @@
 	export let hasStoredFilter: boolean;
 
 	function getFilterString(filter: ServerFilter) {
-		const filterString = JSON.stringify(filter);
+		const filterString = LZString.compressToEncodedURIComponent(JSON.stringify(filter));
 		return filterString;
 	}
 
