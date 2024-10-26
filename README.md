@@ -30,17 +30,6 @@ older data if the branch becomes too large.
 
 The project is currently deployed on GitHub Pages.
 
-## Working with the dataset
-
-You can use the production DuckDB database to play around with the data. Start
-right away using the following command:
-
-```
-duckdb -cmd "attach 'https://radar.iodev.org/sb.duckdb.wasm' (read_only); use sb;"
-```
-
-Inspect the data using the `.schema` pragma.
-
 ## Development
 
 To set up your development environment, you'll need Python 3 for data ingestion
@@ -60,6 +49,14 @@ wget https://radar.iodev.org/sb.duckdb.wasm -O static/sb.duckdb.wasm
 
 Note that we're using the `.wasm` extension purely to trick the Github CDN into
 believing it can be cached; it is indeed a regular DuckDB binary database file.
+
+If you just want to inspect or play with the dataset, you can do so by running.
+
+```
+duckdb -cmd "attach 'https://radar.iodev.org/sb.duckdb.wasm' (read_only); use sb;"
+```
+
+Inspect the schema using the `.schema` pragma.
 
 We use Python 3 to create a DuckDB database and ingest the auction data.
 
