@@ -30,6 +30,17 @@ older data if the branch becomes too large.
 
 The project is currently deployed on GitHub Pages.
 
+## Working with the dataset
+
+You can use the production DuckDB database to play around with the data. Start
+right away using the following command:
+
+```
+duckdb -cmd "attach 'https://radar.iodev.org/sb.duckdb.wasm' (read_only); use sb;"
+```
+
+Inspect the data using the `.schema` pragma.
+
 ## Development
 
 To set up your development environment, you'll need Python 3 for data ingestion
