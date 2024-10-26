@@ -1,4 +1,3 @@
-import queryString from "query-string";
 import type { ServerFilter } from "$lib/dbapi";
 
 export const defaultFilter: ServerFilter = {
@@ -35,7 +34,6 @@ export const defaultFilter: ServerFilter = {
 export function getFilterFromURL(): ServerFilter | null {
   const hash = window.location.hash.substring(1); // Remove the leading '#'
 
-  // Regular expression to match "filter.vN:..." where N is a version number
   const filterRegex = /^filter\.v(\d+):(.+)$/;
   const match = hash.match(filterRegex);
 
@@ -47,25 +45,7 @@ export function getFilterFromURL(): ServerFilter | null {
   const [, versionNumber, filterString] = match;
   const version = `v${versionNumber}`; // e.g., "v1"
 
-  if (!filterString) {
-    // No filter parameters found after the version
-    return null;
-  }
-
-  // Parse the filter string using URLSearchParams
-  const params = new URLSearchParams(filterString);
-
-  if ([...params].length === 0) {
-    // No valid query parameters found
-    return null;
-  }
-
-  // Deserialize the filter using queryString.parse
-  const deserializedFilter = queryString.parse(params.toString(), {
-    arrayFormat: 'bracket',
-    parseBooleans: true,
-    parseNumbers: true,
-  }) as ServerFilter;
+  const deserializedFilter = JSON.parse(decodeURI(filterString)) as ServerFilter;
 
   // TODO: Add validation for deserializedFilter if necessary
 

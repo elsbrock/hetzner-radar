@@ -8,7 +8,6 @@
 	import { MultiSelect } from 'flowbite-svelte';
 	import { Toggle } from 'flowbite-svelte';
 	import { ButtonGroup, Button } from 'flowbite-svelte';
-	import queryString from 'query-string';
 	import { createEventDispatcher } from 'svelte';
 
 	// used for filter persistence events
@@ -37,11 +36,7 @@
 	export let hasStoredFilter: boolean;
 
 	function getFilterString(filter: ServerFilter) {
-		const filterString = queryString.stringify(filter, {
-			arrayFormat: "bracket",
-			skipNull: false,
-			sort: false,
-		});
+		const filterString = JSON.stringify(filter);
 		return filterString;
 	}
 
@@ -67,7 +62,7 @@
 	$: ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1]);
 	$: hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
 	$: hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
-	$: window.location.hash = "filter.v1:" + getFilterString(filter);
+	$: window.location.hash = "filter.v2:" + getFilterString(filter);
 </script>
 
 <style>
