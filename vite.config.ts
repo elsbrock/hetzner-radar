@@ -15,7 +15,9 @@ const formattedDate = date.toLocaleDateString('de-DE', {
 export default defineConfig(({ mode }) => ({
 	plugins: [
 		sveltekit(),
-		removeConsole(),
+		removeConsole({
+			includes: ["log", "error", "warn", "debug", "table", "info"]
+		}),
 	],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
