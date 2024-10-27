@@ -158,7 +158,7 @@
 	</section>
 
 	<!-- Open Source Commitment Section -->
-	<section id="open-source" class="mx-auto my-20 max-w-7xl text-center bg-white shadow-lg rounded-lg p-8 overflow-hidden">
+	<section id="open-source" class="mx-auto my-20 max-w-7xl text-center bg-white shadow-lg rounded-lg md:p-8 overflow-hidden">
 		<!-- Heading -->
 		<h2 class="mb-6 text-4xl font-semibold text-gray-800">Open Source Commitment</h2>
 
