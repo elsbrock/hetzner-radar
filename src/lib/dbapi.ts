@@ -335,11 +335,11 @@ async function getConfigurations(
 	let configurations_query = SQL`
 		WITH subquery AS (
 			SELECT
-				cpu,
+				cpu, cpu_count, cpu_vendor, location,
 				ram_size, is_ecc, hdd_arr,
-				nvme_size, nvme_drives,
-				sata_size, sata_drives,
-				hdd_size, hdd_drives,
+				nvme_size, nvme_drives, nvme_count,
+				sata_size, sata_drives, sata_count,
+				hdd_size, hdd_drives, hdd_count,
 				with_gpu, with_inic, with_hwr, with_rps,
 				price,
 				seen,
@@ -354,12 +354,15 @@ async function getConfigurations(
 										sata_size, sata_drives,
 										hdd_size, hdd_drives,
 										with_gpu, with_inic, with_hwr, with_rps
-							) AS last_seen
+							) AS last_seen,
+				MIN(price) OVER (PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
+										nvme_size, nvme_drives,
+										sata_size, sata_drives,
+										hdd_size, hdd_drives,
+										with_gpu, with_inic, with_hwr, with_rps
+				) AS min_price
 			FROM
 				server
-			WHERE `;
-	configurations_query.append(configurations_filter_query);
-	configurations_query.append(SQL`
 		)
 		SELECT
 			cpu,
@@ -368,13 +371,16 @@ async function getConfigurations(
 			sata_size, sata_drives::JSON as sata_drives,
 			hdd_size, hdd_drives::JSON as hdd_drives,
 			with_gpu, with_inic, with_hwr, with_rps,
-			MIN(price) AS min_price,
+			MAX(min_price) as min_price,
 			MAX(last_price) AS last_price,
 			extract('epoch' from MAX(last_seen)) AS last_seen,
 			-- calculate the markup percentage
-			round((MAX(last_price) - MIN(price)) / MIN(price) * 100, 0) AS markup_percentage
+			round((MAX(last_price) - MAX(min_price)) / MAX(min_price) * 100, 0) AS markup_percentage
 		FROM
 			subquery
+		WHERE `;
+		configurations_query.append(configurations_filter_query);
+		configurations_query.append(`
 		GROUP BY
 			cpu, ram_size, is_ecc, hdd_arr,
 			nvme_size, nvme_drives,
