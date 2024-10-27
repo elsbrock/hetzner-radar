@@ -388,7 +388,7 @@ async function getConfigurations(
 			hdd_size, hdd_drives,
 			with_gpu, with_inic, with_hwr, with_rps
 		ORDER BY
-			last_seen DESC`);
+			last_seen DESC, last_price ASC`);
 
 	const data = await getData<ServerConfiguration>(conn, configurations_query);
 	return data.map((d: ServerConfiguration) => {
