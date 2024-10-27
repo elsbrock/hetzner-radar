@@ -176,7 +176,7 @@
 			{#each data as device, i}
 				<TableBodyRow on:click={() => toggleRow(i)} class="cursor-pointer">
 					<TableBodyCell padding="px-2 py-3">
-						{#if dayjs.unix(device.last_seen) < dayjs().subtract(1, 'hour')}
+						{#if dayjs.unix(device.last_seen) < dayjs().subtract(80, 'minutes')}
 						<div class="w-[70px] font-medium items-center text-center justify-center px-2.5 py-0.5 border-yellow-800 bg-yellow-100 dark:bg-neutral-900 rounded text-sm">
 							{device.last_price}€<br/>
 							<span class="light-gray text-xs">gone</span>
@@ -230,7 +230,7 @@
 					</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">
 						<span class="inline-flex items-center">
-							{#if dayjs.unix(device.last_seen) > dayjs().subtract(2, 'hour')}
+							{#if dayjs.unix(device.last_seen) > dayjs().subtract(80, 'minutes')}
 								<Indicator color="green" class="mr-2" />
 							{:else}
 								<Indicator color="red" class="mr-2" />
