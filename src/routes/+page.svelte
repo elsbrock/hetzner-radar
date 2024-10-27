@@ -180,7 +180,7 @@
 			Have questions or need support? We'd love to hear from you! Reach out to us through our channels below.
 		</p>
 		<div class="flex justify-center space-x-4">
-			<Button color="light" href="mailto:simon+radar@iodev.org" class="px-6 py-3 text-lg flex items-center">
+			<Button color="light" href="/contact" class="px-6 py-3 text-lg flex items-center">
 				Contact Us
 			</Button>
 			<Button color="light" href="https://github.com/elsbrock/hetzner-radar/issues" class="px-6 py-3 text-lg flex items-center">
