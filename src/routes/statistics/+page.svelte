@@ -191,15 +191,6 @@
 							{ name: 'AMD', data: cpuVendorAMDStats },
 							{ name: 'Intel', data: cpuVendorIntelStats }
 						]}
-						options={{
-							chart: {
-								stacked: true,
-								type: "area",
-							},
-							dataLabels: {
-								enabled: false,
-							},
-						}}
 					/>
 				</div>
 			</div>
