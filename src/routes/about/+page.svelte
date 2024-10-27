@@ -125,9 +125,9 @@
 								<FontAwesomeIcon icon={faGithub} class="mr-2" />
 								Visit Our GitHub
 						</a>
-						<a href="mailto:simon+radar@iodev.org" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded flex items-center">
+						<a href="/contact" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded flex items-center">
 								<FontAwesomeIcon icon={faUser} class="mr-2" />
-								Contact Simon
+								Contact
 						</a>
 				</div>
 		</section>
