@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { tickStep } from 'd3';
   import { Spinner } from 'flowbite-svelte';
   import { onMount, onDestroy } from 'svelte';
 
@@ -12,7 +11,7 @@
 
   let options: ApexCharts.ApexOptions = {
     chart: {
-      height: '340px',
+      height: '100%',
       width: '100%',
       dropShadow: {
         enabled: false,
@@ -197,7 +196,7 @@
   }
 </script>
 
-<div class="relative z-0 h-80 w-full">
+<div class="relative h-[320px] w-full">
   <div
     class:blur-sm={loading || noResults}
     class:pointer-events-none={loading || noResults}
