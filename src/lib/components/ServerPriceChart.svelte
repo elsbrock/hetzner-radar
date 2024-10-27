@@ -114,7 +114,7 @@
       const minYVolume = Math.min(...yValuesVolume);
       const maxYVolume = Math.max(...yValuesVolume);
       const paddingVolume = (maxYVolume - minYVolume) * 0.1;
-      const newMinYVolume = Math.floor(minYVolume - paddingVolume);
+      const newMinYVolume = Math.max(0, Math.floor(minYVolume - paddingVolume));
       const newMaxYVolume = Math.ceil(maxYVolume + paddingVolume);
 
 			chart.updateOptions(
