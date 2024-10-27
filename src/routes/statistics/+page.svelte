@@ -156,9 +156,18 @@
 						]}
 						options={{
 							chart: {
-								height: "350px",
 								stacked: true,
 								type: "area",
+							},
+							yaxis: {
+								title: {
+									text: 'Volume',
+								},
+								labels: {
+									formatter: function (value) {
+										return value.toFixed(0);
+									},
+								},
 							},
 							dataLabels: {
 								enabled: false
@@ -184,13 +193,11 @@
 						]}
 						options={{
 							chart: {
-								height: "350px",
 								stacked: true,
 								type: "area",
 							},
 							dataLabels: {
 								enabled: false,
-
 							},
 						}}
 					/>

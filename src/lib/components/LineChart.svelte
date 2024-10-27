@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import type ApexCharts from 'apexcharts';
 	import type { ApexOptions } from 'apexcharts';
+	import merge from 'deepmerge';
 
 	export let data: { name: string; data: { x: number; y: number }[] }[] = [];
 	export let options: ApexOptions = {};
@@ -24,7 +25,7 @@
 		chartOptions = {
 			chart: {
 				type: 'line',
-				height: '100%',
+				height: '95%',
 				width: '100%',
 				toolbar: {
 					tools: {
@@ -49,8 +50,13 @@
 				},
 			},
 			yaxis: {
+				title: {
+					text: 'Price (€)',
+				},
 				labels: {
-					formatter: (value) => value.toFixed(2),
+					formatter: function (value: number) {
+						return value.toFixed(2) + ' €';
+					},
 				},
 			},
 			legend: {
@@ -64,7 +70,7 @@
 		};
 
 		// Merge the user-provided options with the default options
-		chartOptions = { ...chartOptions, ...options };
+		chartOptions = merge(chartOptions, options);
 
 		chart = new ApexCharts(container, chartOptions);
 		chart.render();
