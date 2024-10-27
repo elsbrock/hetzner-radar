@@ -121,7 +121,7 @@
 					"Server Radar has been instrumental in helping me find the best deals on Hetzner servers. The price tracking feature is a game-changer!"
 				</p>
 				<div class="flex items-center">
-					<img src="/images/user1.jpg" alt="Alex Johnson" class="w-12 h-12 rounded-full mr-4"/>
+					<img src="/images/user1.jpg" alt="Alex Johnson" class="w-12 h-12 rounded-full mr-4" loading="lazy"/>
 					<div>
 						<p class="text-gray-800 font-semibold">Alex Johnson</p>
 						<p class="text-gray-500 text-sm">Web Developer</p>
@@ -134,7 +134,7 @@
 					"Thanks to Server Radar, I've been able to optimize my server purchases and save a significant amount of money. Highly recommended!"
 				</p>
 				<div class="flex items-center">
-					<img src="/images/user2.jpg" alt="Maria Lopez" class="w-12 h-12 rounded-full mr-4"/>
+					<img src="/images/user2.jpg" alt="Maria Lopez" class="w-12 h-12 rounded-full mr-4" loading="lazy"/>
 					<div>
 						<p class="text-gray-800 font-semibold">Maria Lopez</p>
 						<p class="text-gray-500 text-sm">System Administrator</p>
@@ -147,7 +147,7 @@
 					"The advanced filtering options make it easy to find exactly what I need. Server Radar is an invaluable tool for anyone serious about server management."
 				</p>
 				<div class="flex items-center">
-					<img src="/images/user3.jpg" alt="Liam Smith" class="w-12 h-12 rounded-full mr-4"/>
+					<img src="/images/user3.jpg" alt="Liam Smith" class="w-12 h-12 rounded-full mr-4" loading="lazy"/>
 					<div>
 						<p class="text-gray-800 font-semibold">Liam Smith</p>
 						<p class="text-gray-500 text-sm">IT Consultant</p>
@@ -158,14 +158,25 @@
 	</section>
 
 	<!-- Open Source Commitment Section -->
-	<section id="open-source" class="mx-auto my-20 max-w-7xl text-center bg-white shadow-lg rounded-lg p-8">
+	<section id="open-source" class="mx-auto my-20 max-w-7xl text-center bg-white shadow-lg rounded-lg p-8 overflow-hidden">
+		<!-- Heading -->
 		<h2 class="mb-6 text-4xl font-semibold text-gray-800">Open Source Commitment</h2>
-		<div class="flex flex-col items-center md:flex-row md:space-x-8">
-			<div>
-				<p class="mx-20 mb-4 text-gray-600">
+
+		<!-- Image and content container -->
+		<div class="relative">
+			<!-- Background Image -->
+			<img src="/images/code.png" alt="GitHub Repository" class="w-full h-64
+			object-cover" style="opacity: 0.3;" loading="lazy" />
+
+			<!-- Gradient Overlay -->
+			<div class="absolute inset-0" style="background: linear-gradient(to bottom, white 5%, transparent 15%, transparent 15%, white 100%);"></div>
+
+			<!-- Content over image -->
+			<div class="absolute inset-0 flex flex-col items-center justify-center p-4">
+				<p class="mx-20 mb-4 text-gray-700">
 					Server Radar is proudly open-source. We believe in transparency and community collaboration to continuously improve our tool. Explore our code, contribute to the project, or suggest new features on GitHub.
 				</p>
-				<Button color="secondary" href="https://github.com/elsbrock/hetzner-radar" class="px-6 pb-3 text-lg flex items-center justify-center mx-auto">
+				<Button color="secondary" href="https://github.com/elsbrock/hetzner-radar" class="px-6 pb-3 text-lg flex items-center justify-center">
 					<FontAwesomeIcon icon={faGithub} class="mr-2" />
 					View on GitHub
 				</Button>
