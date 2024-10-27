@@ -4,6 +4,7 @@
 	import type { ApexOptions } from 'apexcharts';
 
 	export let data: { name: string; data: { x: number; y: number }[] }[] = [];
+	export let options: ApexOptions = {};
 
 	let chart: ApexCharts;
 	let container: HTMLElement;
@@ -61,6 +62,9 @@
 				width: 3,
 			},
 		};
+
+		// Merge the user-provided options with the default options
+		chartOptions = { ...chartOptions, ...options };
 
 		chart = new ApexCharts(container, chartOptions);
 		chart.render();

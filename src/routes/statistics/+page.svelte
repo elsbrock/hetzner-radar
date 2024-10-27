@@ -42,7 +42,6 @@
 					gpuPriceStats,
 					cpuVendorAMDStats,
 					cpuVendorIntelStats,
-					volumeStats,
 					volumeFinlandStats,
 					volumeGermanyStats
 				] = await Promise.all([
@@ -54,7 +53,6 @@
 					getGPUPriceStats(conn1),
 					getCPUVendorPriceStats(conn2, 'AMD'),
 					getCPUVendorPriceStats(conn2, 'Intel'),
-					getVolumeStats(conn3),
 					getVolumeStats(conn3, 'Finland'),
 					getVolumeStats(conn3, 'Germany')
 				]);
@@ -91,7 +89,6 @@
 				<div class="h-80 w-full">
 					<LineChart
 						data={[
-							{ name: 'Any', data: ramPriceStats },
 							{ name: 'With ECC', data: ramWithECCPriceStats },
 							{ name: 'Without ECC', data: ramWithoutECCPriceStats }
 						]}
@@ -154,10 +151,19 @@
 				<div class="h-80 w-full">
 					<LineChart
 						data={[
-							{ name: 'Total', data: volumeStats },
 							{ name: 'Finland', data: volumeFinlandStats },
 							{ name: 'Germany', data: volumeGermanyStats }
 						]}
+						options={{
+							chart: {
+								height: "350px",
+								stacked: true,
+								type: "area",
+							},
+							dataLabels: {
+								enabled: false
+							},
+						}}
 					/>
 				</div>
 			</div>
@@ -176,6 +182,17 @@
 							{ name: 'AMD', data: cpuVendorAMDStats },
 							{ name: 'Intel', data: cpuVendorIntelStats }
 						]}
+						options={{
+							chart: {
+								height: "350px",
+								stacked: true,
+								type: "area",
+							},
+							dataLabels: {
+								enabled: false,
+
+							},
+						}}
 					/>
 				</div>
 			</div>
