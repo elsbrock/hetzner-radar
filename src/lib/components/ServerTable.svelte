@@ -199,7 +199,7 @@
 						{/if}
 					</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">
-						{device.min_price}€<br/>
+						{device.min_price}€
 					</TableBodyCell>
 					<TableBodyCell padding="px-2 py-3">{(device.last_price / device.ram_size).toFixed(2)}€</TableBodyCell>
 					<TableBodyCell
