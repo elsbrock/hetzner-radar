@@ -3,3 +3,7 @@ node_modules
 data
 build
 *.wasm
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
