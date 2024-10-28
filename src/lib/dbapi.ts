@@ -259,7 +259,7 @@ function generateFilterQuery(
 	
 	// recently seen
 	if (recentlySeen && filter.recentlySeen) {
-		query.append(SQL` and seen > (now()::timestamp - interval '1 hour')::timestamp`);
+		query.append(SQL` and seen > (now()::timestamp - interval '70 minute')::timestamp`);
 	}
 
 	return query;
