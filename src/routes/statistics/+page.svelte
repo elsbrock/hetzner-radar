@@ -11,6 +11,9 @@
 		type TemporalStat
 	} from '$lib/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
+  import { Button, Card } from 'flowbite-svelte';
+  import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+  import { faHardDrive, faMemory, faMicrochip } from '@fortawesome/free-solid-svg-icons';
 
 	let loading = true;
 
@@ -77,6 +80,111 @@
 			Explore comprehensive insights into server availability, pricing trends, and configuration distributions to optimize your infrastructure investments.
 		</p>
 
+		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest Storage Configurations</h2>
+		<div class="grid grid-cols-2 gap-6 md:grid-cols-4 mb-10">
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+		</div>
+
+		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest Memory Configurations</h2>
+		<div class="grid grid-cols-2 gap-6 md:grid-cols-4 mb-10">
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+			<Card class="text-left mb-6">
+				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
+					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+				</p>
+				<div class="flex justify-between items-center mt-3">
+					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
+					<Button outline href="/">View</Button>
+				</div>
+			</Card>
+		</div>
+
+		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">General Auction Insights</h2>
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 			<!-- RAM Price Over Time -->
 			<div class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800">
@@ -101,7 +209,7 @@
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 dark:text-white">Disk Price Over Time</h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Explore how the price of HDD storage has fluctuated over time. This data can help you determine the best time to purchase storage-heavy configurations.
+						Explore how the price of one GB HDD storage has fluctuated over time. This data can help you determine the best time to purchase storage-heavy configurations.
 					</p>
 				</div>
 				<div class="h-80 w-full">
@@ -114,7 +222,7 @@
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 dark:text-white">SSD Price Over Time</h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						See how SSD prices have changed over time, allowing you to plan your purchases for configurations that rely on fast storage solutions.
+						See how one GB of SSD storage have changed over time, allowing you to plan your purchases for configurations that rely on fast storage solutions.
 					</p>
 				</div>
 				<div class="h-80 w-full">
@@ -132,7 +240,7 @@
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 dark:text-white">Cheapest GPU Configuration</h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Compare the price trends for GPUs to make informed decisions when selecting a graphics card for your server.
+						Compare the price trends for servers with GPUs to make informed decisions when selecting a graphics card for your server.
 					</p>
 				</div>
 				<div class="h-80 w-full">
