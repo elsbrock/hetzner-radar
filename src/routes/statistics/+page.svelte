@@ -2,22 +2,31 @@
 	import LineChart from '$lib/components/LineChart.svelte';
 	import { db } from '../../stores/db';
 	import {
+		getCheapestConfigurations,
+		getCheapestDiskConfigurations,
+		getCheapestRamConfigurations,
 		getRamPriceStats,
 		getDiskPriceStats,
 		getGPUPriceStats,
 		getCPUVendorPriceStats,
 		getVolumeStats,
 		withDbConnections,
-		type TemporalStat
+		type TemporalStat,
+    	type ServerConfiguration,
 	} from '$lib/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
-  import { Button, Card } from 'flowbite-svelte';
+  import { Button, Card, Badge } from 'flowbite-svelte';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faHardDrive, faMemory, faMicrochip } from '@fortawesome/free-solid-svg-icons';
+  import { getFormattedDiskSize, getFormattedMemorySize } from '$lib/disksize';
+  import Footer from '$lib/components/Footer.svelte';
+  import { convertServerConfigurationToFilter, getFilterString } from '$lib/filter';
 
 	let loading = true;
 
-	let ramPriceStats: TemporalStat[] = [];
+	let cheapestConfigurations: ServerConfiguration[] = [];
+	let cheapDiskConfigurations: ServerConfiguration[] = [];
+	let cheapRamConfigurations: ServerConfiguration[] = [];
 	let ramWithECCPriceStats: TemporalStat[] = [];
 	let ramWithoutECCPriceStats: TemporalStat[] = [];
 	let hddPriceStats: TemporalStat[] = [];
@@ -26,7 +35,6 @@
 	let gpuPriceStats: TemporalStat[] = [];
 	let cpuVendorAMDStats: TemporalStat[] = [];
 	let cpuVendorIntelStats: TemporalStat[] = [];
-	let volumeStats: TemporalStat[] = [];
 	let volumeFinlandStats: TemporalStat[] = [];
 	let volumeGermanyStats: TemporalStat[] = [];
 
@@ -37,6 +45,9 @@
 		await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
 			try {
 				[
+					cheapestConfigurations,
+					cheapDiskConfigurations,
+					cheapRamConfigurations,
 					ramWithECCPriceStats,
 					ramWithoutECCPriceStats,
 					hddPriceStats,
@@ -48,6 +59,9 @@
 					volumeFinlandStats,
 					volumeGermanyStats
 				] = await Promise.all([
+					getCheapestConfigurations(conn1),
+					getCheapestDiskConfigurations(conn1),
+					getCheapestRamConfigurations(conn1),
 					getRamPriceStats(conn2, true),
 					getRamPriceStats(conn3, false),
 					getDiskPriceStats(conn4, 'hdd'),
@@ -80,108 +94,79 @@
 			Explore comprehensive insights into server availability, pricing trends, and configuration distributions to optimize your infrastructure investments.
 		</p>
 
-		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest Storage Configurations</h2>
+		<h3 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest Configurations</h3>
 		<div class="grid grid-cols-2 gap-6 md:grid-cols-4 mb-10">
+			{#each cheapestConfigurations as config}
 			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{config.cpu}</h5>
+				<div class="mb-3">
+					{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
+					{#if config.hdd_drives.length > 0}<span><Badge border>HDD</Badge></span>{/if}
+					{#if config.nvme_drives.length > 0 || config.sata_drives.length > 0}<span><Badge border>SSD</Badge></span>{/if}
+					{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
+					{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
+					{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
+				</div>
 				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-4" /> {config.ram_size} GB RAM<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> {getFormattedDiskSize(config.hdd_size + config.nvme_size + config.sata_size)} Storage<br/>
 				</p>
 				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
+					<span class="text-xl font-bold text-gray-900 dark:text-white">{config.price} €</span>
+					<Button outline href="/analyze#filter.v2:{getFilterString(convertServerConfigurationToFilter(config))}">View</Button>
 				</div>
 			</Card>
-			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
-				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
-				</p>
-				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
-				</div>
-			</Card>
-			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
-				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
-				</p>
-				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
-				</div>
-			</Card>
-			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
-				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
-				</p>
-				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
-				</div>
-			</Card>
+			{/each}
 		</div>
 
-		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest Memory Configurations</h2>
+		<h3 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest by Disk Space</h3>
 		<div class="grid grid-cols-2 gap-6 md:grid-cols-4 mb-10">
+			{#each cheapDiskConfigurations as config}
 			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{config.cpu}</h5>
+				<div class="mb-3">
+					{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
+					{#if config.hdd_drives.length > 0}<span><Badge border>HDD</Badge></span>{/if}
+					{#if config.nvme_drives.length > 0 || config.sata_drives.length > 0}<span><Badge border>SSD</Badge></span>{/if}
+					{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
+					{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
+					{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
+				</div>
 				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-4" /> {config.ram_size} GB RAM<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> {getFormattedDiskSize(config.hdd_size + config.nvme_size + config.sata_size)} Storage<br/>
 				</p>
 				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
+					<span class="text-xl font-bold text-gray-900 dark:text-white">{config.price} € <span class="text-gray-400 text-xs">{(config.price / (config.hdd_size / 1000)).toFixed(2)} € / TB</span></span>
+					<Button outline href="/analyze#filter.v2:{getFilterString(convertServerConfigurationToFilter(config))}">View</Button>
 				</div>
 			</Card>
+			{/each}
+		</div>
+
+		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Cheapest by Memory</h2>
+		<div class="grid grid-cols-2 gap-6 md:grid-cols-4 mb-10">
+			{#each cheapRamConfigurations as config}
 			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
+				<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{config.cpu}</h5>
+				<div class="mb-3">
+					{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
+					{#if config.hdd_drives.length > 0}<span><Badge border>HDD</Badge></span>{/if}
+					{#if config.nvme_drives.length > 0 || config.sata_drives.length > 0}<span><Badge border>SSD</Badge></span>{/if}
+					{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
+					{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
+					{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
+				</div>
 				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
+					<FontAwesomeIcon icon={faMemory} class="me-1 w-4" /> {config.ram_size} GB RAM<br/>
+					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> {getFormattedDiskSize(config.hdd_size + config.nvme_size + config.sata_size)} Storage<br/>
 				</p>
 				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
+					<span class="text-xl font-bold text-gray-900 dark:text-white">{config.price} € <span class="text-gray-400 text-xs">{(config.price / (config.hdd_size / 1000)).toFixed(2)} € / GB</span></span>
+					<Button outline href="/analyze#filter.v2:{getFilterString(convertServerConfigurationToFilter(config))}">View</Button>
 				</div>
 			</Card>
-			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
-				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
-				</p>
-				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
-				</div>
-			</Card>
-			<Card class="text-left mb-6">
-				<h5 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">500 GB</h5>
-				<p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-					<FontAwesomeIcon icon={faMicrochip} class="me-1 w-5" /> Intel Xeon Foo<br/>
-					<FontAwesomeIcon icon={faMemory} class="me-1 w-5" /> 64 GB<br/>
-					<FontAwesomeIcon icon={faHardDrive} class="me-1 w-5" /> 2x 1 TB HDD
-				</p>
-				<div class="flex justify-between items-center mt-3">
-					<span class="text-2xl font-bold text-gray-900 dark:text-white">50 €</span>
-					<Button outline href="/">View</Button>
-				</div>
-			</Card>
+			{/each}
 		</div>
 
 		<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">General Auction Insights</h2>

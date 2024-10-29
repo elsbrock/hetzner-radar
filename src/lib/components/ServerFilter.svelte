@@ -1,31 +1,18 @@
 <script lang="ts">
-	import type { NameValuePair, ServerFilter } from '$lib/dbapi';
+	import type { NameValuePair } from '$lib/dbapi';
 	import { RangeSlider } from "svelte-range-slider-pips";
 	import { faBoxesStacked, faFloppyDisk, faTrash, faGlobe, faHardDrive, faMemory, faMicrochip, faTags } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { filesize, type FileSizeOptions } from 'filesize';
 	import { Label, Tooltip } from 'flowbite-svelte';
 	import { MultiSelect } from 'flowbite-svelte';
 	import { Toggle } from 'flowbite-svelte';
 	import { ButtonGroup, Button } from 'flowbite-svelte';
 	import { createEventDispatcher } from 'svelte';
-	import LZString from 'lz-string';
-
+  	import { getFormattedDiskSize, getFormattedMemorySize } from '$lib/disksize';
+	import { getFilterString, type ServerFilter } from '$lib/filter';
 
 	// used for filter persistence events
 	const dispatch = createEventDispatcher();
-
-	const fileSizeOptions: FileSizeOptions = {
-		base: 10,
-		round: 0,
-		standard: "si",
-	};
-
-	const diskSizeOptions: FileSizeOptions = {
-		base: 10,
-		round: 2,
-		standard: "si",
-	};
 
 	const springValues = {
 		stiffness: 1,
@@ -37,27 +24,8 @@
 	export let cpuModels: NameValuePair[];
 	export let hasStoredFilter: boolean;
 
-	function getFilterString(filter: ServerFilter) {
-		const filterString = LZString.compressToEncodedURIComponent(JSON.stringify(filter));
-		return filterString;
-	}
-
-	function getFormattedSize(exp: number) {
-		return filesize(
-			Math.pow(2, exp) * Math.pow(1000, 3),
-			fileSizeOptions
-		);
-	}
-
-	function getFormattedDiskSize(base: number, step: number = 250) {
-		return filesize(
-			base * step * Math.pow(1000, 3),
-			diskSizeOptions
-		);
-	}
-
-	$: ramSizeLower = getFormattedSize(filter.ramInternalSize[0]);
-	$: ramSizeUpper = getFormattedSize(filter.ramInternalSize[1]);
+	$: ramSizeLower = getFormattedMemorySize(filter.ramInternalSize[0]);
+	$: ramSizeUpper = getFormattedMemorySize(filter.ramInternalSize[1]);
 	$: ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0]);
 	$: ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1]);
 	$: ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0]);
