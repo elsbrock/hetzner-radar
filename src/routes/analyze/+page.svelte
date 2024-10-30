@@ -33,7 +33,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 	import { faClockRotateLeft, faStopwatch } from "@fortawesome/free-solid-svg-icons";
 	import { addToast } from '$lib/toastStore';
-  import { defaultFilter, getFilterFromURL } from "$lib/filter";
+    import { defaultFilter, getFilterFromURL } from "$lib/filter";
 
 	let filter: ServerFilterType;
 
@@ -138,6 +138,7 @@
 
 	const debouncedFetchData = debounce(fetchData, 500);
 	$: if (!!$db && filter) {
+		console.log("Fetching data with filter:", filter);
 		// TODO: generate at build time
 		if (!lastUpdated) {
 			withDbConnections($db, async (conn1) => {

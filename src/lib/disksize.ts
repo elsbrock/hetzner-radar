@@ -19,9 +19,9 @@ export function getFormattedMemorySize(exp: number) {
     );
 }
 
-export function getFormattedDiskSize(base: number) {
+export function getFormattedDiskSize(base: number, step: number = 250) {
     return filesize(
-        base * Math.pow(1000, 3),
+        base * step * Math.pow(1000, 3),
         diskSizeOptions
     );
 }
@@ -30,21 +30,20 @@ export function getInverseMemoryExp(size: number): number {
     if (size <= 0) {
         throw new Error('Size must be a positive number.');
     }
-    const baseSize = Math.pow(1000, 3);
-    return Math.log2(size / baseSize);
+    return Math.log2(size);
 }
 
-export function getInverseDiskBase(size: number): number {
-    if (size < 0) {
-        throw new Error('Size cannot be negative.');
+export function computeFilterRange(drives: number[], multiplier: number): [number, number] {
+    if (drives.length === 0) {
+      return [0, 0];
     }
-    const baseSize = Math.pow(1000, 3);
-    return size / baseSize;
-}
-
-export function getFormattedDiskStepSize(base: number, step: number = 250) {
-    return filesize(
-        base * step * Math.pow(1000, 3),
-        diskSizeOptions
-    );
-}
+  
+    const minDrive = Math.min(...drives);
+    const maxDrive = Math.max(...drives);
+  
+    // Compute filter values by dividing by the multiplier
+    const minFilter = Math.floor(minDrive / multiplier);
+    const maxFilter = Math.ceil(maxDrive / multiplier);
+  
+    return [minFilter, maxFilter];
+  }

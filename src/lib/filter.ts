@@ -1,6 +1,6 @@
 import LZString from 'lz-string';
 import type { ServerConfiguration } from './dbapi';
-import { getInverseDiskBase, getInverseMemoryExp } from './disksize';
+import { computeFilterRange, getInverseMemoryExp } from './disksize';
 
 export type ServerFilter = {
 	recentlySeen: boolean;
@@ -92,6 +92,7 @@ export function getFilterFromURL(): ServerFilter | null {
 }
 
 export function convertServerConfigurationToFilter(serverConfiguration: ServerConfiguration): ServerFilter {
+  console.log(serverConfiguration);
   return {
     cpuCount: 1,
     cpuIntel: true,
@@ -102,23 +103,14 @@ export function convertServerConfigurationToFilter(serverConfiguration: ServerCo
       getInverseMemoryExp(serverConfiguration.ram_size),
     ],
 
-    ssdNvmeCount: [serverConfiguration.nvme_drives.length, serverConfiguration.nvme_drives.length],
-    ssdNvmeInternalSize: [
-      getInverseDiskBase(serverConfiguration.nvme_drives[0]),
-      getInverseDiskBase(serverConfiguration.nvme_drives[0]),
-    ],
+    ssdNvmeCount: Array(2).fill(serverConfiguration.nvme_drives.length).flat().slice(0, 2),
+    ssdNvmeInternalSize: computeFilterRange(serverConfiguration.nvme_drives.toArray(), 250),
 
-    ssdSataCount: [serverConfiguration.sata_drives.length, serverConfiguration.sata_drives.length],
-    ssdSataInternalSize: [
-      getInverseDiskBase(serverConfiguration.sata_drives[0]),
-      getInverseDiskBase(serverConfiguration.sata_drives[0]),
-    ],
+    ssdSataCount: Array(2).fill(serverConfiguration.sata_drives.length).flat().slice(0, 2),
+    ssdSataInternalSize: computeFilterRange(serverConfiguration.sata_drives.toArray(), 250),
 
-    hddCount: [serverConfiguration.hdd_drives.length, serverConfiguration.hdd_drives.length],
-    hddInternalSize: [
-      getInverseDiskBase(serverConfiguration.hdd_drives[0]),
-      getInverseDiskBase(serverConfiguration.hdd_drives[0]),
-    ],
+    hddCount: Array(2).fill(serverConfiguration.hdd_drives.length).flat().slice(0, 2),
+    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives.toArray(), 1000),
 
     selectedCpuModels: [serverConfiguration.cpu],
 

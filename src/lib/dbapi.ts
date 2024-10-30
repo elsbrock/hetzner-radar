@@ -586,7 +586,7 @@ async function getCheapestConfigurations(conn: AsyncDuckDBConnection): Promise<S
 
 async function getCheapestDiskConfigurations(conn: AsyncDuckDBConnection): Promise<ServerConfiguration[]> {
 	return getData<ServerConfiguration>(conn, SQL`
-		SELECT DISTINCT ON (cpu, hdd_size)
+		SELECT DISTINCT ON (cpu)
 			*
 		EXCLUDE (id)
 		FROM server
@@ -602,7 +602,7 @@ async function getCheapestDiskConfigurations(conn: AsyncDuckDBConnection): Promi
 
 async function getCheapestRamConfigurations(conn: AsyncDuckDBConnection): Promise<ServerConfiguration[]> {
 	return getData<ServerConfiguration>(conn, SQL`
-		SELECT DISTINCT ON (cpu, hdd_size)
+		SELECT DISTINCT ON (cpu)
 			*
 		EXCLUDE (id)
 		FROM server
