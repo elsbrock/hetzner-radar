@@ -8,7 +8,6 @@
 		NameValuePair,
 		ServerConfiguration,
 		ServerDetail,
-		ServerFilter as ServerFilterType,
 		ServerLowestPriceStat,
 		ServerPriceStat,
 	} from "$lib/dbapi";
@@ -33,7 +32,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 	import { faClockRotateLeft, faStopwatch } from "@fortawesome/free-solid-svg-icons";
 	import { addToast } from '$lib/toastStore';
-    import { defaultFilter, getFilterFromURL } from "$lib/filter";
+    import { defaultFilter, getFilterFromURL, type ServerFilter as ServerFilterType } from "$lib/filter";
 
 	let filter: ServerFilterType;
 

@@ -33,10 +33,10 @@
 
 	<NavUl class="order-1" {activeUrl}>
 			<NavLi href="/">Home</NavLi>
+			<NavLi href="/configurations">Configurations</NavLi>
 			<NavLi href="/analyze">
 					<FontAwesomeIcon class="me-2" icon={faChartSimple} /> Analyze
 			</NavLi>
-			<NavLi href="/configurations">Configurations</NavLi>
 			<NavLi href="/statistics">Statistics</NavLi>
 			<!-- Optional: Include "Contribute" in the menu -->
 			<!--

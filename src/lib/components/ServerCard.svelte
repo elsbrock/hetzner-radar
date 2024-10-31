@@ -5,7 +5,7 @@
       getFilterString,
       convertServerConfigurationToFilter,
     } from "$lib/filter";
-    import { faMemory, faHardDrive } from "@fortawesome/free-solid-svg-icons";
+    import { faMemory, faHardDrive, faSdCard } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { Card, Badge, Button, Spinner } from "flowbite-svelte"; // Import Spinner from Flowbite-Svelte
 
@@ -50,20 +50,25 @@
       if (unit === 'perGB') {
         return `${(totalPrice / size).toFixed(2)} €/GB`;
       } else if (unit === 'perTB') {
-        return `${(totalPrice / (size / 1024)).toFixed(2)} €/TB`;
+        console.log(totalPrice, size);
+        return `${(totalPrice / (size / 1000)).toFixed(2)} €/TB`;
       }
       return '';
     }
 
-    function getTotalStorageSize(): number {
+    function getTotalStorageSize(config: ServerConfiguration): number {
       let total = 0;
-      const storageTypes = [config.nvme_drives, config.sata_drives, config.hdd_drives];
+      const storageTypes = [
+        config.nvme_drives.toArray(),
+        config.sata_drives.toArray(),
+        config.hdd_drives.toArray(),
+      ];
       storageTypes.forEach(drives => {
-        drives.toArray().forEach(drive => {
-          total += drive;
-        });
+        for (const num of drives) {
+          total += num;
+        }
       });
-      return total; // Assuming drive.value is in GB
+      return total;
     }
 </script>
 
@@ -89,23 +94,23 @@
           <FontAwesomeIcon icon={faMemory} class="me-1 w-4" />
           {config.ram_size} GB RAM<br />
           {#if config.nvme_drives.length > 0}
-            <FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> NVMe
-            {#each summarizeNumbers(config.nvme_drives) as { count, value }}
-              {count}× {getFormattedDiskSize(value / 250)}
+            <FontAwesomeIcon icon={faSdCard} class="me-1 w-4" /> NVMe
+            {#each summarizeNumbers(config.nvme_drives) as { count, value }, i}
+              {count}× {getFormattedDiskSize(value / 250)}{#if i > 0}, {/if}
             {/each}
             <br />
           {/if}
           {#if config.sata_drives.length > 0}
-            <FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> SATA
-            {#each summarizeNumbers(config.sata_drives) as { count, value }}
-              {count}× {getFormattedDiskSize(value / 250)}
+            <FontAwesomeIcon icon={faSdCard} class="me-1 w-4" /> SATA
+            {#each summarizeNumbers(config.sata_drives) as { count, value }, i}
+              {count}× {getFormattedDiskSize(value / 250)}{#if i > 0}, {/if}
             {/each}
             <br />
           {/if}
           {#if config.hdd_drives.length > 0}
             <FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> HDD
-            {#each summarizeNumbers(config.hdd_drives) as { count, value }}
-              {count}× {getFormattedDiskSize(value / 500)}
+            {#each summarizeNumbers(config.hdd_drives) as { count, value }, i}
+              {count}× {getFormattedDiskSize(value, 1)}{#if i > 0}, {/if}
             {/each}
             <br />
           {/if}
@@ -119,7 +124,7 @@
             <span class="text-xl font-bold text-gray-900 dark:text-white">
                 {config.price} €
             </span>
-            + VAT
+            +VAT
           </span>
           {#if displayRamPrice !== 'none' || displayStoragePrice !== 'none'}
             <div class="text-gray-400 text-xs">
@@ -127,7 +132,7 @@
                 {calculatePricePerUnit(config.price, config.ram_size, displayRamPrice)} RAM<br />
               {/if}
               {#if displayStoragePrice !== 'none'}
-                {calculatePricePerUnit(config.price, getTotalStorageSize(), displayStoragePrice)} Storage
+                {calculatePricePerUnit(config.price, getTotalStorageSize(config), displayStoragePrice)} Storage
               {/if}
             </div>
           {/if}

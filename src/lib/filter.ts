@@ -92,7 +92,6 @@ export function getFilterFromURL(): ServerFilter | null {
 }
 
 export function convertServerConfigurationToFilter(serverConfiguration: ServerConfiguration): ServerFilter {
-  console.log(serverConfiguration);
   return {
     cpuCount: 1,
     cpuIntel: true,
@@ -110,7 +109,7 @@ export function convertServerConfigurationToFilter(serverConfiguration: ServerCo
     ssdSataInternalSize: computeFilterRange(serverConfiguration.sata_drives.toArray(), 250),
 
     hddCount: Array(2).fill(serverConfiguration.hdd_drives.length).flat().slice(0, 2),
-    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives.toArray(), 1000),
+    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives.toArray(), 500),
 
     selectedCpuModels: [serverConfiguration.cpu],
 

@@ -269,7 +269,7 @@
 		</span>
 	</li>
 	<li>
-		<RangeSlider bind:values={filter.hddCount} min={0} max={10} hoverable={false} {springValues} pips range pushy />
+		<RangeSlider bind:values={filter.hddCount} min={0} max={15} hoverable={false} {springValues} pips range pushy />
 	</li>
 	<li class="flex justify-between">
 		<Label class="text-sm">HDD Size</Label>
