@@ -4,6 +4,7 @@ import type {
 	AsyncPreparedStatement
 } from '@duckdb/duckdb-wasm';
 import SQL, { type SQLStatement } from 'sql-template-strings';
+import { type ServerFilter } from './filter';
 
 async function fetchWithProgress(
 	url: string,
@@ -124,43 +125,12 @@ async function getData<T>(conn: AsyncDuckDBConnection, query: SQLStatement): Pro
 
 		console.debug(`${results.length} results in ${timing.toFixed(4)}s`);
 	} catch (e) {
-		console.error('error executing query', e);
+		console.error('error executing query', getRawQuery(query), e);
 	} finally {
 		stmt?.close();
 	}
 	return results;
 }
-
-type ServerFilter = {
-	recentlySeen: boolean;
-
-	locationGermany: boolean;
-	locationFinland: boolean;
-
-	cpuCount: number;
-	cpuIntel: boolean;
-	cpuAMD: boolean;
-
-	ramInternalSize: [number, number];
-
-	ssdNvmeCount: [number, number];
-	ssdNvmeInternalSize: [number, number];
-
-	ssdSataCount: [number, number];
-	ssdSataInternalSize: [number, number];
-
-	hddCount: [number, number];
-	hddInternalSize: [number, number];
-
-	selectedDatacenters: string[];
-	selectedCpuModels: string[];
-
-	extrasECC: boolean | null;
-	extrasINIC: boolean | null;
-	extrasHWR: boolean | null;
-	extrasGPU: boolean | null;
-	extrasRPS: boolean | null;
-};
 
 function generateFilterQuery(
 	filter: ServerFilter,
@@ -319,12 +289,12 @@ type ServerConfiguration = {
 	sata_drives: number[];
 	hdd_size: number | null;
 	hdd_drives: number[];
-	price: number;
-	min_price: number;
-	last_price: number;
-	markup_percentage: number;
-	last_seen: number;
-	count: number;
+	price: number | null;
+	min_price: number | null;
+	last_price: number | null;
+	markup_percentage: number | null;
+	last_seen: number | null;
+	count: number | null;
 };
 
 async function getConfigurations(
@@ -598,6 +568,54 @@ type TemporalStat = {
 	y: number;
 };
 
+async function getCheapestConfigurations(conn: AsyncDuckDBConnection): Promise<ServerConfiguration[]> {
+	return getData<ServerConfiguration>(conn, SQL`
+		SELECT DISTINCT ON (cpu)
+			*
+		EXCLUDE (id)
+		FROM server
+		WHERE date_trunc('day', seen) = (
+				SELECT MAX(date_trunc('day', seen)) 
+				FROM server
+			)
+			AND ram_size > 0 AND (hdd_size > 0 OR nvme_size > 0 OR sata_size > 0)
+		ORDER BY price ASC
+		LIMIT 4
+	`);
+}
+
+async function getCheapestDiskConfigurations(conn: AsyncDuckDBConnection): Promise<ServerConfiguration[]> {
+	return getData<ServerConfiguration>(conn, SQL`
+		SELECT DISTINCT ON (cpu)
+			*
+		EXCLUDE (id)
+		FROM server
+		WHERE date_trunc('day', seen) = (
+				SELECT MAX(date_trunc('day', seen)) 
+				FROM server
+			)
+			AND ram_size > 0 AND (hdd_size > 0 OR nvme_size > 0 OR sata_size > 0)
+		ORDER BY (price / hdd_size) ASC
+		LIMIT 4
+	`);
+}
+
+async function getCheapestRamConfigurations(conn: AsyncDuckDBConnection): Promise<ServerConfiguration[]> {
+	return getData<ServerConfiguration>(conn, SQL`
+		SELECT DISTINCT ON (cpu)
+			*
+		EXCLUDE (id)
+		FROM server
+		WHERE date_trunc('day', seen) = (
+				SELECT MAX(date_trunc('day', seen)) 
+				FROM server
+			)
+			AND ram_size > 0 AND (hdd_size > 0 OR nvme_size > 0 OR sata_size > 0)
+		ORDER BY (price / ram_size) ASC
+		LIMIT 4
+	`);
+}
+
 async function getRamPriceStats(conn: AsyncDuckDBConnection, withECC?: boolean, country?: string): Promise<TemporalStat[]> {
 	const query = SQL`
 		select
@@ -739,6 +757,10 @@ async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Pr
 		getDatacenters,
 		getCPUModels,
 
+		getCheapestConfigurations,
+		getCheapestDiskConfigurations,
+		getCheapestRamConfigurations,
+
 		getRamPriceStats,
 		getDiskPriceStats,
 		getGPUPriceStats,
@@ -751,6 +773,5 @@ async function getVolumeStats(conn: AsyncDuckDBConnection, country?: string): Pr
 		type ServerConfiguration,
 		type ServerLowestPriceStat,
 		type ServerPriceStat,
-		type ServerFilter,
 		type ServerDetail,
 	};

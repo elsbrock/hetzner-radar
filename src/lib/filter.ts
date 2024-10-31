@@ -1,5 +1,37 @@
-import type { ServerFilter } from "$lib/dbapi";
 import LZString from 'lz-string';
+import type { ServerConfiguration } from './dbapi';
+import { computeFilterRange, getInverseMemoryExp } from './disksize';
+
+export type ServerFilter = {
+	recentlySeen: boolean;
+
+	locationGermany: boolean;
+	locationFinland: boolean;
+
+	cpuCount: number;
+	cpuIntel: boolean;
+	cpuAMD: boolean;
+
+	ramInternalSize: [number, number];
+
+	ssdNvmeCount: [number, number];
+	ssdNvmeInternalSize: [number, number];
+
+	ssdSataCount: [number, number];
+	ssdSataInternalSize: [number, number];
+
+	hddCount: [number, number];
+	hddInternalSize: [number, number];
+
+	selectedDatacenters: string[];
+	selectedCpuModels: string[];
+
+	extrasECC: boolean | null;
+	extrasINIC: boolean | null;
+	extrasHWR: boolean | null;
+	extrasGPU: boolean | null;
+	extrasRPS: boolean | null;
+};
 
 export const defaultFilter: ServerFilter = {
   recentlySeen: false,
@@ -32,6 +64,11 @@ export const defaultFilter: ServerFilter = {
   extrasRPS: false,
 };
 
+export function getFilterString(filter: ServerFilter) {
+  const filterString = LZString.compressToEncodedURIComponent(JSON.stringify(filter));
+  return filterString;
+}
+
 export function getFilterFromURL(): ServerFilter | null {
   const hash = window.location.hash.substring(1); // Remove the leading '#'
 
@@ -52,4 +89,41 @@ export function getFilterFromURL(): ServerFilter | null {
   // TODO: Add validation for deserializedFilter if necessary
 
   return deserializedFilter;
+}
+
+export function convertServerConfigurationToFilter(serverConfiguration: ServerConfiguration): ServerFilter {
+  return {
+    cpuCount: 1,
+    cpuIntel: true,
+    cpuAMD: true,
+
+    ramInternalSize: [
+      getInverseMemoryExp(serverConfiguration.ram_size),
+      getInverseMemoryExp(serverConfiguration.ram_size),
+    ],
+
+    ssdNvmeCount: Array(2).fill(serverConfiguration.nvme_drives.length).flat().slice(0, 2),
+    ssdNvmeInternalSize: computeFilterRange(serverConfiguration.nvme_drives.toArray(), 250),
+
+    ssdSataCount: Array(2).fill(serverConfiguration.sata_drives.length).flat().slice(0, 2),
+    ssdSataInternalSize: computeFilterRange(serverConfiguration.sata_drives.toArray(), 250),
+
+    hddCount: Array(2).fill(serverConfiguration.hdd_drives.length).flat().slice(0, 2),
+    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives.toArray(), 500),
+
+    selectedCpuModels: [serverConfiguration.cpu],
+
+    extrasECC: serverConfiguration.is_ecc,
+    extrasINIC: serverConfiguration.with_inic,
+    extrasHWR: serverConfiguration.with_hwr,
+    extrasGPU: serverConfiguration.with_gpu,
+    extrasRPS: serverConfiguration.with_rps,
+
+    recentlySeen: false,
+
+    locationGermany: true,
+    locationFinland: true,
+
+    selectedDatacenters: [],
+  };
 }

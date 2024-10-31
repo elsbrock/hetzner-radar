@@ -8,13 +8,13 @@
 		getCPUVendorPriceStats,
 		getVolumeStats,
 		withDbConnections,
-		type TemporalStat
+		type TemporalStat,
+    	type ServerConfiguration,
 	} from '$lib/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 	let loading = true;
 
-	let ramPriceStats: TemporalStat[] = [];
 	let ramWithECCPriceStats: TemporalStat[] = [];
 	let ramWithoutECCPriceStats: TemporalStat[] = [];
 	let hddPriceStats: TemporalStat[] = [];
@@ -23,7 +23,6 @@
 	let gpuPriceStats: TemporalStat[] = [];
 	let cpuVendorAMDStats: TemporalStat[] = [];
 	let cpuVendorIntelStats: TemporalStat[] = [];
-	let volumeStats: TemporalStat[] = [];
 	let volumeFinlandStats: TemporalStat[] = [];
 	let volumeGermanyStats: TemporalStat[] = [];
 
@@ -101,7 +100,7 @@
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 dark:text-white">Disk Price Over Time</h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Explore how the price of HDD storage has fluctuated over time. This data can help you determine the best time to purchase storage-heavy configurations.
+						Explore how the price of one GB HDD storage has fluctuated over time. This data can help you determine the best time to purchase storage-heavy configurations.
 					</p>
 				</div>
 				<div class="h-80 w-full">
@@ -114,7 +113,7 @@
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 dark:text-white">SSD Price Over Time</h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						See how SSD prices have changed over time, allowing you to plan your purchases for configurations that rely on fast storage solutions.
+						See how one GB of SSD storage have changed over time, allowing you to plan your purchases for configurations that rely on fast storage solutions.
 					</p>
 				</div>
 				<div class="h-80 w-full">
@@ -132,7 +131,7 @@
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 dark:text-white">Cheapest GPU Configuration</h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Compare the price trends for GPUs to make informed decisions when selecting a graphics card for your server.
+						Compare the price trends for servers with GPUs to make informed decisions when selecting a graphics card for your server.
 					</p>
 				</div>
 				<div class="h-80 w-full">

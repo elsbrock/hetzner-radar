@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { ServerPriceStat } from '$lib/dbapi';
   import { Spinner } from 'flowbite-svelte';
   import { onMount, onDestroy } from 'svelte';
 
