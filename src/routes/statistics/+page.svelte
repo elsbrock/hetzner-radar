@@ -7,10 +7,9 @@
 		getGPUPriceStats,
 		getCPUVendorPriceStats,
 		getVolumeStats,
-		withDbConnections,
 		type TemporalStat,
-    	type ServerConfiguration,
-	} from '$lib/dbapi';
+	} from '$lib/queries/stats';
+	import { withDbConnections } from '$lib/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 	let loading = true;

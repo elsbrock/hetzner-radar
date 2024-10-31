@@ -3,7 +3,7 @@
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
   	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { page } from '$app/stores';
-  import { faChartSimple } from '@fortawesome/free-solid-svg-icons';
+  import { faChartSimple, faServer } from '@fortawesome/free-solid-svg-icons';
   import Radar from './Radar.svelte';
 	$: activeUrl = $page.url.pathname;
 </script>
@@ -19,21 +19,24 @@
 	<!-- Contribute Button for Desktop -->
 	<div class="hidden md:flex md:order-2">
 			<Button size="sm" href="https://github.com/elsbrock/hetzner-radar">
-					<FontAwesomeIcon class="w-5 h-5 me-2" icon={faGithub} /> Contribute
+					<FontAwesomeIcon class="w-5 h-5" icon={faGithub} /> Contribute
 			</Button>
 	</div>
 
 	<!-- Analyze Button and Hamburger for Mobile -->
 	<div class="flex md:order-2 md:hidden">
 			<Button size="sm" href="/analyze">
-					<FontAwesomeIcon class="w-5 h-5 me-2" icon={faChartSimple} /> Analyze
+					<FontAwesomeIcon class="w-5 h-5" icon={faChartSimple} /> Analyze
 			</Button>
 			<NavHamburger />
 	</div>
 
 	<NavUl class="order-1" {activeUrl}>
 			<NavLi href="/">Home</NavLi>
-			<NavLi href="/configurations">Configurations</NavLi>
+			<NavLi href="/configurations">
+				<FontAwesomeIcon class="me-2" icon={faServer} />
+				Configurations
+			</NavLi>
 			<NavLi href="/analyze">
 					<FontAwesomeIcon class="me-2" icon={faChartSimple} /> Analyze
 			</NavLi>

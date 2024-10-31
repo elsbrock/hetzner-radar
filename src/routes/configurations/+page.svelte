@@ -1,17 +1,18 @@
 <script lang="ts">
 	import { db } from '../../stores/db';
 	import {
-		getCheapestConfigurations,
-		getCheapestDiskConfigurations,
-		getCheapestRamConfigurations,
 		withDbConnections,
-    	type ServerConfiguration,
 	} from '$lib/dbapi';
+    import {
+		type ServerConfiguration,
+	} from '$lib/queries/filter';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
   import ServerCard from '$lib/components/ServerCard.svelte';
   import { faMemory, faDatabase, faGamepad, faCloud, faShieldAlt, faCode } from '@fortawesome/free-solid-svg-icons';
   import { Button } from 'flowbite-svelte';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+  import { encodeFilter, convertServerConfigurationToFilter } from '$lib/filter';
+  import { getCheapestConfigurations, getCheapestDiskConfigurations, getCheapestRamConfigurations } from '$lib/queries/configs';
 
 	let loading = true;
 
@@ -66,10 +67,42 @@
                 Perfect for budget-conscious users looking to maximize value without compromising essential features.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <ServerCard config={cheapestConfigurations[0]} {loading} />
-                <ServerCard config={cheapestConfigurations[1]} {loading} />
-                <ServerCard config={cheapestConfigurations[2]} {loading} />
-                <ServerCard config={cheapestConfigurations[3]} {loading} />
+                <ServerCard config={cheapestConfigurations[0]} {loading}>
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[0]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapestConfigurations[1]} {loading}>
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[1]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapestConfigurations[2]} {loading}>
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[2]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapestConfigurations[3]} {loading}>
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[3]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
             </div>
         </div>
         
@@ -80,10 +113,42 @@
                 Ideal for data-intensive applications, backups, and storage-heavy projects requiring ample disk space.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <ServerCard config={cheapDiskConfigurations[0]} {loading} displayStoragePrice="perTB" />
-                <ServerCard config={cheapDiskConfigurations[1]} {loading} displayStoragePrice="perTB" />
-                <ServerCard config={cheapDiskConfigurations[2]} {loading} displayStoragePrice="perTB" />
-                <ServerCard config={cheapDiskConfigurations[3]} {loading} displayStoragePrice="perTB" />
+                <ServerCard config={cheapDiskConfigurations[0]} {loading} displayStoragePrice="perTB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[0]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapDiskConfigurations[1]} {loading} displayStoragePrice="perTB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[1]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapDiskConfigurations[2]} {loading} displayStoragePrice="perTB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[2]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapDiskConfigurations[3]} {loading} displayStoragePrice="perTB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[3]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
             </div>
         </div>
         
@@ -94,10 +159,42 @@
                 Optimize performance for memory-intensive applications such as databases, virtual machines, and high-traffic websites.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <ServerCard config={cheapRamConfigurations[0]} {loading} displayRamPrice="perGB" />
-                <ServerCard config={cheapRamConfigurations[1]} {loading} displayRamPrice="perGB" />
-                <ServerCard config={cheapRamConfigurations[2]} {loading} displayRamPrice="perGB" />
-                <ServerCard config={cheapRamConfigurations[3]} {loading} displayRamPrice="perGB" />
+                <ServerCard config={cheapRamConfigurations[0]} {loading} displayRamPrice="perGB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[0]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapRamConfigurations[1]} {loading} displayRamPrice="perGB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[1]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapRamConfigurations[2]} {loading} displayRamPrice="perGB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[2]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
+                <ServerCard config={cheapRamConfigurations[3]} {loading} displayRamPrice="perGB">
+                    <Button slot="buttons"
+					outline
+					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[3]))}"
+					class="px-4 py-2 text-sm"
+					>
+					Find
+					</Button>
+                </ServerCard>
             </div>
         </div>
     </section>

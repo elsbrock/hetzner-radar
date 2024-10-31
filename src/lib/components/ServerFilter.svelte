@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NameValuePair } from '$lib/dbapi';
+	import type { NameValuePair } from '$lib/queries/stats';
 	import { RangeSlider } from "svelte-range-slider-pips";
 	import { faBoxesStacked, faFloppyDisk, faTrash, faGlobe, faHardDrive, faMemory, faMicrochip, faTags } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -9,7 +9,7 @@
 	import { ButtonGroup, Button } from 'flowbite-svelte';
 	import { createEventDispatcher } from 'svelte';
   	import { getFormattedDiskSize, getFormattedMemorySize } from '$lib/disksize';
-	import { getFilterString, type ServerFilter } from '$lib/filter';
+	import { encodeFilter, type ServerFilter } from '$lib/filter';
 
 	// used for filter persistence events
 	const dispatch = createEventDispatcher();
@@ -32,7 +32,7 @@
 	$: ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1]);
 	$: hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
 	$: hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
-	$: window.location.hash = "filter.v2:" + getFilterString(filter);
+	$: window.location.hash = "filter.v2:" + encodeFilter(filter);
 </script>
 
 <style>

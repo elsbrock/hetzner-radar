@@ -3,36 +3,37 @@
 </script>
 
 <script lang="ts">
-	import { db, dbInitProgress } from "../../stores/db";
-	import type {
-		NameValuePair,
-		ServerConfiguration,
-		ServerDetail,
-		ServerLowestPriceStat,
-		ServerPriceStat,
-	} from "$lib/dbapi";
+	import ServerCard from "$lib/components/ServerCard.svelte";
+	import ServerFilter from "$lib/components/ServerFilter.svelte";
+	import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
 	import {
-		getLastUpdated,
+	  type ServerConfiguration,
+	  type ServerPriceStat,
+	  getConfigurations,
+	} from "$lib/queries/filter";
+	import {
+		getPrices,
+	} from "$lib/queries/filter";
+	import {
+		type NameValuePair,
 		getCPUModels,
 		getDatacenters,
-		getConfigurations,
-		getPrices,
-		withDbConnections,
-		getServerDetails,
-		getServerDetailPrices,
-		getLowestServerDetailPrices,
+		getLastUpdated,
+	} from "$lib/queries/stats";
+	import {
+	  withDbConnections,
 	} from "$lib/dbapi";
-	import { Progressbar } from "flowbite-svelte";
-	import ServerFilter from "$lib/components/ServerFilter.svelte";
-	import ServerTable from "$lib/components/ServerTable.svelte";
-	import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
-	import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-	import { onMount } from "svelte";
-	import dayjs from 'dayjs';
-	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-	import { faClockRotateLeft, faStopwatch } from "@fortawesome/free-solid-svg-icons";
+	import { convertServerConfigurationToFilter, defaultFilter, getFilterFromURL, encodeFilter, getHetznerLink, type ServerFilter as ServerFilterType, decodeFilterString, isIdenticalFilter, saveFilter, clearFilter, loadFilter } from "$lib/filter";
 	import { addToast } from '$lib/toastStore';
-    import { defaultFilter, getFilterFromURL, type ServerFilter as ServerFilterType } from "$lib/filter";
+	import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+	import { faClockRotateLeft, faMagnifyingGlass, faStopwatch } from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon, } from "@fortawesome/svelte-fontawesome";
+	import dayjs from 'dayjs';
+	import { Button, ButtonGroup, Modal, Progressbar, Alert } from "flowbite-svelte";
+	import { LinkOutline, InfoCircleSolid } from "flowbite-svelte-icons";
+	import { onMount } from "svelte";
+	import { db, dbInitProgress } from "../../stores/db";
+  import Spinner from "flowbite-svelte/Spinner.svelte";
 
 	let filter: ServerFilterType;
 
@@ -43,12 +44,18 @@
 	let serverPrices: ServerPriceStat[] = [];
 	let cpuModels: NameValuePair[] = [];
 	let datacenters: NameValuePair[] = [];
-	let serverDetails: ServerDetail[];
-	let serverDetailPrices: ServerPriceStat[];
-	let lowestServerDetailPrices: ServerLowestPriceStat[];
 
 	let queryTime: number | undefined;
 	let loading = true;
+
+	let showDisclaimer = false;
+	let accepted = false;
+	let forwardUrl = '';
+
+	let currentHash: string = "";
+	const handleHashChange = () => {
+		currentHash = window.location.hash;
+	};
 
 	async function fetchData(db: AsyncDuckDB, filter: ServerFilterType) {
 		console.log("Fetching data with filter:", filter);
@@ -77,32 +84,9 @@
 		});
 	}
 
-	async function handleServerDetails(event: any) {
-		return withDbConnections($db!, async (conn1, conn2, conn3) => {
-			[serverDetails, serverDetailPrices, lowestServerDetailPrices] =
-				await Promise.all([
-					getServerDetails(conn1, serverList[event.detail]),
-					getServerDetailPrices(conn2, serverList[event.detail]),
-					getLowestServerDetailPrices(conn3, serverList[event.detail]),
-				]);
-		});
-	}
-
-	function loadFilter(): ServerFilterType | null {
-		const storedFilter = localStorage.getItem('radar-filter');
-		if (storedFilter) {
-			return JSON.parse(storedFilter);
-		}
-		return null;
-	}
-
 	function handleSaveFilter(event: CustomEvent<void>) {
 		saveFilter(filter);
-	}
-
-	function saveFilter(filter: ServerFilter) {
 		pirsch("filter-save");
-		localStorage.setItem('radar-filter', JSON.stringify(filter));
 		hasStoredFilter = true;
 		addToast({
 			color: 'green',
@@ -112,13 +96,9 @@
 	}
 
 	function handleClearFilter(event: CustomEvent<void>) {
-		hasStoredFilter = false;
 		clearFilter();
-	}
-
-	function clearFilter() {
 		pirsch("filter-clear");
-		localStorage.removeItem('radar-filter');
+		hasStoredFilter = false;
 		addToast({
 			color: 'red',
 			message: 'Filter cleared successfully',
@@ -136,21 +116,11 @@
 	}
 
 	const debouncedFetchData = debounce(fetchData, 500);
-	$: if (!!$db && filter) {
-		console.log("Fetching data with filter:", filter);
-		// TODO: generate at build time
-		if (!lastUpdated) {
-			withDbConnections($db, async (conn1) => {
-				let lastUpdate = await getLastUpdated(conn1);
-				if (lastUpdate.length > 0) {
-					lastUpdated = lastUpdate[0].last_updated;
-				}
-			});
-		}
-		debouncedFetchData($db, filter);
-	}
 
-	onMount(async () => {
+	onMount(() => {
+		currentHash = window.location.hash;
+		window.addEventListener('hashchange', handleHashChange);
+
 		const filterFromURL = getFilterFromURL();
 		const storedFilter = loadFilter();
 		if (filterFromURL) {
@@ -169,13 +139,72 @@
 				filter = defaultFilter;
 			}
 		}
+
+		return () => {
+			window.removeEventListener('hashchange', handleHashChange);
+		};
 	});
+
+	function updateDataFromHash(currentHash: string) {
+		const newFilter = getFilterFromURL();
+		console.log("New filter from hash:", newFilter);
+		console.log("Current filter:", filter);
+		console.log(isIdenticalFilter(filter, newFilter!));
+		if (newFilter && !isIdenticalFilter(filter, newFilter) && !!$db) {
+				filter = newFilter;
+				console.log("Filter updated from hash:", filter);
+				debouncedFetchData($db, filter);
+		}
+	}
 
 	let totalOffers = 0;
 	$: totalOffers = Array.isArray(serverPrices)
 		? serverPrices.reduce((acc, val) => acc + val.count, 0)
 		: 0;
+
+	$: updateDataFromHash(currentHash);
+	
+	$: if (!!$db && filter) {
+		console.log("Fetching data with filter:", filter);
+		// TODO: generate at build time
+		if (!lastUpdated) {
+			withDbConnections($db, async (conn1) => {
+				let lastUpdate = await getLastUpdated(conn1);
+				if (lastUpdate.length > 0) {
+					lastUpdated = lastUpdate[0].last_updated;
+				}
+			});
+		}
+		debouncedFetchData($db, filter);
+	}
 </script>
+
+
+<Modal title="Before You Go…" bind:open={showDisclaimer} autoclose outsideclose>
+	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+		You will be forwarded to a preconfigured Hetzner Server Auction search.
+	</p>
+	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+		Please note that this search may return multiple results or none, depending
+		on availability. Ensure that the server specifications meet your needs.
+	</p>
+	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400 font-semibold">
+		Also, prices shown on Server Radar exclude VAT, which varies by country.
+		Hetzner typically includes VAT automatically, so the final price will be
+		higher if you're within the European Union.
+	</p>
+	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+		This disclaimer will only show once per session.
+	</p>
+	<svelte:fragment slot="footer">
+		<Button on:click={() => {
+			accepted = true;
+			showDisclaimer = false;
+		}} href="{forwardUrl}">
+			I understand, take me there
+		</Button>
+	</svelte:fragment>
+</Modal>
 
 {#if !Number.isNaN($dbInitProgress) && $dbInitProgress < 100}
 <div class="flex flex-col flex-1 px-4 py-8 bg-gray-50" style="padding: 28% 0">
@@ -244,14 +273,60 @@
 					higher. You can see the bid volume in the chart above.
 				</p>
 			</h3>
-			<ServerTable
-				data={serverList}
-				on:serverDetails={handleServerDetails}
-				{serverDetails}
-				{serverDetailPrices}
-				{lowestServerDetailPrices}
-				{loading}
-			/>
+			{#if loading}
+			<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400
+			ml-5"><Spinner class="mr-2"/> Loading...</p>
+			{:else if serverList.length === 0}
+			<Alert class="mx-5"><InfoCircleSolid slot="icon" class="w-5 h-5" />No servers matching the criteria were found. Try
+			changing some of the parameters.</Alert>
+			{:else}
+			<div class="grid grid-cols-[repeat(auto-fill,minmax(300px,auto))] justify-items-start w-full gap-4 px-5 mb-5">
+				{#each serverList as config}
+					<ServerCard {config} {loading}>
+						<ButtonGroup
+							slot="buttons"
+							size="xs"
+							class="
+								opacity-100 
+								sm:opacity-0 
+								group-hover:opacity-100 
+								transition-opacity 
+								duration-300 
+								absolute bottom-4 right-4
+								bg-white 
+								bg-opacity-75 
+								rounded-md 
+								flex 
+							"
+						>
+							<Button
+								on:click={() =>
+									(window.location.hash = `#filter.v2:${encodeFilter(
+										convertServerConfigurationToFilter(config)
+									)}`)
+								}
+							>
+								<FontAwesomeIcon icon={faMagnifyingGlass} class="w-4 h-4" />
+							</Button>
+							<Button
+								on:click={(e) => {
+									if (!accepted) {
+										showDisclaimer = true;
+										forwardUrl = getHetznerLink(config);
+										e.preventDefault();
+									}
+									e.stopPropagation();
+								}}
+								href="{getHetznerLink(config)}"
+							>
+								<LinkOutline class="w-5 h-5" />
+							</Button>
+						</ButtonGroup>
+					</ServerCard>
+				{/each}
+			</div>
+			
+			{/if}
 		</main>
 	</div>
 {/if}

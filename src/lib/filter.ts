@@ -1,5 +1,5 @@
 import LZString from 'lz-string';
-import type { ServerConfiguration } from './dbapi';
+import type { ServerConfiguration } from '$lib/queries/filter';
 import { computeFilterRange, getInverseMemoryExp } from './disksize';
 
 export type ServerFilter = {
@@ -64,12 +64,29 @@ export const defaultFilter: ServerFilter = {
   extrasRPS: false,
 };
 
-export function getFilterString(filter: ServerFilter) {
+export function encodeFilter(filter: ServerFilter): string {
   const filterString = LZString.compressToEncodedURIComponent(JSON.stringify(filter));
   return filterString;
 }
 
+export function decodeFilterString(filterString: string): ServerFilter | null {
+  try {
+    const decompressed = LZString.decompressFromEncodedURIComponent(filterString);
+    if (!decompressed) {
+      return null;
+    }
+    const filter = JSON.parse(decompressed);
+    return filter;
+  } catch (e) {
+    console.error("Error decoding filter string:", e);
+    return null;
+  }
+}
+
 export function getFilterFromURL(): ServerFilter | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
   const hash = window.location.hash.substring(1); // Remove the leading '#'
 
   const filterRegex = /^filter\.v(\d+):(.+)$/;
@@ -83,12 +100,23 @@ export function getFilterFromURL(): ServerFilter | null {
   const [, versionNumber, filterString] = match;
   const version = `v${versionNumber}`; // e.g., "v1"
 
-  const decodedFilter = LZString.decompressFromEncodedURIComponent(filterString);
-  const deserializedFilter = JSON.parse(decodedFilter) as ServerFilter;
+  return decodeFilterString(filterString);
+}
 
-  // TODO: Add validation for deserializedFilter if necessary
+export function loadFilter(): ServerFilter | null {
+  const storedFilter = localStorage.getItem('radar-filter');
+  if (storedFilter) {
+    return JSON.parse(storedFilter);
+  }
+  return null;
+}
 
-  return deserializedFilter;
+export function clearFilter() {
+  localStorage.removeItem('radar-filter');
+}
+
+export function saveFilter(filter: ServerFilter) {
+  localStorage.setItem('radar-filter', JSON.stringify(filter));
 }
 
 export function convertServerConfigurationToFilter(serverConfiguration: ServerConfiguration): ServerFilter {
@@ -103,13 +131,13 @@ export function convertServerConfigurationToFilter(serverConfiguration: ServerCo
     ],
 
     ssdNvmeCount: Array(2).fill(serverConfiguration.nvme_drives.length).flat().slice(0, 2),
-    ssdNvmeInternalSize: computeFilterRange(serverConfiguration.nvme_drives.toArray(), 250),
+    ssdNvmeInternalSize: computeFilterRange(serverConfiguration.nvme_drives, 250),
 
     ssdSataCount: Array(2).fill(serverConfiguration.sata_drives.length).flat().slice(0, 2),
-    ssdSataInternalSize: computeFilterRange(serverConfiguration.sata_drives.toArray(), 250),
+    ssdSataInternalSize: computeFilterRange(serverConfiguration.sata_drives, 250),
 
     hddCount: Array(2).fill(serverConfiguration.hdd_drives.length).flat().slice(0, 2),
-    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives.toArray(), 500),
+    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives, 500),
 
     selectedCpuModels: [serverConfiguration.cpu],
 
@@ -126,4 +154,56 @@ export function convertServerConfigurationToFilter(serverConfiguration: ServerCo
 
     selectedDatacenters: [],
   };
+}
+
+export function isIdenticalFilter(filter1: ServerFilter, filter2: ServerFilter): boolean {
+  return JSON.stringify(filter1) === JSON.stringify(filter2);
+}
+
+export function getHetznerLink(device: ServerConfiguration) {
+  const minDriveLength = Math.min(
+    device.nvme_size ? device.nvme_size / device.nvme_drives.length : Infinity,
+    device.sata_size ? device.sata_size / device.sata_drives.length : Infinity,
+    device.hdd_size ? device.hdd_size / device.hdd_drives.length : Infinity
+  );
+  const maxDriveLength = Math.max(
+    device.nvme_size ? device.nvme_size / device.nvme_drives.length : 0,
+    device.sata_size ? device.sata_size / device.sata_drives.length : 0,
+    device.hdd_size ? device.hdd_size / device.hdd_drives.length : 0
+  );
+  const specials = [];
+  if (device.with_inic) {
+    specials.push("iNIC");
+  }
+  if (device.with_hwr) {
+    specials.push("HWR");
+  }
+  if (device.with_gpu) {
+    specials.push("GPU");
+  }
+  if (device.with_rps) {
+    specials.push("RPS");
+  }
+
+  const filterQ = [
+    `search=${encodeURIComponent(device.cpu)}`,
+    `ram_from=${device.ram_size}`,
+    `ram_to=${device.ram_size}`,
+    `drives_count_from=${device.nvme_drives.length + device.sata_drives.length + device.hdd_drives.length}`,
+  ];
+
+  if (minDriveLength < Infinity) {
+    filterQ.push(`drives_size_from=${Math.floor(minDriveLength/500) * 500}`);
+  }
+  if (maxDriveLength > 0) {
+    filterQ.push(`drives_size_to=${Math.floor(minDriveLength/500) * 500}`);
+  }
+  if (device.is_ecc) {
+    filterQ.push("ecc=true");
+  }
+  if (specials.length > 0) {
+    filterQ.push(`additional=${encodeURIComponent(specials.join("+"))}`);
+  }
+
+  return `https://www.hetzner.com/sb/#${filterQ.join("&")}`;
 }
