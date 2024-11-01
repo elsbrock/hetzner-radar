@@ -123,6 +123,7 @@
           {#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
           {#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
           {#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
+          {#if config.with_hwr}<span><Badge border>HWR</Badge></span>{/if}
           {#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
         </div>
       </div>
