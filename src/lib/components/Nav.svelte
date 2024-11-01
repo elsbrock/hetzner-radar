@@ -23,7 +23,7 @@
 	<!-- Contribute Button for Desktop -->
 	<div class="hidden md:flex md:order-2">
 			<Button size="sm" href="https://github.com/elsbrock/hetzner-radar">
-					<FontAwesomeIcon class="w-5 h-5 me-2" icon={faGithub} /> Contribute
+					<FontAwesomeIcon class="w-5 h-5 me-1" icon={faGithub} /> Contribute
 			</Button>
 	</div>
 
