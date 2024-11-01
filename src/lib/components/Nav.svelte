@@ -29,7 +29,7 @@
 
 	<!-- Analyze Button and Hamburger for Mobile -->
 	<div class="flex md:order-2 md:hidden">
-			<Button size="sm" href="/analyze">
+			<Button size="xs" href="/analyze">
 					<FontAwesomeIcon class="w-5 h-5 me-2" icon={faBinoculars} /> Analyze
 			</Button>
 			<NavHamburger />
@@ -38,7 +38,7 @@
 	<NavUl class="order-1" {activeUrl}>
 			<NavLi href="/">
 				<FontAwesomeIcon class="me-1" icon={faHouse} />
-				Configurations
+				Home
 			</NavLi>
 			<NavLi href="/configurations">
 				<FontAwesomeIcon class="me-1" icon={faServer} />
