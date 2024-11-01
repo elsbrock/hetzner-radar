@@ -282,7 +282,7 @@
 			{:else}
 			<div class="grid grid-cols-[repeat(auto-fill,minmax(300px,auto))] justify-items-start w-full gap-4 px-5 mb-5">
 				{#each serverList as config}
-					<ServerCard {config} {loading}>
+					<ServerCard {config} {loading} displayMarkupPercentage>
 						<ButtonGroup
 							slot="buttons"
 							size="xs"

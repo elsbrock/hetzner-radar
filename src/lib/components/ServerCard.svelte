@@ -11,8 +11,12 @@
     export let config: ServerConfiguration;
     export let displayRamPrice: 'none' | 'perGB' | 'perTB' = 'none';
     export let displayStoragePrice: 'none' | 'perGB' | 'perTB' = 'none';
+    export let displayMarkupPercentage: boolean = false;
 
     export let loading: boolean = false;
+
+    let classes: string;
+    const defaultClasses = "relative group text-left flex flex-col justify-between min-h-[240px] sm:min-h-[220px] md:min-h-[240px] lg:min-h-[240px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300";
 
     interface NumberSummary {
       count: number;
@@ -66,9 +70,15 @@
       });
       return total;
     }
+
+    $: if (config && config.markup_percentage === 0) {
+      classes = `${defaultClasses} border-l-4 border-l-green-500`;
+    } else {
+      classes = defaultClasses;
+    }
 </script>
 
-<Card class="relative group text-left flex flex-col justify-between min-h-[240px] sm:min-h-[220px] md:min-h-[240px] lg:min-h-[240px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+<Card class={classes}>
     {#if loading}
       <!-- Loading Spinner -->
       <div class="flex items-center justify-center h-full">
@@ -83,7 +93,7 @@
         <div class="text-gray-400 text-xs mb-3">
           <span class="inline-flex items-center">
             {#if dayjs.unix(config.last_seen) > dayjs().subtract(80, 'minutes')}
-              <Indicator color="green" class="mr-2" size="xs" />
+              <Indicator color="green" class="animate-pulse mr-2" size="xs" />
             {:else}
               <Indicator color="red" class="mr-2" size="xs" />
             {/if}
@@ -126,13 +136,24 @@
             </span>
             +VAT
           </span>
-          {#if displayRamPrice !== 'none' || displayStoragePrice !== 'none'}
+          {#if displayRamPrice !== 'none' || displayStoragePrice !== 'none' || displayMarkupPercentage}
             <div class="text-gray-400 text-xs">
               {#if displayRamPrice !== 'none'}
                 {calculatePricePerUnit(config.price, config.ram_size, displayRamPrice)} RAM<br />
               {/if}
               {#if displayStoragePrice !== 'none'}
                 {calculatePricePerUnit(config.price, getTotalStorageSize(config), displayStoragePrice)} Storage
+              {/if}
+              {#if displayMarkupPercentage}
+                <span class="text-gray-500">
+                  {#if config.markup_percentage > 0}
+                    <span style={`color: hsl(${Math.max(0, Math.min(120, 120 *
+                    (10 - config.markup_percentage) / 10))}, 70%,
+                    50%);`}>{config.markup_percentage}%</span> higher than best
+                  {:else}
+                    best price
+                  {/if}
+                </span>
               {/if}
             </div>
           {/if}

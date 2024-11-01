@@ -5,9 +5,11 @@
 </script>
 
 <main class="min-h-screen p-8 bg-gray-50">
-	<div class="max-w-4xl mx-auto p-8">
-		<h1 class="text-4xl font-bold mb-6 text-center text-gray-800">About Server Radar</h1>
+	<section class="mx-auto my-12 max-w-7xl text-center">
+		<h1 class="mb-6 text-5xl font-extrabold text-gray-800">About Server Radar</h1>
+	</section>
 
+	<div class="max-w-4xl mx-auto pb-8">
 		<!-- Introduction Section -->
 		<div class="mb-12 text-center">
 				<p class="text-lg text-gray-600 mb-5">
@@ -21,7 +23,7 @@
 		<!-- Who Are We Section -->
 		<section class="mb-12">
 				<h2 class="text-3xl font-semibold text-gray-800 mb-6 text-center">Who Are We</h2>
-				<div class="flex flex-col items-center md:flex-row md:space-x-8 text-justify">
+				<div class="flex flex-col items-center md:flex-row md:space-x-8 text-justif bg-white p-6 rounded-lg shadow-md">
 						<!-- Profile Image -->
 						<img src="/images/operator.png" alt="Profile Picture of Simon"
 						class="w-48 h-48 rounded-full mb-6 md:mb-0 drop-shadow-lg" />
@@ -29,9 +31,9 @@
 						<div>
 								<p class="text-gray-600 mb-4">
 										Hi, I'm Simon – the creator and maintainer of Server Radar.
-										With a background in software engineering and a keen interest in server
-										management, I embarked on this project to bridge the gap
-										between server providers and users seeking the best deals.
+										With a background in software engineering and a keen
+										interest in running my own servers, I embarked on this project to bridge the gap
+										between Hetzner Auctions and users seeking the best deals.
 								</p>
 								<p class="text-gray-600">
 										As a passionate developer, I believe in the power of open-source projects to foster community collaboration and innovation. Server Radar is not just a tool; it's a community-driven project aimed at empowering users with the data and insights they need to make smarter server purchasing decisions.
@@ -49,7 +51,8 @@
 								<FontAwesomeIcon icon={faSpaceShuttle} size="3x" class="text-blue-500 mb-4" />
 								<h3 class="text-2xl font-semibold text-gray-800 mb-2">Our Mission</h3>
 								<p class="text-gray-600">
-									To provide accurate and up-to-date server pricing information, enabling users to make informed decisions when purchasing Hetzner Dedicated Servers.
+									To become the premier price tracker for Hetzner server
+									auctions, enabling users to make informed decisions and secure the best deals on dedicated servers.
 								</p>
 						</div>
 
@@ -58,7 +61,9 @@
 								<FontAwesomeIcon icon={faLightbulb} size="3x" class="text-green-500 mb-4" />
 								<h3 class="text-2xl font-semibold text-gray-800 mb-2">Our Vision</h3>
 								<p class="text-gray-600">
-									To create a reliable resource for tracking server prices and identifying the best deals, supporting users in making cost-effective decisions for their server needs.
+									To notify users about their preferred pricing signals for
+									their desired configuration, ensuring they never miss out on a
+									great deal. We're almost there.
 								</p>
 						</div>
 				</div>
@@ -69,7 +74,7 @@
 				<h2 class="text-3xl font-semibold text-gray-800 mb-6 text-center">How It Works</h2>
 				<div class="space-y-8">
 						<!-- Data Collection -->
-						<div class="flex flex-col items-center bg-white p-6 rounded-lg shadow-md">
+						<div class="flex flex-col grid-cols-2 items-center bg-white p-6 rounded-lg shadow-md">
 								<FontAwesomeIcon icon={faDatabase} size="3x" class="text-blue-500 mb-4" aria-hidden="true" />
 								<h3 class="text-2xl font-semibold text-gray-800 mb-2">Data Collection</h3>
 								<p class="text-gray-600 text-center">

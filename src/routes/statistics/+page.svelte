@@ -69,12 +69,14 @@
 </script>
 
 <div class="min-h-screen p-8 bg-gray-50">
-	<div class="mx-auto my-12 max-w-7xl text-center">
-		<h1 class="text-4xl font-bold mb-6 text-center text-gray-800">Statistics</h1>
-		<p class="mt-2 mb-8 text-lg text-gray-700 dark:text-gray-300">
+	<section class="mx-auto my-12 max-w-7xl text-center">
+		<h1 class="mb-6 text-5xl font-extrabold text-gray-800">Dive into our Auction Statistics</h1>
+		<p class="text-lg text-gray-600 mb-10">
 			Explore comprehensive insights into server availability, pricing trends, and configuration distributions to optimize your infrastructure investments.
 		</p>
+	</section>
 
+	<div class="mx-auto my-12 max-w-7xl text-center">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 			<!-- RAM Price Over Time -->
 			<div class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800">
