@@ -51,7 +51,7 @@
 	}
 </style>
 
-<ul class="space-y-2 font-medium">
+<ul class="space-y-2 font-medium" data-testid="server-filter">
 	<li class="flex items-center justify-between">
 		<h2 class="flex items-center">
 			<FontAwesomeIcon

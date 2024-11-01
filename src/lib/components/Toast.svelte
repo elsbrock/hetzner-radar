@@ -23,7 +23,7 @@
   });
 </script>
 
-<div class="fixed bottom-5 right-0 z-50 w-96">
+<div class="fixed bottom-5 right-0 z-50 w-96" data-testid="toast">
   {#each toasts as toast (toast.id)}
     <Toast color={toast.color} dismissable={false} class="flex items-center
     gap-2 mt-5">

@@ -78,7 +78,7 @@
     }
 </script>
 
-<Card class={classes}>
+<Card class={classes} data-testid="server-card">
     {#if loading}
       <!-- Loading Spinner -->
       <div class="flex items-center justify-center h-full">

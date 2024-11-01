@@ -197,7 +197,7 @@
   }
 </script>
 
-<div class="relative h-[320px] w-full">
+<div class="relative h-[320px] w-full" data-testid="server-pricechart">
   <div
     class:blur-sm={loading || noResults}
     class:pointer-events-none={loading || noResults}

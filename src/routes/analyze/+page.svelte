@@ -255,7 +255,7 @@
 				>
 					Pricing
 					<p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">
-						View the minimum, mean, and maximum server prices observed for the
+						View the minimum server prices matching your filter observed for the
 						given configuration over the last three months. {#if totalOffers > 0}A
 							total of {totalOffers} offers have been seen.{/if}
 					</p>
