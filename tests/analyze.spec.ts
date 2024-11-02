@@ -4,7 +4,7 @@ test('analyze: we have data', async ({ page }) => {
   await page.goto('/analyze');
   await expect(page.getByTestId('server-filter')).toBeVisible();
   await expect(page.getByTestId('server-pricechart')).toBeVisible();
-  await page.getByTestId('server-card').first().waitFor();
+  await page.getByTestId('server-card').first().waitFor({ timeout: 10000});
   await expect(await page.getByTestId('server-card').count()).toBeGreaterThan(0);
   await expect(page.getByText('Volume', { exact: true })).toBeVisible();
   await expect(page.getByText('Price (€)', { exact: true })).toBeDefined();
