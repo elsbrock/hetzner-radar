@@ -107,11 +107,8 @@
 				{
 					xaxis: {
 						type: 'datetime',
-						tickAmount: '3',
-						tickPlacement: 'on',
+            tickAmount: 30,
 						labels: {
-							rotate: -45,
-							hideOverlappingLabels: true,
 							formatter: function (value: number) {
 								const date = new Date(value);
 								return date.toLocaleDateString('de-DE', {
