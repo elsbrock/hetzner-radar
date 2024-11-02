@@ -41,6 +41,10 @@
 				animations: {
 					enabled: false,
 				},
+				zoom: {
+					enabled: true,
+					allowMouseWheelZoom: false
+				},
 			},
 			series: series,
 			xaxis: {

@@ -33,7 +33,11 @@
 					pan: false,
 					reset: true,
 				},
-			}
+			},
+			zoom: {
+			  enabled: true,
+				allowMouseWheelZoom: false
+			},
     },
     colors: ['#F97316', '#9CA3AF'],
     fill: {
