@@ -100,25 +100,53 @@
             seen {dayjs.unix(config.last_seen).fromNow()}
           </span>
         </div>
-        <p class="font-normal text-gray-700 dark:text-gray-400 leading-tight">
-          <FontAwesomeIcon icon={faMemory} class="me-1 w-4" /> RAM
-          {config.ram_size} GB<br />
+
+        <!-- Aligned Hardware Details -->
+        <div class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[50px,1fr] gap-x-4">
+          <!-- RAM -->
+          <div class="flex items-center">
+            <FontAwesomeIcon icon={faMemory} class="me-1 w-4" />
+            RAM
+          </div>
+          <div>
+            {config.ram_size} GB
+          </div>
+
+          <!-- NVMe Drives -->
           {#if config.nvme_drives.length > 0}
-            <FontAwesomeIcon icon={faSdCard} class="me-1 w-4" /> NVMe
-            {summarizeNumbers(config.nvme_drives).map(d => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`).join(", ")}
-            <br />
+            <div class="flex items-center">
+              <FontAwesomeIcon icon={faSdCard} class="me-1 w-4" />
+              NVMe
+            </div>
+            <div>
+              {summarizeNumbers(config.nvme_drives).map(d => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`).join(", ")}
+            </div>
           {/if}
+
+          <!-- SATA Drives -->
           {#if config.sata_drives.length > 0}
-            <FontAwesomeIcon icon={faSdCard} class="me-1 w-4" /> SATA
-            {summarizeNumbers(config.sata_drives).map(d => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`).join(", ")}
-            <br />
+            <div class="flex items-center">
+              <FontAwesomeIcon icon={faSdCard} class="me-1 w-4" />
+              SATA
+            </div>
+            <div>
+              {summarizeNumbers(config.sata_drives).map(d => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`).join(", ")}
+            </div>
           {/if}
+
+          <!-- HDD Drives -->
           {#if config.hdd_drives.length > 0}
-            <FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" /> HDD
-            {summarizeNumbers(config.hdd_drives).map(d => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`).join(", ")}
-            <br />
+            <div class="flex items-center">
+              <FontAwesomeIcon icon={faHardDrive} class="me-1 w-4" />
+              HDD
+            </div>
+            <div>
+              {summarizeNumbers(config.hdd_drives).map(d => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`).join(", ")}
+            </div>
           {/if}
-        </p>
+        </div>
+
+        <!-- Badges -->
         <div class="mt-3 flex flex-wrap gap-2">
           {#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
           {#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
