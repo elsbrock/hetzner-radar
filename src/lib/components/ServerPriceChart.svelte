@@ -60,16 +60,7 @@
       shared: true,
       x: {
         show: false,
-      },
-      y: {
-        formatter: function (value, { seriesIndex }) {
-          if (seriesIndex === 0) {
-            return value.toFixed(0) + ' €';
-          } else {
-            return value.toFixed(0);
-          }
-        },
-      },
+      }
     },
     series: [],
   };
@@ -168,12 +159,17 @@
 							title: {
 								text: 'Volume',
 							},
+              axisTicks: {
+                show: true,
+                color: '#9CA3AF',
+              },
               opposite: true,
               labels: {
                 formatter: function (value: number) {
                   return value.toFixed(0);
                 },
               },
+              stepSize: 1,
             }
           ],
         },
