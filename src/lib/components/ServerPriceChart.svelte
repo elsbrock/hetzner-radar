@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ServerPriceStat } from '$lib/dbapi';
+  import type { ServerPriceStat } from '$lib/queries/filter';
   import { Spinner } from 'flowbite-svelte';
   import { onMount, onDestroy } from 'svelte';
 
@@ -42,6 +42,12 @@
     colors: ['#F97316', '#9CA3AF'],
     fill: {
       opacity: [1, 0.2],
+    },
+    grid: {
+      show: true,
+      borderColor: '#dfdfdf',
+      position: 'back',
+      strokeDashArray: 5,
     },
 		stroke: {
 			width: [3, 0.3],
@@ -97,22 +103,6 @@
         y: d.count,
       }));
 
-      // Calculate min and max for price series
-      const yValuesPrice = lineData.map((point) => point.y);
-      const minYPrice = Math.min(...yValuesPrice);
-      const maxYPrice = Math.max(...yValuesPrice);
-      const paddingPrice = (maxYPrice - minYPrice) * 0.1;
-      const newMinYPrice = Math.floor(minYPrice - paddingPrice);
-      const newMaxYPrice = Math.ceil(maxYPrice + paddingPrice);
-
-      // Calculate min and max for volume series
-      const yValuesVolume = barData.map((point) => point.y);
-      const minYVolume = Math.min(...yValuesVolume);
-      const maxYVolume = Math.max(...yValuesVolume);
-      const paddingVolume = (maxYVolume - minYVolume) * 0.1;
-      const newMinYVolume = Math.max(0, Math.floor(minYVolume - paddingVolume));
-      const newMaxYVolume = Math.ceil(maxYVolume + paddingVolume);
-
 			chart.updateOptions(
 				{
 					xaxis: {
@@ -141,8 +131,7 @@
           yaxis: [
             {
               seriesName: 'Price',
-              min: newMinYPrice,
-              max: newMaxYPrice,
+              forceNiceScale: true,
               title: {
                 text: 'Price (€)',
               },
@@ -154,22 +143,16 @@
             },
             {
               seriesName: 'Volume',
-              min: newMinYVolume,
-              max: newMaxYVolume,
+              forceNiceScale: true,
 							title: {
 								text: 'Volume',
 							},
-              axisTicks: {
-                show: true,
-                color: '#9CA3AF',
-              },
               opposite: true,
               labels: {
                 formatter: function (value: number) {
                   return value.toFixed(0);
                 },
               },
-              stepSize: 1,
             }
           ],
         },
