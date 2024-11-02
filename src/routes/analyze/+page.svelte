@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-	declare let pirsch: any;
+	declare function pirsch(event_name: string, metadata?: {[key: string]: string | number}): void;
 </script>
 
 <script lang="ts">
