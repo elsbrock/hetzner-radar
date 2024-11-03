@@ -118,13 +118,6 @@
 							},
 						},
 					},
-				},
-				false,
-				false
-			);
-
-      chart.updateOptions(
-        {
           yaxis: [
             {
               seriesName: 'Price',
