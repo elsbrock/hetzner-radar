@@ -8,7 +8,7 @@
 	$: activeUrl = $page.url.pathname;
 </script>
 
-<Navbar class="h-15 w-full border-b border-gray-200">
+<Navbar class="h-15 w-full">
 	<NavBrand href="/">
 			<div style="width: 32px; height: 32px">
 					<Radar />
@@ -61,6 +61,6 @@
 	</NavUl>
 </Navbar>
 
-<div class="relative w-full h-[1px]">
-	<div class="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent h-[1px]"></div>
+<div class="relative w-full h-[2px]">
+	<div class="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent h-[2px]"></div>
 </div>
