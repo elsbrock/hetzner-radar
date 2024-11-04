@@ -60,3 +60,7 @@
 				<FontAwesomeIcon class="me-1" icon={faCircleInfo} /> About</NavLi>
 	</NavUl>
 </Navbar>
+
+<div class="relative w-full h-[1px]">
+	<div class="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent h-[1px]"></div>
+</div>
