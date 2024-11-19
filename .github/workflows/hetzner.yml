@@ -18,7 +18,7 @@ jobs:
         run: git fetch origin data --depth 1 && git checkout data
 
       - name: Install jq
-        uses: dcarbone/install-jq-action@v2.1.0
+        uses: dcarbone/install-jq-action@v3.0.1
 
       - name: Fetch Hetzner Serverboerse Data
         run: curl 'https://www.hetzner.com/_resources/app/jsondata/live_data_sb.json' | jq .server | gzip > sb-$(date -u +%H%M%S).json.gz
