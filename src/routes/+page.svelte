@@ -208,7 +208,7 @@
                 </p>
                 <div class="flex items-center">
                     <img
-                        src="/images/user1.jpg"
+                        src="/images/user1.webp"
                         alt="Alex Johnson"
                         class="w-12 h-12 rounded-full mr-4"
                         loading="lazy"
@@ -228,7 +228,7 @@
                 </p>
                 <div class="flex items-center">
                     <img
-                        src="/images/user2.jpg"
+                        src="/images/user2.webp"
                         alt="Maria Lopez"
                         class="w-12 h-12 rounded-full mr-4"
                         loading="lazy"
@@ -251,7 +251,7 @@
                 </p>
                 <div class="flex items-center">
                     <img
-                        src="/images/user3.jpg"
+                        src="/images/user3.webp"
                         alt="Liam Smith"
                         class="w-12 h-12 rounded-full mr-4"
                         loading="lazy"

@@ -59,7 +59,7 @@
     <meta property="og:type" content="website" />
     <meta
         property="og:image"
-        content="https://radar.iodev.org/images/og-image.jpg"
+        content="https://radar.iodev.org/images/og-image.webp"
     />
     <meta property="og:image:alt" content="Server Radar Dashboard" />
 
