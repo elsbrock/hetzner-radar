@@ -1,4 +1,4 @@
-import { initDB } from '$lib/dbapi';
+import { initDB } from '$lib/api/frontend/dbapi';
 import { createDB } from '$lib/duckdb';
 import { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 import { writable, get } from 'svelte/store';

@@ -5,7 +5,7 @@
     import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 </script>
 
-<div class="p-8 bg-gray-50">
+<div class="bg-gray-50">
     <div class="max-w-4xl mx-auto p-8">
         <h1 class="text-4xl font-bold mb-6 text-center text-gray-800">Contact Us</h1>
 

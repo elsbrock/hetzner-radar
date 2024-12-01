@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vitest/config';
 import removeConsole from 'vite-plugin-remove-console';
+import { defineConfig } from 'vitest/config';
 
 const date = new Date();
 const formattedDate = date.toLocaleDateString('de-DE', {
@@ -15,10 +15,15 @@ const formattedDate = date.toLocaleDateString('de-DE', {
 export default defineConfig(({ mode }) => ({
 	plugins: [
 		sveltekit(),
-		removeConsole({
-			includes: ["log", "error", "warn", "debug", "table", "info"]
-		}),
+		process.env.NODE_ENV === 'production' ? removeConsole({
+			includes: ["log", "debug", "table", "info"]
+		}) : undefined,
 	],
+	build: {
+		rollupOptions: {
+			external: ['emailjs']
+		}
+	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	},

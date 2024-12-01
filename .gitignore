@@ -1,3 +1,4 @@
+.wrangler
 .svelte-kit
 node_modules
 data
@@ -7,3 +8,5 @@ build
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.env*
+.dev.vars

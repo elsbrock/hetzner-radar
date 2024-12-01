@@ -1,7 +1,7 @@
+import { getData } from "$lib/api/frontend/dbapi";
+import { type ServerConfiguration } from "$lib/api/frontend/filter";
 import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import SQL from "sql-template-strings";
-import { getData } from "$lib/dbapi";
-import { type ServerConfiguration } from "$lib/queries/filter";
 
 export async function getCheapestConfigurations(conn: AsyncDuckDBConnection): Promise<ServerConfiguration[]> {
 	return (await getData<ServerConfiguration>(conn, SQL`

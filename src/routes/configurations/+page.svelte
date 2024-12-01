@@ -2,17 +2,17 @@
 	import { db } from '../../stores/db';
 	import {
 		withDbConnections,
-	} from '$lib/dbapi';
-    import {
+	} from '$lib/api/frontend/dbapi';
+   import {
 		type ServerConfiguration,
-	} from '$lib/queries/filter';
+	} from '$lib/api/frontend/filter';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
   import ServerCard from '$lib/components/ServerCard.svelte';
   import { faMemory, faDatabase, faGamepad, faCloud, faShieldAlt, faCode } from '@fortawesome/free-solid-svg-icons';
   import { Button } from 'flowbite-svelte';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { encodeFilter, convertServerConfigurationToFilter } from '$lib/filter';
-  import { getCheapestConfigurations, getCheapestDiskConfigurations, getCheapestRamConfigurations } from '$lib/queries/configs';
+  import { getCheapestConfigurations, getCheapestDiskConfigurations, getCheapestRamConfigurations } from '$lib/api/frontend/configs';
 
 	let loading = true;
 
@@ -49,7 +49,7 @@
 	}
 </script>
 
-<main class="min-h-screen p-8 bg-gray-50">
+<main class="p-8 bg-gray-50">
     <!-- Page Header -->
     <section class="mx-auto my-12 max-w-7xl text-center">
         <h1 class="mb-6 text-5xl font-extrabold text-gray-800">Choose the Right Server for Your Needs</h1>
@@ -70,7 +70,7 @@
                 <ServerCard config={cheapestConfigurations[0]} {loading}>
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[0]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[0]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -79,7 +79,7 @@
                 <ServerCard config={cheapestConfigurations[1]} {loading}>
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[1]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[1]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -88,7 +88,7 @@
                 <ServerCard config={cheapestConfigurations[2]} {loading}>
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[2]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[2]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -97,7 +97,7 @@
                 <ServerCard config={cheapestConfigurations[3]} {loading}>
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[3]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapestConfigurations[3]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -116,7 +116,7 @@
                 <ServerCard config={cheapDiskConfigurations[0]} {loading} displayStoragePrice="perTB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[0]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[0]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -125,7 +125,7 @@
                 <ServerCard config={cheapDiskConfigurations[1]} {loading} displayStoragePrice="perTB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[1]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[1]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -134,7 +134,7 @@
                 <ServerCard config={cheapDiskConfigurations[2]} {loading} displayStoragePrice="perTB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[2]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[2]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -143,7 +143,7 @@
                 <ServerCard config={cheapDiskConfigurations[3]} {loading} displayStoragePrice="perTB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[3]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapDiskConfigurations[3]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -162,7 +162,7 @@
                 <ServerCard config={cheapRamConfigurations[0]} {loading} displayRamPrice="perGB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[0]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[0]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -171,7 +171,7 @@
                 <ServerCard config={cheapRamConfigurations[1]} {loading} displayRamPrice="perGB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[1]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[1]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -180,7 +180,7 @@
                 <ServerCard config={cheapRamConfigurations[2]} {loading} displayRamPrice="perGB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[2]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[2]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -189,7 +189,7 @@
                 <ServerCard config={cheapRamConfigurations[3]} {loading} displayRamPrice="perGB">
                     <Button slot="buttons"
 					outline
-					href="/analyze#filter.v2:{encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[3]))}"
+					href="/analyze?filter={encodeFilter(convertServerConfigurationToFilter(cheapRamConfigurations[3]))}"
 					class="px-4 py-2 text-sm"
 					>
 					Find
@@ -205,7 +205,7 @@
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             <!-- High-Memory Applications -->
             <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
-                <FontAwesomeIcon class="mb-4 text-blue-500" icon={faMemory} size="3x" />
+                <FontAwesomeIcon class="mb-4 text-orange-500" icon={faMemory} size="3x" />
                 <h3 class="mb-4 text-2xl font-bold text-gray-800">High-Memory Applications</h3>
                 <p class="text-gray-600">
                     Perfect for running large databases, virtual machines, and applications that require substantial memory resources.
@@ -214,7 +214,7 @@
             
             <!-- Backup Solutions -->
             <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
-                <FontAwesomeIcon class="mb-4 text-blue-500" icon={faDatabase} size="3x" />
+                <FontAwesomeIcon class="mb-4 text-orange-500" icon={faDatabase} size="3x" />
                 <h3 class="mb-4 text-2xl font-bold text-gray-800">Backup Solutions</h3>
                 <p class="text-gray-600">
                     Ideal for storing backups and ensuring data redundancy, providing peace of mind for your critical information.
@@ -223,7 +223,7 @@
             
             <!-- Game Servers -->
             <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
-                <FontAwesomeIcon class="mb-4 text-blue-500" icon={faGamepad} size="3x" />
+                <FontAwesomeIcon class="mb-4 text-orange-500" icon={faGamepad} size="3x" />
                 <h3 class="mb-4 text-2xl font-bold text-gray-800">Game Servers</h3>
                 <p class="text-gray-600">
                     Host multiplayer game servers with low latency and reliable performance to ensure a smooth gaming experience.
@@ -233,7 +233,7 @@
             <!-- Additional Scenarios (Optional) -->
             <!-- You can add more scenarios as needed -->
             <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
-                <FontAwesomeIcon class="mb-4 text-blue-500" icon={faCloud} size="3x" />
+                <FontAwesomeIcon class="mb-4 text-orange-500" icon={faCloud} size="3x" />
                 <h3 class="mb-4 text-2xl font-bold text-gray-800">Cloud Applications</h3>
                 <p class="text-gray-600">
                     Deploy scalable cloud applications that can handle varying workloads with ease and flexibility.
@@ -241,7 +241,7 @@
             </div>
             
             <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
-                <FontAwesomeIcon class="mb-4 text-blue-500" icon={faShieldAlt} size="3x" />
+                <FontAwesomeIcon class="mb-4 text-orange-500" icon={faShieldAlt} size="3x" />
                 <h3 class="mb-4 text-2xl font-bold text-gray-800">Secure Hosting</h3>
                 <p class="text-gray-600">
                     Host your websites and applications with robust security measures to protect against threats and vulnerabilities.
@@ -249,7 +249,7 @@
             </div>
             
             <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center">
-                <FontAwesomeIcon class="mb-4 text-blue-500" icon={faCode} size="3x" />
+                <FontAwesomeIcon class="mb-4 text-orange-500" icon={faCode} size="3x" />
                 <h3 class="mb-4 text-2xl font-bold text-gray-800">Development Environments</h3>
                 <p class="text-gray-600">
                     Set up reliable and customizable development environments to streamline your software development process.
@@ -265,7 +265,7 @@
             Dive into our server configurations and find the perfect setup for your projects.
         </p>
         <div class="flex justify-center space-x-4">
-            <Button color="primary" href="/analyze" class="px-8 py-4 text-xl">Analyze</Button>
+            <Button color="primary" href="/analyze" class="px-8 py-3 text-lg shadow-sm">Analyze</Button>
         </div>
     </section>
 </main>

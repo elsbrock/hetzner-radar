@@ -11,11 +11,12 @@
                 ulClass="flex flex-wrap order-1 items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
             >
                 <FooterLink href="/privacy">Privacy</FooterLink>
+                <FooterLink href="/terms">Terms</FooterLink>
                 <FooterLink href="/contact">Contact</FooterLink>
             </FooterLinkGroup>
         </div>
         <div class="order-1">
-            <p class="text-xs text-gray-500 dark:text-gray-400 text-italic">last updated {buildDate} (Europe/Berlin)</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 text-italic">Last Update {buildDate} (Europe/Berlin)</p>
         </div>
 	</div>
 </Footer>

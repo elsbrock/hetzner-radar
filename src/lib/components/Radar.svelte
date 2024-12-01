@@ -22,6 +22,7 @@
   role="button"
   tabindex="0"
   style="border: 1px solid #ccc; height: 40px; width: 40px; margin-top: -5px; --radar-bg-color: {radarBackgroundColor};"
+  aria-label="Server Radar Logo"
   on:mouseenter={() => setAnimationEnabled(true)}
   on:mouseleave={() => setAnimationEnabled(false)}
 >

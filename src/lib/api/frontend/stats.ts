@@ -2,8 +2,8 @@
  * Statistics
  */
 
-import { getData } from "$lib/dbapi";
-import { generateFilterQuery } from "$lib/queries/filter";
+import { getData } from "$lib/api/frontend/dbapi";
+import { generateFilterQuery } from "$lib/api/frontend/filter";
 import type { ServerFilter } from "$lib/filter";
 import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import SQL from "sql-template-strings";

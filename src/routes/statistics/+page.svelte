@@ -8,8 +8,8 @@
 		getCPUVendorPriceStats,
 		getVolumeStats,
 		type TemporalStat,
-	} from '$lib/queries/stats';
-	import { withDbConnections } from '$lib/dbapi';
+	} from '$lib/api/frontend/stats';
+	import { withDbConnections } from '$lib/api/frontend/dbapi';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 	let loading = true;
@@ -68,7 +68,7 @@
 	}
 </script>
 
-<div class="min-h-screen p-8 bg-gray-50">
+<div class="p-8 bg-gray-50">
 	<section class="mx-auto my-12 max-w-7xl text-center">
 		<h1 class="mb-6 text-5xl font-extrabold text-gray-800">Dive into our Auction Statistics</h1>
 		<p class="text-lg text-gray-600 mb-10">
