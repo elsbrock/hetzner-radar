@@ -22,15 +22,6 @@
 </script>
 
 <svelte:head>
-    <script
-        defer
-        src="https://wa.iodev.org/pa.js"
-        id="pianjs"
-        data-code="R5X9PYTQxsNNMIjmLKGTsfFKf4il1nGW"
-        data-hit-endpoint="https://wa.iodev.org/hit"
-        data-event-endpoint="https://wa.iodev.org/event"
-        data-session-endpoint="https://wa.iodev.org/session"
-    ></script>
     <!-- Primary Meta Tags -->
     <title>Server Radar - Track Hetzner Auction Server Prices</title>
     <meta

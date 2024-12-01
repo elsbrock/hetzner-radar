@@ -106,10 +106,6 @@
         console.log("Fetching data with filter:", filter);
         let queryStart = performance.now();
 
-        if (typeof pirsch !== "undefined") {
-            pirsch("search", {});
-        }
-
         await withDbConnections(db, async (conn1, conn2, conn3, conn4) => {
             try {
                 [cpuModels, datacenters, serverPrices, serverList] =
@@ -135,7 +131,6 @@
                 }
             } catch (error: Error | any) {
                 console.error("Error fetching data:", error);
-                pirsch("search-error", { error: error?.message });
             } finally {
                 loading = false;
             }

@@ -3,12 +3,6 @@
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
 declare global {
-    // Define the pirsch function globally
-    function pirsch(
-        event_name: string,
-        metadata?: { [key: string]: string | number }
-    ): void;
-
     namespace App {
         /**
          * Represents a user in the application.
