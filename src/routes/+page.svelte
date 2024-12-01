@@ -41,9 +41,12 @@
             >
             <Button
                 color="alternative"
-                href="/about"
-                class="px-5 py-3 text-lg shadow-sm">Learn More</Button
+                href="https://github.com/elsbrock/hetzner-radar"
+                class="px-5 py-3 text-lg shadow-sm"
             >
+                <FontAwesomeIcon icon={faGithub} class="mr-2" />
+                View on GitHub
+            </Button>
         </div>
     </section>
 
