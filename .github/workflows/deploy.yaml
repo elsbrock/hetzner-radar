@@ -37,7 +37,7 @@ jobs:
               uses: cloudflare/wrangler-action@v3
               with:
                   command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
-                  apiToken: ${{ secrets.R2_API_TOKEN }}
+                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
             - name: Install Node.js
               uses: actions/setup-node@v4
