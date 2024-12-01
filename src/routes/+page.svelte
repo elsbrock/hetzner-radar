@@ -274,7 +274,7 @@
         <div
             class="absolute inset-0 w-full h-full"
             style="
-            background-image: url('/images/code.png');
+            background-image: url('/images/code.webp');
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
