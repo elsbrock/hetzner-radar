@@ -281,8 +281,11 @@ WHERE
   const alertResults = results[results.length-2].results;
   for (const alert of alertResults) {
     const mail = await sendMail(event.platform?.env, {
+      from: {
+          name: "Server Radar",
+          email: "no-reply@radar.iodev.org",
+      },
       to: alert.email,
-      from: 'Server Radar <no-reply@radar.iodev.org>',
       subject: `Price Alert: Target Price Reached`,
       text: `Hi there,
 

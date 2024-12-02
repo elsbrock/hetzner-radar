@@ -3,7 +3,10 @@
 import { dev } from '$app/environment';
 
 interface MailOptions {
-  from: string;
+  from: {
+    name: string;
+    email: string;
+  };
   to: string;
   subject: string;
   text: string;

@@ -1,4 +1,4 @@
-import { WorkerMailer } from 'worker-mailer'
+import { WorkerMailer } from 'worker-mailer';
 
 export default {
   async queue(batch, env): Promise<void> {

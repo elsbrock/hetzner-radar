@@ -5,9 +5,9 @@ import {
     verifyCodeExists,
 } from "$lib/api/backend/auth";
 import {
+    SESSION_COOKIE_NAME,
     createSession,
     generateSessionToken,
-    SESSION_COOKIE_NAME,
     validateSessionToken,
 } from "$lib/api/backend/session";
 import { createUser, getUserId } from "$lib/api/backend/user";
@@ -35,8 +35,11 @@ export const actions: Actions = {
         console.log("verification code", verificationCode);
 
         await sendMail(event.platform?.env, {
-            from: "Server Radar <no-reply@radar.iodev.org>",
             to: email,
+            from: {
+                name: "Server Radar",
+                email: "no-reply@radar.iodev.org",
+            },
             subject: "Your Magic Sign-In Code",
             text: `Greetings!
 
@@ -47,7 +50,7 @@ You've requested to sign in to Server Radar. Here's your magic code:
 You've got 15 minutes to use it before it expires. If you didn't request this, just ignore this email – no action needed on your part.
 
 Cheers,
-The Server Radar Team`,
+Server Radar`,
         });
 
         return { success: true };
