@@ -4,31 +4,41 @@ Hetzner Radar is a tool that tracks the prices of Hetzner's [Dedicated Server
 Auction](https://www.hetzner.com/sb/) over time, helping customers identify the
 best configurations and prices. While Hetzner's auction site allows filtering by
 certain criteria, it only provides a snapshot at a given moment. Hetzner Radar
-aims to enhance this by offering advanced filtering and a comprehensive pricing
-history. Additionally, we track server volumes and other relevant statistics.
+aims to enhance this by offering advanced filtering, a comprehensive pricing
+history and target price alerts. Additionally, we track server volumes and other
+relevant statistics.
 
 https://github.com/user-attachments/assets/cb49e923-0315-49aa-a3c2-2dbef2ee0596
+
+> [!NOTE]
+> This is an independent project and is not officially affiliated with Hetzner.
+> "Hetzner" is a trademark owned by its respective owners. This project does
+> not claim any official endorsement by Hetzner, nor does it guarantee
+> correctness of the data. Use at your own risk.
 
 ## Features
 
 * Track server prices and volumes over time.
-* Find all configurations that match your filters.
+* Find all configurations that match your filter criteria.
 * View the lowest price seen for a specific configuration.
-* Utilize advanced filters such as location, datacenter, CPU, RAM, and drive
-  configuration.
+* *New*: Get notified when your target price is met.
 
 ## Architecture
 
-This is a single-tier, client-only architecture, with the website statically
+This is a client- and backend architecture, with the website statically
 built using SvelteKit. DuckDB is used in the background for querying the
-database.
+database on the client.
+
+In addition, we use Cloudflare Workers to for session management, storing
+alerts and sending email notifications.
 
 We fetch the latest auction data from Hetzner once per hour, rebuild the
-database and update the website. The raw data is stored in the `data` branch,
-where we currently maintain three months of history. We may consider purging
-older data if the branch becomes too large.
+database, update the website and push new configurations to the backend.
+The raw data is stored in the `data` branch, where we currently maintain
+three months of history. We may consider purging older data if the branch
+becomes too large.
 
-The project is currently deployed on GitHub Pages.
+The project is deployed on Cloudflare Pages.
 
 ## Development
 
@@ -44,16 +54,13 @@ This step is optional if you just want to work on the frontend. You can simply
 download the latest snapshot from the website:
 
 ```
-wget https://radar.iodev.org/sb.duckdb.wasm -O static/sb.duckdb.wasm
+wget https://static.radar.iodev.org/sb.duckdb -O static/sb.duckdb
 ```
-
-Note that we're using the `.wasm` extension purely to trick the Github CDN into
-believing it can be cached; it is indeed a regular DuckDB binary database file.
 
 If you just want to inspect or play with the dataset, you can do so by running.
 
 ```
-duckdb -cmd "attach 'https://radar.iodev.org/sb.duckdb.wasm' (read_only); use sb;"
+duckdb -cmd "attach 'https://static.radar.iodev.org/sb.duckdb' (read_only); use sb;"
 ```
 
 Inspect the schema using the `.schema` pragma.
@@ -65,7 +72,7 @@ poetry shell
 # Add the `data` branch under /data
 git worktree add data data
 # Build the DuckDB database
-python scripts/import.py data static/sb.duckdb.wasm
+python scripts/import.py data static/sb.duckdb
 ```
 
 ### Running the Website
