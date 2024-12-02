@@ -21,7 +21,7 @@ jobs:
               uses: dcarbone/install-jq-action@v3.0.1
 
             - name: Fetch Hetzner Serverboerse Data
-              run: curl 'https://www.hetzner.com/_resources/app/jsondata/live_data_sb.json' | jq .server | gzip > sb-$(date -u +%H%M%S).json.gz
+              run: curl 'https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json' | jq .server | gzip > sb-$(date -u +%H%M%S).json.gz
 
             - name: Partition files
               run: mkdir -p $(date -u +%Y%m%d) && mv sb-*.json.gz $(date -u +%Y%m%d)
