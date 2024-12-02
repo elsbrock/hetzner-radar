@@ -286,7 +286,7 @@ WHERE
       subject: `Price Alert: Target Price Reached`,
       text: `Hi there,
 
-good news! The target price of for one of your alerts has been reached.
+good news! The target price for one of your alerts has been reached.
 
          Filter: ${alert.name}
    Target Price: ${alert.price} EUR
@@ -296,8 +296,8 @@ Visit your alerts section to see further details:
 
   https://radar.iodev.org/alerts
 
-Please note that Server Radar may notice prices with a delay of up to
-60 minutes and the server you are looking for may not be available anymore.
+Please note that Server Radar may notice prices with a delay of up to 60
+minutes and the server you are looking for may not be available anymore.
 
 Fingers crossed!
 
