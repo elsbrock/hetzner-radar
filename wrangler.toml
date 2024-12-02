@@ -32,3 +32,26 @@ database_name = "DB"
 producers=[
   { queue = "email-queue", binding = "EMAIL_QUEUE" }
 ]
+
+[env.preview]
+compatibility_date = "2024-09-23"
+compatibility_flags = [ "nodejs_compat" ]
+services = [
+  { binding = "RATE_LIMIT", service = "rate-limiter" }
+]
+
+[env.preview.placement]
+mode = "smart"
+
+[[env.preview.vars]]
+NODE_VERSION = "22"
+
+[[env.preview.d1_databases]]
+database_id = "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f"
+binding = "DB"
+database_name = "DB"
+
+[env.preview.queues]
+producers=[
+  { queue = "email-queue", binding = "EMAIL_QUEUE" }
+]
