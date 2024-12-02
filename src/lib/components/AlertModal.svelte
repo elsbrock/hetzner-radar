@@ -1,7 +1,7 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
     import { invalidate } from "$app/navigation";
-    import { MAX_ALERTS } from "$lib/api/backend/alerts";
+    import { MAX_ALERTS, MAX_NAME_LENGTH } from "$lib/api/backend/alerts";
     import { filter } from "$lib/stores/filter";
     import { session } from "$lib/stores/session";
     import { addToast } from "$lib/stores/toast";
@@ -107,6 +107,7 @@
                     type="text"
                     name="name"
                     placeholder="Backup Server"
+                    maxlength={MAX_NAME_LENGTH}
                     required
                     value={alert?.name}
                     class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
@@ -125,6 +126,7 @@
                     placeholder="e.g., 50"
                     required
                     min="30"
+                    max="1000"
                     value={alert?.price}
                     class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />

@@ -1,3 +1,6 @@
+export const MAX_NAME_LENGTH = 100;
+export const MAX_ALERTS = 5;
+
 export interface PriceAlert {
     id: string;
     user_id: string;
@@ -32,9 +35,6 @@ function parsePriceAlertHistory(raw: any): PriceAlertHistory {
         triggered_at: new Date(raw.triggered_at),
     };
 }
-
-// Define the maximum number of alerts per user
-export const MAX_ALERTS = 5;
 
 export async function getAlertsForUser(db: DB, userId: string): Promise<UserAlerts> {
     const activeResultsRaw = await db.prepare(
