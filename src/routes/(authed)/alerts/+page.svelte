@@ -82,7 +82,7 @@
                     <div class="space-y-4">
                         {#each active as alert}
                             <div
-                                class="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-l-4 border-l-gray-300"
+                                class="flex flex-col md:flex-row md:items-start p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-l-4 border-l-gray-300"
                             >
                                 <div class="mb-4 md:mb-0 w-full md:w-1/3">
                                     <span
@@ -91,8 +91,9 @@
                                     >
                                     <span
                                         class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{alert.name}</span
                                     >
+                                        {alert.name}
+                                    </span>
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/3">
                                     <span
@@ -101,8 +102,9 @@
                                     >
                                     <span
                                         class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{alert.price} €</span
                                     >
+                                        {alert.price} €
+                                    </span>
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/3">
                                     <span
@@ -111,13 +113,14 @@
                                     >
                                     <span
                                         class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{dayjs
+                                    >
+                                        {dayjs
                                             .utc(alert.created_at)
                                             .local()
-                                            .format("lll")}</span
-                                    >
+                                            .format("DD.MM.YYYY HH:mm")}
+                                    </span>
                                 </div>
-                                <div class="mt-4 md:mt-0">
+                                <div class="mt-4 md:mt-0 self-center">
                                     <ButtonGroup>
                                         <Button
                                             size="xs"
@@ -210,7 +213,7 @@
                     <div class="space-y-4">
                         {#each triggered as alert}
                             <div
-                                class="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-l-4 border-l-green-500"
+                                class="flex flex-col md:flex-row md:items-start p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-l-4 border-l-green-500"
                             >
                                 <div class="mb-4 md:mb-0 w-full md:w-1/5">
                                     <span
@@ -218,7 +221,8 @@
                                         >Name</span
                                     >
                                     <span
-                                        class="text-xl font-semibold text-gray-900 dark:text-white"
+                                        class="text-xl font-semibold text-gray-900
+                                    dark:text-white whitespace-break-spaces"
                                         >{alert.name}</span
                                     >
                                 </div>
@@ -252,7 +256,7 @@
                                         >{dayjs
                                             .utc(alert.created_at)
                                             .local()
-                                            .format("lll")}</span
+                                            .format("DD.MM.YYYY HH:mm")}</span
                                     >
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/4">
@@ -265,10 +269,10 @@
                                         >{dayjs
                                             .utc(alert.triggered_at)
                                             .local()
-                                            .format("lll")}</span
+                                            .format("DD.MM.YYYY HH:mm")}</span
                                     >
                                 </div>
-                                <div class="mt-4 md:mt-0">
+                                <div class="mt-4 md:mt-0 self-center">
                                     <Button
                                         size="xs"
                                         color="alternative"
