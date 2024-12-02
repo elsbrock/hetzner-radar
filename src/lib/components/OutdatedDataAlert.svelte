@@ -26,6 +26,9 @@
         if (elapsedSeconds > threshold) {
             showElement = true;
         } else {
+            if (timer) {
+                clearTimeout(timer);
+            }
             timer = setTimeout(() => {
                 showElement = true;
             }, remainingTime * 1000);
