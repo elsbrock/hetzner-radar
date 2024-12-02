@@ -3,6 +3,7 @@ import {
     deleteAlert,
     getAlertsForUser,
     isBelowMaxAlerts,
+    MAX_NAME_LENGTH,
     updateAlert,
 } from "$lib/api/backend/alerts";
 import { fail, type Actions } from "@sveltejs/kit";
