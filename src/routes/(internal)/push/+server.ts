@@ -91,180 +91,180 @@ export const POST: RequestHandler = async (event) => {
   }
 
   const matchStmt = await db.prepare(`
-WITH ConfigWithDriveStats AS (
-    SELECT
-        c.*,
-        -- Compute min and max for HDD drives
-        (SELECT MIN(value) FROM json_each(c.hdd_drives)) AS min_hdd_drive,
-        (SELECT MAX(value) FROM json_each(c.hdd_drives)) AS max_hdd_drive,
+    WITH ConfigWithDriveStats AS (
+        SELECT
+            c.*,
+            -- Compute min and max for HDD drives
+            (SELECT MIN(value) FROM json_each(c.hdd_drives)) AS min_hdd_drive,
+            (SELECT MAX(value) FROM json_each(c.hdd_drives)) AS max_hdd_drive,
 
-        -- Compute min and max for NVMe drives
-        (SELECT MIN(value) FROM json_each(c.nvme_drives)) AS min_nvme_drive,
-        (SELECT MAX(value) FROM json_each(c.nvme_drives)) AS max_nvme_drive,
+            -- Compute min and max for NVMe drives
+            (SELECT MIN(value) FROM json_each(c.nvme_drives)) AS min_nvme_drive,
+            (SELECT MAX(value) FROM json_each(c.nvme_drives)) AS max_nvme_drive,
 
-        -- Compute min and max for SATA drives
-        (SELECT MIN(value) FROM json_each(c.sata_drives)) AS min_sata_drive,
-        (SELECT MAX(value) FROM json_each(c.sata_drives)) AS max_sata_drive
+            -- Compute min and max for SATA drives
+            (SELECT MIN(value) FROM json_each(c.sata_drives)) AS min_sata_drive,
+            (SELECT MAX(value) FROM json_each(c.sata_drives)) AS max_sata_drive
+        FROM
+            temp_servers_staging c
+    )
+
+    SELECT DISTINCT
+        pa.id,
+        pa.name,
+        pa.price,
+        pa.user_id,
+        user.email,
+        pa.created_at,
+        min(c.price) as trigger_price
     FROM
-        temp_servers_staging c
-)
+        price_alert pa
+    JOIN
+        ConfigWithDriveStats c
+    ON
+        1 = 1  -- Cross join; all filtering is handled in WHERE
+    INNER JOIN
+        user
+    ON
+        pa.user_id = user.id
+    WHERE
+        -- Price Conditions
+        pa.price >= c.price
 
-SELECT DISTINCT
-    pa.id,
-    pa.name,
-    pa.price,
-    pa.user_id,
-    user.email,
-    pa.created_at,
-    min(c.price) as trigger_price
-FROM
-    price_alert pa
-JOIN
-    ConfigWithDriveStats c
-ON
-    1 = 1  -- Cross join; all filtering is handled in WHERE
-INNER JOIN
-    user
-ON
-    pa.user_id = user.id
-WHERE
-    -- Price Conditions
-    pa.price >= c.price
-
-    -- Location Conditions: ORed appropriately
-    AND (
-        (
-            json_extract(pa.filter, '$.locationGermany') = 1
-            AND c.location = 'Germany'
+        -- Location Conditions: ORed appropriately
+        AND (
+            (
+                json_extract(pa.filter, '$.locationGermany') = 1
+                AND c.location = 'Germany'
+            )
+            OR
+            (
+                json_extract(pa.filter, '$.locationFinland') = 1
+                AND c.location = 'Finland'
+            )
         )
-        OR
-        (
-            json_extract(pa.filter, '$.locationFinland') = 1
-            AND c.location = 'Finland'
+
+        -- CPU Count
+        AND c.cpu_count >= json_extract(pa.filter, '$.cpuCount')
+
+        -- CPU Vendor Conditions: ORed appropriately
+        AND (
+            (
+                json_extract(pa.filter, '$.cpuIntel') = 1
+                AND c.cpu_vendor = 'Intel'
+            )
+            OR
+            (
+                json_extract(pa.filter, '$.cpuAMD') = 1
+                AND c.cpu_vendor = 'AMD'
+            )
         )
-    )
 
-    -- CPU Count
-    AND c.cpu_count >= json_extract(pa.filter, '$.cpuCount')
-
-    -- CPU Vendor Conditions: ORed appropriately
-    AND (
-        (
-            json_extract(pa.filter, '$.cpuIntel') = 1
-            AND c.cpu_vendor = 'Intel'
+        -- RAM Internal Size (log2 transformation)
+        AND (
+            json_extract(pa.filter, '$.ramInternalSize[0]') <= (ln(c.ram_size) / ln(2))
+            AND (ln(c.ram_size) / ln(2)) <= json_extract(pa.filter, '$.ramInternalSize[1]')
         )
-        OR
-        (
-            json_extract(pa.filter, '$.cpuAMD') = 1
-            AND c.cpu_vendor = 'AMD'
+
+        -- NVMe SSD Count
+        AND c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
+
+        -- NVMe SSD Internal Size
+        AND (
+          json_extract(pa.filter, '$.ssdNvmeCount[0]') = 0
+          OR (
+              json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') <=
+                  COALESCE(FLOOR(c.min_nvme_drive / 250.0), 0)
+              AND
+                  (FLOOR(c.max_nvme_drive / 250.0) + CASE WHEN (c.max_nvme_drive / 250.0) > FLOOR(c.max_nvme_drive / 250.0) THEN 1 ELSE 0 END)
+                  <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]')
+            )
         )
-    )
 
-    -- RAM Internal Size (log2 transformation)
-    AND (
-        json_extract(pa.filter, '$.ramInternalSize[0]') <= (ln(c.ram_size) / ln(2))
-        AND (ln(c.ram_size) / ln(2)) <= json_extract(pa.filter, '$.ramInternalSize[1]')
-    )
+        -- SATA SSD Count
+        AND c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
 
-    -- NVMe SSD Count
-    AND c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
-
-    -- NVMe SSD Internal Size
-    AND (
-    	json_extract(pa.filter, '$.ssdNvmeCount[0]') = 0
-    	OR (
-	        json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') <=
-	            COALESCE(FLOOR(c.min_nvme_drive / 250.0), 0)
-	        AND
-	            (FLOOR(c.max_nvme_drive / 250.0) + CASE WHEN (c.max_nvme_drive / 250.0) > FLOOR(c.max_nvme_drive / 250.0) THEN 1 ELSE 0 END)
-	            <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]')
+        -- SATA SSD Internal Size
+        AND (
+          json_extract(pa.filter, '$.ssdSataCount[0]') = 0
+          OR (
+              json_extract(pa.filter, '$.ssdSataInternalSize[0]') <=
+                  COALESCE(FLOOR(c.min_sata_drive / 250.0), 0)
+              AND
+                  (FLOOR(c.max_sata_drive / 250.0) + CASE WHEN (c.max_sata_drive / 250.0) > FLOOR(c.max_sata_drive / 250.0) THEN 1 ELSE 0 END)
+                  <= json_extract(pa.filter, '$.ssdSataInternalSize[1]')
+          )
         )
-    )
 
-    -- SATA SSD Count
-    AND c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
+        -- HDD Count
+        AND c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
 
-    -- SATA SSD Internal Size
-    AND (
-    	json_extract(pa.filter, '$.ssdSataCount[0]') = 0
-    	OR (
-	        json_extract(pa.filter, '$.ssdSataInternalSize[0]') <=
-	            COALESCE(FLOOR(c.min_sata_drive / 250.0), 0)
-	        AND
-	            (FLOOR(c.max_sata_drive / 250.0) + CASE WHEN (c.max_sata_drive / 250.0) > FLOOR(c.max_sata_drive / 250.0) THEN 1 ELSE 0 END)
-	            <= json_extract(pa.filter, '$.ssdSataInternalSize[1]')
-	    )
-    )
-
-    -- HDD Count
-    AND c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
-
-    -- HDD Internal Size
-    AND (
-    	json_extract(pa.filter, '$.hddCount[0]') = 0
-    	OR (
-	        json_extract(pa.filter, '$.hddInternalSize[0]') <=
-	            COALESCE(FLOOR(c.min_hdd_drive / 500.0), 0)
-	        AND
-	            (FLOOR(c.max_hdd_drive / 500.0) + CASE WHEN (c.max_hdd_drive / 500.0) > FLOOR(c.max_hdd_drive / 500.0) THEN 1 ELSE 0 END)
-	            <= json_extract(pa.filter, '$.hddInternalSize[1]')
-	    )
-    )
-
-    -- Selected Datacenters
-    AND (
-        json_type(pa.filter, '$.selectedDatacenters') = 'null'
-        OR json_array_length(json_extract(pa.filter, '$.selectedDatacenters')) = 0
-        OR c.datacenter IN (
-            SELECT value FROM json_each(pa.filter, '$.selectedDatacenters')
+        -- HDD Internal Size
+        AND (
+          json_extract(pa.filter, '$.hddCount[0]') = 0
+          OR (
+              json_extract(pa.filter, '$.hddInternalSize[0]') <=
+                  COALESCE(FLOOR(c.min_hdd_drive / 500.0), 0)
+              AND
+                  (FLOOR(c.max_hdd_drive / 500.0) + CASE WHEN (c.max_hdd_drive / 500.0) > FLOOR(c.max_hdd_drive / 500.0) THEN 1 ELSE 0 END)
+                  <= json_extract(pa.filter, '$.hddInternalSize[1]')
+          )
         )
-    )
 
-    -- Selected CPU Models (Comparing c.cpu instead of c.cpu_vendor)
-    AND (
-        json_type(pa.filter, '$.selectedCpuModels') = 'null'
-        OR json_array_length(json_extract(pa.filter, '$.selectedCpuModels')) = 0
-        OR c.cpu IN (
-            SELECT value FROM json_each(pa.filter, '$.selectedCpuModels')
+        -- Selected Datacenters
+        AND (
+            json_type(pa.filter, '$.selectedDatacenters') = 'null'
+            OR json_array_length(json_extract(pa.filter, '$.selectedDatacenters')) = 0
+            OR c.datacenter IN (
+                SELECT value FROM json_each(pa.filter, '$.selectedDatacenters')
+            )
         )
-    )
 
-    -- Extras: ECC
-    AND (
-        json_type(pa.filter, '$.extrasECC') = 'null'
-        OR json_extract(pa.filter, '$.extrasECC') = c.is_ecc
-    )
+        -- Selected CPU Models (Comparing c.cpu instead of c.cpu_vendor)
+        AND (
+            json_type(pa.filter, '$.selectedCpuModels') = 'null'
+            OR json_array_length(json_extract(pa.filter, '$.selectedCpuModels')) = 0
+            OR c.cpu IN (
+                SELECT value FROM json_each(pa.filter, '$.selectedCpuModels')
+            )
+        )
 
-    -- Extras: INIC
-    AND (
-        json_type(pa.filter, '$.extrasINIC') = 'null'
-        OR json_extract(pa.filter, '$.extrasINIC') = c.with_inic
-    )
+        -- Extras: ECC
+        AND (
+            json_type(pa.filter, '$.extrasECC') = 'null'
+            OR json_extract(pa.filter, '$.extrasECC') = c.is_ecc
+        )
 
-    -- Extras: HWR
-    AND (
-        json_type(pa.filter, '$.extrasHWR') = 'null'
-        OR json_extract(pa.filter, '$.extrasHWR') = c.with_hwr
-    )
+        -- Extras: INIC
+        AND (
+            json_type(pa.filter, '$.extrasINIC') = 'null'
+            OR json_extract(pa.filter, '$.extrasINIC') = c.with_inic
+        )
 
-    -- Extras: GPU
-    AND (
-        json_type(pa.filter, '$.extrasGPU') = 'null'
-        OR json_extract(pa.filter, '$.extrasGPU') = c.with_gpu
-    )
+        -- Extras: HWR
+        AND (
+            json_type(pa.filter, '$.extrasHWR') = 'null'
+            OR json_extract(pa.filter, '$.extrasHWR') = c.with_hwr
+        )
 
-    -- Extras: RPS
-    AND (
-        json_type(pa.filter, '$.extrasRPS') = 'null'
-        OR json_extract(pa.filter, '$.extrasRPS') = c.with_rps
-    )
-  GROUP BY
-    pa.id,
-    pa.name,
-    pa.price,
-    pa.user_id,
-    user.email,
-    pa.created_at
+        -- Extras: GPU
+        AND (
+            json_type(pa.filter, '$.extrasGPU') = 'null'
+            OR json_extract(pa.filter, '$.extrasGPU') = c.with_gpu
+        )
+
+        -- Extras: RPS
+        AND (
+            json_type(pa.filter, '$.extrasRPS') = 'null'
+            OR json_extract(pa.filter, '$.extrasRPS') = c.with_rps
+        )
+      GROUP BY
+        pa.id,
+        pa.name,
+        pa.price,
+        pa.user_id,
+        user.email,
+        pa.created_at
   `);
 
   const rollbackStmt = await db.prepare(`delete from temp_servers_staging`);
