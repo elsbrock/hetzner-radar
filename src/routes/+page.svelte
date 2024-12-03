@@ -2,7 +2,10 @@
     import { faGithub } from "@fortawesome/free-brands-svg-icons";
     import {
         faBell,
+        faBinoculars,
+        faBug,
         faChartLine,
+        faEnvelope,
         faEye,
         faFilter,
         faForwardStep,
@@ -37,7 +40,10 @@
             <Button
                 color="primary"
                 href="/analyze"
-                class="px-5 py-3 text-lg shadow-sm">Start Analyzing</Button
+                class="px-5 py-3 text-lg shadow-sm"
+            >
+                <FontAwesomeIcon icon={faBinoculars} class="mr-2" />Start
+                Analyzing</Button
             >
             <Button
                 color="alternative"
@@ -326,6 +332,7 @@
                 class="px-6 py-3 text-md flex items-center shadow-sm"
                 color="alternative"
             >
+                <FontAwesomeIcon icon={faEnvelope} class="mr-2" />
                 Contact Us
             </Button>
             <Button
@@ -333,6 +340,7 @@
                 class="px-6 py-3 text-md flex items-center shadow-sm"
                 color="alternative"
             >
+                <FontAwesomeIcon icon={faBug} class="mr-2" />
                 Report an Issue
             </Button>
         </div>
