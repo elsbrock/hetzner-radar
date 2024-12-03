@@ -8,9 +8,10 @@ test('analyze: we have data', async ({ page }) => {
   await expect(await page.getByTestId('server-card').count()).toBeGreaterThan(0);
   await expect(page.getByText('Volume', { exact: true })).toBeVisible();
   await expect(page.getByText('Price (€)', { exact: true })).toBeDefined();
-  await expect(page.getByLabel('Clear Filter')).not.toBeVisible();
-  await page.getByLabel('Save Filter').click();
-  await expect(page.getByLabel('Clear Filter')).toBeDefined();
-  await page.getByLabel('Clear Filter').click();
-  await expect(page.getByLabel('Clear Filter')).not.toBeVisible();
+  await expect(page.getByTestId('filter-clear')).not.toBeVisible();
+  await page.getByTestId('filter-save').click();
+  await expect(page.getByTestId('filter-clear')).toBeVisible();
+  await page.getByTestId('filter-clear').click();
+  await expect(page.getByTestId('filter-clear')).not.toBeVisible();
+  await expect(page.getByTestId('results-count')).toHaveText(/^\d+ results/);
 });

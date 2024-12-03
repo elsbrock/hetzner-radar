@@ -237,6 +237,7 @@
                                     size="xs"
                                     color="alternative"
                                     class="shadow-sm"
+                                    data-testid="filter-save"
                                     disabled={updateStoredFilterDisabled}
                                     on:click={handleSaveFilter}
                                 >
@@ -251,6 +252,7 @@
                                         size="xs"
                                         color="alternative"
                                         class="shadow-sm"
+                                        data-testid="filter-clear"
                                         on:click={handleClearFilter}
                                         >Delete</Button
                                     >
@@ -395,7 +397,10 @@
                     </h3>
                     {#if !loading}
                         <div class="text-gray-500 text-sm mt-1">
-                            <Badge color="green" rounded
+                            <Badge
+                                color="green"
+                                data-testid="results-count"
+                                rounded
                                 >{serverList.length > 100
                                     ? "more than 100"
                                     : serverList.length} results</Badge
