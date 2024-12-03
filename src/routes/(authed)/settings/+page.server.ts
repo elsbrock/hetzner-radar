@@ -27,7 +27,9 @@ This is to notify you that your account on Server Radar has been successfully de
 We're sad to see you go and hope you'll come back soon. If you have any feedback, we'd love to hear it.
 
 Cheers,
-Server Radar`,
+Server Radar
+--
+https://radar.iodev.org/`,
         });
 
         throw redirect(302, '/');

@@ -69,10 +69,13 @@ You've requested to sign in to Server Radar. Here's your magic code:
 
   ${verificationCode}
 
-You've got 15 minutes to use it before it expires. If you didn't request this, just ignore this email – no action needed on your part.
+You've got 15 minutes to use it before it expires. If you didn't request
+this, just ignore this email – no action needed on your part.
 
 Cheers,
-The Server Radar Team`,
+Server Radar
+--
+https://radar.iodev.org/`,
             });
 
             return { success: true };

@@ -306,6 +306,8 @@ Fingers crossed!
 
 Cheers,
 Server Radar
+--
+https://radar.iodev.org/
       `,
     });
     await db.batch([triggeredStmt.bind(alert.trigger_price, alert.id), deleteStmt.bind(alert.id)]);
