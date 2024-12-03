@@ -1,6 +1,5 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { faGithub } from "@fortawesome/free-brands-svg-icons";
     import {
         faBell,
         faBinoculars,
@@ -27,6 +26,7 @@
     import { enhance } from "$app/forms";
     import { goto } from "$app/navigation";
     import { session } from "$lib/stores/session";
+    import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
     let alertShakeAnim = false;
 
@@ -51,14 +51,18 @@
         </div>
     </NavBrand>
 
-    <!-- Contribute Button for Desktop -->
     <div class="hidden lg:flex md:order-2">
-        <Button size="md" href="https://github.com/elsbrock/hetzner-radar">
-            <FontAwesomeIcon class="w-5 h-5 me-1" icon={faGithub} /> Contribute
+        <Button
+            size="md"
+            color="alternative"
+            href="https://github.com/elsbrock/hetzner-radar"
+            class="border-gray-400 bg-gray-50 p-2 px-4"
+        >
+            <FontAwesomeIcon class="w-5 h-5 me-2" icon={faGithub} />
+            Star
         </Button>
     </div>
 
-    <!-- Analyze Button and Hamburger for Mobile -->
     <div class="flex md:order-2 lg:hidden">
         <Button href="/analyze" aria-label="Analyze" size="xs">
             <FontAwesomeIcon class="w-5 h-5" icon={faBinoculars} /><span
