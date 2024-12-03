@@ -41,3 +41,9 @@ export async function deleteVerificationCodes(db: any, email: string) {
         .bind(email)
         .run();
 }
+
+export async function deleteExpiredVerificationCodes(db: any) {
+    return db
+        .prepare("DELETE FROM email_verification_code WHERE expires_at < datetime('now')")
+        .run();
+}

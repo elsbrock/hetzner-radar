@@ -1,5 +1,6 @@
 import { dev } from "$app/environment";
 import {
+    deleteExpiredVerificationCodes,
     deleteVerificationCodes,
     generateEmailVerificationCode,
     verifyCodeExists,
@@ -113,6 +114,8 @@ https://radar.iodev.org/`,
                     error: "Invalid code, please try again.",
                 });
             }
+
+            await deleteExpiredVerificationCodes(db);
 
             const codeExists = await verifyCodeExists(db, email, code);
             if (!codeExists) {
