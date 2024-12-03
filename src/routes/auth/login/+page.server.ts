@@ -5,43 +5,62 @@ import {
     verifyCodeExists,
 } from "$lib/api/backend/auth";
 import {
-    SESSION_COOKIE_NAME,
     createSession,
     generateSessionToken,
+    SESSION_COOKIE_NAME,
     validateSessionToken,
 } from "$lib/api/backend/session";
 import { createUser, getUserId } from "$lib/api/backend/user";
 import { createSessionCookie } from "$lib/cookie";
 import { sendMail } from "$lib/mail";
 import { rateLimit } from "$lib/session";
-import { redirect } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
+import validator from "validator";
 import type { Actions } from "./$types";
 
 export const actions: Actions = {
     identify: rateLimit(async (event) => {
-        const db = event.platform?.env.DB;
-        const formData = await event.request.formData();
-        const email = formData.get("email") as string;
-        const tosAgree = formData.get("tosagree") as string;
-        const cookieConsent = formData.get("cookieconsent") as string;
+        try {
+            const db = event.platform?.env.DB;
+            const formData = await event.request.formData();
+            let email = formData.get("email") as string;
+            const tosAgree = formData.get("tosagree") as string;
+            const cookieConsent = formData.get("cookieconsent") as string;
 
-        if (!email) {
-            return {
-                success: false,
-                error: "Invalid email, please try again.",
-            };
-        }
-        const verificationCode = await generateEmailVerificationCode(db, email);
-        console.log("verification code", verificationCode);
+            if (tosAgree !== "on") {
+                return fail(400, {
+                    error: "You must agree to the Terms of Service.",
+                });
+            }
 
-        await sendMail(event.platform?.env, {
-            to: email,
-            from: {
-                name: "Server Radar",
-                email: "no-reply@radar.iodev.org",
-            },
-            subject: "Your Magic Sign-In Code",
-            text: `Greetings!
+            if (cookieConsent !== "on") {
+                return fail(400, {
+                    error: "You must consent to the use of cookies.",
+                });
+            }
+
+            if (!email) {
+                return fail(400, {
+                    error: "Invalid email, please try again.",
+                });
+            }
+
+            email = email.toLowerCase();
+
+            if (!validator.isEmail(email)) {
+                return fail(400, {
+                    error: "Invalid email format.",
+                });
+            }
+
+            const verificationCode = await generateEmailVerificationCode(db, email);
+            console.log("verification code", verificationCode);
+
+            await sendMail(event.platform?.env, {
+                from: "Server Radar <no-reply@radar.iodev.org>",
+                to: email,
+                subject: "Your Magic Sign-In Code",
+                text: `Greetings!
 
 You've requested to sign in to Server Radar. Here's your magic code:
 
@@ -50,50 +69,82 @@ You've requested to sign in to Server Radar. Here's your magic code:
 You've got 15 minutes to use it before it expires. If you didn't request this, just ignore this email – no action needed on your part.
 
 Cheers,
-Server Radar`,
-        });
+The Server Radar Team`,
+            });
 
-        return { success: true };
+            return { success: true };
+        } catch (error) {
+            console.error("Identify action error:", error);
+            return fail(500, {
+                error: "An unexpected error occurred. Please try again later.",
+            });
+        }
     }),
 
     authenticate: rateLimit(async (event) => {
-        const db = event.platform?.env.DB;
-        const formData = await event.request.formData();
-        const code = formData.get("code") as string;
-        const email = formData.get("email") as string;
+        try {
+            const db = event.platform?.env.DB;
+            const formData = await event.request.formData();
+            let code = formData.get("code") as string;
+            let email = formData.get("email") as string;
 
-        console.log(await db.prepare("SELECT * FROM email_verification_code").all());
+            if (!email) {
+                return fail(400, {
+                    error: "Email is required.",
+                });
+            }
 
-        if (!code) {
-            return { success: false, error: "Invalid code, please try again." };
-        }
+            email = email.toLowerCase();
 
-        const codeExists = await verifyCodeExists(db, email, code);
-        if (!codeExists) {
-            return { success: false, error: "Invalid code, please try again." };
-        }
+            if (!validator.isEmail(email)) {
+                return fail(400, {
+                    error: "Invalid email format.",
+                });
+            }
 
-        let userId = await getUserId(db, email);
-        if (!userId) {
-            userId = await createUser(db, email);
-        }
+            if (!code) {
+                return fail(400, {
+                    error: "Invalid code, please try again.",
+                });
+            }
 
-        await deleteVerificationCodes(db, email);
+            const codeExists = await verifyCodeExists(db, email, code);
+            if (!codeExists) {
+                return fail(400, {
+                    error: "Invalid code, please try again.",
+                });
+            }
 
-        const sessionToken = generateSessionToken();
-        const session = await createSession(db, sessionToken, userId, email);
+            let userId = await getUserId(db, email);
+            if (!userId) {
+                userId = await createUser(db, email);
+            }
 
-        const cookie = createSessionCookie(SESSION_COOKIE_NAME, sessionToken, {
-            secure: !dev
-        });
-        event.cookies.set(cookie.name, cookie.value, cookie.attributes as any);
+            await deleteVerificationCodes(db, email);
 
-        // if application/json, return json. else, redirect to /analyze
-        if (event.request.headers.get("accept") === "application/json") {
-            const { user } = await validateSessionToken(db, sessionToken);
-            return { success: true, session, user };
-        } else {
-            throw redirect(303, "/analyze");
+            const sessionToken = generateSessionToken();
+            const session = await createSession(db, sessionToken, userId, email);
+
+            const cookie = createSessionCookie(SESSION_COOKIE_NAME, sessionToken, {
+                secure: !dev,
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+            });
+            event.cookies.set(cookie.name, cookie.value, cookie.attributes as any);
+
+            // If application/json, return JSON. Else, redirect to /analyze
+            if (event.request.headers.get("accept")?.includes("application/json")) {
+                const { user } = await validateSessionToken(db, sessionToken);
+                return { success: true, session, user };
+            } else {
+                throw redirect(303, "/analyze");
+            }
+        } catch (error) {
+            console.error("Authenticate action error:", error);
+            return fail(500, {
+                error: "An unexpected error occurred. Please try again later.",
+            });
         }
     }),
 };
