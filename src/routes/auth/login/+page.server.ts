@@ -57,7 +57,10 @@ export const actions: Actions = {
             console.log("verification code", verificationCode);
 
             await sendMail(event.platform?.env, {
-                from: "Server Radar <no-reply@radar.iodev.org>",
+                from: {
+                    name: "Server Radar",
+                    email: "no-reply@radar.iodev.org",
+                },
                 to: email,
                 subject: "Your Magic Sign-In Code",
                 text: `Greetings!
