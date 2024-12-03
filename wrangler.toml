@@ -7,6 +7,7 @@ mode = "off"
 
 [[d1_databases]]
 database_id = "1138185b-a1aa-4d0b-96f8-7e1388b91a2a"
+preview_database_id = "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f"
 binding = "DB"
 database_name = "DB"
 
