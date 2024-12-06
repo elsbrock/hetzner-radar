@@ -63,6 +63,7 @@ If you just want to inspect or play with the dataset, you can do so by running.
 duckdb -cmd "attach 'https://static.radar.iodev.org/sb.duckdb' (read_only); use sb;"
 ```
 
+:
 Inspect the schema using the `.schema` pragma.
 
 We use Python 3 to create a DuckDB database and ingest the auction data.
@@ -107,4 +108,4 @@ have any concerns, please reach out.
 Please note that this is an independent project and is not officially affiliated
 with Hetzner. "Hetzner" is a trademark owned by its respective owners. This
 project does not claim any official endorsement by Hetzner, nor does it
-guarantee correctness of the data. Use at your own risk.
+T:guarantee correctness of the data. Use at your own risk.
