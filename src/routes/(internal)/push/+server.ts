@@ -5,6 +5,7 @@ import { sendMail } from "$lib/mail";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const POST: RequestHandler = async (event) => {
+  const start = performance.now();
   const request = event.request;
 
   // verify api key is present
@@ -23,8 +24,6 @@ export const POST: RequestHandler = async (event) => {
       statusText: "Bad Request",
     });
   }
-
-  const configs = await request.json() as ServerConfiguration[];
 
   const db = event.platform?.env.DB;
   if (!db) {
@@ -53,6 +52,7 @@ export const POST: RequestHandler = async (event) => {
   const stmt = await db.prepare(sql);
 
   // split config into batches of 100 and do batch insert
+  const configs = await request.json() as ServerConfiguration[];
   const batch: PreparedStatement[] = [];
   for (let i = 0; i < configs.length; i++) {
     const config = configs[i];
@@ -313,5 +313,9 @@ https://radar.iodev.org/
     await db.batch([triggeredStmt.bind(alert.trigger_price, alert.id), deleteStmt.bind(alert.id)]);
   }
 
-	return new Response(JSON.stringify(results[results.length-2]));
+	return new Response(JSON.stringify({
+    servers: configs.length,
+    alerts: alertResults.length,
+    time: performance.now() - start,
+  }));
 }

@@ -59,7 +59,8 @@ def push_data(data):
         sys.exit(1)
 
     duration = time.time() - start
-    print(f"Pushed {len(data)} servers in {duration:.2f} seconds")
+    print(response.json())
+    print(f"Pushed data in {duration} seconds")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
