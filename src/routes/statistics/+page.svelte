@@ -1,63 +1,15 @@
 <script lang="ts">
-  import { withDbConnections } from "$lib/api/frontend/dbapi";
   import {
     getCPUVendorPriceStats,
     getDiskPriceStats,
     getGPUPriceStats,
     getPriceIndexStats,
     getRamPriceStats,
-    getVolumeStats,
-    type TemporalStat,
+    getVolumeStats
   } from "$lib/api/frontend/stats";
   import LineChart from "$lib/components/LineChart.svelte";
-  import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+  import { Spinner } from "flowbite-svelte";
   import { db } from "../../stores/db";
-
-	let dailyPriceIndexStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let ramWithECCPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let ramWithoutECCPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let hddPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let nvmePriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let sataPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let gpuPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let cpuVendorAMDStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let cpuVendorIntelStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let volumeFinlandStats: Promise<TemporalStat[]> = Promise.resolve([]);
-  let volumeGermanyStats: Promise<TemporalStat[]> = Promise.resolve([]);
-
-  async function fetchData(db: AsyncDuckDB) {
-    return withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
-			dailyPriceIndexStats = getPriceIndexStats(conn1);
-      ramWithECCPriceStats = getRamPriceStats(conn2, true);
-      ramWithoutECCPriceStats = getRamPriceStats(conn3, false);
-      hddPriceStats = getDiskPriceStats(conn4, "hdd");
-      nvmePriceStats = getDiskPriceStats(conn5, "nvme");
-      sataPriceStats = getDiskPriceStats(conn1, "sata");
-      gpuPriceStats = getGPUPriceStats(conn1);
-      cpuVendorAMDStats = getCPUVendorPriceStats(conn2, "AMD");
-      cpuVendorIntelStats = getCPUVendorPriceStats(conn2, "Intel");
-      volumeFinlandStats = getVolumeStats(conn3, "Finland");
-      volumeGermanyStats = getVolumeStats(conn3, "Germany");
-			// hack to ensure connection stays open
-			await Promise.all([
-				dailyPriceIndexStats,
-				ramWithECCPriceStats,
-				ramWithoutECCPriceStats,
-				hddPriceStats,
-				nvmePriceStats,
-				sataPriceStats,
-				gpuPriceStats,
-				cpuVendorAMDStats,
-				cpuVendorIntelStats,
-				volumeFinlandStats,
-				volumeGermanyStats
-			]);
-    });
-  }
-
-  $: if (!!$db) {
-    fetchData($db);
-  }
 </script>
 
 <div class="p-8 bg-gray-50">
@@ -72,6 +24,10 @@
     </p>
   </section>
 
+{#if !!$db}
+{#await $db.connect()}
+  <Spinner />
+{:then conn}
   <div class="mx-auto my-12 max-w-7xl">
     <div
       class="my-6 overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800"
@@ -89,7 +45,7 @@
 			</div>
       <div class="h-80 w-full">
         <LineChart
-          data={[{ name: "Price Index", data: dailyPriceIndexStats }]}
+          data={[{ name: "Price Index", data: getPriceIndexStats(conn) }]}
           options={{
             yaxis: {
 							title: {
@@ -122,8 +78,8 @@
         <div class="h-80 w-full">
           <LineChart
             data={[
-              { name: "With ECC", data: ramWithECCPriceStats },
-              { name: "Without ECC", data: ramWithoutECCPriceStats },
+              { name: "With ECC", data: getRamPriceStats(conn, true) },
+              { name: "Without ECC", data: getRamPriceStats(conn, false) },
             ]}
           />
         </div>
@@ -144,7 +100,7 @@
           </p>
         </div>
         <div class="h-80 w-full">
-          <LineChart data={[{ name: "HDD Price", data: hddPriceStats }]} />
+          <LineChart data={[{ name: "HDD Price", data: getDiskPriceStats(conn, "hdd") }]} />
         </div>
       </div>
 
@@ -165,8 +121,8 @@
         <div class="h-80 w-full">
           <LineChart
             data={[
-              { name: "NVMe", data: nvmePriceStats },
-              { name: "SATA", data: sataPriceStats },
+              { name: "NVMe", data: getDiskPriceStats(conn, "nvme") },
+              { name: "SATA", data: getDiskPriceStats(conn, "sata") },
             ]}
           />
         </div>
@@ -186,7 +142,7 @@
           </p>
         </div>
         <div class="h-80 w-full">
-          <LineChart data={[{ name: "GPU", data: gpuPriceStats }]} />
+          <LineChart data={[{ name: "GPU", data: getGPUPriceStats(conn) }]} />
         </div>
       </div>
 
@@ -207,8 +163,8 @@
         <div class="h-80 w-full">
           <LineChart
             data={[
-              { name: "Finland", data: volumeFinlandStats },
-              { name: "Germany", data: volumeGermanyStats },
+              { name: "Finland", data: getVolumeStats(conn, "Finland") },
+              { name: "Germany", data: getVolumeStats(conn, "Germany") },
             ]}
             options={{
               chart: {
@@ -249,12 +205,14 @@
         <div class="h-80 w-full">
           <LineChart
             data={[
-              { name: "AMD", data: cpuVendorAMDStats },
-              { name: "Intel", data: cpuVendorIntelStats },
+              { name: "AMD", data: getCPUVendorPriceStats(conn, "AMD") },
+              { name: "Intel", data: getCPUVendorPriceStats(conn, "Intel") },
             ]}
           />
         </div>
       </div>
     </div>
   </div>
+  {/await}
+  {/if}
 </div>

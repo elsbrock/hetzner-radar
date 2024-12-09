@@ -4,7 +4,7 @@
   import type { ApexOptions } from "apexcharts";
   import merge from "deepmerge";
   import { Spinner } from "flowbite-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
 
   export let data: { name?: string; data: Promise<TemporalStat[]> }[];
   export let options: ApexOptions = {};
@@ -17,6 +17,7 @@
   let resolvedData: { name?: string; data: TemporalStat[] }[] = [];
 
   onMount(async () => {
+    await tick();
     // Dynamically import ApexCharts to ensure window is available
     const ApexChartsModule = await import("apexcharts");
     const ApexCharts = ApexChartsModule.default;
@@ -35,8 +36,6 @@
         name: dataset.name,
         data: dataset.data.map((d) => [d.x * 1000, d.y]), // Convert timestamp to milliseconds
       }));
-
-      console.log(resolvedData[0]);
 
       chartOptions = {
         chart: {
@@ -104,30 +103,19 @@
       chart.destroy();
     }
   });
-
-  // Update the chart when data changes
-  $: if (chart && resolvedData) {
-    const updatedSeries = resolvedData.map((dataset) => ({
-      name: dataset.name,
-      data: dataset.data.map((d) => [d.x * 1000, d.y]),
-    }));
-    chart.updateSeries(updatedSeries);
-  }
 </script>
 
-{#if loading}
-  <Spinner />
-{:else}
+<div class="relative w-full h-full">
+  <div
+    class="absolute inset-0 flex items-center justify-center"
+    class:hidden={!loading}
+  >
+    <Spinner />
+  </div>
+
   <div
     bind:this={container}
-    style="width: 100%; height: 100%;"
+    class="w-full h-full"
     data-testid="linechart"
   ></div>
-{/if}
-
-<style>
-  div {
-    display: block;
-    position: relative;
-  }
-</style>
+</div>
