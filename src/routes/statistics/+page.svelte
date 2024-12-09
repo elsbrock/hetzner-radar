@@ -13,57 +13,45 @@
   import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
   import { db } from "../../stores/db";
 
-  let loading = true;
-
-  let dailyPriceIndexStats: TemporalStat[] = [];
-  let ramWithECCPriceStats: TemporalStat[] = [];
-  let ramWithoutECCPriceStats: TemporalStat[] = [];
-  let hddPriceStats: TemporalStat[] = [];
-  let nvmePriceStats: TemporalStat[] = [];
-  let sataPriceStats: TemporalStat[] = [];
-  let gpuPriceStats: TemporalStat[] = [];
-  let cpuVendorAMDStats: TemporalStat[] = [];
-  let cpuVendorIntelStats: TemporalStat[] = [];
-  let volumeFinlandStats: TemporalStat[] = [];
-  let volumeGermanyStats: TemporalStat[] = [];
+	let dailyPriceIndexStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let ramWithECCPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let ramWithoutECCPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let hddPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let nvmePriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let sataPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let gpuPriceStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let cpuVendorAMDStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let cpuVendorIntelStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let volumeFinlandStats: Promise<TemporalStat[]> = Promise.resolve([]);
+  let volumeGermanyStats: Promise<TemporalStat[]> = Promise.resolve([]);
 
   async function fetchData(db: AsyncDuckDB) {
-    let queryTime = performance.now();
-    loading = true;
-
-    await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
-      try {
-        [
-          dailyPriceIndexStats,
-          ramWithECCPriceStats,
-          ramWithoutECCPriceStats,
-          hddPriceStats,
-          nvmePriceStats,
-          sataPriceStats,
-          gpuPriceStats,
-          cpuVendorAMDStats,
-          cpuVendorIntelStats,
-          volumeFinlandStats,
-          volumeGermanyStats,
-        ] = await Promise.all([
-          getPriceIndexStats(conn1),
-          getRamPriceStats(conn2, true),
-          getRamPriceStats(conn3, false),
-          getDiskPriceStats(conn4, "hdd"),
-          getDiskPriceStats(conn5, "nvme"),
-          getDiskPriceStats(conn1, "sata"),
-          getGPUPriceStats(conn1),
-          getCPUVendorPriceStats(conn2, "AMD"),
-          getCPUVendorPriceStats(conn2, "Intel"),
-          getVolumeStats(conn3, "Finland"),
-          getVolumeStats(conn3, "Germany"),
-        ]);
-        queryTime = performance.now() - queryTime;
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        loading = false;
-      }
+    return withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
+			dailyPriceIndexStats = getPriceIndexStats(conn1);
+      ramWithECCPriceStats = getRamPriceStats(conn2, true);
+      ramWithoutECCPriceStats = getRamPriceStats(conn3, false);
+      hddPriceStats = getDiskPriceStats(conn4, "hdd");
+      nvmePriceStats = getDiskPriceStats(conn5, "nvme");
+      sataPriceStats = getDiskPriceStats(conn1, "sata");
+      gpuPriceStats = getGPUPriceStats(conn1);
+      cpuVendorAMDStats = getCPUVendorPriceStats(conn2, "AMD");
+      cpuVendorIntelStats = getCPUVendorPriceStats(conn2, "Intel");
+      volumeFinlandStats = getVolumeStats(conn3, "Finland");
+      volumeGermanyStats = getVolumeStats(conn3, "Germany");
+			// hack to ensure connection stays open
+			await Promise.all([
+				dailyPriceIndexStats,
+				ramWithECCPriceStats,
+				ramWithoutECCPriceStats,
+				hddPriceStats,
+				nvmePriceStats,
+				sataPriceStats,
+				gpuPriceStats,
+				cpuVendorAMDStats,
+				cpuVendorIntelStats,
+				volumeFinlandStats,
+				volumeGermanyStats
+			]);
     });
   }
 
