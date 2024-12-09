@@ -160,6 +160,64 @@ export async function getVolumeStats(conn: AsyncDuckDBConnection, country?: stri
 	return getData<TemporalStat>(conn, query);
 }
 
+export async function getPriceIndexStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
+	const query = SQL`
+		WITH config_daily_prices AS (
+				-- Calculate the daily min price for each configuration
+				SELECT
+						date_trunc('d', seen) AS date,
+						cpu, ram_size, is_ecc, hdd_arr,
+						nvme_size, nvme_drives,
+						sata_size, sata_drives,
+						hdd_size, hdd_drives,
+						with_gpu, with_inic, with_hwr, with_rps,
+						min(price) AS daily_min_price,
+						COUNT(*) AS server_count
+				FROM server
+				GROUP BY
+						cpu, ram_size, is_ecc, hdd_arr,
+						nvme_size, nvme_drives,
+						sata_size, sata_drives,
+						hdd_size, hdd_drives,
+						with_gpu, with_inic, with_hwr, with_rps,
+						date_trunc('d', seen)
+		),
+		config_deviations AS (
+				-- Calculate normalized deviation for each configuration
+				SELECT
+						date,
+						daily_min_price,
+						server_count,
+						avg(daily_min_price) OVER (
+								PARTITION BY
+										cpu, ram_size, is_ecc, hdd_arr,
+										nvme_size, nvme_drives,
+										sata_size, sata_drives,
+										hdd_size, hdd_drives,
+										with_gpu, with_inic, with_hwr, with_rps
+								ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+						) AS rolling_avg_price
+				FROM config_daily_prices
+		),
+		daily_price_index AS (
+				-- Consolidate to a single price index per day
+				SELECT
+						date,
+						SUM((daily_min_price / NULLIF(rolling_avg_price, 0)) * server_count) AS weighted_sum,
+						SUM(server_count) AS total_servers
+				FROM config_deviations
+				GROUP BY date
+		)
+		-- Final result: one price index value per day
+		SELECT
+				EXTRACT(epoch FROM date_trunc('d', date))::int as x,
+				weighted_sum / NULLIF(total_servers, 0) as y
+		FROM daily_price_index
+		ORDER BY date;
+	`;
+	return getData<TemporalStat>(conn, query);
+}
+
 export type LastUpdate = {
   last_updated: number;
 };
