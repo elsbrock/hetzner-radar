@@ -177,8 +177,7 @@ export async function getConfigurations(
     let configurations_query = SQL`
 		WITH subquery AS (
 			SELECT
-				cpu, cpu_count, cpu_vendor, location,
-				ram_size, is_ecc, hdd_arr,
+				cpu, ram_size, is_ecc, hdd_arr,
 				nvme_size, nvme_drives, nvme_count,
 				sata_size, sata_drives, sata_count,
 				hdd_size, hdd_drives, hdd_count,
