@@ -173,64 +173,61 @@ export async function getConfigurations(
     conn: AsyncDuckDBConnection,
     filter: ServerFilter,
 ): Promise<ServerConfiguration[]> {
-    let configurations_filter_query = generateFilterQuery(filter, true, true);
+    let configurations_filter_query = generateFilterQuery(filter, true, false);
     let configurations_query = SQL`
-		WITH subquery AS (
-			SELECT
-				cpu, ram_size, is_ecc, hdd_arr,
-				nvme_size, nvme_drives, nvme_count,
-				sata_size, sata_drives, sata_count,
-				hdd_size, hdd_drives, hdd_count,
-				with_gpu, with_inic, with_hwr, with_rps,
-				price,
-				seen,
-				FIRST_VALUE(price) OVER (PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
-												nvme_size, nvme_drives,
-												sata_size, sata_drives,
-												hdd_size, hdd_drives,
-												with_gpu, with_inic, with_hwr, with_rps
-										ORDER BY seen DESC) AS last_price,
-				MAX(seen) OVER (PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
-										nvme_size, nvme_drives,
-										sata_size, sata_drives,
-										hdd_size, hdd_drives,
-										with_gpu, with_inic, with_hwr, with_rps
-							) AS last_seen,
-				MIN(price) OVER (PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
-										nvme_size, nvme_drives,
-										sata_size, sata_drives,
-										hdd_size, hdd_drives,
-										with_gpu, with_inic, with_hwr, with_rps
-				) AS min_price
-			FROM
-				server
-      WHERE `;
-    configurations_query.append(configurations_filter_query);
-    configurations_query.append(`
-		)
-		SELECT
-			cpu,
-			ram_size, is_ecc, hdd_arr::JSON as hdd_arr,
-			nvme_size, nvme_drives::JSON as nvme_drives,
-			sata_size, sata_drives::JSON as sata_drives,
-			hdd_size, hdd_drives::JSON as hdd_drives,
-			with_gpu, with_inic, with_hwr, with_rps,
-			MAX(min_price) as min_price,
-			MAX(last_price) AS price,
-			extract('epoch' from MAX(last_seen)) AS last_seen,
-			-- calculate the markup percentage
-			round((MAX(last_price) - MAX(min_price)) / MAX(min_price) * 100, 0) AS markup_percentage
-		FROM
-			subquery
-		GROUP BY
-			cpu, ram_size, is_ecc, hdd_arr,
-			nvme_size, nvme_drives,
-			sata_size, sata_drives,
-			hdd_size, hdd_drives,
-			with_gpu, with_inic, with_hwr, with_rps
-		ORDER BY
-			price ASC
-        LIMIT 101`); // if we get more than 100 results, we limit on the ui
+    SELECT
+        * exclude(last_seen),
+        extract('epoch' from last_seen) as last_seen
+    FROM (
+        SELECT
+            cpu,
+            ram_size,
+            is_ecc,
+            hdd_arr::JSON AS hdd_arr,
+            nvme_size,
+            nvme_drives::JSON AS nvme_drives,
+            sata_size,
+            sata_drives::JSON AS sata_drives,
+            hdd_size,
+            hdd_drives::JSON AS hdd_drives,
+            with_gpu,
+            with_inic,
+            with_hwr,
+            with_rps,
+            nvme_count,
+            sata_count,
+            hdd_count,
+            MAX(seen) AS last_seen,
+            MIN(price) AS min_price,
+            MAX_BY(price, seen) AS price,
+            (MAX_BY(price, seen) - MIN(price)) AS markup_percentage
+        from server
+        WHERE `;
+            configurations_query.append(configurations_filter_query);
+            configurations_query.append(`
+        GROUP BY
+            cpu,
+            ram_size,
+            is_ecc,
+            hdd_arr::JSON,
+            nvme_size,
+            nvme_drives::JSON,
+            sata_size,
+            sata_drives::JSON,
+            hdd_size,
+            hdd_drives::JSON,
+            with_gpu,
+            with_inic,
+            with_hwr,
+            with_rps,
+            nvme_count,
+            sata_count,
+            hdd_count
+    )
+    WHERE last_seen > (now()::timestamp - interval '70 minute')::timestamp
+    ORDER BY price asc
+    LIMIT 101
+`); // if we get more than 100 results, we limit on the ui
 
     const data = await getData<ServerConfiguration>(conn, configurations_query);
     return data.map((d: ServerConfiguration) => {
