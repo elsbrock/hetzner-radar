@@ -173,7 +173,7 @@ export async function getConfigurations(
     conn: AsyncDuckDBConnection,
     filter: ServerFilter,
 ): Promise<ServerConfiguration[]> {
-    let configurations_filter_query = generateFilterQuery(filter, true, false);
+    let configurations_filter_query = generateFilterQuery(filter, true, true, false);
     let configurations_query = SQL`
     SELECT
         * exclude(last_seen),
@@ -223,8 +223,13 @@ export async function getConfigurations(
             nvme_count,
             sata_count,
             hdd_count
-    )
-    WHERE last_seen > (now()::timestamp - interval '70 minute')::timestamp
+    )`);
+    if (filter.recentlySeen) {
+        configurations_query.append(
+            SQL` where last_seen > (now()::timestamp - interval '70 minute')::timestamp`,
+        );
+    }
+    configurations_query.append(`
     ORDER BY price asc
     LIMIT 101
 `); // if we get more than 100 results, we limit on the ui
