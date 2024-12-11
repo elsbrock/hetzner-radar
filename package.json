@@ -48,6 +48,7 @@
         "prettier-plugin-svelte": "^3.1.2",
         "prettier-plugin-tailwindcss": "^0.6.4",
         "sql-template-strings": "^2.2.2",
+        "super-sitemap": "^1.0.3",
         "svelte": "^5.0.0",
         "svelte-check": "^4.0.0",
         "svelte-range-slider-pips": "^3.0.0",
