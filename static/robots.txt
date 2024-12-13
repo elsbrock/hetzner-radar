@@ -1,1 +1,4 @@
 User-agent: *
+Allow: /
+
+Sitemap: https://radar.iodev.org/sitemap.xml
