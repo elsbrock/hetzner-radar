@@ -56,7 +56,18 @@
             size="md"
             color="alternative"
             href="https://github.com/elsbrock/hetzner-radar"
-            class="border-gray-400 bg-gray-50 p-2 px-4"
+            class="
+            border-gray-400
+            bg-gray-50
+            p-2
+            px-4
+            ring-4
+            ring-orange-100
+            hover:ring-orange-200
+            hover:border-orange-400
+            text-gray-800
+            hover:text-gray-800
+        "
         >
             <FontAwesomeIcon class="w-5 h-5 me-2" icon={faGithub} />
             Star
