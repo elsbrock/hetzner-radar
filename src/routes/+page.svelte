@@ -22,21 +22,29 @@
   let loadingAlerts = true;
   let loadingHistory = true;
 
-  // Create a promise for the server count
-  let serverCountPromise: Promise<number>;
+  // Initialize the promise to wait for both db and component mount
+  let serverCountPromise: Promise<number> = new Promise((resolve) => {
+    const unsubscribe = db.subscribe(async (dbInstance) => {
+      if (!dbInstance) return;
 
-  onMount(async () => {
-    if (!$db) return;
+      try {
+        await withDbConnections(dbInstance, async (conn) => {
+          const result = await conn.query(
+            `SELECT COUNT(id) as count
+            FROM server`
+          );
+          resolve(result.toArray()[0].count);
+        });
+      } catch (error) {
+        console.error("Error fetching server count:", error);
+        resolve(0);
+      }
 
-    await withDbConnections($db, async (conn) => {
-      serverCountPromise = conn
-        .query(
-          `SELECT COUNT(id) as count
-          FROM server`
-        )
-        .then((result) => result.toArray()[0].count);
+      unsubscribe();
     });
+  });
 
+  onMount(() => {
     // Backend stats hydration
     if (data.userStats !== null) loadingUsers = false;
     if (data.alertStats !== null) loadingAlerts = false;
