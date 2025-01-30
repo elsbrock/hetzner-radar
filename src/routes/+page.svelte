@@ -14,6 +14,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { Button, Card } from "flowbite-svelte";
   import { onMount } from "svelte";
+  import { cubicOut } from "svelte/easing";
+  import { tweened } from "svelte/motion";
   import { db } from "../stores/db";
 
   export let data;
@@ -22,7 +24,25 @@
   let loadingAlerts = true;
   let loadingHistory = true;
 
-  // Initialize the promise to wait for both db and component mount
+  // Create tweened stores for all counters
+  const serverCounter = tweened(0, {
+    duration: 1000,
+    easing: cubicOut,
+  });
+  const userCounter = tweened(0, {
+    duration: 1000,
+    easing: cubicOut,
+  });
+  const alertCounter = tweened(0, {
+    duration: 1000,
+    easing: cubicOut,
+  });
+  const historyCounter = tweened(0, {
+    duration: 1000,
+    easing: cubicOut,
+  });
+
+  // Server count promise remains the same but uses serverCounter instead of counter
   let serverCountPromise: Promise<number> = new Promise((resolve) => {
     const unsubscribe = db.subscribe(async (dbInstance) => {
       if (!dbInstance) return;
@@ -33,16 +53,46 @@
             `SELECT COUNT(id) as count
             FROM server`
           );
-          resolve(result.toArray()[0].count);
+          const count = Number(result.toArray()[0].count);
+          if (isNaN(count)) {
+            console.error("Invalid count value received");
+            serverCounter.set(0);
+            resolve(0);
+          } else {
+            serverCounter.set(count);
+            resolve(count);
+          }
         });
       } catch (error) {
         console.error("Error fetching server count:", error);
+        serverCounter.set(0);
         resolve(0);
       }
 
       unsubscribe();
     });
   });
+
+  // Watch the data.userStats promise
+  $: if (data.userStats) {
+    data.userStats.then((count) => {
+      userCounter.set(Number(count) || 0);
+    });
+  }
+
+  // Watch the data.alertStats promise
+  $: if (data.alertStats) {
+    data.alertStats.then((count) => {
+      alertCounter.set(Number(count) || 0);
+    });
+  }
+
+  // Watch the data.historyStats promise
+  $: if (data.historyStats) {
+    data.historyStats.then((count) => {
+      historyCounter.set(Number(count) || 0);
+    });
+  }
 
   onMount(() => {
     // Backend stats hydration
@@ -231,11 +281,11 @@
       <div class="flex flex-col items-center relative px-20">
         {#await serverCountPromise}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then count}
+        {:then}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
-            {(count || 0).toLocaleString()}
+            {Math.round($serverCounter).toLocaleString()}
           </p>
         {:catch error}
           <p class="text-red-500">Error loading count</p>
@@ -250,11 +300,11 @@
       <div class="flex flex-col items-center relative px-20">
         {#await data.userStats}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then count}
+        {:then}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
-            {(count || 0).toLocaleString()}
+            {Math.round($userCounter).toLocaleString()}
           </p>
         {/await}
         <p class="text-base text-gray-500 antialiased">Active Users</p>
@@ -267,11 +317,11 @@
       <div class="flex flex-col items-center relative px-20">
         {#await data.alertStats}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then count}
+        {:then}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
-            {(count || 0).toLocaleString()}
+            {Math.round($alertCounter).toLocaleString()}
           </p>
         {/await}
         <p class="text-base text-gray-500 antialiased">Active Alerts</p>
@@ -284,11 +334,11 @@
       <div class="flex flex-col items-center px-20">
         {#await data.historyStats}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then count}
+        {:then}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
-            {(count || 0).toLocaleString()}
+            {Math.round($historyCounter).toLocaleString()}
           </p>
         {/await}
         <p class="text-base text-gray-500 antialiased">Alerts Triggered</p>
