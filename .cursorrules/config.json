@@ -1,0 +1,59 @@
+{
+	"language": "typescript",
+	"framework": "svelte",
+	"context": [
+		"https://svelte-llm.khromov.se/sveltekit,svelte",
+		"https://tailwindcss.com/docs",
+		"https://svelte.dev/docs",
+		"https://www.typescriptlang.org/docs/"
+	],
+	"api": {
+		"svelte": {
+			"docs": "https://svelte.dev/content.json",
+			"refresh": "daily"
+		},
+		"typescript": {
+			"strict": true
+		}
+	},
+	"includePatterns": [
+		"src/**/*.{ts,js,svelte}",
+		"*.config.{ts,js}"
+	],
+	"excludePatterns": [
+		"node_modules/**",
+		".svelte-kit/**",
+		"build/**"
+	],
+	"rules": {
+		"svelte5_events": {
+			"pattern": "on:(click|keydown|input|change|submit)",
+			"message": "Use 'onclick', 'onkeydown', etc. in Svelte 5 instead of 'on:' event syntax",
+			"replacement": {
+				"on:click": "onclick",
+				"on:keydown": "onkeydown",
+				"on:input": "oninput",
+				"on:change": "onchange",
+				"on:submit": "onsubmit"
+			}
+		},
+		"svelte5_reactivity": {
+			"pattern": "\\$:",
+			"message": "Use '$derived' or '$effect' in Svelte 5 instead of '$:' reactive statements"
+		},
+		"bun_sqlite_import": {
+			"pattern": "bun:sqlite3",
+			"message": "Use 'bun:sqlite' for Bun's SQLite package",
+			"replacement": "bun:sqlite"
+		},
+		"sveltekit_request_event": {
+			"pattern": "({ params })",
+			"message": "Add RequestEvent type for SvelteKit endpoint parameters",
+			"replacement": "({ params }: RequestEvent)"
+		},
+		"sveltekit_imports_order": {
+			"pattern": "import.*from.*@sveltejs/kit.*\n.*import.*from.*\\$lib",
+			"message": "Import $lib modules before @sveltejs/kit modules"
+		}
+	}
+}
