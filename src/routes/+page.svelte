@@ -18,7 +18,7 @@
   import { tweened } from "svelte/motion";
   import { db } from "../stores/db";
 
-  export let data;
+  let { userStats, alertStats, historyStats } = $props();
 
   let loadingUsers = true;
   let loadingAlerts = true;
@@ -42,8 +42,8 @@
     easing: cubicOut,
   });
 
-  // Server count promise remains the same but uses serverCounter instead of counter
-  let serverCountPromise: Promise<number> = new Promise((resolve) => {
+  // Server count promise using $effect
+  $effect(() => {
     const unsubscribe = db.subscribe(async (dbInstance) => {
       if (!dbInstance) return;
 
@@ -54,51 +54,46 @@
             FROM server`
           );
           const count = Number(result.toArray()[0].count);
-          if (isNaN(count)) {
+          if (!isNaN(count)) {
+            serverCounter.set(count);
+          } else {
             console.error("Invalid count value received");
             serverCounter.set(0);
-            resolve(0);
-          } else {
-            serverCounter.set(count);
-            resolve(count);
           }
         });
       } catch (error) {
         console.error("Error fetching server count:", error);
         serverCounter.set(0);
-        resolve(0);
       }
 
       unsubscribe();
     });
   });
 
-  // Watch the data.userStats promise
-  $: if (data.userStats) {
-    data.userStats.then((count) => {
-      userCounter.set(Number(count) || 0);
-    });
-  }
+  // Handle server-side stats with $effect
+  $effect(() => {
+    userCounter.set(0);
+    userCounter.set(userStats);
+    loadingUsers = false;
+  });
 
-  // Watch the data.alertStats promise
-  $: if (data.alertStats) {
-    data.alertStats.then((count) => {
-      alertCounter.set(Number(count) || 0);
-    });
-  }
+  $effect(() => {
+    alertCounter.set(0);
+    alertCounter.set(alertStats);
+    loadingAlerts = false;
+  });
 
-  // Watch the data.historyStats promise
-  $: if (data.historyStats) {
-    data.historyStats.then((count) => {
-      historyCounter.set(Number(count) || 0);
-    });
-  }
+  $effect(() => {
+    historyCounter.set(0);
+    historyCounter.set(historyStats);
+    loadingHistory = false;
+  });
 
   onMount(() => {
     // Backend stats hydration
-    if (data.userStats !== null) loadingUsers = false;
-    if (data.alertStats !== null) loadingAlerts = false;
-    if (data.historyStats !== null) loadingHistory = false;
+    if (userStats !== null) loadingUsers = false;
+    if (alertStats !== null) loadingAlerts = false;
+    if (historyStats !== null) loadingHistory = false;
   });
 </script>
 
@@ -279,17 +274,15 @@
     >
       <!-- Servers Tracked -->
       <div class="flex flex-col items-center relative px-20">
-        {#await serverCountPromise}
+        {#if $serverCounter === 0}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then}
+        {:else}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
             {Math.round($serverCounter).toLocaleString()}
           </p>
-        {:catch error}
-          <p class="text-red-500">Error loading count</p>
-        {/await}
+        {/if}
         <p class="text-base text-gray-500 antialiased">Servers Tracked</p>
         <div
           class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 transform -translate-y-1/2"
@@ -298,7 +291,7 @@
 
       <!-- Active Users -->
       <div class="flex flex-col items-center relative px-20">
-        {#await data.userStats}
+        {#await userStats}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
         {:then}
           <p
@@ -315,7 +308,7 @@
 
       <!-- Active Alerts -->
       <div class="flex flex-col items-center relative px-20">
-        {#await data.alertStats}
+        {#await alertStats}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
         {:then}
           <p
@@ -332,7 +325,7 @@
 
       <!-- Alerts Triggered -->
       <div class="flex flex-col items-center px-20">
-        {#await data.historyStats}
+        {#await historyStats}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
         {:then}
           <p
