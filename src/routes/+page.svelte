@@ -18,7 +18,7 @@
   import { tweened } from "svelte/motion";
   import { db } from "../stores/db";
 
-  let { userStats, alertStats, historyStats } = $props();
+  let { data } = $props();
 
   let loadingUsers = true;
   let loadingAlerts = true;
@@ -42,7 +42,7 @@
     easing: cubicOut,
   });
 
-  // Server count promise using $effect
+  // Server count using $effect
   $effect(() => {
     const unsubscribe = db.subscribe(async (dbInstance) => {
       if (!dbInstance) return;
@@ -56,9 +56,6 @@
           const count = Number(result.toArray()[0].count);
           if (!isNaN(count)) {
             serverCounter.set(count);
-          } else {
-            console.error("Invalid count value received");
-            serverCounter.set(0);
           }
         });
       } catch (error) {
@@ -72,28 +69,40 @@
 
   // Handle server-side stats with $effect
   $effect(() => {
-    userCounter.set(0);
-    userCounter.set(userStats);
-    loadingUsers = false;
+    if (data.userStats !== undefined) {
+      userCounter.set(-1);
+      setTimeout(() => {
+        userCounter.set(data.userStats);
+      }, 0);
+      loadingUsers = false;
+    }
   });
 
   $effect(() => {
-    alertCounter.set(0);
-    alertCounter.set(alertStats);
-    loadingAlerts = false;
+    if (data.alertStats !== undefined) {
+      alertCounter.set(-1);
+      setTimeout(() => {
+        alertCounter.set(data.alertStats);
+      }, 0);
+      loadingAlerts = false;
+    }
   });
 
   $effect(() => {
-    historyCounter.set(0);
-    historyCounter.set(historyStats);
-    loadingHistory = false;
+    if (data.historyStats !== undefined) {
+      historyCounter.set(-1);
+      setTimeout(() => {
+        historyCounter.set(data.historyStats);
+      }, 0);
+      loadingHistory = false;
+    }
   });
 
   onMount(() => {
     // Backend stats hydration
-    if (userStats !== null) loadingUsers = false;
-    if (alertStats !== null) loadingAlerts = false;
-    if (historyStats !== null) loadingHistory = false;
+    if (data.userStats !== undefined) loadingUsers = false;
+    if (data.alertStats !== undefined) loadingAlerts = false;
+    if (data.historyStats !== undefined) loadingHistory = false;
   });
 </script>
 
@@ -291,15 +300,15 @@
 
       <!-- Active Users -->
       <div class="flex flex-col items-center relative px-20">
-        {#await userStats}
+        {#if $userCounter < 0}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then}
+        {:else}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
             {Math.round($userCounter).toLocaleString()}
           </p>
-        {/await}
+        {/if}
         <p class="text-base text-gray-500 antialiased">Active Users</p>
         <div
           class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 transform -translate-y-1/2"
@@ -308,15 +317,15 @@
 
       <!-- Active Alerts -->
       <div class="flex flex-col items-center relative px-20">
-        {#await alertStats}
+        {#if $alertCounter < 0}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then}
+        {:else}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
             {Math.round($alertCounter).toLocaleString()}
           </p>
-        {/await}
+        {/if}
         <p class="text-base text-gray-500 antialiased">Active Alerts</p>
         <div
           class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 transform -translate-y-1/2"
@@ -325,15 +334,15 @@
 
       <!-- Alerts Triggered -->
       <div class="flex flex-col items-center px-20">
-        {#await historyStats}
+        {#if $historyCounter < 0}
           <div class="h-12 w-24 bg-gray-200 rounded animate-pulse"></div>
-        {:then}
+        {:else}
           <p
             class="text-4xl font-semibold pb-2 text-gray-700 tracking-tight leading-tight antialiased"
           >
             {Math.round($historyCounter).toLocaleString()}
           </p>
-        {/await}
+        {/if}
         <p class="text-base text-gray-500 antialiased">Alerts Triggered</p>
       </div>
     </div>
