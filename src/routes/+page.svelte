@@ -292,7 +292,7 @@
             {Math.round($serverCounter).toLocaleString()}
           </p>
         {/if}
-        <p class="text-base text-gray-500 antialiased">Servers Tracked</p>
+        <p class="text-base text-gray-500 antialiased">Auctions Tracked</p>
         <div
           class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 transform -translate-y-1/2"
         ></div>
