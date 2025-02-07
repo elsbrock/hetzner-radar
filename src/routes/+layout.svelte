@@ -23,7 +23,6 @@
 
 <svelte:head>
   <!-- Primary Meta Tags -->
-  <title>Server Radar - Track Hetzner Auction Server Prices</title>
   <meta
     name="description"
     content="Server Radar helps you find the best deals on Hetzner dedicated servers. Monitor prices, set up email alerts, and make informed purchasing decisions effortlessly."
