@@ -267,8 +267,13 @@ export const POST: RequestHandler = async (event) => {
         pa.created_at
   `);
 
+  const copyStmt = await db.prepare(`
+    INSERT OR IGNORE INTO servers
+    SELECT * FROM temp_servers_staging
+  `);
+
   const rollbackStmt = await db.prepare(`delete from temp_servers_staging`);
-  const results = await db.batch([...batch, matchStmt, rollbackStmt]);
+  const results = await db.batch([...batch, matchStmt, copyStmt, rollbackStmt]);
 
   const triggeredStmt = await db.prepare(`
     insert into price_alert_history (id, name, filter, price, trigger_price, user_id, created_at, triggered_at)
@@ -278,7 +283,7 @@ export const POST: RequestHandler = async (event) => {
   const deleteStmt = await db.prepare(`delete from price_alert where id = ?`);
 
   // send notification mails
-  const alertResults = results[results.length-2].results;
+  const alertResults = results[results.length-3].results;
   for (const alert of alertResults) {
     const mail = await sendMail(event.platform?.env, {
       from: {
