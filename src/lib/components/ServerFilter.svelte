@@ -23,6 +23,7 @@
     } from "$lib/filter";
     import { filter as filterStore } from "$lib/stores/filter";
     import { addToast } from "$lib/stores/toast";
+    import { debounce } from "$lib/util";
     import {
         faBoxesStacked,
         faGlobe,
@@ -78,12 +79,22 @@
         }
     });
 
+    function updateUrl(newFilter: ServerFilter | null) {
+        if (newFilter) {
+            goto(`?filter=${encodeFilter(newFilter)}`, {
+                noScroll: true,
+                replaceState: true, // Use replaceState to avoid bloating history
+            });
+        }
+    }
+
+    const debouncedUpdateUrl = debounce(updateUrl, 500); // 500ms delay
+
     $: {
+        // Update the store immediately for reactivity elsewhere (like data fetching)
         filterStore.set(filter);
-        goto(`?filter=${encodeFilter(filter!)}`, {
-            noScroll: true,
-            replaceState: false,
-        });
+        // Update the URL only after a delay
+        debouncedUpdateUrl(filter);
     }
 
     // escape reactivity
@@ -205,7 +216,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter.ramInternalSize = e.detail.values)}
+                on:change={(e) => (filter!.ramInternalSize = e.detail.values)}
             />
         </li>
         <li>
@@ -215,17 +226,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasECC = true)}
+                            on:click={() => (filter!.extrasECC = true)}
                             checked={filter.extrasECC === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasECC = false)}
+                            on:click={() => (filter!.extrasECC = false)}
                             checked={filter.extrasECC === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasECC = null)}
+                            on:click={() => (filter!.extrasECC = null)}
                             checked={filter.extrasECC === null}>any</Button
                         >
                     </ButtonGroup>
@@ -266,7 +277,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter.ssdNvmeCount = e.detail.values)}
+                on:change={(e) => (filter!.ssdNvmeCount = e.detail.values)}
             />
         </li>
         <li class="flex justify-between">
@@ -290,7 +301,7 @@
                 range
                 pushy
                 on:change={(e) =>
-                    (filter.ssdNvmeInternalSize = e.detail.values)}
+                    (filter!.ssdNvmeInternalSize = e.detail.values)}
             />
         </li>
 
@@ -320,7 +331,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter.ssdSataCount = e.detail.values)}
+                on:change={(e) => (filter!.ssdSataCount = e.detail.values)}
             />
         </li>
         <li class="flex justify-between">
@@ -344,7 +355,7 @@
                 range
                 pushy
                 on:change={(e) =>
-                    (filter.ssdSataInternalSize = e.detail.values)}
+                    (filter!.ssdSataInternalSize = e.detail.values)}
             />
         </li>
 
@@ -372,7 +383,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter.hddCount = e.detail.values)}
+                on:change={(e) => (filter!.hddCount = e.detail.values)}
             />
         </li>
         <li class="flex justify-between">
@@ -395,7 +406,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter.hddInternalSize = e.detail.values)}
+                on:change={(e) => (filter!.hddInternalSize = e.detail.values)}
             />
         </li>
 
@@ -413,17 +424,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasINIC = true)}
+                            on:click={() => (filter!.extrasINIC = true)}
                             checked={filter.extrasINIC === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasINIC = false)}
+                            on:click={() => (filter!.extrasINIC = false)}
                             checked={filter.extrasINIC === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasINIC = null)}
+                            on:click={() => (filter!.extrasINIC = null)}
                             checked={filter.extrasINIC === null}>any</Button
                         >
                     </ButtonGroup>
@@ -438,17 +449,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasHWR = true)}
+                            on:click={() => (filter!.extrasHWR = true)}
                             checked={filter.extrasHWR === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasHWR = false)}
+                            on:click={() => (filter!.extrasHWR = false)}
                             checked={filter.extrasHWR === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasHWR = null)}
+                            on:click={() => (filter!.extrasHWR = null)}
                             checked={filter.extrasHWR === null}>any</Button
                         >
                     </ButtonGroup>
@@ -463,17 +474,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasGPU = true)}
+                            on:click={() => (filter!.extrasGPU = true)}
                             checked={filter.extrasGPU === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasGPU = false)}
+                            on:click={() => (filter!.extrasGPU = false)}
                             checked={filter.extrasGPU === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasGPU = null)}
+                            on:click={() => (filter!.extrasGPU = null)}
                             checked={filter.extrasGPU === null}>any</Button
                         >
                     </ButtonGroup>
@@ -488,17 +499,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasRPS = true)}
+                            on:click={() => (filter!.extrasRPS = true)}
                             checked={filter.extrasRPS === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasRPS = false)}
+                            on:click={() => (filter!.extrasRPS = false)}
                             checked={filter.extrasRPS === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter.extrasRPS = null)}
+                            on:click={() => (filter!.extrasRPS = null)}
                             checked={filter.extrasRPS === null}>any</Button
                         >
                     </ButtonGroup>
