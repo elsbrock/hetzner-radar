@@ -38,7 +38,7 @@
         "eslint-plugin-svelte": "^2.36.0",
         "filesize": "^10.1.4",
         "flowbite": "^2.4.1",
-        "flowbite-svelte": "^0.47.0",
+        "flowbite-svelte": "^0.48.0",
         "flowbite-svelte-icons": "^2.0.0",
         "globals": "^15.0.0",
         "lz-string": "^1.5.0",
