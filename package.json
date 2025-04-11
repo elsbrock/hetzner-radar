@@ -24,7 +24,7 @@
         "@oslojs/crypto": "1.0.1",
         "@oslojs/encoding": "1.1.0",
         "@playwright/test": "1.51.1",
-        "@sveltejs/adapter-cloudflare": "5.1.0",
+        "@sveltejs/adapter-cloudflare": "7.0.1",
         "@sveltejs/kit": "2.20.5",
         "@sveltejs/vite-plugin-svelte": "5.0.3",
         "@types/eslint": "9.6.1",
