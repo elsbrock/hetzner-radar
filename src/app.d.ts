@@ -75,6 +75,13 @@ declare global {
          * @returns A PreparedStatement instance.
          */
         prepare(query: string): PreparedStatement;
+
+        /**
+         * Executes multiple prepared statements in a single transaction.
+         * @param statements - Array of PreparedStatement instances to execute.
+         * @returns Promise resolving to an array of QueryResults.
+         */
+        batch(statements: PreparedStatement[]): Promise<QueryResult<any>[]>;
     }
 
     /**
