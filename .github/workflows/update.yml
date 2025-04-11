@@ -8,14 +8,14 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout data
-              uses: actions/checkout@v4
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
               with:
                   ref: data
             - name: Checkout repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
             - name: Set up Python 3.11
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5
               with:
                   python-version: 3.11
 
@@ -31,7 +31,7 @@ jobs:
                   poetry run python scripts/import.py data static/sb.duckdb.wasm
 
             - name: Deploy DB to R2
-              uses: cloudflare/wrangler-action@v3
+              uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
               with:
                   command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
