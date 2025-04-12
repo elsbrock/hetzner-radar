@@ -214,13 +214,10 @@
             <main class="flex-grow overflow-y-auto bg-white">
                 <div class="w-full">
                     <div
-                        class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 flex
-                        md:justify-between md:items-start text-left text-lg
-                    font-semibold text-gray-900 dark:bg-gray-800 dark:text-white
-                    border-b border-gray-2b00 dark:border-gray-700"
+                        class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-start text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700"
                     >
-                        <div class="text-xs text-gray-900">
-                            <ButtonGroup class="me-2">
+                        <div class="md:col-span-2 flex flex-row flex-wrap gap-3 items-center text-xs text-gray-900">
+                            <ButtonGroup>
                                 <div
                                     class="text-center font-medium
                                 focus-within:ring-2 focus-within:z-10
@@ -345,7 +342,9 @@
                                 {/await}
                             </ButtonGroup>
                         </div>
-                        <PriceControls />
+                        <div class="md:justify-self-end">
+                            <PriceControls />
+                        </div>
                     </div>
                     <h1
                         class="bg-white px-5 text-left text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
