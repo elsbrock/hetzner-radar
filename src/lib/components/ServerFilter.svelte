@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { goto } from "$app/navigation";
+    // Removed goto import
 
     type SliderSizeType =
         | string
@@ -80,11 +80,11 @@
     });
 
     function updateUrl(newFilter: ServerFilter | null) {
-        if (newFilter) {
-            goto(`?filter=${encodeFilter(newFilter)}`, {
-                noScroll: true,
-                replaceState: true, // Use replaceState to avoid bloating history
-            });
+        if (newFilter && typeof window !== 'undefined') { // Check for window object
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('filter', encodeFilter(newFilter));
+            // Use history.replaceState to update URL without navigation
+            window.history.replaceState(window.history.state, '', newUrl.toString());
         }
     }
 
@@ -107,7 +107,10 @@
         const filterString = $page.url.searchParams.get("filter");
         if (filterString) {
             const decodedFilter = decodeFilterString(filterString);
-            updateFilterFromUrl(decodedFilter);
+            // Avoid infinite loop by checking if filter actually changed
+            if (JSON.stringify(decodedFilter) !== JSON.stringify(filter)) {
+                 updateFilterFromUrl(decodedFilter);
+            }
         }
     }
 

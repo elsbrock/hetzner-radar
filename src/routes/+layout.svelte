@@ -10,7 +10,12 @@
   import { initializeDB, tearDownDB } from "../stores/db";
 
   export let data;
-  session.set(data.session);
+  if (data.session) {
+    session.set(data.session);
+  } else {
+    // Optionally set a default/null state if the store requires it
+    // session.set(null); // Or some default session object
+  }
 
   onMount(async () => {
     return initializeDB();
@@ -85,7 +90,7 @@
 
 <div class="bg-gray-50">
   <Banner>
-    <strong>New Feature:</strong> Price Alerts 🚀
+    <strong>New Feature:</strong> VAT Selection 💰
   </Banner>
   <Nav />
 

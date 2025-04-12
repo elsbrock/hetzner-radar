@@ -25,7 +25,7 @@
     // VAT related reactive variables
     $: selectedOption = vatOptions[$settingsStore.vatSelection.countryCode] || vatOptions['NET']; // Fallback to NET
     $: displayPrice = (config.price ?? 0) * (1 + selectedOption.rate);
-    $: vatSuffix = selectedOption.rate > 0 ? `(incl. ${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
+    $: vatSuffix = selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
 
     let classes: string;
     const defaultClasses =

@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-type Settings = {
+export type Settings = {
   [key: string]: any;
 };
 

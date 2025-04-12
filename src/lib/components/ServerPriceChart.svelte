@@ -4,14 +4,27 @@
     import { onDestroy, onMount } from "svelte";
     import { settingsStore } from '$lib/stores/settings';
     import { vatOptions } from './VatSelector.svelte';
+
+    // Define the type for valid VAT option keys
+    type VatOptionKey = keyof typeof vatOptions;
     export let data: ServerPriceStat[] | null = null;
     export let loading: boolean = true;
     export let timeUnitPrice = "perHour";
 
     let noResults = false;
 
+    // Helper function to get a valid VAT key, defaulting to 'NET'
+    function getValidVatKey(code: string | undefined): VatOptionKey {
+        // Check if the provided code is a valid key in vatOptions
+        if (code && code in vatOptions) {
+            return code as VatOptionKey; // Cast to VatOptionKey as we've confirmed it exists
+        }
+        return 'NET';
+    }
+
     // VAT related reactive variables
-    $: selectedOption = vatOptions[$settingsStore.vatSelection.countryCode] || vatOptions['NET']; // Fallback to NET
+    $: validKey = getValidVatKey($settingsStore.vatSelection.countryCode);
+    $: selectedOption = vatOptions[validKey];
     $: vatSuffix = selectedOption.rate > 0 ? `(incl. ${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
 
     let chart: ApexCharts;
@@ -24,7 +37,7 @@
         } else {
             basePrice = value.toFixed(2) + " €/mo"; // Use toFixed(2) for monthly consistency
         }
-        return `${basePrice} ${vatSuffix}`;
+        return basePrice;
     }
 
     let options: ApexCharts.ApexOptions = {
@@ -78,13 +91,7 @@
                 columnWidth: "60%",
             },
         },
-        tooltip: {
-            enabled: true,
-            shared: true,
-            x: {
-                show: false,
-            },
-        },
+        // Tooltip configuration moved to updateOptions to ensure vatSuffix is reactive
         series: [
             {
                 name: "Price",
@@ -174,6 +181,32 @@
                             },
                         },
                     ],
+                    tooltip: { // Add tooltip config here
+                        enabled: true,
+                        shared: true,
+                        x: {
+                            show: false,
+                        },
+                        y: {
+                            formatter: function (value: number, { seriesName }: { seriesName: string }) {
+                                if (seriesName === 'Price') {
+                                    let formattedPrice: string;
+                                    if (timeUnitPrice === "perHour") {
+                                        // The value passed here is already VAT-adjusted from lineData
+                                        formattedPrice = (value / (30 * 24)).toFixed(4) + " €/h";
+                                    } else {
+                                        formattedPrice = value.toFixed(2) + " €/mo";
+                                    }
+                                    // Use the current vatSuffix
+                                    return `${formattedPrice} ${vatSuffix}`;
+                                }
+                                if (seriesName === 'Volume') {
+                                    return value.toFixed(0);
+                                }
+                                return value.toString();
+                            }
+                        }
+                    },
                 },
                 false,
                 false,

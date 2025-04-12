@@ -7,6 +7,8 @@
     import { withDbConnections } from "$lib/api/frontend/dbapi";
     import { type ServerConfiguration } from "$lib/api/frontend/filter";
     import ServerCard from "$lib/components/ServerCard.svelte";
+    import VatSelector from "$lib/components/VatSelector.svelte";
+
     import {
         convertServerConfigurationToFilter,
         encodeFilter,
@@ -73,29 +75,35 @@
             usage scenarios. Find the best options that fit your specific needs.
         </p>
 
-        <ButtonGroup>
-            <div
-                class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-2 bg-gray-50 border border-grey-300 first:rounded-s-lg last:rounded-e-lg opacity-90"
-            >
-                <FontAwesomeIcon icon={faEuroSign} class="mr-2" /> Rate
-            </div>
-            <Button
-                class="px-2"
-                color="alternative"
-                disabled={timeUnitPrice === "perHour"}
-                on:click={() => (timeUnitPrice = "perHour")}>hourly</Button
-            >
-            <Button
-                class="px-2"
-                color="alternative"
-                disabled={timeUnitPrice === "perMonth"}
-                on:click={() => (timeUnitPrice = "perMonth")}>monthly</Button
-            >
-        </ButtonGroup>
-        <Tooltip placement="left" class="z-50">
-            Display prices per hour or per month.
+        <!-- Tooltip wraps the container div for Rate and VAT controls -->
+        <Tooltip triggeredBy="#rate-vat-controls" placement="bottom" class="z-50">
+            Display prices per hour or per month, including selected VAT.
         </Tooltip>
+        <div class="flex justify-center space-x-4 mb-5" id="rate-vat-controls"> <!-- Added id for potential targeting if needed -->
+            <ButtonGroup>
+                <div
+                    class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-2 bg-gray-50 border border-grey-300 first:rounded-s-lg last:rounded-e-lg opacity-90"
+                >
+                    <FontAwesomeIcon icon={faEuroSign} class="mr-2" /> Rate
+                </div>
+                <Button
+                    class="px-2"
+                    color="alternative"
+                    disabled={timeUnitPrice === "perHour"}
+                    on:click={() => (timeUnitPrice = "perHour")}>hourly</Button
+                >
+                <Button
+                    class="px-2"
+                    color="alternative"
+                    disabled={timeUnitPrice === "perMonth"}
+                    on:click={() => (timeUnitPrice = "perMonth")}>monthly</Button
+                >
+            </ButtonGroup>
+            <VatSelector />
+        </div>
+        <!-- Removed extra closing div -->
     </section>
+
 
     <!-- Configurations Sections -->
     <section class="mx-auto mb-10 max-w-7xl">
@@ -109,6 +117,7 @@
                 without compromising essential features.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {#if cheapestConfigurations[0]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapestConfigurations[0]}
@@ -127,6 +136,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapestConfigurations[1]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapestConfigurations[1]}
@@ -145,6 +156,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapestConfigurations[2]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapestConfigurations[2]}
@@ -163,6 +176,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapestConfigurations[3]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapestConfigurations[3]}
@@ -181,6 +196,7 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
             </div>
         </div>
 
@@ -194,6 +210,7 @@
                 storage-heavy projects requiring ample disk space.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {#if cheapDiskConfigurations[0]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapDiskConfigurations[0]}
@@ -213,6 +230,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapDiskConfigurations[1]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapDiskConfigurations[1]}
@@ -232,6 +251,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapDiskConfigurations[2]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapDiskConfigurations[2]}
@@ -251,6 +272,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapDiskConfigurations[3]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapDiskConfigurations[3]}
@@ -270,6 +293,7 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
             </div>
         </div>
 
@@ -283,6 +307,7 @@
                 databases, virtual machines, and high-traffic websites.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {#if cheapRamConfigurations[0]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapRamConfigurations[0]}
@@ -302,6 +327,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapRamConfigurations[1]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapRamConfigurations[1]}
@@ -321,6 +348,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapRamConfigurations[2]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapRamConfigurations[2]}
@@ -340,6 +369,8 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapRamConfigurations[3]}
                 <ServerCard
                     {timeUnitPrice}
                     config={cheapRamConfigurations[3]}
@@ -359,6 +390,7 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
             </div>
         </div>
     </section>

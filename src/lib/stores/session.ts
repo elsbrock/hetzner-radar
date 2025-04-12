@@ -1,3 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 
-export const session = writable(null);
+// Explicitly type the store to accept Session or null
+export const session: Writable<App.Session | null> = writable(null);
