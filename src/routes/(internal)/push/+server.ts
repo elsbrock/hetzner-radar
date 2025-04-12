@@ -113,6 +113,7 @@ export const POST: RequestHandler = async (event) => {
         pa.id,
         pa.name,
         pa.price,
+        pa.vat_rate,
         pa.user_id,
         user.email,
         pa.created_at,
@@ -129,7 +130,7 @@ export const POST: RequestHandler = async (event) => {
         pa.user_id = user.id
     WHERE
         -- Price Conditions
-        pa.price >= c.price
+        pa.price >= (c.price * (1 + pa.vat_rate / 100.0))
 
         -- Location Conditions: ORed appropriately
         AND (
@@ -262,6 +263,7 @@ export const POST: RequestHandler = async (event) => {
         pa.id,
         pa.name,
         pa.price,
+        pa.vat_rate,
         pa.user_id,
         user.email,
         pa.created_at
@@ -271,8 +273,8 @@ export const POST: RequestHandler = async (event) => {
   const results = await db.batch([...batch, matchStmt, rollbackStmt]);
 
   const triggeredStmt = await db.prepare(`
-    insert into price_alert_history (id, name, filter, price, trigger_price, user_id, created_at, triggered_at)
-    select id, name, filter, price, ?, user_id, created_at, current_timestamp from price_alert
+    insert into price_alert_history (id, name, filter, price, vat_rate, trigger_price, user_id, created_at, triggered_at)
+    select id, name, filter, price, vat_rate, ?, user_id, created_at, current_timestamp from price_alert
     where id = ?
   `);
   const deleteStmt = await db.prepare(`delete from price_alert where id = ?`);
@@ -292,7 +294,7 @@ export const POST: RequestHandler = async (event) => {
 good news! The target price for one of your alerts has been reached.
 
          Filter: ${alert.name}
-   Target Price: ${alert.price} EUR
+   Target Price (incl. ${alert.vat_rate}% VAT): ${alert.price} EUR
   Trigger Price: ${alert.trigger_price} EUR
 
 Visit your alerts section to see further details:

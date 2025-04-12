@@ -17,9 +17,9 @@
 		on availability. Ensure that the server specifications meet your needs.
 	</p>
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400 font-semibold">
-		Also, prices shown on Server Radar exclude VAT, which varies by country.
-		Hetzner typically includes VAT automatically, so the final price will be
-		higher if you're within the European Union.
+		Also, prices shown on Server Radar now include VAT based on your selection.
+		However, Hetzner's final price might differ depending on their own VAT calculation
+		or your account's location and status.
 	</p>
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
 		This disclaimer will only show once per session.

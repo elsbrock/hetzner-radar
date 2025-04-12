@@ -7,6 +7,7 @@ export interface PriceAlert {
     name: string;
     filter: string;
     price: string;
+    vat_rate: number; // Added VAT rate
     created_at: Date;
 }
 
@@ -14,6 +15,7 @@ export interface PriceAlertHistory {
     id: string;
     user_id: string;
     alert_id: string;
+    vat_rate: number; // Added VAT rate
     triggered_at: Date;
 }
 
@@ -88,12 +90,13 @@ export async function createAlert(
     name: string,
     filter: string,
     price: string,
+    vatRate: number,
 ): Promise<void> {
     try {
         await db.prepare(
-            "INSERT INTO price_alert (user_id, name, filter, price) VALUES (?, ?, ?, ?)"
+            "INSERT INTO price_alert (user_id, name, filter, price, vat_rate) VALUES (?, ?, ?, ?, ?)"
         )
-        .bind(userId, name, filter, price)
+        .bind(userId, name, filter, price, vatRate)
         .run();
     } catch (error) {
         console.error(`Failed to create alert for user ${userId}:`, error);

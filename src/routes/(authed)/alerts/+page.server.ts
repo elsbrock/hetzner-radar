@@ -6,13 +6,13 @@ import {
     MAX_NAME_LENGTH,
     updateAlert,
 } from "$lib/api/backend/alerts";
-import { fail, type Actions } from "@sveltejs/kit";
+import { fail, type Actions, type ServerLoad, type RequestEvent, type ServerLoadEvent } from "@sveltejs/kit";
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load(event) {
+export const load: ServerLoad = async (event: ServerLoadEvent) => {
     const db = event.platform?.env.DB;
 
-    const alertResults = await getAlertsForUser(db, event.locals.user.id);
+    const alertResults = await getAlertsForUser(db!, event.locals.user!.id.toString());
 
     return {
         alerts: {
@@ -51,13 +51,20 @@ function validateAlert(name: string, price: string, filter?: string) {
 }
 
 export const actions: Actions = {
-    add: async (event) => {
+    add: async (event: RequestEvent) => {
         const db = event.platform?.env.DB;
         const formData = await event.request.formData();
         const name = formData.get("name") as string;
         const filter = formData.get("filter") as string;
         const price = formData.get("price") as string;
+        const vatRateStr = formData.get("vatRate") as string;
 
+        // Validate vatRate
+        const vatRateNum = parseInt(vatRateStr, 10);
+        if (isNaN(vatRateNum)) {
+            // Return specific error for vatRate if it's invalid
+            return fail(400, { success: false, errors: { vatRate: "VAT Rate must be a valid number." } });
+        }
         const { isValid, errors } = validateAlert(name, price, filter);
 
         if (!isValid) {
@@ -65,13 +72,13 @@ export const actions: Actions = {
         }
 
         // verify user is below the limit
-        const isBelow = await isBelowMaxAlerts(db!, event.locals.user?.id);
+        const isBelow = await isBelowMaxAlerts(db!, event.locals.user!.id.toString());
         if (!isBelow) {
             return fail(400, { success: false, error: "Maximum alerts reached" });
         }
 
         try {
-            await createAlert(db!, event.locals.user?.id, name, filter, price);
+            await createAlert(db!, event.locals.user!.id.toString(), name, filter, price, vatRateNum);
         } catch (e) {
             console.error(e);
             return fail(500, { success: false, error: "Failed to create alert" });
@@ -79,7 +86,7 @@ export const actions: Actions = {
 
         return { success: true };
     },
-    edit: async (event) => {
+    edit: async (event: RequestEvent) => {
         const db = event.platform?.env.DB;
         const formData = await event.request.formData();
         const name = formData.get("name") as string;
@@ -95,7 +102,7 @@ export const actions: Actions = {
         try {
             await updateAlert(
                 db!,
-                event.locals.user?.id,
+                event.locals.user!.id.toString(),
                 alertId,
                 name,
                 price,
@@ -107,7 +114,7 @@ export const actions: Actions = {
 
         return { success: true };
     },
-    delete: async (event) => {
+    delete: async (event: RequestEvent) => {
         const db = event.platform?.env.DB;
         const formData = await event.request.formData();
         const alertId = formData.get("alertId") as string;
@@ -117,7 +124,7 @@ export const actions: Actions = {
         }
 
         try {
-            await deleteAlert(db!, alertId, event.locals.user?.id);
+            await deleteAlert(db!, alertId, event.locals.user!.id.toString());
         } catch (e) {
             console.error(e);
             return fail(500, { success: false, error: "Failed to delete alert" });
