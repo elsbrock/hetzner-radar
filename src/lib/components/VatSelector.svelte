@@ -49,7 +49,12 @@
   }
 
   function handleVatChange() {
+    const selectedOption = vatOptions[selectedCountryCode as keyof typeof vatOptions];
+    const ratePercentage = selectedOption ? Math.round(selectedOption.rate * 100) : 0; // Calculate integer percentage
+
+    // Update both country code selection and the calculated rate in the store
     settingsStore.updateSetting('vatSelection', { countryCode: selectedCountryCode });
+    settingsStore.updateSetting('currentVatRate', ratePercentage);
   }
 </script>
 

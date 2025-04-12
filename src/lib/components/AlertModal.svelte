@@ -43,6 +43,7 @@
             method="POST"
             {action}
             use:enhance={() => {
+                // Removed console.log for vatRate
                 loading = true;
                 return async ({ result, update }) => {
                     loading = false;
@@ -88,7 +89,10 @@
             {#if !alert}
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                     Get notified when the price of this configuration drops
-                    below your desired monthly price. Please enter the desired price <em>including</em> VAT according to your current selection; the alert will trigger based on this VAT-inclusive comparison. You will receive a single
+                    below your desired monthly price.
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                    Please enter the desired price <em>including</em> VAT according to your current selection; the alert will trigger based on this VAT-inclusive comparison. You will receive a single
                     email notification, and the alert will automatically disable
                     itself afterwards.
                 </p>
@@ -110,7 +114,7 @@
                 value={JSON.stringify(alert ? alert.filter : $filter)}
             />
             {#if !alert}
-                <input type="hidden" name="vatRate" value={$settingsStore.vatRate} />
+                <input type="hidden" name="vatRate" value={$settingsStore.currentVatRate ?? 0} />
             {/if}
 
             <Label class="flex flex-col space-y-1">
