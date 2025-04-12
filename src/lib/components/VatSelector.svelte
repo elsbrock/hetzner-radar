@@ -1,0 +1,78 @@
+<script context="module" lang="ts">
+  // Define the available VAT options - moved to module context for external import
+  // see https://europa.eu/youreurope/business/taxation/vat/vat-rules-rates/index_en.htm
+  export const vatOptions = {
+    'NET': { name: 'Others (Net)', rate: 0, flag: '🌎' },
+    'AT': { name: 'Austria', rate: 0.20, flag: '🇦🇹' },
+    'BE': { name: 'Belgium', rate: 0.21, flag: '🇧🇪' },
+    'BG': { name: 'Bulgaria', rate: 0.20, flag: '🇧🇬' },
+    'HR': { name: 'Croatia', rate: 0.25, flag: '🇭🇷' },
+    'CY': { name: 'Cyprus', rate: 0.19, flag: '🇨🇾' },
+    'CZ': { name: 'Czech Republic', rate: 0.21, flag: '🇨🇿' },
+    'DK': { name: 'Denmark', rate: 0.25, flag: '🇩🇰' },
+    'EE': { name: 'Estonia', rate: 0.22, flag: '🇪🇪' },
+    'FI': { name: 'Finland', rate: 0.24, flag: '🇫🇮' },
+    'FR': { name: 'France', rate: 0.20, flag: '🇫🇷' },
+    'DE': { name: 'Germany', rate: 0.19, flag: '🇩🇪' },
+    'GR': { name: 'Greece', rate: 0.24, flag: '🇬🇷' },
+    'HU': { name: 'Hungary', rate: 0.27, flag: '🇭🇺' },
+    'IE': { name: 'Ireland', rate: 0.23, flag: '🇮🇪' },
+    'IT': { name: 'Italy', rate: 0.22, flag: '🇮🇹' },
+    'LV': { name: 'Latvia', rate: 0.21, flag: '🇱🇻' },
+    'LT': { name: 'Lithuania', rate: 0.21, flag: '🇱🇹' },
+    'LU': { name: 'Luxembourg', rate: 0.17, flag: '🇱🇺' },
+    'MT': { name: 'Malta', rate: 0.18, flag: '🇲🇹' },
+    'NL': { name: 'Netherlands', rate: 0.21, flag: '🇳🇱' },
+    'PL': { name: 'Poland', rate: 0.23, flag: '🇵🇱' },
+    'PT': { name: 'Portugal', rate: 0.23, flag: '🇵🇹' },
+    'RO': { name: 'Romania', rate: 0.19, flag: '🇷🇴' },
+    'SK': { name: 'Slovakia', rate: 0.20, flag: '🇸🇰' },
+    'SI': { name: 'Slovenia', rate: 0.22, flag: '🇸🇮' },
+    'ES': { name: 'Spain', rate: 0.21, flag: '🇪🇸' },
+    'SE': { name: 'Sweden', rate: 0.25, flag: '🇸🇪' },
+  };
+</script>
+
+<script lang="ts">
+  import { settingsStore } from '$lib/stores/settings';
+  import { Select, ButtonGroup } from 'flowbite-svelte';
+
+  // Intermediate variable for two-way binding, initialized from store
+  let selectedCountryCode = $settingsStore.vatSelection.countryCode;
+
+  // Helper to format the option text - updated for brevity
+  function formatOptionText(flag: string, name: string, rate: number): string {
+    if (rate > 0) {
+      return `${flag} ${(rate * 100).toFixed(0)}%`; // e.g., 🇩🇪 19%
+    }
+    return `${flag} 0% (others)`; // e.g., 💼 Net
+  }
+
+  function handleVatChange() {
+    const selectedOption = vatOptions[selectedCountryCode as keyof typeof vatOptions];
+    const ratePercentage = selectedOption ? Math.round(selectedOption.rate * 100) : 0; // Calculate integer percentage
+
+    // Update both country code selection and the calculated rate in the store
+    settingsStore.updateSetting('vatSelection', { countryCode: selectedCountryCode });
+    settingsStore.updateSetting('currentVatRate', ratePercentage);
+  }
+</script>
+
+<ButtonGroup size="xs">
+    <div
+        class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-1 text-xs bg-gray-50 border border-gray-200 first:rounded-s-lg last:rounded-e-lg opacity-90 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+    >
+        VAT
+    </div>
+    <Select
+        id="vat-select"
+        bind:value={selectedCountryCode}
+        on:change={handleVatChange}
+        items={Object.entries(vatOptions).map(([code, option]) => ({
+            value: code,
+            name: formatOptionText(option.flag, option.name, option.rate)
+        }))}
+        size="sm"
+        class="!rounded-s-none text-xs w-24 bg-white dark:bg-gray-700"
+    />
+</ButtonGroup>

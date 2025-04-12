@@ -7,27 +7,28 @@
     import { withDbConnections } from "$lib/api/frontend/dbapi";
     import { type ServerConfiguration } from "$lib/api/frontend/filter";
     import ServerCard from "$lib/components/ServerCard.svelte";
+    import PriceControls from '$lib/components/PriceControls.svelte';
+
     import {
         convertServerConfigurationToFilter,
         encodeFilter,
     } from "$lib/filter";
     import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+    import { settingsStore } from '$lib/stores/settings';
     import {
         faCloud,
         faCode,
         faDatabase,
-        faEuroSign,
         faGamepad,
         faMemory,
         faShieldAlt,
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-    import { Button, ButtonGroup, Tooltip } from "flowbite-svelte";
     import { db } from "../../stores/db";
+    import { Button } from "flowbite-svelte";
 
     let loading = true;
 
-    let timeUnitPrice: "perMonth" | "perHour" = "perMonth";
 
     let cheapestConfigurations: ServerConfiguration[] = [];
     let cheapDiskConfigurations: ServerConfiguration[] = [];
@@ -73,29 +74,11 @@
             usage scenarios. Find the best options that fit your specific needs.
         </p>
 
-        <ButtonGroup>
-            <div
-                class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-2 bg-gray-50 border border-grey-300 first:rounded-s-lg last:rounded-e-lg opacity-90"
-            >
-                <FontAwesomeIcon icon={faEuroSign} class="mr-2" /> Rate
-            </div>
-            <Button
-                class="px-2"
-                color="alternative"
-                disabled={timeUnitPrice === "perHour"}
-                on:click={() => (timeUnitPrice = "perHour")}>hourly</Button
-            >
-            <Button
-                class="px-2"
-                color="alternative"
-                disabled={timeUnitPrice === "perMonth"}
-                on:click={() => (timeUnitPrice = "perMonth")}>monthly</Button
-            >
-        </ButtonGroup>
-        <Tooltip placement="left" class="z-50">
-            Display prices per hour or per month.
-        </Tooltip>
+        <div class="flex justify-center space-x-4 mb-5">
+            <PriceControls />
+        </div>
     </section>
+
 
     <!-- Configurations Sections -->
     <section class="mx-auto mb-10 max-w-7xl">
@@ -109,8 +92,9 @@
                 without compromising essential features.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {#if cheapestConfigurations[0]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapestConfigurations[0]}
                     {loading}
                 >
@@ -127,8 +111,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapestConfigurations[1]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapestConfigurations[1]}
                     {loading}
                 >
@@ -145,8 +131,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapestConfigurations[2]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapestConfigurations[2]}
                     {loading}
                 >
@@ -163,8 +151,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapestConfigurations[3]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapestConfigurations[3]}
                     {loading}
                 >
@@ -181,6 +171,7 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
             </div>
         </div>
 
@@ -194,8 +185,9 @@
                 storage-heavy projects requiring ample disk space.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {#if cheapDiskConfigurations[0]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapDiskConfigurations[0]}
                     {loading}
                     displayStoragePrice="perTB"
@@ -213,8 +205,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapDiskConfigurations[1]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapDiskConfigurations[1]}
                     {loading}
                     displayStoragePrice="perTB"
@@ -232,8 +226,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapDiskConfigurations[2]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapDiskConfigurations[2]}
                     {loading}
                     displayStoragePrice="perTB"
@@ -251,8 +247,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapDiskConfigurations[3]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapDiskConfigurations[3]}
                     {loading}
                     displayStoragePrice="perTB"
@@ -270,6 +268,7 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
             </div>
         </div>
 
@@ -283,8 +282,9 @@
                 databases, virtual machines, and high-traffic websites.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {#if cheapRamConfigurations[0]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapRamConfigurations[0]}
                     {loading}
                     displayRamPrice="perGB"
@@ -302,8 +302,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapRamConfigurations[1]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapRamConfigurations[1]}
                     {loading}
                     displayRamPrice="perGB"
@@ -321,8 +323,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapRamConfigurations[2]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapRamConfigurations[2]}
                     {loading}
                     displayRamPrice="perGB"
@@ -340,8 +344,10 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
+                {#if cheapRamConfigurations[3]}
                 <ServerCard
-                    {timeUnitPrice}
+                    timeUnitPrice={$settingsStore.timeUnitPrice}
                     config={cheapRamConfigurations[3]}
                     {loading}
                     displayRamPrice="perGB"
@@ -359,6 +365,7 @@
                         Find
                     </Button>
                 </ServerCard>
+                {/if}
             </div>
         </div>
     </section>

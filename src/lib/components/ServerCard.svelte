@@ -11,6 +11,8 @@
     import relativeTime from "dayjs/plugin/relativeTime";
     import { Badge, Card, Indicator, Spinner } from "flowbite-svelte";
     dayjs.extend(relativeTime);
+    import { settingsStore } from '$lib/stores/settings';
+    import { vatOptions } from './VatSelector.svelte';
 
     export let timeUnitPrice: "perMonth" | "perHour" = "perHour";
     export let config: ServerConfiguration;
@@ -20,10 +22,14 @@
 
     export let loading: boolean = false;
 
+    // VAT related reactive variables
+    $: selectedOption = vatOptions[$settingsStore.vatSelection.countryCode] || vatOptions['NET']; // Fallback to NET
+    $: displayPrice = (config.price ?? 0) * (1 + selectedOption.rate);
+    $: vatSuffix = selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
+
     let classes: string;
     const defaultClasses =
         "relative group  text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300";
-
     interface NumberSummary {
         count: number;
         value: number;
@@ -104,7 +110,7 @@
             </h5>
             <div class="text-gray-400 text-xs mb-3">
                 <span class="inline-flex items-center">
-                    {#if dayjs.unix(config.last_seen) > dayjs().subtract(80, "minutes")}
+                    {#if dayjs.unix(config.last_seen ?? 0) > dayjs().subtract(80, "minutes")}
                         <Indicator
                             color="green"
                             class="animate-pulse mr-2"
@@ -113,7 +119,7 @@
                     {:else}
                         <Indicator color="red" class="mr-2" size="xs" />
                     {/if}
-                    seen {dayjs.unix(config.last_seen).fromNow()}
+                    seen {config.last_seen ? dayjs.unix(config.last_seen).fromNow() : 'unknown'}
                 </span>
             </div>
 
@@ -198,13 +204,13 @@
                         class="text-xl font-bold text-gray-900 dark:text-white"
                     >
                         {#if timeUnitPrice === "perMonth"}
-                            {config.price} €
+                            {displayPrice.toFixed(2)} €
                         {:else if timeUnitPrice === "perHour"}
-                            {(config.price / (30 * 24)).toFixed(4)} €
+                            {(displayPrice / (30 * 24)).toFixed(4)} €
                         {/if}
                     </span>
-                    +VAT
-                    <span class="text-gray-400 text-xs">
+                    <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{vatSuffix}</span>
+                    <span class="text-gray-400 text-xs ml-1">
                         {#if timeUnitPrice === "perMonth"}
                             monthly
                         {:else if timeUnitPrice === "perHour"}
@@ -216,21 +222,21 @@
                     <div class="text-gray-400 text-xs">
                         {#if displayRamPrice !== "none"}
                             {calculatePricePerUnit(
-                                config.price,
+                                displayPrice, // Use VAT-adjusted price
                                 config.ram_size,
                                 displayRamPrice,
                             )} RAM/month
                         {/if}
                         {#if displayStoragePrice !== "none"}
                             {calculatePricePerUnit(
-                                config.price,
+                                displayPrice, // Use VAT-adjusted price
                                 getTotalStorageSize(config),
                                 displayStoragePrice,
                             )} Storage/month
                         {/if}
                         {#if displayMarkupPercentage}
                             <span class="text-gray-500">
-                                {#if config.markup_percentage > 0}
+                                {#if (config.markup_percentage ?? 0) > 0}
                                     <span
                                         style={`color: hsl(${Math.max(
                                             0,
@@ -238,7 +244,7 @@
                                                 120,
                                                 (120 *
                                                     (10 -
-                                                        config.markup_percentage)) /
+                                                        (config.markup_percentage ?? 0))) /
                                                     10,
                                             ),
                                         )}, 70%,

@@ -1,10 +1,11 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
     import { invalidate } from "$app/navigation";
-    import { MAX_ALERTS, MAX_NAME_LENGTH } from "$lib/api/backend/alerts";
+    import { MAX_ALERTS, MAX_NAME_LENGTH, type PriceAlert } from "$lib/api/backend/alerts";
     import { filter } from "$lib/stores/filter";
     import { session } from "$lib/stores/session";
     import { addToast } from "$lib/stores/toast";
+    import { settingsStore } from "$lib/stores/settings";
     import {
         A,
         Alert,
@@ -16,7 +17,7 @@
     } from "flowbite-svelte";
     import { createEventDispatcher } from "svelte";
 
-    export let alert: any = null;
+    export let alert: PriceAlert | null = null;
     export let open = false;
 
     let loading = false;
@@ -42,29 +43,41 @@
             method="POST"
             {action}
             use:enhance={() => {
+                // Removed console.log for vatRate
                 loading = true;
-                return async ({ result }) => {
+                return async ({ result, update }) => {
                     loading = false;
-                    if (result.data?.success) {
-                        open = false;
-                        if (alert) {
-                            addToast({
-                                color: "green",
-                                message: "Alert updated successfully.",
-                                icon: "success",
-                            });
+                    // Check result type for success or failure before accessing data
+                    if (result.type === 'success' || result.type === 'failure') {
+                        if (result.data?.success) {
+                            open = false;
+                            if (alert) {
+                                addToast({
+                                    color: "green",
+                                    message: "Alert updated successfully.",
+                                    icon: "success",
+                                });
+                            } else {
+                                addToast({
+                                    color: "green",
+                                    message: "Alert set up successfully.",
+                                    icon: "success",
+                                });
+                            }
+                            invalidate("/alerts"); // Invalidate data to refresh lists/views
+                            dispatch("success"); // Dispatch success event if needed
+                        } else if (result.data?.error) {
+                            error = typeof result.data.error === 'string' ? result.data.error : "An unknown error occurred."; // Explicit type check
                         } else {
-                            addToast({
-                                color: "green",
-                                message: "Alert set up successfully.",
-                                icon: "success",
-                            });
+                            // Handle unexpected result structure or generic failure
+                            error = "An unexpected error occurred.";
                         }
-                        invalidate("/alerts");
-                        dispatch("success");
-                    } else {
-                        error = result.data.error;
+                    } else if (result.type === 'error') {
+                         // Handle client-side errors or network issues if necessary
+                         error = result.error.message || "An error occurred during submission.";
                     }
+                    // Ensure the form state is updated if necessary, e.g., after validation errors
+                    update({ reset: false });
                 };
             }}
         >
@@ -76,7 +89,10 @@
             {#if !alert}
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                     Get notified when the price of this configuration drops
-                    below your desired monthly price. You will receive a single
+                    below your desired monthly price.
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                    Please enter the desired price <em>including</em> VAT according to your current selection; the alert will trigger based on this VAT-inclusive comparison. You will receive a single
                     email notification, and the alert will automatically disable
                     itself afterwards.
                 </p>
@@ -97,6 +113,9 @@
                 name="filter"
                 value={JSON.stringify(alert ? alert.filter : $filter)}
             />
+            {#if !alert}
+                <input type="hidden" name="vatRate" value={$settingsStore.currentVatRate ?? 0} />
+            {/if}
 
             <Label class="flex flex-col space-y-1">
                 <span
@@ -141,7 +160,7 @@
             <div class="flex justify-end space-x-2">
                 <Button
                     type="button"
-                    color="gray"
+                    color="alternative"
                     on:click={() => (open = false)}
                 >
                     Cancel

@@ -6,7 +6,7 @@
 
   // Local state to hold toasts
   let toasts: { id: number; color: 'green' | 'red'; message: string; icon: 'success' | 'error' }[] = [];
-  let duration = 2000;
+  export let duration: number = 2000; // Export duration as a prop with a default value
 
   // Manage store subscription explicitly
   onMount(() => {

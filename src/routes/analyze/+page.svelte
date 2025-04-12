@@ -8,6 +8,7 @@
         getConfigurations,
         getPrices,
     } from "$lib/api/frontend/filter";
+    import type { PriceAlert } from '$lib/api/backend/alerts';
     import {
         type NameValuePair,
         getCPUModels,
@@ -20,6 +21,7 @@
     import ServerFilter from "$lib/components/ServerFilter.svelte";
     import ServerList from "$lib/components/ServerList.svelte";
     import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
+    import PriceControls from '$lib/components/PriceControls.svelte';
     import {
         type ServerFilter as ServerFilterType,
         clearFilter,
@@ -30,11 +32,11 @@
     import { filter } from "$lib/stores/filter";
     import { addToast } from "$lib/stores/toast";
     import { debounce } from "$lib/util";
+    import { settingsStore } from '$lib/stores/settings';
     import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
     import {
         faBell,
         faClockRotateLeft,
-        faEuroSign,
         faFilter,
         faStopwatch,
         faWarning,
@@ -62,12 +64,11 @@
     let cpuModels: NameValuePair[] = [];
     let datacenters: NameValuePair[] = [];
 
-    let timeUnitPrice = "perMonth";
 
     let queryTime: number | undefined;
     let loading = true;
 
-    let selectedAlert = null;
+    let selectedAlert: PriceAlert | null = null;
     let alertDialogOpen = false;
 
     let storedFilter: ServerFilterType | null = null;
@@ -213,13 +214,10 @@
             <main class="flex-grow overflow-y-auto bg-white">
                 <div class="w-full">
                     <div
-                        class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 flex
-                        md:justify-between md:items-start text-left text-lg
-                    font-semibold text-gray-900 dark:bg-gray-800 dark:text-white
-                    border-b border-gray-2b00 dark:border-gray-700"
+                        class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-start text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700"
                     >
-                        <div class="text-xs text-gray-900">
-                            <ButtonGroup class="me-2">
+                        <div class="md:col-span-2 flex flex-row flex-wrap gap-3 items-center text-xs text-gray-900">
+                            <ButtonGroup>
                                 <div
                                     class="text-center font-medium
                                 focus-within:ring-2 focus-within:z-10
@@ -344,35 +342,8 @@
                                 {/await}
                             </ButtonGroup>
                         </div>
-                        <div class="text-xs text-gray-900">
-                            <ButtonGroup>
-                                <div
-                                    class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-2 bg-gray-50 border border-gray-200 first:rounded-s-lg last:rounded-e-lg opacity-90"
-                                >
-                                    <FontAwesomeIcon
-                                        icon={faEuroSign}
-                                        class="mr-2"
-                                    /> Rate
-                                </div>
-                                <Button
-                                    class="px-2"
-                                    size="xs"
-                                    disabled={timeUnitPrice === "perHour"}
-                                    on:click={() => (timeUnitPrice = "perHour")}
-                                    >hourly</Button
-                                >
-                                <Button
-                                    class="px-2"
-                                    size="xs"
-                                    disabled={timeUnitPrice === "perMonth"}
-                                    on:click={() =>
-                                        (timeUnitPrice = "perMonth")}
-                                    >monthly</Button
-                                >
-                            </ButtonGroup>
-                            <Tooltip placement="left" class="z-50">
-                                Display prices per hour or per month.
-                            </Tooltip>
+                        <div class="md:justify-self-end">
+                            <PriceControls />
                         </div>
                     </div>
                     <h1
@@ -384,7 +355,7 @@
                         <ServerPriceChart
                             data={serverPrices}
                             {loading}
-                            {timeUnitPrice}
+                            timeUnitPrice={$settingsStore.timeUnitPrice}
                         />
                     </div>
                 </div>
@@ -432,7 +403,7 @@
                         some of the parameters.</Alert
                     >
                 {:else}
-                    <ServerList {serverList} {loading} {timeUnitPrice} />
+                    <ServerList {serverList} {loading} timeUnitPrice={$settingsStore.timeUnitPrice} />
                 {/if}
             </main>
         </div>

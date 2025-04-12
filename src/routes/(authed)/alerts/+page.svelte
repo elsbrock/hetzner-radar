@@ -12,6 +12,7 @@
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { A, Banner, Button, ButtonGroup, Spinner } from "flowbite-svelte";
+    import type { PriceAlert } from "$lib/api/backend/alerts";
 
     import dayjs from "dayjs";
     import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -28,7 +29,7 @@
     export let data;
 
     let showEdit = false;
-    let selectedAlert = null;
+    let selectedAlert: PriceAlert | null = null;
 </script>
 
 <AlertModal
@@ -103,7 +104,7 @@
                                     <span
                                         class="text-xl font-semibold text-gray-900 dark:text-white"
                                     >
-                                        {alert.price} €
+                                        {alert.price} € (incl. {alert.vat_rate}%)
                                     </span>
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/3">
@@ -233,7 +234,7 @@
                                     >
                                     <span
                                         class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{alert.price} €</span
+                                        >{alert.price} € (incl. {alert.vat_rate}%)</span
                                     >
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/6">
@@ -243,7 +244,7 @@
                                     >
                                     <span
                                         class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{alert.trigger_price} €</span
+                                        >{alert.trigger_price} € (incl. {alert.vat_rate}%)</span
                                     >
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/4">
