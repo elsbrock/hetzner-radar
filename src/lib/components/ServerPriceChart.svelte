@@ -188,12 +188,14 @@
                             show: false,
                         },
                         y: {
-                            formatter: function (value: number, { seriesName }: { seriesName: string }) {
+                            formatter: function (value: number, { series, seriesIndex, dataPointIndex, w }: { series: any[], seriesIndex: number, dataPointIndex: number, w: any }) {
+                                const seriesName = w.globals.seriesNames[seriesIndex]; // Get series name reliably
                                 if (seriesName === 'Price') {
                                     let formattedPrice: string;
                                     if (timeUnitPrice === "perHour") {
                                         // The value passed here is already VAT-adjusted from lineData
-                                        formattedPrice = (value / (30 * 24)).toFixed(4) + " €/h";
+                                        // Ensure hourly price also uses 2 decimal places
+                                        formattedPrice = (value / (30 * 24)).toFixed(2) + " €/h";
                                     } else {
                                         formattedPrice = value.toFixed(2) + " €/mo";
                                     }
