@@ -3,6 +3,7 @@
  */
 
 import { getData } from "$lib/api/frontend/dbapi";
+import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
 import type { ServerFilter } from "$lib/filter";
 import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import SQL, { SQLStatement } from "sql-template-strings";
@@ -131,10 +132,10 @@ export async function getPrices(
     let prices_filter_query = generateFilterQuery(filter, true, true, false);
     let prices_query = SQL`
         select
-			min(price) as min_price,
-			max(price) as max_price,
+			min(price + ${HETZNER_IPV4_COST_CENTS/100}) as min_price, -- Add IPv4 cost
+			max(price + ${HETZNER_IPV4_COST_CENTS/100}) as max_price, -- Add IPv4 cost
 			count(distinct id)::int as count,
-			round(mean(price))::int as mean_price,
+			round(mean(price + ${HETZNER_IPV4_COST_CENTS/100}))::int as mean_price, -- Add IPv4 cost
 			extract('epoch' from date_trunc('d', seen))::int as seen
         from
         	server
@@ -198,9 +199,9 @@ export async function getConfigurations(
             sata_count,
             hdd_count,
             MAX(seen) AS last_seen,
-            MIN(price) AS min_price,
-            MAX_BY(price, seen) AS price,
-            (MAX_BY(price, seen) - MIN(price)) AS markup_percentage
+            MIN(price + ${HETZNER_IPV4_COST_CENTS/100}) AS min_price, -- Add IPv4 cost
+            MAX_BY(price + ${HETZNER_IPV4_COST_CENTS/100}, seen) AS price, -- Add IPv4 cost
+            (MAX_BY(price + ${HETZNER_IPV4_COST_CENTS/100}, seen) - MIN(price + ${HETZNER_IPV4_COST_CENTS/100})) AS markup_percentage -- Add IPv4 cost
         from server
         WHERE `;
             configurations_query.append(configurations_filter_query);

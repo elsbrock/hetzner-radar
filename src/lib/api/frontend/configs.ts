@@ -1,5 +1,6 @@
 import { getData } from "$lib/api/frontend/dbapi";
 import { type ServerConfiguration } from "$lib/api/frontend/filter";
+import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
 import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import SQL from "sql-template-strings";
 
@@ -7,9 +8,9 @@ export async function getCheapestConfigurations(conn: AsyncDuckDBConnection): Pr
 	return (await getData<ServerConfiguration>(conn, SQL`
 		WITH latest_configs AS (
 				SELECT DISTINCT ON (cpu)
-						*
 						-- Exclude the specified columns
-						EXCLUDE(id, nvme_drives, sata_drives, hdd_drives, seen),
+						* EXCLUDE(id, nvme_drives, sata_drives, hdd_drives, seen),
+						price + ${HETZNER_IPV4_COST_CENTS/100} AS price, -- Add IPv4 cost, overwriting price from *
 						nvme_drives::JSON AS nvme_drives,
 						sata_drives::JSON AS sata_drives,
 						hdd_drives::JSON AS hdd_drives,
@@ -41,6 +42,7 @@ export async function getCheapestDiskConfigurations(conn: AsyncDuckDBConnection)
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
 						* EXCLUDE (id, nvme_drives, sata_drives, hdd_drives, seen),
+						price + ${HETZNER_IPV4_COST_CENTS/100} AS price, -- Add IPv4 cost, overwriting price from *
 						nvme_drives::JSON AS nvme_drives,
 						sata_drives::JSON AS sata_drives,
 						hdd_drives::JSON AS hdd_drives,
@@ -72,6 +74,7 @@ export async function getCheapestRamConfigurations(conn: AsyncDuckDBConnection):
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
 						* EXCLUDE (id, nvme_drives, sata_drives, hdd_drives, seen),
+						price + ${HETZNER_IPV4_COST_CENTS/100} AS price, -- Add IPv4 cost, overwriting price from *
 						nvme_drives::JSON AS nvme_drives,
 						sata_drives::JSON AS sata_drives,
 						hdd_drives::JSON AS hdd_drives,

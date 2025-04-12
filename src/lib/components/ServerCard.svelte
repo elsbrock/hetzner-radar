@@ -248,7 +248,7 @@
                                                     10,
                                             ),
                                         )}, 70%,
-                    50%);`}>{config.markup_percentage}%</span
+                    50%);`}>{config.markup_percentage.toFixed(0)}%</span
                                     > higher than best
                                 {:else}
                                     best price
