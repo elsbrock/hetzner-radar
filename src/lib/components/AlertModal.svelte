@@ -88,11 +88,11 @@
 
             {#if !alert}
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Get notified when the price of this configuration drops
+                    Get notified when the price of this configuration (including the standard €1.70 net IPv4 cost) drops
                     below your desired monthly price.
                 </p>
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Please enter the desired price <em>including</em> VAT according to your current selection; the alert will trigger based on this VAT-inclusive comparison. You will receive a single
+                    Please enter the desired price <em>including</em> VAT according to your current selection; the alert will trigger based on this VAT-inclusive comparison, which incorporates the standard IPv4 cost. You will receive a single
                     email notification, and the alert will automatically disable
                     itself afterwards.
                 </p>

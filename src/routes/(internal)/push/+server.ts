@@ -3,6 +3,40 @@ import { env } from "$env/dynamic/private";
 import type { ServerConfiguration } from "$lib/api/frontend/filter";
 import { sendMail } from "$lib/mail";
 import type { RequestHandler } from "@sveltejs/kit";
+import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
+// Define the structure for the incoming raw server data
+interface RawServerData {
+  id: number;
+  information: string | null;
+  datacenter: string;
+  location: string;
+  cpu_vendor: string;
+  cpu: string;
+  cpu_count: number;
+  is_highio: boolean;
+  ram: string; // Assuming RAM description like '4x 16GB DDR4'
+  ram_size: number;
+  is_ecc: boolean;
+  hdd_arr: string; // JSON string array like '["2x 480GB NVMe"]'
+  nvme_count: number;
+  nvme_drives: string; // JSON string array like '[480, 480]'
+  nvme_size: number;
+  sata_count: number;
+  sata_drives: string; // JSON string array
+  sata_size: number;
+  hdd_count: number;
+  hdd_drives: string; // JSON string array
+  hdd_size: number;
+  with_inic: boolean;
+  with_hwr: boolean;
+  with_gpu: boolean;
+  with_rps: boolean;
+  traffic: string;
+  bandwidth: number;
+  price: number;
+  fixed_price: boolean;
+  seen: string; // ISO date string
+}
 
 export const POST: RequestHandler = async (event) => {
   const start = performance.now();
@@ -52,7 +86,7 @@ export const POST: RequestHandler = async (event) => {
   const stmt = await db.prepare(sql);
 
   // split config into batches of 100 and do batch insert
-  const configs = await request.json() as ServerConfiguration[];
+  const configs = await request.json() as RawServerData[];
   const batch: PreparedStatement[] = [];
   for (let i = 0; i < configs.length; i++) {
     const config = configs[i];
@@ -115,6 +149,7 @@ export const POST: RequestHandler = async (event) => {
         pa.price,
         pa.vat_rate,
         pa.user_id,
+        pa.includes_ipv4_cost,
         user.email,
         pa.created_at,
         min(c.price) as trigger_price
@@ -130,7 +165,7 @@ export const POST: RequestHandler = async (event) => {
         pa.user_id = user.id
     WHERE
         -- Price Conditions
-        pa.price >= (c.price * (1 + pa.vat_rate / 100.0))
+        pa.price >= (c.price + (CASE WHEN pa.includes_ipv4_cost = 1 THEN ${HETZNER_IPV4_COST_CENTS/100} ELSE 0 END)) * (1 + pa.vat_rate / 100.0)
 
         -- Location Conditions: ORed appropriately
         AND (
@@ -265,6 +300,7 @@ export const POST: RequestHandler = async (event) => {
         pa.price,
         pa.vat_rate,
         pa.user_id,
+        pa.includes_ipv4_cost,
         user.email,
         pa.created_at
   `);
@@ -296,7 +332,7 @@ good news! The target price for one of your alerts has been reached.
          Filter: ${alert.name}
    Target Price (incl. ${alert.vat_rate}% VAT): ${alert.price} EUR
   Trigger Price: ${alert.trigger_price} EUR
-
+${alert.includes_ipv4_cost ? '          (Price comparison included standard IPv4 cost)\n' : ''}
 Visit your alerts section to see further details:
 
   https://radar.iodev.org/alerts
