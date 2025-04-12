@@ -8,6 +8,7 @@
         getConfigurations,
         getPrices,
     } from "$lib/api/frontend/filter";
+    import type { PriceAlert } from '$lib/api/backend/alerts';
     import {
         type NameValuePair,
         getCPUModels,
@@ -20,6 +21,7 @@
     import ServerFilter from "$lib/components/ServerFilter.svelte";
     import ServerList from "$lib/components/ServerList.svelte";
     import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
+    import VatSelector from '$lib/components/VatSelector.svelte';
     import {
         type ServerFilter as ServerFilterType,
         clearFilter,
@@ -62,12 +64,12 @@
     let cpuModels: NameValuePair[] = [];
     let datacenters: NameValuePair[] = [];
 
-    let timeUnitPrice = "perMonth";
+    let timeUnitPrice: "perMonth" | "perHour" = "perMonth";
 
     let queryTime: number | undefined;
     let loading = true;
 
-    let selectedAlert = null;
+    let selectedAlert: PriceAlert | null = null;
     let alertDialogOpen = false;
 
     let storedFilter: ServerFilterType | null = null;
@@ -344,7 +346,7 @@
                                 {/await}
                             </ButtonGroup>
                         </div>
-                        <div class="text-xs text-gray-900">
+                        <div class="text-xs text-gray-900 flex items-center space-x-4">
                             <ButtonGroup>
                                 <div
                                     class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-2 bg-gray-50 border border-gray-200 first:rounded-s-lg last:rounded-e-lg opacity-90"
@@ -373,6 +375,7 @@
                             <Tooltip placement="left" class="z-50">
                                 Display prices per hour or per month.
                             </Tooltip>
+                            <VatSelector />
                         </div>
                     </div>
                     <h1

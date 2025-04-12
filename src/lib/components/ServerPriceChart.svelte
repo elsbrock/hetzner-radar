@@ -1,22 +1,30 @@
 <script lang="ts">
-    import type { ServerPriceStat } from "$lib/queries/filter";
+    import type { ServerPriceStat } from "$lib/api/frontend/filter";
     import { Spinner } from "flowbite-svelte";
     import { onDestroy, onMount } from "svelte";
-
+    import { settingsStore } from '$lib/stores/settings';
+    import { vatOptions } from './VatSelector.svelte';
     export let data: ServerPriceStat[] | null = null;
     export let loading: boolean = true;
     export let timeUnitPrice = "perHour";
 
     let noResults = false;
 
+    // VAT related reactive variables
+    $: selectedOption = vatOptions[$settingsStore.vatSelection.countryCode] || vatOptions['NET']; // Fallback to NET
+    $: vatSuffix = selectedOption.rate > 0 ? `(incl. ${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
+
     let chart: ApexCharts;
     let chartElement: HTMLElement;
 
     function formatPrice(value: number) {
+        let basePrice: string;
         if (timeUnitPrice === "perHour") {
-            return (value / (30 * 24)).toFixed(4) + " €/h";
+            basePrice = (value / (30 * 24)).toFixed(4) + " €/h";
+        } else {
+            basePrice = value.toFixed(2) + " €/mo"; // Use toFixed(2) for monthly consistency
         }
-        return value.toFixed(0) + " €/mo";
+        return `${basePrice} ${vatSuffix}`;
     }
 
     let options: ApexCharts.ApexOptions = {
@@ -115,7 +123,7 @@
         if (chart && data && data.length > 0) {
             const lineData = data.map((d) => ({
                 x: new Date(d.seen * 1000),
-                y: d.min_price,
+                y: d.min_price * (1 + selectedOption.rate), // Apply VAT rate
             }));
 
             const barData = data.map((d) => ({
@@ -186,7 +194,8 @@
         }
     }
 
-    $: if (chart && data && timeUnitPrice) {
+    // Update chart when data, time unit, or VAT selection changes
+    $: if (chart && data && timeUnitPrice && selectedOption) {
         updateChartData();
     }
 </script>
