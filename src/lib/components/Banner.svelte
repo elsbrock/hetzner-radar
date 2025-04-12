@@ -6,26 +6,27 @@
   import { get } from "svelte/store";
 
   export let id: string = "default";
+  export let version: string | number = 1; // Add version prop
   let bannerStatus: boolean = false;
   let initialized: boolean = false;
 
   onMount(() => {
     const settings = get(settingsStore);
-    const setting = settings[`sr-banner-closed-${id}`];
-    console.log("Setting", setting);
+    const dismissedVersion = settings[`sr-banner-closed-${id}`];
 
-    if (setting) {
-      bannerStatus = false; // Hide banner if setting exists
+    // Show banner if no version dismissed OR if dismissed version is different from current version
+    if (dismissedVersion === undefined || dismissedVersion !== version) {
+      bannerStatus = true;
     } else {
-      bannerStatus = true; // Show banner if no setting
+      bannerStatus = false; // Hide banner if the current version was already dismissed
     }
 
     initialized = true;
   });
 
   $: if (initialized && !bannerStatus) {
-    console.log("Banner closed, updating store");
-    settingsStore.updateSetting(`sr-banner-closed-${id}`, true);
+    // Store the version that was dismissed
+    settingsStore.updateSetting(`sr-banner-closed-${id}`, version);
   }
 </script>
 
