@@ -13,6 +13,7 @@
     dayjs.extend(relativeTime);
     import { settingsStore } from '$lib/stores/settings';
     import { vatOptions } from './VatSelector.svelte';
+import ServerDetailDrawer from './ServerDetailDrawer.svelte';
 
     export let timeUnitPrice: "perMonth" | "perHour" = "perHour";
     export let config: ServerConfiguration;
@@ -21,15 +22,22 @@
     export let displayMarkupPercentage: boolean = false;
 
     export let loading: boolean = false;
+    let drawerOpen = false;
+    let selectedConfig: ServerConfiguration | null = null;
 
     // VAT related reactive variables
-    $: selectedOption = vatOptions[$settingsStore.vatSelection.countryCode] || vatOptions['NET']; // Fallback to NET
+    // Define the type for VAT option keys based on the imported value
+    type VatCountryCode = keyof typeof vatOptions;
+    // VAT related reactive variables with improved type safety
+    $: countryCode = $settingsStore.vatSelection.countryCode;
+    $: validCountryCode = (countryCode && countryCode in vatOptions) ? countryCode as VatCountryCode : 'NET';
+    $: selectedOption = vatOptions[validCountryCode];
     $: displayPrice = (config.price ?? 0) * (1 + selectedOption.rate);
     $: vatSuffix = selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
 
     let classes: string;
     const defaultClasses =
-        "relative group  text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300";
+        "relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer";
     interface NumberSummary {
         count: number;
         value: number;
@@ -87,14 +95,25 @@
         return total;
     }
 
-    $: if (config && config.markup_percentage === 0) {
-        classes = `${defaultClasses} border-l-4 border-l-green-500`;
-    } else {
-        classes = defaultClasses;
+    // Reactive classes based on markup and drawer state
+    $: {
+    	let currentClasses = defaultClasses;
+    	if (config && config.markup_percentage === 0) {
+    		currentClasses += ' border-l-4 border-l-green-500';
+    	}
+    	classes = currentClasses;
     }
 </script>
 
-<Card class={classes} data-testid="server-card" style="padding: 15px">
+<Card
+    class={classes}
+    data-testid="server-card"
+    style="padding: 15px"
+    on:click={() => {
+        selectedConfig = config;
+        drawerOpen = true;
+    }}
+>
     {#if loading}
         <!-- Loading Spinner -->
         <div class="flex items-center justify-center h-full">
@@ -235,30 +254,31 @@
                             )} Storage/month
                         {/if}
                         {#if displayMarkupPercentage}
-                            <span class="text-gray-500">
-                                {#if (config.markup_percentage ?? 0) > 0}
-                                    <span
-                                        style={`color: hsl(${Math.max(
-                                            0,
-                                            Math.min(
-                                                120,
-                                                (120 *
-                                                    (10 -
-                                                        (config.markup_percentage ?? 0))) /
-                                                    10,
-                                            ),
-                                        )}, 70%,
-                    50%);`}>{config.markup_percentage.toFixed(0)}%</span
-                                    > higher than best
-                                {:else}
-                                    best price
-                                {/if}
-                            </span>
+                        	<span class="text-gray-500">
+                        		{#if (config.markup_percentage ?? 0) > 0}
+                        			<span
+                        				style={`color: hsl(${Math.max(
+                        					0,
+                        					Math.min(
+                        						120,
+                        						(120 *
+                        							(10 -
+                        								(config.markup_percentage ?? 0))) /
+                        							10,
+                        					),
+                        				)}, 70%,
+                       50%);`}>{(config.markup_percentage ?? 0).toFixed(0)}%</span
+                        			> higher than best
+                        		{:else}
+                        			best price
+                        		{/if}
+                        	</span>
                         {/if}
                     </div>
                 {/if}
             </div>
-            <slot name="buttons" />
+            <!-- Removed slot name="buttons" -->
         </div>
     {/if}
+    <ServerDetailDrawer bind:open={drawerOpen} config={selectedConfig} />
 </Card>
