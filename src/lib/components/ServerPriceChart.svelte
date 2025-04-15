@@ -86,7 +86,7 @@
             curve: "smooth",
         },
         legend: {
-            show: legendShow,
+            show: false,
         },
         plotOptions: {
             bar: {

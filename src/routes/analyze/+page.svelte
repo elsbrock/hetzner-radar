@@ -351,7 +351,7 @@
                     >
                         Price History
                     </h1>
-                    <div class="border-b -pb-5 h-[320px]">
+                    <div class="border-b h-[320px]">
                         <ServerPriceChart
                             data={serverPrices}
                             {loading}
