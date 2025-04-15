@@ -13,6 +13,9 @@
 	import { filter } from '$lib/stores/filter'; // Corrected import name
 	import { getHetznerLink, convertServerConfigurationToFilter } from '$lib/filter'; // Added convert function
   	import { sineIn } from 'svelte/easing';
+    import { withDbConnections } from '$lib/api/frontend/dbapi'; // Added
+	import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions'; // Added
+	import { db } from '../../stores/db'; // Use relative path for db store import
 
 	export let config: ServerConfiguration | null = null;
 	export let hidden: boolean = true; // Two-way binding: bind:ihdden
@@ -23,19 +26,34 @@
 		easing: sineIn
 	};
 
-	interface MockAuction {
-		id: string;
-		lastPrice: number;
-		link: string;
-		lastSeen: number; // Unix timestamp
-	}
+	// Real auction data
+	let auctions: AuctionResult[] = [];
+	let loadingAuctions = false;
 
-	const mockAuctions: MockAuction[] = [
-		// Using placeholder timestamps for demonstration
-		{ id: 'SB-A123', lastPrice: 45.5, link: 'https://www.hetzner.com/sb?search=A123', lastSeen: dayjs().subtract(10, 'minutes').unix() },
-		{ id: 'SB-B456', lastPrice: 48.0, link: 'https://www.hetzner.com/sb?search=B456', lastSeen: dayjs().subtract(90, 'minutes').unix() },
-		{ id: 'SB-C789', lastPrice: 42.99, link: 'https://www.hetzner.com/sb?search=C789', lastSeen: dayjs().subtract(5, 'hours').unix() }
-	];
+	// Fetch auctions when config changes or db is ready
+	$: (async () => { // Make the reactive block async
+		// Ensure both config and $db are ready before fetching
+		if (config && $db) {
+			loadingAuctions = true;
+			auctions = []; // Clear previous results
+			try {
+				// Use withDbConnections to get a connection
+				await withDbConnections($db, async (conn) => {
+					auctions = await getAuctionsForConfiguration(conn, config);
+				});
+			} catch (error) {
+				console.error('Error fetching auctions:', error);
+				// Optionally show an error message to the user
+				auctions = []; // Ensure auctions is empty on error
+			} finally {
+				loadingAuctions = false;
+			}
+		} else {
+			// Reset if config is null or db not ready
+			auctions = [];
+			loadingAuctions = false;
+		}
+	})(); // Immediately invoke the async function
 
 	function closeDrawer() {
 		hidden = true;
@@ -211,39 +229,58 @@
 		</div>
 		<Table hoverable={true} striped={true}>
 			<TableBody class="divide-y">
-				{#each mockAuctions as auction (auction.id)}
+				{#if loadingAuctions}
 					<TableBodyRow>
-						<TableBodyCell class="px-1 py-4">
-							<div>#{auction.id}</div>
-							<div class="text-gray-400 text-xs mt-1">
-								<span class="inline-flex items-center">
-									{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
-										<Indicator color="green" class="animate-pulse mr-1.5" size="xs" />
-									{:else}
-										<Indicator color="red" class="mr-1.5" size="xs" />
-									{/if}
-									seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
-								</span>
-							</div>
-						</TableBodyCell>
-						<TableBodyCell class="px-2 py-4 text-right">{auction.lastPrice.toFixed(2)} €</TableBodyCell>
-						<TableBodyCell class="px-2 py-4 text-right">
-							<form action="https://robot.hetzner.com/order/marketConfirm" method="POST" target="_blank">
-								<input type="hidden" name="id" value={auction.id} />
-								<input type="hidden" name="server_id" value={auction.id} />
-								<input type="hidden" name="culture" value="en_GB" />
-								<input type="hidden" name="ip[1266]" value="1" />
-								<input type="hidden" name="country" value="de" />
-								<input type="hidden" name="currency" value="EUR" />
-								<Button type="submit" size="md" aria-label="Confirm Order" class="px-4">
-									<Fa icon={faShoppingCart} />
-								</Button>
-							</form>
+						<TableBodyCell colspan={3} class="text-center py-4">
+							<p>Loading auctions...</p>
 						</TableBodyCell>
 					</TableBodyRow>
-				{/each}
+				{:else if auctions.length > 0}
+					{#each auctions.slice(0, 10) as auction (auction.id)}
+						<TableBodyRow>
+							<TableBodyCell class="px-1 py-4">
+								<div>#{auction.id}</div>
+								<div class="text-gray-400 text-xs mt-1">
+									<span class="inline-flex items-center">
+										{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
+											<Indicator color="green" class="animate-pulse mr-1.5" size="xs" />
+										{:else}
+											<Indicator color="red" class="mr-1.5" size="xs" />
+										{/if}
+										seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
+									</span>
+								</div>
+							</TableBodyCell>
+							<TableBodyCell class="px-2 py-4 text-right">{(auction.lastPrice * (1 + selectedOption.rate)).toFixed(2)} €</TableBodyCell>
+							<TableBodyCell class="px-2 py-4 text-right">
+								<form action="https://robot.hetzner.com/order/marketConfirm" method="POST" target="_blank">
+									<input type="hidden" name="id" value={auction.id} />
+									<input type="hidden" name="server_id" value={auction.id} />
+									<input type="hidden" name="culture" value="en_GB" />
+									<input type="hidden" name="ip[1266]" value="1" />
+									<input type="hidden" name="country" value={validCountryCode.toLowerCase()} />
+									<input type="hidden" name="currency" value="EUR" />
+									<Button type="submit" size="md" aria-label="Confirm Order" class="px-4">
+										<Fa icon={faShoppingCart} />
+									</Button>
+								</form>
+							</TableBodyCell>
+						</TableBodyRow>
+					{/each}
+				{:else}
+					<TableBodyRow>
+						<TableBodyCell colspan={3} class="text-center py-4">
+							<p>No matching auctions found.</p>
+						</TableBodyCell>
+					</TableBodyRow>
+				{/if}
 			</TableBody>
 		</Table>
+		{#if auctions.length > 5}
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+				Showing the 5 most recently seen auctions. More may be available.
+			</p>
+		{/if}
 
 		<!-- Horizontal Rule and Disclaimer -->
 		<hr class="my-4 border-gray-200 dark:border-gray-600" />
