@@ -10,6 +10,8 @@
     export let data: ServerPriceStat[] | null = null;
     export let loading: boolean = true;
     export let timeUnitPrice = "perHour";
+    export let toolbarShow: boolean = true;
+    export let legendShow: boolean = true;
 
     let noResults = false;
 
@@ -42,7 +44,7 @@
 
     let options: ApexCharts.ApexOptions = {
         chart: {
-            height: "105%",
+            height: "100%",
             width: "100%",
             dropShadow: {
                 enabled: false,
@@ -51,7 +53,7 @@
                 enabled: false,
             },
             toolbar: {
-                show: true,
+                show: toolbarShow,
                 offsetX: -20,
                 offsetY: -10,
                 tools: {
@@ -74,7 +76,7 @@
             opacity: [1, 0.2],
         },
         grid: {
-            show: true,
+            show: legendShow,
             borderColor: "#dfdfdf",
             position: "back",
             strokeDashArray: 5,
@@ -142,11 +144,15 @@
                 {
                     xaxis: {
                         type: "datetime",
+                        axisTicks: {
+                            show: legendShow,
+                        },
                         tickAmount: Math.min(
                             Math.max(30, chartElement.clientWidth / 100),
                             30,
                         ),
                         labels: {
+                            show: legendShow,
                             formatter: function (value: number) {
                                 const date = new Date(value);
                                 return date.toLocaleDateString("de-DE", {
@@ -158,6 +164,7 @@
                     },
                     yaxis: [
                         {
+                            show: legendShow,
                             seriesName: "Price",
                             forceNiceScale: true,
                             title: {
@@ -168,6 +175,7 @@
                             },
                         },
                         {
+                            show: legendShow,
                             seriesName: "Volume",
                             forceNiceScale: true,
                             title: {
@@ -235,12 +243,20 @@
     }
 </script>
 
-<div class="relative h-[320px] w-full" data-testid="server-pricechart">
+<svelte:window on:load={() => {
+	if (chartElement) {
+		console.log('Chart width:', chartElement.offsetWidth);
+		console.log('Parent width:', chartElement.parentElement?.offsetWidth);
+	}
+}}/>
+
+<div class="relative h-full w-full" data-testid="server-pricechart">
     <div
         class:blur-sm={loading || noResults}
         class:pointer-events-none={loading || noResults}
         bind:this={chartElement}
-    ></div>
+    >
+	</div>
     {#if loading}
         <div class="absolute inset-0 z-10 flex items-center justify-center">
             <Spinner />

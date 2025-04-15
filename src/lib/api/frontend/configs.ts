@@ -10,7 +10,7 @@ export async function getCheapestConfigurations(conn: AsyncDuckDBConnection): Pr
 				SELECT DISTINCT ON (cpu)
 						-- Exclude the specified columns
 						* EXCLUDE(id, nvme_drives, sata_drives, hdd_drives, seen),
-						price + ${HETZNER_IPV4_COST_CENTS/100} AS price, -- Add IPv4 cost, overwriting price from *
+						price, -- Add IPv4 cost, overwriting price from *
 						nvme_drives::JSON AS nvme_drives,
 						sata_drives::JSON AS sata_drives,
 						hdd_drives::JSON AS hdd_drives,
@@ -24,7 +24,7 @@ export async function getCheapestConfigurations(conn: AsyncDuckDBConnection): Pr
 					AND (hdd_size > 0 OR nvme_size > 0 OR sata_size > 0)
 				ORDER BY cpu, seen DESC
 		)
-		SELECT *
+		SELECT * exclude (price), price + ${HETZNER_IPV4_COST_CENTS/100} AS price
 		FROM latest_configs
 		ORDER BY price ASC
 		LIMIT 4;
@@ -42,7 +42,7 @@ export async function getCheapestDiskConfigurations(conn: AsyncDuckDBConnection)
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
 						* EXCLUDE (id, nvme_drives, sata_drives, hdd_drives, seen),
-						price + ${HETZNER_IPV4_COST_CENTS/100} AS price, -- Add IPv4 cost, overwriting price from *
+						price,
 						nvme_drives::JSON AS nvme_drives,
 						sata_drives::JSON AS sata_drives,
 						hdd_drives::JSON AS hdd_drives,
@@ -56,7 +56,7 @@ export async function getCheapestDiskConfigurations(conn: AsyncDuckDBConnection)
 					AND (hdd_size > 0 OR nvme_size > 0 OR sata_size > 0)
 				ORDER BY cpu, seen DESC
 		)
-		SELECT *
+		SELECT * exclude (price), price + ${HETZNER_IPV4_COST_CENTS/100} AS price
 		FROM latest_configs
 		ORDER BY (price / hdd_size) ASC
 		LIMIT 4;
@@ -74,7 +74,7 @@ export async function getCheapestRamConfigurations(conn: AsyncDuckDBConnection):
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
 						* EXCLUDE (id, nvme_drives, sata_drives, hdd_drives, seen),
-						price + ${HETZNER_IPV4_COST_CENTS/100} AS price, -- Add IPv4 cost, overwriting price from *
+						price, -- Add IPv4 cost, overwriting price from *
 						nvme_drives::JSON AS nvme_drives,
 						sata_drives::JSON AS sata_drives,
 						hdd_drives::JSON AS hdd_drives,
@@ -88,7 +88,7 @@ export async function getCheapestRamConfigurations(conn: AsyncDuckDBConnection):
 					AND (hdd_size > 0 OR nvme_size > 0 OR sata_size > 0)
 				ORDER BY cpu, seen DESC
 		)
-		SELECT *
+		SELECT * exclude (price), price + ${HETZNER_IPV4_COST_CENTS/100} AS price
 		FROM latest_configs
 		ORDER BY (price / ram_size) ASC
 		LIMIT 4;
