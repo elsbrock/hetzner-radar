@@ -1,43 +1,23 @@
 import { getData } from '$lib/api/frontend/dbapi';
-import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 import type { ServerConfiguration } from '$lib/api/frontend/filter';
 import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import SQL, { SQLStatement } from 'sql-template-strings';
 
-/**
- * Represents the result structure for an auction query.
- */
 export interface AuctionResult {
 	id: string;
 	lastPrice: number;
 	lastSeen: number; // Unix timestamp
 }
 
-/**
- * Fetches the latest auction data matching a specific server configuration.
- *
- * @param conn - The asynchronous DuckDB connection.
- * @param config - The server configuration to match auctions against.
- * @param recentlySeen - Whether to filter for auctions seen in the last 70 minutes (default: true).
- * @returns A promise resolving to an array of matching auction results, containing the 6 cheapest
- *          distinct auctions ordered by price (ascending).
- */
 export async function getAuctionsForConfiguration(
 	conn: AsyncDuckDBConnection,
 	config: ServerConfiguration,
 	recentlySeen: boolean = true
 ): Promise<AuctionResult[]> {
-	// Construct the SQL query to find matching auctions
-	// Assumes 'auction' table exists with columns matching ServerConfiguration fields
-	// and that array columns (nvme_drives, etc.) can be compared directly.
-	// Ensure the config arrays are sorted for consistent comparison in SQL
 	const sortedNvmeDrives = [...config.nvme_drives].sort((a, b) => a - b);
 	const sortedSataDrives = [...config.sata_drives].sort((a, b) => a - b);
 	const sortedHddDrives = [...config.hdd_drives].sort((a, b) => a - b);
 
-	// Construct the SQL query using the append pattern for clarity and consistency
-	// Construct the SQL query using the append pattern for clarity and consistency
-	// Explicitly type as SQLStatement
 	const query: SQLStatement = SQL`
 			WITH filtered_servers AS (
 				SELECT
@@ -59,13 +39,10 @@ export async function getAuctionsForConfiguration(
 					AND with_rps = ${config.with_rps}
 	`;
 	
-	// Add time filter conditionally
 	if (recentlySeen) {
 		query.append(SQL` AND seen > (now()::timestamp - interval '70 minute')::timestamp`);
 	}
 
-	// Append list comparison clauses separately by constructing the list literal string
-	// Handle empty arrays correctly by generating '[]'
 	const nvmeListLiteral = `[${sortedNvmeDrives.join(',')}]`;
 	query.append(` AND list_sort(nvme_drives) = `).append(nvmeListLiteral);
 
@@ -88,7 +65,5 @@ export async function getAuctionsForConfiguration(
 			LIMIT 6
 	`);
 
-	// Execute the query and return the results
-	// The getData function is assumed to handle the mapping to AuctionResult[] based on the generic type.
 	return await getData<AuctionResult>(conn, query);
 }

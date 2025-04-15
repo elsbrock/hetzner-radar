@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { ServerConfiguration } from '$lib/api/frontend/filter';
-	import type { ServerFilter } from '$lib/filter'; // Corrected import path for ServerFilter
 	import { getFormattedDiskSize } from '$lib/disksize';
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { faHardDrive, faMemory, faSdCard, faShoppingCart, faFilter, faExternalLinkAlt, faHammer, faTicket } from '@fortawesome/free-solid-svg-icons';
@@ -12,12 +11,12 @@
 	dayjs.extend(relativeTime);
 	import { settingsStore } from '$lib/stores/settings';
 	import { vatOptions } from './VatSelector.svelte';
-	import { filter } from '$lib/stores/filter'; // Corrected import name
-	import { getHetznerLink, convertServerConfigurationToFilter } from '$lib/filter'; // Added convert function
+	import { filter } from '$lib/stores/filter';
+	import { getHetznerLink, convertServerConfigurationToFilter } from '$lib/filter';
   	import { sineIn } from 'svelte/easing';
-    import { withDbConnections } from '$lib/api/frontend/dbapi'; // Added
- import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions'; // Added
- import { db } from '../../stores/db'; // Use relative path for db store import
+    import { withDbConnections } from '$lib/api/frontend/dbapi';
+	import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions';
+	import { db } from '../../stores/db';
     import ServerPriceChart from './ServerPriceChart.svelte';
     import { getPrices } from '$lib/api/frontend/filter';
 
@@ -30,7 +29,6 @@
 		easing: sineIn
 	};
 
-	// Real auction data
 	let auctions: AuctionResult[] = [];
 	let loadingAuctions = false;
 
@@ -47,7 +45,6 @@
 				});
 			} catch (error) {
 				console.error('Error fetching auctions:', error);
-				// Optionally show an error message to the user
 				auctions = []; // Ensure auctions is empty on error
 			} finally {
 				loadingAuctions = false;
@@ -57,7 +54,7 @@
 			auctions = [];
 			loadingAuctions = false;
 		}
-	})(); // Immediately invoke the async function
+	})();
 
 	function closeDrawer() {
 		hidden = true;
@@ -68,7 +65,6 @@
 		value: number;
 	}
 
-	// Helper function copied from ServerCard.svelte
 	function summarizeNumbers(numbers: number[]): NumberSummary[] {
 		const counts = new Map<number, number>();
 		const order: number[] = [];
@@ -78,7 +74,7 @@
 				counts.set(num, counts.get(num)! + 1);
 			} else {
 				counts.set(num, 1);
-				order.push(num); // Preserve the order of first occurrence
+				order.push(num);
 			}
 		}
 
@@ -92,12 +88,9 @@
 		return result;
 	}
 
-	// Define the type for VAT option keys based on the imported value
 	type VatCountryCode = keyof typeof vatOptions;
 
-	// VAT related reactive variables copied from ServerCard.svelte, with improved type safety
 	$: countryCode = $settingsStore.vatSelection.countryCode;
-	// Ensure the country code is a valid key before using it, default to 'NET'
 	$: validCountryCode = (countryCode && countryCode in vatOptions) ? countryCode as VatCountryCode : 'NET';
 	$: selectedOption = config ? vatOptions[validCountryCode] : vatOptions['NET'];
 	$: displayPrice = config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0;
@@ -135,7 +128,6 @@
 	</div>
 
 	{#if config}
-		<!-- Configuration Details - Styled like ServerCard -->
 		<div class="mb-6">
 			<div class="flex items-center justify-between mb-2">
 				<h5 class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
@@ -315,9 +307,7 @@
 			</p>
 		{/if}
 
-		<!-- Horizontal Rule and Disclaimer -->
 		<hr class="my-4 border-gray-200 dark:border-gray-600" />
-		<!-- Enhanced Disclaimer -->
 		<div class="text-xs leading-relaxed text-gray-400 dark:text-gray-500 space-y-2">
 			<p>
 				Clicking the <Fa icon={faShoppingCart} class="inline mx-1" /> button redirects you to Hetzner to confirm the order. Clicking the <Fa icon={faExternalLinkAlt} class="inline mx-1" /> button opens a preconfigured Hetzner search.
