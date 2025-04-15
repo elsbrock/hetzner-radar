@@ -84,7 +84,7 @@ export async function getAuctionsForConfiguration(
 				seen_epoch AS lastSeen
 			FROM filtered_servers
 			WHERE rn = 1
-			ORDER BY lastSeen DESC
+			ORDER BY date_trunc('h', seen) DESC, price ASC
 			LIMIT 6
 	`);
 

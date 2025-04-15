@@ -6,6 +6,7 @@
 	import { faHardDrive, faMemory, faSdCard, faShoppingCart, faFilter, faExternalLinkAlt, faHammer, faTicket } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import { Drawer, Button, CloseButton, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Badge, Indicator, Tooltip } from 'flowbite-svelte';
+	import { goto } from '$app/navigation';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
@@ -144,6 +145,10 @@
 					if (config) {
 						const newFilter = convertServerConfigurationToFilter(config);
 						filter.set(newFilter);
+						if (window.location.pathname !== '/analyze') {
+							goto('/analyze');
+							return;
+						}
 						closeDrawer();
 					}
 				}}>
@@ -153,7 +158,7 @@
 			</div>
 			<!-- Price with VAT -->
 			<div class="mb-3 max-w-full overflow-hidden">
-				<div class="h-50 -mt-5 -mb-4 -mx-3"><ServerPriceChart data={serverPrices} loading={loadingPrices} toolbarShow={false} legendShow={false} /></div>
+				<div class="h-50 -mt-5 -mb-4 -mx-3"><ServerPriceChart data={serverPrices} loading={loadingPrices} toolbarShow={false} legendShow={false} timeUnitPrice={$settingsStore.timeUnitPrice} /></div>
 				<span class="text-lg font-bold text-gray-900 dark:text-white">
 					{displayPrice.toFixed(2)} €
 				</span>
