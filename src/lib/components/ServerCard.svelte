@@ -22,7 +22,7 @@ import ServerDetailDrawer from './ServerDetailDrawer.svelte';
     export let displayMarkupPercentage: boolean = false;
 
     export let loading: boolean = false;
-    let drawerOpen = false;
+    let drawerHidden = true;
     let selectedConfig: ServerConfiguration | null = null;
 
     // VAT related reactive variables
@@ -111,7 +111,7 @@ import ServerDetailDrawer from './ServerDetailDrawer.svelte';
     style="padding: 15px"
     on:click={() => {
         selectedConfig = config;
-        drawerOpen = true;
+        drawerHidden = false;
     }}
 >
     {#if loading}
@@ -279,6 +279,6 @@ import ServerDetailDrawer from './ServerDetailDrawer.svelte';
             </div>
             <!-- Removed slot name="buttons" -->
         </div>
-    {/if}
-    <ServerDetailDrawer bind:open={drawerOpen} config={selectedConfig} />
-</Card>
+        {/if}
+    </Card>
+<ServerDetailDrawer bind:hidden={drawerHidden} config={selectedConfig} />
