@@ -2,9 +2,10 @@
 	import type { ServerConfiguration } from '$lib/api/frontend/filter';
 	import type { ServerFilter } from '$lib/filter'; // Corrected import path for ServerFilter
 	import { getFormattedDiskSize } from '$lib/disksize';
+	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { faHardDrive, faMemory, faSdCard, faShoppingCart, faFilter, faExternalLinkAlt, faHammer, faTicket } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
-	import { Drawer, Button, CloseButton, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Badge, Indicator } from 'flowbite-svelte';
+	import { Drawer, Button, CloseButton, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Badge, Indicator, Tooltip } from 'flowbite-svelte';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	dayjs.extend(relativeTime);
@@ -39,7 +40,7 @@
 			try {
 				// Use withDbConnections to get a connection
 				await withDbConnections($db, async (conn) => {
-					auctions = await getAuctionsForConfiguration(conn, config);
+					auctions = await getAuctionsForConfiguration(conn, config, $filter?.recentlySeen ?? false);
 				});
 			} catch (error) {
 				console.error('Error fetching auctions:', error);
@@ -100,7 +101,7 @@
 	$: vatSuffix = selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
 </script>
 
-<Drawer bind:hidden={hidden} backdrop={true} bgOpacity="bg-black/25" placement="right" transitionType="fly" transitionParams={transitionParamsRight} id="server-detail-drawer" width="w-96">
+<Drawer bind:hidden={hidden} backdrop={true} bgOpacity="bg-black/25" placement="right" transitionType="fly" transitionParams={transitionParamsRight} id="server-detail-drawer" width="w-96" class="border-l-1">
 	<div class="flex items-center mb-4">
 		<h5 class="inline-flex items-center text-base font-semibold text-gray-500 dark:text-gray-400">
 			Server Details
@@ -115,7 +116,7 @@
 				<h5 class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
 					{config.cpu}
 				</h5>
-				<Button size="xs" color="alternative" title="Apply configuration to filter" on:click={() => {
+				<Button size="xs" color="alternative" on:click={() => {
 					if (config) {
 						const newFilter = convertServerConfigurationToFilter(config);
 						filter.set(newFilter);
@@ -124,6 +125,7 @@
 				}}>
 					<Fa icon={faFilter} />
 				</Button>
+				<Tooltip placement="bottom" class="z-50">Apply configuration to filter</Tooltip>
 			</div>
 			<!-- Price with VAT -->
 			<div class="mb-3">
@@ -222,9 +224,10 @@
 		<div class="flex items-center justify-between mb-1">
 			<h6 class="text-lg font-medium text-gray-900 dark:text-white">Auctions</h6>
 			{#if config}
-				<a href={getHetznerLink(config)} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" title="Search on Hetzner with this configuration">
+				<Button href={getHetznerLink(config)} target="_blank" rel="noopener noreferrer" size="xs" color="alternative">
 					<Fa icon={faExternalLinkAlt} />
-				</a>
+				</Button>
+				<Tooltip placement="bottom" class="z-50">Search on Hetzner with this configuration</Tooltip>
 			{/if}
 		</div>
 		<Table hoverable={true} striped={true}>
@@ -236,7 +239,7 @@
 						</TableBodyCell>
 					</TableBodyRow>
 				{:else if auctions.length > 0}
-					{#each auctions.slice(0, 10) as auction (auction.id)}
+					{#each auctions.slice(0, 5) as auction (auction.id)}
 						<TableBodyRow>
 							<TableBodyCell class="px-1 py-4">
 								<div>#{auction.id}</div>
@@ -251,7 +254,7 @@
 									</span>
 								</div>
 							</TableBodyCell>
-							<TableBodyCell class="px-2 py-4 text-right">{(auction.lastPrice * (1 + selectedOption.rate)).toFixed(2)} €</TableBodyCell>
+							<TableBodyCell class="px-2 py-4 text-right">{((auction.lastPrice + HETZNER_IPV4_COST_CENTS/100) * (1 + selectedOption.rate)).toFixed(2)} €</TableBodyCell>
 							<TableBodyCell class="px-2 py-4 text-right">
 								<form action="https://robot.hetzner.com/order/marketConfirm" method="POST" target="_blank">
 									<input type="hidden" name="id" value={auction.id} />

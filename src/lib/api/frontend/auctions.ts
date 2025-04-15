@@ -18,11 +18,14 @@ export interface AuctionResult {
  *
  * @param conn - The asynchronous DuckDB connection.
  * @param config - The server configuration to match auctions against.
- * @returns A promise resolving to an array of matching auction results, ordered by last seen time.
+ * @param recentlySeen - Whether to filter for auctions seen in the last 70 minutes (default: true).
+ * @returns A promise resolving to an array of matching auction results, containing the 6 cheapest
+ *          distinct auctions ordered by price (ascending).
  */
 export async function getAuctionsForConfiguration(
 	conn: AsyncDuckDBConnection,
-	config: ServerConfiguration
+	config: ServerConfiguration,
+	recentlySeen: boolean = true
 ): Promise<AuctionResult[]> {
 	// Construct the SQL query to find matching auctions
 	// Assumes 'auction' table exists with columns matching ServerConfiguration fields
@@ -36,23 +39,30 @@ export async function getAuctionsForConfiguration(
 	// Construct the SQL query using the append pattern for clarity and consistency
 	// Explicitly type as SQLStatement
 	const query: SQLStatement = SQL`
-		WITH LatestAuctions AS (
-			SELECT DISTINCT ON (id)
-				id,
-				price,
-				seen
-			FROM server
-			WHERE cpu = ${config.cpu}
-			AND ram_size = ${config.ram_size}
-			AND nvme_count = ${config.nvme_drives.length}
-			AND sata_count = ${config.sata_drives.length}
-			AND hdd_count = ${config.hdd_drives.length}
-			AND is_ecc = ${config.is_ecc}
-			AND with_inic = ${config.with_inic}
-			AND with_gpu = ${config.with_gpu}
-			AND with_hwr = ${config.with_hwr}
-			AND with_rps = ${config.with_rps}
+			WITH filtered_servers AS (
+				SELECT
+					id,
+					price,
+					seen,
+					CAST(EXTRACT('epoch' FROM seen) AS INT) AS seen_epoch,
+					ROW_NUMBER() OVER (PARTITION BY id ORDER BY seen DESC) AS rn
+				FROM server
+				WHERE cpu = ${config.cpu}
+					AND ram_size = ${config.ram_size}
+					AND nvme_count = ${config.nvme_drives.length}
+					AND sata_count = ${config.sata_drives.length}
+					AND hdd_count = ${config.hdd_drives.length}
+					AND is_ecc = ${config.is_ecc}
+					AND with_inic = ${config.with_inic}
+					AND with_gpu = ${config.with_gpu}
+					AND with_hwr = ${config.with_hwr}
+					AND with_rps = ${config.with_rps}
 	`;
+	
+	// Add time filter conditionally
+	if (recentlySeen) {
+		query.append(SQL` AND seen > (now()::timestamp - interval '70 minute')::timestamp`);
+	}
 
 	// Append list comparison clauses separately by constructing the list literal string
 	// Handle empty arrays correctly by generating '[]'
@@ -65,18 +75,17 @@ export async function getAuctionsForConfiguration(
 	const hddListLiteral = `[${sortedHddDrives.join(',')}]`;
 	query.append(` AND list_sort(hdd_drives) = `).append(hddListLiteral);
 
-	// Complete the WITH clause and final SELECT
+	// Complete the query with the final SELECT to get only the most recent entry for each auction
 	query.append(SQL`
-			ORDER BY id, seen DESC
-		)
-		SELECT
-			id,
-			(price + ${HETZNER_IPV4_COST_CENTS / 100}) AS lastPrice, -- Add IPv4 cost
-			CAST(EXTRACT('epoch' FROM seen) AS INT) AS lastSeen,
-			date_trunc('hour', seen) as seen_hour -- Add hourly truncated timestamp for sorting
-		FROM LatestAuctions
-		ORDER BY seen_hour DESC, lastPrice ASC -- Order by hour desc, then price asc
-		LIMIT 6;
+			)
+			SELECT
+				id,
+				price AS lastPrice,
+				seen_epoch AS lastSeen
+			FROM filtered_servers
+			WHERE rn = 1
+			ORDER BY lastSeen DESC
+			LIMIT 6
 	`);
 
 	// Execute the query and return the results
