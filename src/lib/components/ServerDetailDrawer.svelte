@@ -15,8 +15,10 @@
 	import { getHetznerLink, convertServerConfigurationToFilter } from '$lib/filter'; // Added convert function
   	import { sineIn } from 'svelte/easing';
     import { withDbConnections } from '$lib/api/frontend/dbapi'; // Added
-	import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions'; // Added
-	import { db } from '../../stores/db'; // Use relative path for db store import
+ import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions'; // Added
+ import { db } from '../../stores/db'; // Use relative path for db store import
+    import ServerPriceChart from './ServerPriceChart.svelte';
+    import { getPrices } from '$lib/api/frontend/filter';
 
 	export let config: ServerConfiguration | null = null;
 	export let hidden: boolean = true; // Two-way binding: bind:ihdden
@@ -99,6 +101,28 @@
 	$: selectedOption = config ? vatOptions[validCountryCode] : vatOptions['NET'];
 	$: displayPrice = config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0;
 	$: vatSuffix = selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
+
+	   let serverPrices: any[] = [];
+	   let loadingPrices = true;
+
+	   $: (async () => {
+	       if (config && $db) {
+	           loadingPrices = true;
+	           try {
+	               await withDbConnections($db, async (conn) => {
+	                   serverPrices = await getPrices(conn, convertServerConfigurationToFilter(config));
+	               });
+	           } catch (error) {
+	               console.error('Error fetching server prices:', error);
+	               serverPrices = [];
+	           } finally {
+	               loadingPrices = false;
+	           }
+	       } else {
+	           serverPrices = [];
+	           loadingPrices = false;
+	       }
+	   })();
 </script>
 
 <Drawer bind:hidden={hidden} backdrop={true} bgOpacity="bg-black/25" placement="right" transitionType="fly" transitionParams={transitionParamsRight} id="server-detail-drawer" width="w-96" class="border-l-1">
@@ -128,7 +152,8 @@
 				<Tooltip placement="bottom" class="z-50">Apply configuration to filter</Tooltip>
 			</div>
 			<!-- Price with VAT -->
-			<div class="mb-3">
+			<div class="mb-3 max-w-full overflow-hidden">
+				<div class="h-50 -mt-5 -mb-4 -mx-3"><ServerPriceChart data={serverPrices} loading={loadingPrices} toolbarShow={false} legendShow={false} /></div>
 				<span class="text-lg font-bold text-gray-900 dark:text-white">
 					{displayPrice.toFixed(2)} €
 				</span>
