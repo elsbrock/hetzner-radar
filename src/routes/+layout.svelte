@@ -89,8 +89,8 @@
 </svelte:head>
 
 <div class="bg-gray-50">
-  <Banner version={2} id="vat-feature">
-    <strong>New Feature:</strong> VAT Selection 💰
+  <Banner version={2} id="vat-auctions">
+    <strong>New Feature:</strong> Auction View 🧑‍⚖️
   </Banner>
   <Nav />
 
