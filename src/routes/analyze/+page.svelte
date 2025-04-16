@@ -41,6 +41,7 @@
         faStopwatch,
         faWarning,
     } from "@fortawesome/free-solid-svg-icons";
+    import { faEuroSign } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import dayjs from "dayjs";
     import {
@@ -48,7 +49,9 @@
         Badge,
         Button,
         ButtonGroup,
+        Input,
         Tooltip,
+        InputAddon,
     } from "flowbite-svelte";
     import { InfoCircleSolid } from "flowbite-svelte-icons";
     import Spinner from "flowbite-svelte/Spinner.svelte";
@@ -63,6 +66,19 @@
     let serverPrices: ServerPriceStat[] = [];
     let cpuModels: NameValuePair[] = [];
     let datacenters: NameValuePair[] = [];
+
+    
+        let priceMax: number | null = $filter?.priceMax ?? 200;
+    
+        $: if ($filter) {
+            $filter.priceMax = priceMax;
+        }
+    
+        function updatePriceMax(event: Event) {
+            const target = event.target as HTMLInputElement;
+            priceMax = Number(target.value);
+            console.log('priceMax changed', priceMax);
+        }
 
 
     let queryTime: number | undefined;
@@ -218,19 +234,26 @@
                     >
                         <div class="md:col-span-2 flex flex-row flex-wrap gap-3 items-center text-xs text-gray-900">
                             <ButtonGroup>
-                                <div
-                                    class="text-center font-medium
-                                focus-within:ring-2 focus-within:z-10
-                                inline-flex items-center justify-center px-2
-                                py-2 bg-gray-50 border
-                                border-gray-200 first:rounded-s-lg
-                                last:rounded-e-lg opacity-90"
-                                >
+                                <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                    <FontAwesomeIcon
+                                        icon={faEuroSign}
+                                        class="me-2 dark:text-gray-400"
+                                    />Max Price
+                                </InputAddon>
+                                <Input
+                                    size="sm"
+                                    class="w-12 bg-white"
+                                    bind:value={priceMax}
+                                    on:change={updatePriceMax}
+                                />
+                            </ButtonGroup>
+                            <ButtonGroup>
+                                <InputAddon size="sm" class="bg-gray-50 text-gray-900">
                                     <FontAwesomeIcon
                                         class="me-2"
                                         icon={faFilter}
-                                    /> Filter
-                                </div>
+                                    />Filter
+                                </InputAddon>
                                 <Button
                                     size="xs"
                                     color="alternative"
@@ -265,14 +288,12 @@
                             </Tooltip>
 
                             <ButtonGroup>
-                                <div
-                                    class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-2 bg-gray-50 border border-gray-200 first:rounded-s-lg last:rounded-e-lg opacity-90"
-                                >
+                                <InputAddon size="sm" class="bg-gray-50 text-gray-900">
                                     <FontAwesomeIcon
                                         class="text-orange-500 me-2"
                                         icon={faBell}
-                                    /> Alert
-                                </div>
+                                    />
+                                </InputAddon>
                                 {#await data?.alert then alert}
                                     {#if alert}
                                         <Button

@@ -3,69 +3,72 @@ import LZString from "lz-string";
 import { computeFilterRange, getInverseMemoryExp } from "./disksize";
 
 export type ServerFilter = {
-    version: number;
+	version: number;
 
-    recentlySeen: boolean;
+	recentlySeen: boolean;
 
-    locationGermany: boolean;
-    locationFinland: boolean;
+	locationGermany: boolean;
+	locationFinland: boolean;
 
-    cpuCount: number;
-    cpuIntel: boolean;
-    cpuAMD: boolean;
+	cpuCount: number;
+	cpuIntel: boolean;
+	cpuAMD: boolean;
 
-    ramInternalSize: [number, number];
+	ramInternalSize: [number, number];
 
-    ssdNvmeCount: [number, number];
-    ssdNvmeInternalSize: [number, number];
+	ssdNvmeCount: [number, number];
+	ssdNvmeInternalSize: [number, number];
 
-    ssdSataCount: [number, number];
-    ssdSataInternalSize: [number, number];
+	ssdSataCount: [number, number];
+	ssdSataInternalSize: [number, number];
 
-    hddCount: [number, number];
-    hddInternalSize: [number, number];
+	hddCount: [number, number];
+	hddInternalSize: [number, number];
 
-    selectedDatacenters: string[];
-    selectedCpuModels: string[];
+	selectedDatacenters: string[];
+	selectedCpuModels: string[];
 
-    extrasECC: boolean | null;
-    extrasINIC: boolean | null;
-    extrasHWR: boolean | null;
-    extrasGPU: boolean | null;
-    extrasRPS: boolean | null;
+	extrasECC: boolean | null;
+	extrasINIC: boolean | null;
+	extrasHWR: boolean | null;
+	extrasGPU: boolean | null;
+	extrasRPS: boolean | null;
+	priceMax: number | null;
 };
 
 export const defaultFilter: ServerFilter = {
-    version: 1,
+	version: 1,
 
-    recentlySeen: true,
+	recentlySeen: true,
 
-    locationGermany: true,
-    locationFinland: true,
+	locationGermany: true,
+	locationFinland: true,
 
-    cpuCount: 1,
-    cpuIntel: true,
-    cpuAMD: true,
+	cpuCount: 1,
+	cpuIntel: true,
+	cpuAMD: true,
 
-    ramInternalSize: [4, 6],
+	ramInternalSize: [4, 6],
 
-    ssdNvmeCount: [0, 0],
-    ssdNvmeInternalSize: [1, 12],
+	ssdNvmeCount: [0, 0],
+	ssdNvmeInternalSize: [1, 12],
 
-    ssdSataCount: [0, 0],
-    ssdSataInternalSize: [1, 4],
+	ssdSataCount: [0, 0],
+	ssdSataInternalSize: [1, 4],
 
-    hddCount: [0, 2],
-    hddInternalSize: [4, 16],
+	hddCount: [0, 2],
+	hddInternalSize: [4, 16],
 
-    selectedDatacenters: [],
-    selectedCpuModels: [],
+	selectedDatacenters: [],
+	selectedCpuModels: [],
 
-    extrasECC: null,
-    extrasINIC: null,
-    extrasHWR: false,
-    extrasGPU: false,
-    extrasRPS: false,
+	extrasECC: null,
+	extrasINIC: null,
+	extrasHWR: false,
+	extrasGPU: false,
+	extrasRPS: false,
+
+	priceMax: 200,
 };
 
 export function encodeFilter(filter: ServerFilter): string {
@@ -176,8 +179,9 @@ export function convertServerConfigurationToFilter(
         locationFinland: true,
 
         selectedDatacenters: [],
-    };
-}
+        priceMax: null,
+       };
+      }
 
 export function isIdenticalFilter(
     filter1: ServerFilter | null,

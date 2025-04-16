@@ -114,8 +114,12 @@ export function generateFilterQuery(
         );
     }
 
+    if (filter.priceMax !== null) {
+        query.append(SQL` and price <= ${filter.priceMax}`);
+    }
+
     return query;
-}
+   }
 
 export type ServerPriceStat = {
     min_price: number;
