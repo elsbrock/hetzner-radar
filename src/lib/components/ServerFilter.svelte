@@ -146,10 +146,10 @@
             </h2>
         </li>
         <li>
-            <Toggle bind:checked={filter.locationGermany}>Germany</Toggle>
+            <Toggle size="small" bind:checked={filter.locationGermany}>Germany</Toggle>
         </li>
         <li>
-            <Toggle bind:checked={filter.locationFinland}>Finland</Toggle>
+            <Toggle size="small" bind:checked={filter.locationFinland}>Finland</Toggle>
         </li>
 
         <!-- Datacenter Filters -->
@@ -178,10 +178,10 @@
         </li>
         <li><Label class="text-sm">Vendor</Label></li>
         <li>
-            <Toggle bind:checked={filter.cpuIntel}>Intel</Toggle>
+            <Toggle size="small" bind:checked={filter.cpuIntel}>Intel</Toggle>
         </li>
         <li>
-            <Toggle bind:checked={filter.cpuAMD}>AMD</Toggle>
+            <Toggle size="small" bind:checked={filter.cpuAMD}>AMD</Toggle>
         </li>
         <li><h2>Model</h2></li>
         <li>
@@ -522,7 +522,7 @@
         <!-- Recently Seen -->
         <li>
             <div class="my-3">
-                <Toggle bind:checked={filter.recentlySeen}>Recently Seen</Toggle
+                <Toggle size="small" bind:checked={filter.recentlySeen}>Recently Seen</Toggle
                 >
             </div>
         </li>
