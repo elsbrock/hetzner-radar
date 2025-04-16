@@ -20,6 +20,12 @@
     export let alert: PriceAlert | null = null;
     export let open = false;
 
+    interface AlertFormErrors {
+        name?: string;
+        price?: string;
+        vatRate?: string;
+    }
+
     let loading = false;
     let error: string;
     const dispatch = createEventDispatcher();
@@ -66,6 +72,9 @@
                             }
                             invalidate("/alerts"); // Invalidate data to refresh lists/views
                             dispatch("success"); // Dispatch success event if needed
+                        } else if (result.data?.errors) {
+                            const errors = result.data.errors as AlertFormErrors;
+                            error = errors.price || "";
                         } else if (result.data?.error) {
                             error = typeof result.data.error === 'string' ? result.data.error : "An unknown error occurred."; // Explicit type check
                         } else {
@@ -144,7 +153,7 @@
                     name="price"
                     placeholder="e.g., 50"
                     required
-                    min="30"
+                    min="20"
                     max="1000"
                     value={alert?.price}
                     class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
@@ -153,7 +162,7 @@
 
             <!-- Error -->
             {#if error}
-                <Alert><strong>Error:</strong> {error}</Alert>
+                <Alert><strong>Error:</strong> {error || "Please enter a price between 20 and 1000 EUR."}</Alert>
             {/if}
 
             <!-- Action Buttons -->

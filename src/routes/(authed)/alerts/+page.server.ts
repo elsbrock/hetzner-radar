@@ -6,6 +6,7 @@ import {
     MAX_NAME_LENGTH,
     updateAlert,
 } from "$lib/api/backend/alerts";
+import { MAX_PRICE, MIN_PRICE } from "$lib/constants";
 import { fail, type Actions, type ServerLoad, type RequestEvent, type ServerLoadEvent } from "@sveltejs/kit";
 
 /** @type {import('./$types').PageServerLoad} */
@@ -39,8 +40,8 @@ function validateAlert(name: string, price: string, filter?: string) {
         const priceNumber = Number(price);
         if (!Number.isInteger(priceNumber)) {
             errors.price = "Price must be an integer.";
-        } else if (priceNumber < 30 || priceNumber > 1000) {
-            errors.price = "Price must be between 30 and 1000.";
+        } else if (priceNumber < MIN_PRICE || priceNumber > MAX_PRICE) {
+            errors.price = `Price must be between ${MIN_PRICE} and ${MAX_PRICE}.`;
         }
     }
 
