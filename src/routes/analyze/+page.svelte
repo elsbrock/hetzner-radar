@@ -63,24 +63,13 @@
 
     let lastUpdate: number;
     let serverList: ServerConfiguration[] = [];
+    let filteredServerList: ServerConfiguration[] = [];
     let serverPrices: ServerPriceStat[] = [];
     let cpuModels: NameValuePair[] = [];
     let datacenters: NameValuePair[] = [];
 
+    let priceMax: number | null = null;
     
-        let priceMax: number | null = $filter?.priceMax ?? 200;
-    
-        $: if ($filter) {
-            $filter.priceMax = priceMax;
-        }
-    
-        function updatePriceMax(event: Event) {
-            const target = event.target as HTMLInputElement;
-            priceMax = Number(target.value);
-            console.log('priceMax changed', priceMax);
-        }
-
-
     let queryTime: number | undefined;
     let loading = true;
 
@@ -152,7 +141,7 @@
                 loading = false;
             }
         });
-    }
+    };
 
     const debouncedFetchData = debounce(fetchData, 500);
 
@@ -164,6 +153,15 @@
     $: if (!!$db && $filter) {
         debouncedFetchData($db, $filter);
     }
+
+    // filter by max price
+    $: if (priceMax !== null && serverList.length > 0) {
+        console.log("Filtering by max price:", priceMax);
+        serverList = serverList.filter(server => server.price! <= priceMax);
+    }
+
+    let hasFilter: boolean = false;
+    let updateStoredFilterDisabled: boolean = false;
 
     $: hasFilter = storedFilter !== null;
     $: updateStoredFilterDisabled = isIdenticalFilter($filter, storedFilter);
@@ -242,9 +240,9 @@
                                 </InputAddon>
                                 <Input
                                     size="sm"
+                                    type="number"
                                     class="w-12 bg-white"
                                     bind:value={priceMax}
-                                    on:change={updatePriceMax}
                                 />
                             </ButtonGroup>
                             <ButtonGroup>
@@ -292,7 +290,7 @@
                                     <FontAwesomeIcon
                                         class="text-orange-500 me-2"
                                         icon={faBell}
-                                    />
+                                    /> Alert
                                 </InputAddon>
                                 {#await data?.alert then alert}
                                     {#if alert}
