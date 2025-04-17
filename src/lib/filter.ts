@@ -33,7 +33,6 @@ export type ServerFilter = {
 	extrasHWR: boolean | null;
 	extrasGPU: boolean | null;
 	extrasRPS: boolean | null;
-	priceMax: number | null;
 };
 
 export const defaultFilter: ServerFilter = {
@@ -67,8 +66,6 @@ export const defaultFilter: ServerFilter = {
 	extrasHWR: false,
 	extrasGPU: false,
 	extrasRPS: false,
-
-	priceMax: 200,
 };
 
 export function encodeFilter(filter: ServerFilter): string {
@@ -179,9 +176,8 @@ export function convertServerConfigurationToFilter(
         locationFinland: true,
 
         selectedDatacenters: [],
-        priceMax: null,
-       };
-      }
+    };
+}
 
 export function isIdenticalFilter(
     filter1: ServerFilter | null,

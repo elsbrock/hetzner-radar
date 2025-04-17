@@ -16,12 +16,14 @@ function createSettingsStore() {
 
   // Ensure vatSelection exists with a default if not set
   if (initialSettings.vatSelection === undefined) {
-    initialSettings.vatSelection = { countryCode: 'DE' };
-    // Persist the default if it was just added and we are in a browser context
-    // Only write back if settings were initially empty to avoid overwriting concurrent changes
-    if (typeof window !== 'undefined' && !storedSettings) {
-      localStorage.setItem('sr-settings', JSON.stringify(initialSettings));
-    }
+    initialSettings.vatSelection = { countryCode: 'DE', currentVatRate: 0 };
+  } else if (initialSettings.vatSelection.currentVatRate === undefined) {
+    initialSettings.vatSelection.currentVatRate = 0;
+  }
+  // Persist the default if it was just added and we are in a browser context
+  // Only write back if settings were initially empty to avoid overwriting concurrent changes
+  if (typeof window !== 'undefined' && !storedSettings) {
+    localStorage.setItem('sr-settings', JSON.stringify(initialSettings));
   }
 
 

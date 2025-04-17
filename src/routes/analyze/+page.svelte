@@ -155,11 +155,19 @@
     }
 
     // filter by max price
-    $: if (priceMax !== null && serverList.length > 0) {
-        console.log("Filtering by max price:", priceMax);
-        serverList = serverList.filter(server => server.price! <= priceMax);
+    $: {
+      const vatRate = $settingsStore.vatSelection.countryCode === 'NET' ? 0 : $settingsStore.vatSelection[
+        'currentVatRate'
+      ] / 100;
+      const ipv4Cost = 1.70; // From constants.ts, but hardcoding for simplicity
+      const maxPriceWithVat = priceMax !== null ? priceMax / (1 + vatRate) - ipv4Cost : null;
+   
+      console.log("Filtering by max price:", maxPriceWithVat, "vatRate:", vatRate);
+   
+      if (maxPriceWithVat !== null && serverList.length > 0) {
+        serverList = serverList.filter(server => server.price! <= maxPriceWithVat);
+      }
     }
-
     let hasFilter: boolean = false;
     let updateStoredFilterDisabled: boolean = false;
 
@@ -241,8 +249,14 @@
                                 <Input
                                     size="sm"
                                     type="number"
-                                    class="w-12 bg-white"
+                                    min="0" step="1"
+                                    class="w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     bind:value={priceMax}
+                                    on:change={() => {
+                                      if (priceMax !== null) {
+                                        priceMax = Number(priceMax);
+                                      }
+                                    }}
                                 />
                             </ButtonGroup>
                             <ButtonGroup>

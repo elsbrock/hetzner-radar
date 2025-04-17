@@ -124,10 +124,7 @@
         hddSizeLower: SliderSizeType,
         hddSizeUpper: SliderSizeType;
 
-	let priceMax: number | null = null;
-
     $: if (filter) {
-		priceMax = filter.priceMax;
         ramSizeLower = getFormattedMemorySize(filter.ramInternalSize[0]);
         ramSizeUpper = getFormattedMemorySize(filter.ramInternalSize[1]);
         ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0]);
@@ -137,13 +134,6 @@
         hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
         hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
     }
-
-	function updatePriceMax(newPriceMax: number | null) {
-		if (filter) {
-			filter.priceMax = newPriceMax;
-			console.log('priceMax changed', filter.priceMax);
-		}
-	}
 </script>
 
 {#if filter}
