@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { vatOptions } from '$lib/components/VatSelector.svelte';
     import { enhance } from "$app/forms";
     import { invalidate, invalidateAll } from "$app/navigation";
     import { withDbConnections } from "$lib/api/frontend/dbapi";
@@ -57,6 +58,7 @@
     import Spinner from "flowbite-svelte/Spinner.svelte";
     import { onMount } from "svelte";
     import { db, dbInitProgress } from "../../stores/db";
+  import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 
     /** @type {{ data: import('./$types').PageData }} */
     export let data;
@@ -155,19 +157,25 @@
     }
 
     // filter by max price
-    $: {
-      const vatRate = $settingsStore.vatSelection.countryCode === 'NET' ? 0 : $settingsStore.vatSelection[
-        'currentVatRate'
-      ] / 100;
-      const ipv4Cost = 1.70; // From constants.ts, but hardcoding for simplicity
-      const maxPriceWithVat = priceMax !== null ? priceMax / (1 + vatRate) - ipv4Cost : null;
-   
-      console.log("Filtering by max price:", maxPriceWithVat, "vatRate:", vatRate);
-   
-      if (maxPriceWithVat !== null && serverList.length > 0) {
-        serverList = serverList.filter(server => server.price! <= maxPriceWithVat);
-      }
+    function filterServerList(priceMax: number) {
+        const countryCode = $settingsStore.vatSelection.countryCode as keyof typeof vatOptions;
+        const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
+        const vatRate = selectedOption.rate;
+        const maxPriceBeforeVat = priceMax !== null ? Math.round((priceMax  / (1 + vatRate)) * 100)/100 : null;
+    
+        if (maxPriceBeforeVat !== null && serverList.length > 0) {
+            filteredServerList = serverList.filter(server => server.price! <= maxPriceBeforeVat);
+        }
     }
+
+    const debouncedFilterServerList = debounce(filterServerList, 500);
+    $: if (priceMax !== null) {
+        console.log(JSON.stringify(priceMax));
+        debouncedFilterServerList(priceMax);
+    } else {
+        filteredServerList = serverList;
+    }
+
     let hasFilter: boolean = false;
     let updateStoredFilterDisabled: boolean = false;
 
@@ -236,146 +244,151 @@
             <main class="flex-grow overflow-y-auto bg-white">
                 <div class="w-full">
                     <div
-                        class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-start text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700"
+                        class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-start text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700"
                     >
-                        <div class="md:col-span-2 flex flex-row flex-wrap gap-3 items-center text-xs text-gray-900">
-                            <ButtonGroup>
-                                <InputAddon size="sm" class="bg-gray-50 text-gray-900">
-                                    <FontAwesomeIcon
-                                        icon={faEuroSign}
-                                        class="me-2 dark:text-gray-400"
-                                    />Max Price
-                                </InputAddon>
-                                <Input
-                                    size="sm"
-                                    type="number"
-                                    min="0" step="1"
-                                    class="w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    bind:value={priceMax}
-                                    on:change={() => {
-                                      if (priceMax !== null) {
-                                        priceMax = Number(priceMax);
-                                      }
-                                    }}
-                                />
-                            </ButtonGroup>
-                            <ButtonGroup>
-                                <InputAddon size="sm" class="bg-gray-50 text-gray-900">
-                                    <FontAwesomeIcon
-                                        class="me-2"
-                                        icon={faFilter}
-                                    />Filter
-                                </InputAddon>
-                                <Button
-                                    size="xs"
-                                    color="alternative"
-                                    class="shadow-sm"
-                                    data-testid="filter-save"
-                                    disabled={updateStoredFilterDisabled}
-                                    on:click={handleSaveFilter}
-                                >
-                                    {#if hasFilter}
-                                        Update
-                                    {:else}
-                                        Save
-                                    {/if}
-                                </Button>
-                                {#if hasFilter}
+                        <!-- Left-aligned controls: scrollable on mobile with fixed fade -->
+                        <div class="relative md:col-span-1 after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden">
+                            <div class="flex flex-nowrap gap-3 items-start overflow-x-auto scrollbar-hide text-xs text-gray-900">
+                                <ButtonGroup class="flex-shrink-0">
+                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                        <FontAwesomeIcon
+                                            icon={faEuroSign}
+                                            class="me-2 dark:text-gray-400"
+                                        />Max Price
+                                    </InputAddon>
+                                    <Input
+                                        size="sm"
+                                        type="number"
+                                        min="0" step="1"
+                                        placeholder="1000"
+                                        class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        bind:value={priceMax}
+                                        on:change={() => {
+                                          if (priceMax !== null) {
+                                            priceMax = Number(priceMax);
+                                          }
+                                        }}
+                                    />
+                                </ButtonGroup>
+                                <ButtonGroup class="flex-shrink-0">
+                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                        <FontAwesomeIcon
+                                            class="me-2"
+                                            icon={faFilter}
+                                        />Filter
+                                    </InputAddon>
                                     <Button
                                         size="xs"
                                         color="alternative"
                                         class="shadow-sm"
-                                        data-testid="filter-clear"
-                                        on:click={handleClearFilter}
-                                        >Delete</Button
+                                        data-testid="filter-save"
+                                        disabled={updateStoredFilterDisabled}
+                                        on:click={handleSaveFilter}
                                     >
-                                {/if}
-                            </ButtonGroup>
-                            <Tooltip
-                                placement="bottom"
-                                class="z-50 text-center"
-                            >
-                                Store current filter locally<br />
-                                on your computer.
-                            </Tooltip>
-
-                            <ButtonGroup>
-                                <InputAddon size="sm" class="bg-gray-50 text-gray-900">
-                                    <FontAwesomeIcon
-                                        class="text-orange-500 me-2"
-                                        icon={faBell}
-                                    /> Alert
-                                </InputAddon>
-                                {#await data?.alert then alert}
-                                    {#if alert}
+                                        {#if hasFilter}
+                                            Update
+                                        {:else}
+                                            Save
+                                        {/if}
+                                    </Button>
+                                    {#if hasFilter}
                                         <Button
-                                            color="alternative"
                                             size="xs"
-                                            id="price-alert"
-                                            on:click={(e) => {
-                                                alertDialogOpen = true;
-                                                selectedAlert = alert;
-                                                e.stopPropagation();
-                                            }}
+                                            color="alternative"
+                                            class="shadow-sm"
+                                            data-testid="filter-clear"
+                                            on:click={handleClearFilter}
+                                            >Delete</Button
                                         >
-                                            Edit
-                                        </Button>
-                                        <form
-                                            method="POST"
-                                            action="/alerts?/delete"
-                                            use:enhance={() => {
-                                                addToast({
-                                                    color: "green",
-                                                    message:
-                                                        "Alert deleted successfully.",
-                                                    icon: "success",
-                                                });
-                                                selectedAlert = null;
-                                                invalidate("/analyze");
-                                            }}
-                                        >
-                                            <input
-                                                type="hidden"
-                                                name="alertId"
-                                                value={alert.id}
-                                            />
+                                    {/if}
+                                </ButtonGroup>
+                                <Tooltip
+                                    placement="bottom"
+                                    class="z-50 text-center"
+                                >
+                                    Store current filter locally<br />
+                                    on your computer.
+                                </Tooltip>
+
+                                <ButtonGroup class="flex-shrink-0">
+                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                        <FontAwesomeIcon
+                                            class="text-orange-500 me-2"
+                                            icon={faBell}
+                                        /> Alert
+                                    </InputAddon>
+                                    {#await data?.alert then alert}
+                                        {#if alert}
                                             <Button
                                                 color="alternative"
                                                 size="xs"
-                                                id="price-alert-delete"
-                                                type="submit"
+                                                id="price-alert"
                                                 on:click={(e) => {
-                                                    selectedAlert = null;
+                                                    alertDialogOpen = true;
+                                                    selectedAlert = alert;
                                                     e.stopPropagation();
                                                 }}
                                             >
-                                                Delete
+                                                Edit
                                             </Button>
-                                        </form>
-                                    {:else}
-                                        <Button
-                                            color="alternative"
-                                            size="xs"
-                                            id="price-alert"
-                                            on:click={(e) => {
-                                                alertDialogOpen = true;
-                                                e.stopPropagation();
-                                            }}
-                                        >
-                                            Create
-                                        </Button>
-                                        <Tooltip
-                                            placement="bottom"
-                                            class="z-50 text-center"
-                                        >
-                                            Get a notification once your<br />
-                                            preferred price has been reached.
-                                        </Tooltip>
-                                    {/if}
-                                {/await}
-                            </ButtonGroup>
+                                            <form
+                                                method="POST"
+                                                action="/alerts?/delete"
+                                                use:enhance={() => {
+                                                    addToast({
+                                                        color: "green",
+                                                        message:
+                                                            "Alert deleted successfully.",
+                                                        icon: "success",
+                                                    });
+                                                    selectedAlert = null;
+                                                    invalidate("/analyze");
+                                                }}
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="alertId"
+                                                    value={alert.id}
+                                                />
+                                                <Button
+                                                    color="alternative"
+                                                    size="xs"
+                                                    id="price-alert-delete"
+                                                    type="submit"
+                                                    on:click={(e) => {
+                                                        selectedAlert = null;
+                                                        e.stopPropagation();
+                                                    }}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </form>
+                                        {:else}
+                                            <Button
+                                                color="alternative"
+                                                size="xs"
+                                                id="price-alert"
+                                                on:click={(e) => {
+                                                    alertDialogOpen = true;
+                                                    e.stopPropagation();
+                                                }}
+                                            >
+                                                Create
+                                            </Button>
+                                            <Tooltip
+                                                placement="bottom"
+                                                class="z-50 text-center"
+                                            >
+                                                Get a notification once your<br />
+                                                preferred price has been reached.
+                                            </Tooltip>
+                                        {/if}
+                                    {/await}
+                                </ButtonGroup>
+                            </div>
                         </div>
-                        <div class="md:justify-self-end">
+                        
+                        <div class="col-span-1 flex justify-end">
                             <PriceControls />
                         </div>
                     </div>
@@ -405,14 +418,14 @@
                                 color="green"
                                 data-testid="results-count"
                                 rounded
-                                >{serverList.length > 100
+                                >{filteredServerList.length > 100
                                     ? "more than 100"
-                                    : serverList.length} results</Badge
+                                    : filteredServerList.length} results</Badge
                             >
                         </div>
                     {/if}
                 </div>
-                {#if !loading && serverList.length > 100}
+                {#if !loading && filteredServerList.length > 100}
                     <Alert class="mx-5 mb-5" color="red">
                         <FontAwesomeIcon
                             icon={faWarning}
@@ -429,14 +442,14 @@
                     >
                         <Spinner class="mr-2" /> Loading...
                     </p>
-                {:else if serverList.length === 0}
+                {:else if filteredServerList.length === 0}
                     <Alert class="mx-5"
                         ><InfoCircleSolid slot="icon" class="w-5 h-5" />No
                         servers matching the criteria were found. Try changing
                         some of the parameters.</Alert
                     >
                 {:else}
-                    <ServerList {serverList} {loading} timeUnitPrice={$settingsStore.timeUnitPrice} />
+                    <ServerList serverList={filteredServerList} {loading} timeUnitPrice={$settingsStore.timeUnitPrice} />
                 {/if}
             </main>
         </div>
