@@ -264,6 +264,7 @@
                                         type="number"
                                         min="0" step="1"
                                         placeholder="min"
+                                        data-testid="price-min-input"
                                         class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMin}
                                         on:change={() => {
@@ -277,6 +278,7 @@
                                         type="number"
                                         min="0" step="1"
                                         placeholder="max"
+                                        data-testid="price-max-input"
                                         class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMax}
                                         on:change={() => {
