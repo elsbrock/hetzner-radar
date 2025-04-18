@@ -58,7 +58,6 @@
     import Spinner from "flowbite-svelte/Spinner.svelte";
     import { onMount } from "svelte";
     import { db, dbInitProgress } from "../../stores/db";
-  import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 
     /** @type {{ data: import('./$types').PageData }} */
     export let data;
@@ -70,6 +69,7 @@
     let cpuModels: NameValuePair[] = [];
     let datacenters: NameValuePair[] = [];
 
+    let priceMin: number | null = null;
     let priceMax: number | null = null;
     
     let queryTime: number | undefined;
@@ -156,22 +156,25 @@
         debouncedFetchData($db, $filter);
     }
 
-    // filter by max price
-    function filterServerList(priceMax: number) {
+    // filter by min, maxprice
+    function filterServerList(priceMin: number, priceMax: number) {
         const countryCode = $settingsStore.vatSelection.countryCode as keyof typeof vatOptions;
         const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
         const vatRate = selectedOption.rate;
+        const minPriceBeforeVat = priceMin !== null ? Math.round((priceMin  / (1 + vatRate)) * 100)/100 : null;
         const maxPriceBeforeVat = priceMax !== null ? Math.round((priceMax  / (1 + vatRate)) * 100)/100 : null;
     
+        if (minPriceBeforeVat !== null && serverList.length > 0) {
+            filteredServerList = serverList.filter(server => server.price! >= minPriceBeforeVat);
+        }
         if (maxPriceBeforeVat !== null && serverList.length > 0) {
             filteredServerList = serverList.filter(server => server.price! <= maxPriceBeforeVat);
         }
     }
 
     const debouncedFilterServerList = debounce(filterServerList, 500);
-    $: if (priceMax !== null) {
-        console.log(JSON.stringify(priceMax));
-        debouncedFilterServerList(priceMax);
+    $: if (priceMin !== null || priceMax !== null) {
+        debouncedFilterServerList(priceMin, priceMax);
     } else {
         filteredServerList = serverList;
     }
@@ -254,13 +257,26 @@
                                         <FontAwesomeIcon
                                             icon={faEuroSign}
                                             class="me-2 dark:text-gray-400"
-                                        />Max Price
+                                        />Price
                                     </InputAddon>
                                     <Input
                                         size="sm"
                                         type="number"
                                         min="0" step="1"
-                                        placeholder="1000"
+                                        placeholder="min"
+                                        class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        bind:value={priceMin}
+                                        on:change={() => {
+                                          if (priceMin !== null) {
+                                            priceMin = Number(priceMin);
+                                          }
+                                        }}
+                                    />
+                                    <Input
+                                        size="sm"
+                                        type="number"
+                                        min="0" step="1"
+                                        placeholder="max"
                                         class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMax}
                                         on:change={() => {
