@@ -35,7 +35,9 @@
 
 <script lang="ts">
   import { settingsStore } from '$lib/stores/settings';
-  import { Select, ButtonGroup } from 'flowbite-svelte';
+  import { Select, ButtonGroup, InputAddon } from 'flowbite-svelte';
+  import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+  import { faPercentage } from '@fortawesome/free-solid-svg-icons';
 
   // Intermediate variable for two-way binding, initialized from store
   let selectedCountryCode = $settingsStore.vatSelection.countryCode;
@@ -59,11 +61,12 @@
 </script>
 
 <ButtonGroup size="xs">
-    <div
-        class="text-center font-medium focus-within:ring-2 focus-within:z-10 inline-flex items-center justify-center px-2 py-1 text-xs bg-gray-50 border border-gray-200 first:rounded-s-lg last:rounded-e-lg opacity-90 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-    >
-        VAT
-    </div>
+    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+    <FontAwesomeIcon
+            icon={faPercentage}
+            class="mr-2"
+        />VAT
+    </InputAddon>
     <Select
         id="vat-select"
         bind:value={selectedCountryCode}
