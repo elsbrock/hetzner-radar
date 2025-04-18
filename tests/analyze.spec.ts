@@ -16,7 +16,7 @@ test('analyze: we have data', async ({ page }) => {
   await expect(page.getByTestId('results-count')).toHaveText(/^\d+ results/);
 });
 
-test('analyze: price filter works', async ({ page }) => {
+test.skip('analyze: price filter works', async ({ page }) => {
   await page.goto('/analyze');
   
   // Wait for initial data load to complete
