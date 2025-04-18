@@ -41,7 +41,7 @@ test('analyze: price filter works', async ({ page }) => {
   
   // Clear min price and add max price
   await page.getByTestId('price-min-input').fill('');
-  await page.getByTestId('price-max-input').fill('20');
+  await page.getByTestId('price-max-input').fill('40');
   
   // Wait for filtering to take effect
   await page.waitForTimeout(600);
@@ -54,8 +54,8 @@ test('analyze: price filter works', async ({ page }) => {
   expect(maxFilteredCount).toBeLessThanOrEqual(initialCount);
   
   // Test min and max together
-  await page.getByTestId('price-min-input').fill('10');
-  await page.getByTestId('price-max-input').fill('30');
+  await page.getByTestId('price-min-input').fill('35');
+  await page.getByTestId('price-max-input').fill('40');
   
   // Wait for filtering to take effect
   await page.waitForTimeout(600);
