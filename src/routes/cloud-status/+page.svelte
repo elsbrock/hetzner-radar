@@ -59,11 +59,37 @@
 			archGroup.get(serverType.cpu_type)!.push(serverType);
 		});
 
-		const sortedGroups = new Map([...groups.entries()].sort());
+		// Custom sort order for architectures
+		const architectureOrder = ['x86', 'arm'];
+		const sortedGroups = new Map([...groups.entries()].sort(([archA], [archB]) => {
+			const indexA = architectureOrder.indexOf(archA);
+			const indexB = architectureOrder.indexOf(archB);
+			if (indexA === -1 && indexB === -1) return archA.localeCompare(archB); // Fallback for unknown
+			if (indexA === -1) return 1; // Unknown last
+			if (indexB === -1) return -1; // Unknown last
+			return indexA - indexB;
+		}));
+
+		// Custom sort order for CPU types within each architecture
+		const cpuTypeOrder = ['shared', 'dedicated'];
 		sortedGroups.forEach((cpuMap) => {
-			const sortedCpuMap = new Map([...cpuMap.entries()].sort());
+			const sortedCpuMap = new Map([...cpuMap.entries()].sort(([typeA], [typeB]) => {
+				const indexA = cpuTypeOrder.indexOf(typeA);
+				const indexB = cpuTypeOrder.indexOf(typeB);
+				if (indexA === -1 && indexB === -1) return typeA.localeCompare(typeB); // Fallback for unknown
+				if (indexA === -1) return 1; // Unknown last
+				if (indexB === -1) return -1; // Unknown last
+				return indexA - indexB;
+			}));
+			// Rebuild the map with the new order
+			const originalEntries = [...cpuMap.entries()]; // Keep original data
 			cpuMap.clear();
-			sortedCpuMap.forEach((value, key) => cpuMap.set(key, value));
+			sortedCpuMap.forEach((_, key) => {
+				const originalValue = originalEntries.find(([k]) => k === key)?.[1];
+				if (originalValue) {
+					cpuMap.set(key, originalValue);
+				}
+			});
 		});
 
 		return sortedGroups;
