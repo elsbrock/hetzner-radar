@@ -201,16 +201,16 @@
 								switch (status) {
 									case 'all':
 										icon = iconAllAvailable;
-										popupText += '<br>Status: All active types available';
+										popupText += '<br>Status: All server types available';
 										break;
 									case 'some':
 										icon = iconSomeAvailable;
-										popupText += '<br>Status: Some active types available';
+										popupText += '<br>Status: Not all server types available';
 										break;
 									case 'none':
 									default:
 										icon = iconNoneAvailable; // Use red icon for none
-										popupText += '<br>Status: No active types available';
+										popupText += '<br>Status: No server types available';
 										break;
 								}
 
@@ -250,7 +250,7 @@
 
 <div class="p-4 dark:bg-gray-900 dark:text-gray-100">
 	<Heading tag="h1" class="text-3xl font-bold mt-4 mb-4 text-center">Cloud Server Availability</Heading>
-	<P class="text-center text-lg text-gray-600 dark:text-gray-400 mb-8">
+	<P class="text-center text-lg text-gray-600 dark:text-gray-400 mb-4">
 		Track the real-time availability of Hetzner Cloud server types across different locations.
 	</P>
 
@@ -287,15 +287,9 @@
 								<!-- Adjusted padding and added flex for alignment -->
 								<TableHeadCell class="sticky left-0 z-10 bg-gray-50 dark:bg-gray-700 px-4 pb-3 pt-4 align-middle">Server Type</TableHeadCell>
 								{#each data.statusData.locations as location}
-									<TableHeadCell class="text-center whitespace-nowrap px-4 pb-3 pt-4 align-middle"> <!-- Adjusted padding and alignment -->
-										<div>
-											<span>{location.city}, {location.country}</span>
-											<span class="text-xs font-normal text-gray-500 dark:text-gray-400">({location.name})</span>
-									</div>
-									<Tooltip triggeredBy="#{location.name}-tooltip">
-										{location.city}, {location.country} ({location.name}) - Lat: {location.latitude}, Lng: {location.longitude}
-									</Tooltip>
-									<div id="{location.name}-tooltip" class="inline-block"></div>
+								<TableHeadCell class="text-center whitespace-nowrap px-4 pb-3 pt-4 align-middle">
+									{location.city}, {location.country}<br />
+									<span class="text-xs font-normal text-gray-500 dark:text-gray-400">({location.name})</span>
 								</TableHeadCell>
 							{/each}
 						</TableHead>
