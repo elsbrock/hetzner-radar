@@ -233,17 +233,13 @@
 											</TableBodyCell>
 											{#each data.statusData.locations as location}
 												{@const available = isAvailable(location.id, serverType.id)}
-												<!-- Applied flex items-center justify-center, adjusted padding px-3 -->
-												<TableBodyCell class="text-center px-3 py-4 flex items-center justify-center">
+												<!-- Removed flex classes, kept padding adjustment px-3 -->
+												<TableBodyCell class="text-center px-3 py-4">
 													{#if available}
-														<Badge color="green" class="inline-flex items-center px-2.5 py-0.5" id="avail-{location.id}-{serverType.id}">
-															<CheckCircleSolid class="w-4 h-4 mr-1" /> Available
-														</Badge>
+														<CheckCircleSolid class="w-4 h-4 mr-1" />
 														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}">Available in {location.city}</Tooltip>
 													{:else}
-														<Badge color="red" class="inline-flex items-center px-2.5 py-0.5" id="notavail-{location.id}-{serverType.id}">
-															<CloseCircleSolid class="w-4 h-4 mr-1" /> Unavailable
-														</Badge>
+														<CloseCircleSolid class="w-4 h-4 mr-1" />
 														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}">Not available in {location.city}</Tooltip>
 													{/if}
 												</TableBodyCell>
