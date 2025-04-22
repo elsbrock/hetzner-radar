@@ -37,9 +37,8 @@ declare global {
          */
         interface Platform {
             env: {
-               RATE_LIMIT: any; // Replace `any` with a specific type if available
+               RATE_LIMIT: any;
                DB: DB;
-               // Add Durable Object bindings here
                CLOUD_STATUS: any;
            };
        }

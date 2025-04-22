@@ -16,12 +16,10 @@
 		Spinner,
 		P,
 		Heading,
-		Card
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
 		CloseCircleSolid,
-		MapPinSolid,
 		ExclamationCircleSolid
 	} from 'flowbite-svelte-icons';
 
@@ -151,18 +149,13 @@
 		if (browser) {
 			const L = await import('leaflet');
 
-			// --- Fix for default marker icon ---
-			// Make sure Leaflet knows where to find its images
-			// Adjust the path if your setup places images differently
 			delete (L.Icon.Default.prototype as any)._getIconUrl;
 			L.Icon.Default.mergeOptions({
-				iconRetinaUrl: '/node_modules/leaflet/dist/images/marker-icon-2x.png', // Adjust path if needed
-				iconUrl: '/node_modules/leaflet/dist/images/marker-icon.png', // Adjust path if needed
-				shadowUrl: '/node_modules/leaflet/dist/images/marker-shadow.png' // Adjust path if needed
+				iconRetinaUrl: '/node_modules/leaflet/dist/images/marker-icon-2x.png',
+				iconUrl: '/node_modules/leaflet/dist/images/marker-icon.png',
+				shadowUrl: '/node_modules/leaflet/dist/images/marker-shadow.png'
 			});
-			// --- End fix ---
 
-			// --- Custom Marker Icons ---
 			const createDivIcon = (color: string) => {
 				return L.divIcon({
 					html: `<span style="background-color: ${color}; width: 1rem; height: 1rem; display: block; border-radius: 50%; border: 1px solid white;"></span>`,
@@ -174,9 +167,7 @@
 
 			const iconAllAvailable = createDivIcon('green');
 			const iconSomeAvailable = createDivIcon('orange');
-			const iconNoneAvailable = createDivIcon('red'); // Using red for none/error
-			// --- End Custom Icons ---
-
+			const iconNoneAvailable = createDivIcon('red');
 
 			setTimeout(() => {
 				if (data.statusData?.locations && document.getElementById('map') && !mapInitialized) {
@@ -267,24 +258,22 @@
 		<!-- Wrapper for Map and Table -->
 		<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
 			<!-- Map Container -->
-			<div class="w-full shadow border dark:border-gray-700 rounded-t-lg overflow-hidden"> <!-- Added shadow, border, top rounding, overflow -->
+			<div class="w-full shadow border dark:border-gray-700 rounded-t-lg overflow-hidden">
 				{#if browser}
-					<div id="map" class="h-96 w-full"></div> <!-- Keep height, width is handled by parent -->
+					<div id="map" class="h-96 w-full"></div>
 				{:else}
-					<div class="h-96 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"> <!-- Keep height, width handled by parent -->
+					<div class="h-96 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
 						<p class="text-gray-500 dark:text-gray-400">Map loading...</p>
 					</div>
 				{/if}
 			</div>
 
 			<!-- Table Container -->
-			<div class="overflow-x-auto"> <!-- Ensure horizontal scrolling works -->
+			<div class="overflow-x-auto">
 				<div class="inline-block min-w-full align-middle">
-					<!-- Removed shadow, top rounding. Added bottom rounding. Removed top border as map border covers it -->
 					<div class="overflow-hidden rounded-b-lg border-b border-l border-r dark:border-gray-700">
 						<Table hoverable={true} class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
 							<TableHead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-								<!-- Adjusted padding and added flex for alignment -->
 								<TableHeadCell class="sticky left-0 z-10 bg-gray-50 dark:bg-gray-700 px-4 pb-3 pt-4 align-middle">Server Type</TableHeadCell>
 								{#each data.statusData.locations as location}
 								<TableHeadCell class="text-center whitespace-nowrap px-4 pb-3 pt-4 align-middle">
@@ -304,7 +293,6 @@
 
 									{#each serverTypes as serverType}
 										<TableBodyRow class="bg-white dark:bg-gray-800 text-sm">
-											<!-- Adjusted padding to match header -->
 											<TableBodyCell class="font-medium text-gray-900 dark:text-white whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-gray-800 px-4 py-4 flex items-center">
 												<div class="flex flex-col">
 													<div class="flex items-center space-x-2">
@@ -325,7 +313,6 @@
 											</TableBodyCell>
 											{#each data.statusData.locations as location}
 												{@const available = isAvailable(location.id, serverType.id)}
-												<!-- Adjusted padding to match header -->
 												<TableBodyCell class="text-center px-4 py-4">
 													{#if available}
 														<CheckCircleSolid size="xl" color="green" class="w-4 h-4 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
