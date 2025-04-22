@@ -1,9 +1,11 @@
 <script>
     import {
+      Badge,
         Footer,
         FooterCopyright,
         FooterLink,
         FooterLinkGroup,
+        Indicator,
     } from "flowbite-svelte";
     const buildDate = __BUILD_STAMP__;
 </script>
@@ -19,6 +21,7 @@
             <FooterLinkGroup
                 ulClass="flex flex-wrap order-1 items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
             >
+                <FooterLink href="/cloud-status">Cloud Status</FooterLink>
                 <FooterLink href="/privacy">Privacy</FooterLink>
                 <FooterLink href="/terms">Terms</FooterLink>
                 <FooterLink href="/contact">Contact</FooterLink>
