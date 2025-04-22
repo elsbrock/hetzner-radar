@@ -16,6 +16,10 @@ interface ServerTypeInfo {
     id: number;
     name: string;
     description: string;
+    cores: number; // Added
+    memory: number; // Added
+    disk: number; // Added
+    cpu_type: 'shared' | 'dedicated'; // Added
 }
 
 // Availability Matrix: Record<locationId: number, availableServerTypeIds: number[]>

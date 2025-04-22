@@ -1,7 +1,11 @@
 // workers/cloud-availability/src/index.ts
+// Import only WorkerEntrypoint explicitly for the default export class
+import { WorkerEntrypoint, DurableObject } from "cloudflare:workers";
 
 interface Env {
-	CLOUD_STATUS_DO: DurableObjectNamespace;
+	// Type the DO namespace with the class it provides
+	// Assuming DurableObjectNamespace is available globally/implicitly
+	CLOUD_STATUS_DO: DurableObjectNamespace<CloudAvailability>;
 	HETZNER_API_TOKEN: string; // Secret expected to be set in Cloudflare dashboard
 	FETCH_INTERVAL_MS?: string; // Optional override for fetch interval
 }
@@ -57,6 +61,10 @@ interface ServerTypeInfo {
 	id: number;
 	name: string;
 	description: string;
+	cores: number; // Added
+	memory: number; // Added
+	disk: number; // Added
+	cpu_type: 'shared' | 'dedicated'; // Added
 }
 
 // Availability Matrix: Map<locationId, Set<availableServerTypeId>>
@@ -74,7 +82,9 @@ const HETZNER_API_BASE = 'https://api.hetzner.cloud/v1';
 // Fetch every minute, but allow override via environment variable for testing
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
 
-export class CloudAvailability implements DurableObject {
+// Keep implementing DurableObject (assuming it's globally available)
+export class CloudAvailability extends DurableObject {
+	// Use 'ctx' as it seems expected by the TS error messages and original code
 	ctx: DurableObjectState;
 	env: Env;
 	fetchIntervalMs: number;
@@ -83,8 +93,11 @@ export class CloudAvailability implements DurableObject {
 	initialized: boolean = false;
 
 
+	// Constructor receives DurableObjectState (assuming global type) and Env
 	constructor(ctx: DurableObjectState, env: Env) {
-		this.ctx = ctx;
+		super(ctx, env);
+
+		this.ctx = ctx; // Assign to 'ctx'
 		this.env = env;
 		// Allow overriding fetch interval via environment variable if needed
 		this.fetchIntervalMs = env.FETCH_INTERVAL_MS ? parseInt(env.FETCH_INTERVAL_MS) : DEFAULT_FETCH_INTERVAL_MS;
@@ -225,6 +238,10 @@ export class CloudAvailability implements DurableObject {
 				id: st.id,
 				name: st.name,
 				description: st.description,
+				cores: st.cores, // Added
+				memory: st.memory, // Added
+				disk: st.disk, // Added
+				cpu_type: st.cpu_type, // Added
 			}));
 			processedServerTypes.sort((a, b) => a.name.localeCompare(b.name)); // Sort for consistency
 
@@ -286,13 +303,14 @@ export class CloudAvailability implements DurableObject {
 	}
 }
 
-// Default export for the Worker entrypoint (may not be strictly needed if only accessed via DO binding)
-export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+// Default export for the Worker entrypoint, extending WorkerEntrypoint for RPC
+export default class CloudAvailabilityWorker extends WorkerEntrypoint<Env> {
+	// Handles standard HTTP requests to the worker.
+	async fetch(request: Request): Promise<Response> {
 		try {
 			// Use a fixed name for the singleton DO instance
-			const durableObjectId = env.CLOUD_STATUS_DO.idFromName("singleton-cloud-availability-v1");
-			const stub = env.CLOUD_STATUS_DO.get(durableObjectId);
+			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName("singleton-cloud-availability-v1");
+			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
 
 			// Forward the request to the DO instance.
 			// The DO's fetch method will handle routing based on the path.
@@ -302,4 +320,21 @@ export default {
 			return new Response(`Error processing request: ${e.message}`, { status: 500 });
 		}
 	}
-};
+
+	// RPC method callable from other workers/services
+	async getStatus(): Promise<CloudStatusData> {
+		try {
+			// Use a fixed name for the singleton DO instance
+			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName("singleton-cloud-availability-v1");
+			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
+
+			// Directly call the getStatus method on the DO stub
+			// Use type assertion as a workaround for TS inference issues
+			return await (stub as any).getStatus();
+		} catch (e: any) {
+			console.error("Error in Worker getStatus RPC:", e);
+			// Re-throw or return a specific error structure if needed for RPC consumers
+			throw new Error(`Error calling getStatus on DO: ${e.message}`);
+		}
+	}
+}
