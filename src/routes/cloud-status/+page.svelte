@@ -151,9 +151,9 @@
 	});
 </script>
 
-<div class="p-4 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
-	<Heading tag="h1" class="text-3xl font-bold mb-3 text-center">Hetzner Cloud Server Availability</Heading>
-	<P class="text-center text-lg text-gray-600 dark:text-gray-400 mb-2">
+<div class="p-4 dark:bg-gray-900 dark:text-gray-100">
+	<Heading tag="h1" class="text-3xl font-bold mt-4 mb-4 text-center">Cloud Server Availability</Heading>
+	<P class="text-center text-lg text-gray-600 dark:text-gray-400 mb-8">
 		Track the real-time availability of Hetzner Cloud server types across different locations.
 	</P>
 	<!-- Disclaimer will be added at the bottom -->
@@ -234,12 +234,12 @@
 											{#each data.statusData.locations as location}
 												{@const available = isAvailable(location.id, serverType.id)}
 												<!-- Removed flex classes, kept padding adjustment px-3 -->
-												<TableBodyCell class="text-center px-3 py-4">
+												<TableBodyCell class="text-center px-3 py-4 text-lg">
 													{#if available}
-														<CheckCircleSolid class="w-4 h-4 mr-1" />
+														<CheckCircleSolid color="green" class="w-4 h-4 mr-1" />
 														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}">Available in {location.city}</Tooltip>
 													{:else}
-														<CloseCircleSolid class="w-4 h-4 mr-1" />
+														<CloseCircleSolid color="green" class="w-4 h-4 mr-1" /> Unavailable
 														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}">Not available in {location.city}</Tooltip>
 													{/if}
 												</TableBodyCell>
@@ -253,19 +253,6 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- How it Works Section - Centered -->
-		<section class="max-w-4xl mx-auto mt-8">
-			<Card>
-				<Heading tag="h2" class="mb-2 text-xl font-semibold tracking-tight text-gray-900 dark:text-white">How It Works</Heading>
-				<P class="mb-3 font-normal text-gray-700 dark:text-gray-400">
-					This page periodically checks the official Hetzner Cloud status information to determine which server types are currently available in each location.
-					The availability status is aggregated for each location (e.g., Falkenstein, Helsinki) based on the data provided by Hetzner.
-					Your browser then displays this processed status information in the map and table above. The data is typically updated every minute, and the "Last Updated" timestamp indicates the time of the last successful check.
-				</P>
-			</Card>
-		</section>
-
 	{:else}
 		<div class="flex justify-center items-center p-10">
 			<Spinner size="8" />
@@ -273,8 +260,18 @@
 		</div>
 	{/if}
 
-	<!-- Disclaimer Section -->
-	<P class="text-center text-sm text-gray-500 dark:text-gray-500 mt-8 mb-4">
-		Disclaimer: This data is fetched periodically from the Hetzner Cloud API. While we strive for accuracy, there might be slight delays. Always verify critical availability directly with Hetzner if needed.
-	</P>
+	<!-- How it Works Section - Centered -->
+	<section class="mt-8 mb-12">
+		<h2 class="text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-6 text-center">
+			How It Works
+		</h2>
+		<!-- Single Column Content Container -->
+		<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-3xl mx-auto">
+			<p class="text-gray-700 dark:text-gray-400">
+				This page periodically checks the official Hetzner Cloud status information to determine which server types are currently available in each location.
+				The availability status is aggregated for each location (e.g., Falkenstein, Helsinki) based on the data provided by Hetzner.
+				Your browser then displays this processed status information in the map and table above. The data is typically updated every minute, and the "Last Updated" timestamp indicates the time of the last successful check.
+			</p>
+		</div>
+	</section>
 </div>
