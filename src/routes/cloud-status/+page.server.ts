@@ -20,6 +20,8 @@ interface ServerTypeInfo {
     memory: number; // Added
     disk: number; // Added
     cpu_type: 'shared' | 'dedicated'; // Added
+    architecture: string; // Added
+    deprecated: boolean; // Added
 }
 
 // Availability Matrix: Record<locationId: number, availableServerTypeIds: number[]>

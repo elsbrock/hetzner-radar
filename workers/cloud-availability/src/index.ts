@@ -21,6 +21,11 @@ interface HetznerServerType {
 	disk: number;
 	storage_type: 'local' | 'network';
 	cpu_type: 'shared' | 'dedicated';
+	architecture: string; // Added: e.g., 'x86', 'arm'
+	deprecation: { // Added: Can be null if not deprecated
+		unavailable_after: string;
+		announced: string;
+	} | null;
 	// ... other properties not strictly needed for availability status
 }
 
@@ -65,6 +70,8 @@ interface ServerTypeInfo {
 	memory: number; // Added
 	disk: number; // Added
 	cpu_type: 'shared' | 'dedicated'; // Added
+	architecture: string; // Added
+	isDeprecated: boolean; // Added: True if deprecation info exists
 }
 
 // Availability Matrix: Map<locationId, Set<availableServerTypeId>>
@@ -242,6 +249,8 @@ export class CloudAvailability extends DurableObject {
 				memory: st.memory, // Added
 				disk: st.disk, // Added
 				cpu_type: st.cpu_type, // Added
+				architecture: st.architecture, // Added
+				isDeprecated: st.deprecation !== null, // Added
 			}));
 			processedServerTypes.sort((a, b) => a.name.localeCompare(b.name)); // Sort for consistency
 
