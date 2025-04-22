@@ -2,6 +2,7 @@
 
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
+import type { DurableObjectNamespace } from '@cloudflare/workers-types';
 declare global {
     namespace App {
         /**
@@ -36,10 +37,12 @@ declare global {
          */
         interface Platform {
             env: {
-                RATE_LIMIT: any; // Replace `any` with a specific type if available
-                DB: DB;
-            };
-        }
+               RATE_LIMIT: any; // Replace `any` with a specific type if available
+               DB: DB;
+               // Add Durable Object bindings here
+               CLOUD_STATUS: any;
+           };
+       }
 
         /**
          * PageData can be used to type data loaded in +page.server.ts or +layout.server.ts.

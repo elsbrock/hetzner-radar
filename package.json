@@ -42,6 +42,8 @@
         "flowbite-svelte-icons": "2.1.1",
         "globals": "16.0.0",
         "lz-string": "1.5.0",
+        "leaflet": "^1.9.4",
+        "@types/leaflet": "^1.9.12",
         "oslo": "1.2.1",
         "postcss": "8.5.3",
         "prettier": "3.5.3",
