@@ -32,84 +32,104 @@
 
     let codeInputs: HTMLInputElement[] = [];
 
-    function preventNonDigits(event: KeyboardEvent) {
-        const char = String.fromCharCode(event.keyCode);
-        if (!/^\d$/.test(char)) {
-            console.log("nope: prevent");
-            event.preventDefault();
+    // Handles input events on the code fields
+    async function handleCodeInput(index: number, event: Event) {
+        const input = event.target as HTMLInputElement;
+        const value = input.value;
+
+        // Allow only single digits
+        if (/^\d$/.test(value)) {
+            input.value = value; // Keep the entered digit
+            code = code.slice(0, index) + value + code.slice(index + 1);
+
+            // Auto-advance focus to the next input if available
+            if (index < codeInputs.length - 1) {
+                await tick(); // Wait for DOM update
+                codeInputs[index + 1].focus();
+            }
+        } else {
+            // Clear the input if it's not a single digit (e.g., paste, non-numeric)
+            input.value = "";
+            // Update code state if the input was cleared
+            if (code.length > index) {
+                 code = code.slice(0, index) + code.slice(index + 1);
+            }
         }
     }
 
-    function handleCodeInput(index: number) {
-        return (event: Event) => {
-            console.log("input", event.data);
-            const input = event.target as HTMLInputElement;
-            const value = input.value;
+    // Handles keydown events for navigation (Backspace, Arrows) and paste
+    async function handleCodeKeyDown(index: number, event: KeyboardEvent) {
+        const input = event.target as HTMLInputElement;
 
-            if (/^\d$/.test(value)) {
-                input.value = value;
-                code = code.slice(0, index) + value + code.slice(index + 1);
-
-                if (index < codeInputs.length - 1) {
-                    codeInputs[index + 1].focus();
-                }
-
-                setTimeout(() => {
-                    if (input.value === "") return;
-                    input.value = "•"; // Unicode black dot
-                }, 300);
-            } else {
-                input.value = "";
+        if (event.key === "Backspace") {
+            // If the current input is empty and we press backspace,
+            // move focus to the previous input field if it exists.
+            if (input.value === "" && index > 0) {
+                event.preventDefault(); // Prevent default backspace behavior (like browser back navigation)
+                await tick(); // Wait for DOM update
+                codeInputs[index - 1].focus();
+                // No need to clear previous input here, let user do it or type over
+            } else if (input.value !== "") {
+                 // If current input is not empty, allow backspace to clear it.
+                 // The 'input' event will handle the state update.
+                 // We still might want to prevent default if focus management is complex elsewhere
+                 // event.preventDefault(); // Optional: uncomment if needed
+                 code = code.slice(0, index) + code.slice(index + 1); // Update code state immediately
             }
-        };
-    }
-
-    function handleCodeKeyDown(index: number) {
-        return (event: KeyboardEvent) => {
-            const input = event.target as HTMLInputElement;
-
-            if (event.key === "Backspace") {
-                if (input.value === "") {
-                    // Move focus to previous input if exists
-                    if (index > 0) {
-                        codeInputs[index - 1].focus();
-                        codeInputs[index - 1].value = ""; // Clear the previous input
-                        code =
-                            code.slice(0, index) + "" + code.slice(index + 1);
-                        event.preventDefault(); // Prevent default backspace behavior
-                    }
-                } else {
-                    // Clear the current input
-                    input.value = "";
-                    if (index > 0) {
-                        codeInputs[index - 1].focus();
-                    }
-                    event.preventDefault(); // Prevent default backspace behavior
-                }
-            } else if (/** left key */ event.key === "ArrowLeft") {
-                if (index > 0) {
-                    codeInputs[index - 1].focus();
-                }
-            } else if (/** right key */ event.key === "ArrowRight") {
-                if (index < codeInputs.length - 1) {
-                    codeInputs[index + 1].focus();
-                }
-            } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+        } else if (event.key === "ArrowLeft") {
+            if (index > 0) {
                 event.preventDefault();
-                console.log("paste");
-                navigator.clipboard.readText().then((text) => {
-                    if (text.length === 6) {
-                        code = text;
-                        codeInputs.forEach((input, i) => {
-                            input.value = text[i];
-                        });
-                    }
-                });
-            } else {
-                event.data = event.key;
-                handleCodeInput(index)(event);
+                await tick();
+                codeInputs[index - 1].focus();
             }
-        };
+        } else if (event.key === "ArrowRight") {
+            if (index < codeInputs.length - 1) {
+                event.preventDefault();
+                await tick();
+                codeInputs[index + 1].focus();
+            }
+        } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+            event.preventDefault();
+            try {
+                const text = await navigator.clipboard.readText();
+                const digits = text.replace(/\D/g, ""); // Remove non-digits
+                if (digits.length > 0) {
+                    const len = Math.min(digits.length, codeInputs.length - index);
+                    let pastedCode = "";
+                    // Fill inputs directly
+                    for (let i = 0; i < len; i++) {
+                        const currentInputIndex = index + i;
+                        if (currentInputIndex < codeInputs.length) {
+                            codeInputs[currentInputIndex].value = digits[i];
+                            pastedCode += digits[i]; // Build the pasted part
+                        }
+                    }
+
+                    // Update the main 'code' variable based on the paste
+                    // Replace the portion of the code string affected by the paste
+                    code = code.slice(0, index) + pastedCode + code.slice(index + len);
+                    // Ensure code doesn't exceed max length (e.g., if pasting over existing digits)
+                    if (code.length > codeInputs.length) {
+                        code = code.slice(0, codeInputs.length);
+                    }
+
+                    // Focus the next input after the pasted content, or the last input
+                    const focusIndex = Math.min(index + len, codeInputs.length - 1);
+                    await tick();
+                    codeInputs[focusIndex].focus();
+
+                    // Explicitly check for completion and submit if needed after paste
+                    if (code.length === codeInputs.length) {
+                        console.log("Code complete after paste, submitting", code);
+                        await tick(); // Ensure DOM/focus updates settle
+                        authForm.requestSubmit();
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to read clipboard contents: ", err);
+            }
+        }
+        // Non-digit keys are ignored here, handled by the 'input' event filtering
     }
 
     function clearCode() {
@@ -148,18 +168,21 @@
                 method="POST"
                 class="space-y-6"
                 action="?/identify"
-                use:enhance={({ data: formData }) => {
+                use:enhance={({ formData }) => { // Correctly access formData
                     identifying = true;
                     return async ({ result }) => {
                         identifying = false;
-                        if (result.data?.success === true) {
+                        // Check result type before accessing data
+                        if (result.type === 'success' && result.data?.success === true) {
                             currentStep = AUTHENTICATE;
-                            form = null;
+                            form = undefined; // Clear form on success
+                        } else if (result.type === 'failure') {
+                            // Assign the data returned on failure to the form variable
+                            // Construct ActionData for failure case
+                            form = { success: false, error: result.data?.error as string ?? 'An unknown error occurred.' };
                         } else {
-                            form = {
-                                success: false,
-                                error: result.data.error,
-                            };
+                            // Handle unexpected results (e.g., redirect, error)
+                            form = { success: false, error: 'An unexpected server response.' };
                         }
                     };
                 }}
@@ -178,11 +201,8 @@
                         required
                         bind:value={email}
                     />
-                    {#if form?.email}
-                        <p class="text-red-500 text-sm mt-1">{form.email}</p>
-                    {/if}
                 </div>
-
+                <!-- Removed inconsistent form.email check -->
                 <div class="space-x-0">
                     <Checkbox
                         class="mb-3 space-x-1 rtl:space-x-reverse"
@@ -227,22 +247,26 @@
                 class="space-y-6"
                 on:submit={handleCodeSubmit}
                 action="?/authenticate"
-                use:enhance={({ data: formData }) => {
-                    form = undefined;
+                use:enhance={({ formData }) => { // Correctly access formData
+                    form = undefined; // Clear form state before submission attempt
                     return async ({ result }) => {
-                        if (result.data?.success === true) {
-                            session.set(result.data?.session);
+                         // Check result type before accessing data
+                        if (result.type === 'success' && result.data?.success === true) {
+                            // Assuming result.data.session is of type Session | null
+                            session.set(result.data?.session as any); // Cast to 'any' for now, refine if Session type is available
                             addToast({
                                 color: "green",
                                 message: "Signed in successfully.",
                                 icon: "success",
                             });
                             await goto("/analyze");
+                        } else if (result.type === 'failure') {
+                             // Construct ActionData for failure case
+                            form = { success: false, error: result.data?.error as string ?? 'Authentication failed.' };
+                            clearCode();
                         } else {
-                            form = {
-                                success: false,
-                                error: result.data.error,
-                            };
+                             // Handle unexpected results
+                            form = { success: false, error: 'An unexpected server response during authentication.' };
                             clearCode();
                         }
                     };
@@ -269,15 +293,15 @@
                                  caret-transparent dark:bg-neutral-900 dark:border-neutral-700
                                 dark:text-neutral-400 dark:placeholder-neutral-500
                                 dark:focus:ring-neutral-600 focus:border-0"
-                            type="tel"
-                            autocomplete="one-time-code"
-                            maxlength="1"
-                            on:input={handleCodeInput(index)}
-                            on:keydown={handleCodeKeyDown(index)}
-                            on:keypress={preventNonDigits}
-                            required
-                        />
-                    {/each}
+                           type="tel"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           maxlength="1"
+                           on:input={(e) => handleCodeInput(index, e)}
+                           on:keydown={(e) => handleCodeKeyDown(index, e)}
+                           required
+                       />
+                   {/each}
                 </div>
                 <div class="flex justify-between items-center w-full">
                     <Button
