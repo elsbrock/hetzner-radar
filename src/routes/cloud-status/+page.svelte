@@ -19,6 +19,7 @@
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
+		CloseCircleOutline,
 		CloseCircleSolid,
 		ExclamationCircleSolid
 	} from 'flowbite-svelte-icons';
@@ -318,7 +319,7 @@
 														<CheckCircleSolid size="xl" color="green" class="w-4 h-4 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
 														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}">Available in {location.city}</Tooltip>
 													{:else}
-														<CloseCircleSolid size="xl" color="red" class="w-4 h-4 inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
+														<CloseCircleOutline size="xl" color="red" class="w-4 h-4 inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
 														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}">Not available in {location.city}</Tooltip>
 													{/if}
 												</TableBodyCell>
