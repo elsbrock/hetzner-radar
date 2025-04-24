@@ -215,6 +215,24 @@ export function getHetznerLink(device: ServerConfiguration) {
         specials.push("RPS");
     }
 
+    const driveTypes = [];
+    if (device.nvme_drives.length > 0) {
+        driveTypes.push("nvme");
+    }
+    if (device.sata_drives.length > 0) {
+        driveTypes.push("sata");
+    }
+    if (device.hdd_drives.length > 0) {
+        driveTypes.push("hdd");
+    }
+
+    let cpuType = "";
+    if (device.cpu.toLowerCase().includes("intel")) {
+        cpuType = "Intel";
+    } else if (device.cpu.toLowerCase().includes("amd")) {
+        cpuType = "AMD";
+    }
+
     const filterQ = [
         `search=${encodeURIComponent(device.cpu)}`,
         `ram_from=${device.ram_size}`,
@@ -229,8 +247,14 @@ export function getHetznerLink(device: ServerConfiguration) {
     }
     if (maxDriveLength > 0) {
         filterQ.push(
-            `drives_size_to=${Math.floor(minDriveLength / 500) * 500}`,
+            `drives_size_to=${Math.floor(maxDriveLength / 500) * 500}`,
         );
+    }
+    if (driveTypes.length > 0) {
+        filterQ.push(`driveType=${encodeURIComponent(driveTypes.join("+"))}`);
+    }
+    if (cpuType) {
+        filterQ.push(`cpuType=${cpuType}`);
     }
     if (device.is_ecc) {
         filterQ.push("ecc=true");
