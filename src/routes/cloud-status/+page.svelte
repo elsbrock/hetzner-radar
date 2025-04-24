@@ -316,10 +316,10 @@
 												{@const available = isAvailable(location.id, serverType.id)}
 												<TableBodyCell class="text-center px-4 py-4">
 													{#if available}
-														<CheckCircleSolid size="xl" color="green" class="w-4 h-4 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
+														<CheckCircleSolid size="xl" color="green" class="inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
 														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}">Available in {location.city}</Tooltip>
 													{:else}
-														<CloseCircleOutline size="xl" color="red" class="w-4 h-4 inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
+														<CloseCircleSolid size="xl" color="red" class="inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
 														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}">Not available in {location.city}</Tooltip>
 													{/if}
 												</TableBodyCell>
