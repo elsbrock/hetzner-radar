@@ -32,6 +32,8 @@
         faTags,
         faChevronLeft,
         faChevronRight,
+        faChevronUp,
+        faChevronDown,
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import type { FileSizeReturnArray, FileSizeReturnObject } from "filesize";
@@ -173,25 +175,57 @@
     });
 </script>
 
-<!-- Header and Toggle Button - Always Render -->
-<div class="flex items-center justify-between py-2">
-    <h1 class="text-xl font-semibold {isFilterCollapsed ? 'sr-only' : ''}">Filter Settings</h1>
-    <Button
-        color="alternative"
-        size="sm"
-        class="!p-2"
-        onclick={() => isFilterCollapsed = !isFilterCollapsed}
-        aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
-    >
-        <FontAwesomeIcon icon={isFilterCollapsed ? faChevronRight : faChevronLeft} />
-    </Button>
-</div>
+<!-- Container for responsive layout - Full width on mobile, auto on desktop -->
+<div class="flex flex-col w-full md:w-auto">
+    <!-- Header Section: Switches structure based on collapsed state and screen size -->
 
-<!-- Filter List - No longer needs #if filter, just hide when collapsed -->
-<ul class="space-y-2 font-medium {isFilterCollapsed ? 'hidden' : ''}" data-testid="server-filter">
-    <!-- Location Filters -->
-    <li class="flex items-center justify-between">
-        <h2 class="flex items-center">
+    <!-- Structure for Expanded View (All Sizes) and Collapsed Mobile View -->
+    {#if !isFilterCollapsed || (typeof window !== 'undefined' && window.innerWidth < 768)}
+        <div class="flex items-center justify-between py-2">
+            <!-- Title: Always visible in this layout (Expanded all sizes + Collapsed Mobile) -->
+            <h1 class="text-xl font-semibold">Filter Settings</h1>
+            <!-- Toggle Button -->
+            <Button
+                color="alternative"
+                size="sm"
+                class="!p-2"
+                onclick={() => isFilterCollapsed = !isFilterCollapsed}
+                aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
+            >
+                {#key isFilterCollapsed}
+                    <FontAwesomeIcon class="block md:hidden" icon={isFilterCollapsed ? faChevronDown : faChevronUp} />
+                    <FontAwesomeIcon class="hidden md:block" icon={isFilterCollapsed ? faChevronRight : faChevronLeft} />
+                {/key}
+            </Button>
+        </div>
+    {/if}
+
+    <!-- Structure for Collapsed Desktop View (md+) -->
+    {#if isFilterCollapsed && (typeof window !== 'undefined' && window.innerWidth >= 768)}
+        <div class="flex flex-col items-center py-2 gap-3">
+             <!-- Toggle Button -->
+             <Button
+                color="alternative"
+                size="sm"
+                class="!p-2"
+                onclick={() => isFilterCollapsed = !isFilterCollapsed}
+                aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
+            >
+                {#key isFilterCollapsed}
+                     <!-- Only need desktop icon here -->
+                    <FontAwesomeIcon class="hidden md:block" icon={isFilterCollapsed ? faChevronRight : faChevronLeft} />
+                {/key}
+            </Button>
+             <!-- Rotated Title - Increased margin-top -->
+            <h1 class="text-md -rotate-90 origin-center whitespace-nowrap mt-10">Filter Settings</h1>
+        </div>
+    {/if}
+
+    <!-- Filter List - Visibility controlled by isFilterCollapsed -->
+    <ul class="space-y-2 font-medium {isFilterCollapsed ? 'hidden' : ''}" data-testid="server-filter">
+        <!-- Location Filters -->
+        <li class="flex items-center justify-between">
+            <h2 class="flex items-center">
             <FontAwesomeIcon class="w-4 h-4 me-1" icon={faGlobe} /> Location
         </h2>
     </li>
@@ -693,6 +727,7 @@
         </div>
     </li>
 </ul>
+</div> <!-- Close responsive container -->
 
 <style>
     :root {

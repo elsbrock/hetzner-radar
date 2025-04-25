@@ -229,7 +229,7 @@
         md:border-r-2 md:border-r-gray-100"
         >
             <aside
-                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out {isFilterCollapsed ? 'w-14' : 'w-64'}"
+                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out {isFilterCollapsed ? 'w-full md:w-14' : 'w-full md:w-64'}"
             >
                 <!-- ServerFilter Container - Grows and Scrolls -->
                 <div class="flex-grow overflow-y-auto px-3 py-2">
