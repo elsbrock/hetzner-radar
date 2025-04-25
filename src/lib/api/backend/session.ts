@@ -72,6 +72,21 @@ export async function validateSessionToken(
     db: any,
     token: string,
 ): Promise<SessionValidationResult> {
+    // Probabilistic cleanup: Run on ~1% of requests
+    if (Math.random() < 0.01) { // Adjust probability as needed (0.01 = 1%)
+        console.log("Attempting probabilistic cleanup of expired sessions...");
+        try {
+            // Use 'await' as DB operations are async
+            const cleanupResult = await db
+                .prepare("DELETE FROM session WHERE expires_at < ?")
+                .bind(new Date().toISOString()) // Compare against current time
+                .run();
+            console.log(`Cleaned up ${cleanupResult.changes ?? 0} expired sessions.`);
+        } catch (error) {
+            // Log error but allow validation to continue
+            console.error("Error during probabilistic session cleanup:", error);
+        }
+    }
     const sessionId = encodeHexLowerCase(
         sha256(new TextEncoder().encode(token)),
     );
