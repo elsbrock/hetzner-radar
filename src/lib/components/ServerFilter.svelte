@@ -231,14 +231,8 @@
         <MultiSelect
             class="text-sm"
             items={datacenters}
-            value={filter.selectedDatacenters}
+            bind:value={filter.selectedDatacenters}
             size="sm"
-            on:change={(e) => {
-                // MultiSelect in flowbite-svelte uses on:change with selected values in e.detail
-                console.log("Datacenters selection changed:", e.detail);
-                // Create a new object to ensure reactivity
-                filter = { ...filter, selectedDatacenters: e.detail };
-            }}
         />
     </li>
 
@@ -276,14 +270,8 @@
         <MultiSelect
             class="text-sm"
             items={cpuModels}
-            value={filter.selectedCpuModels}
+            bind:value={filter.selectedCpuModels}
             size="sm"
-            on:change={(e) => {
-                // MultiSelect in flowbite-svelte uses on:change with selected values in e.detail
-                console.log("CPU models selection changed:", e.detail);
-                // Create a new object to ensure reactivity
-                filter = { ...filter, selectedCpuModels: e.detail };
-            }}
         />
     </li>
 
