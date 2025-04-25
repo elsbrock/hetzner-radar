@@ -41,6 +41,8 @@
         faFilter,
         faStopwatch,
         faWarning,
+        faChevronLeft,
+        faChevronRight,
     } from "@fortawesome/free-solid-svg-icons";
     import { faEuroSign } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
@@ -60,25 +62,27 @@
     import { db, dbInitProgress } from "../../stores/db";
 
     /** @type {{ data: import('./$types').PageData }} */
-    export let data;
-
-    let lastUpdate: number;
-    let serverList: ServerConfiguration[] = [];
-    let filteredServerList: ServerConfiguration[] = [];
-    let serverPrices: ServerPriceStat[] = [];
-    let cpuModels: NameValuePair[] = [];
-    let datacenters: NameValuePair[] = [];
+    let { data } = $props<{ data: import('./$types').PageData }>();
+    
+    let lastUpdate = $state<number | undefined>(undefined);
+    let serverList = $state<ServerConfiguration[]>([]);
+    let filteredServerList = $state<ServerConfiguration[]>([]);
+    let serverPrices = $state<ServerPriceStat[]>([]);
+    let cpuModels = $state<NameValuePair[]>([]);
+    let datacenters = $state<NameValuePair[]>([]);
 
     let priceMin: number | null = null;
     let priceMax: number | null = null;
     
-    let queryTime: number | undefined;
-    let loading = true;
+    let queryTime = $state<number | undefined>(undefined);
+    let loading = $state(true);
 
     let selectedAlert: PriceAlert | null = null;
     let alertDialogOpen = false;
 
     let storedFilter: ServerFilterType | null = null;
+ 
+    let isFilterCollapsed = $state(false);
 
     function handleSaveFilter(e: Event) {
         saveFilter($filter);
@@ -111,18 +115,27 @@
     async function fetchData(db: AsyncDuckDB, filter: ServerFilterType) {
         loading = true;
 
-        console.log("Fetching data with filter:", filter);
+        console.log("fetchData called with filter:", filter);
+        console.log("Filter properties:", {
+            locationGermany: filter.locationGermany,
+            locationFinland: filter.locationFinland,
+            extrasECC: filter.extrasECC,
+            extrasINIC: filter.extrasINIC,
+            extrasHWR: filter.extrasHWR,
+            extrasGPU: filter.extrasGPU,
+            extrasRPS: filter.extrasRPS
+        });
         let queryStart = performance.now();
 
         await withDbConnections(db, async (conn1, conn2, conn3, conn4) => {
             try {
-                [cpuModels, datacenters, serverPrices, serverList] =
-                    await Promise.all([
-                        getCPUModels(conn1, filter),
-                        getDatacenters(conn2, filter),
-                        getPrices(conn3, filter),
-                        getConfigurations(conn4, filter),
-                    ]);
+                const results = await Promise.all([
+                    getCPUModels(conn1, filter),
+                    getDatacenters(conn2, filter),
+                    getPrices(conn3, filter),
+                    getConfigurations(conn4, filter),
+                ]);
+                [cpuModels, datacenters, serverPrices, serverList] = results;
 
                 queryTime = performance.now() - queryStart;
 
@@ -138,7 +151,7 @@
                     });
                 }
             } catch (error: Error | any) {
-                console.error("Error fetching data:", error);
+                console.error("[+page.svelte] Error fetching data:", error);
             } finally {
                 loading = false;
             }
@@ -147,16 +160,32 @@
 
     const debouncedFetchData = debounce(fetchData, 500);
 
-    let totalOffers = 0;
-    $: totalOffers = Array.isArray(serverPrices)
+    let totalOffers = $derived(Array.isArray(serverPrices)
         ? serverPrices.reduce((acc, val) => acc + val.count, 0)
-        : 0;
-
-    $: if (!!$db && $filter) {
-        debouncedFetchData($db, $filter);
-    }
-
-    // filter by min, maxprice
+        : 0);
+    
+    // Log initial state for debugging
+    console.log("Page: Initial filter store value on component creation:", $filter);
+    console.log("Page: Initial DB state:", { available: !!$db, progress: $dbInitProgress });
+    
+    $effect(() => {
+        console.log("Page effect triggered with filter:", $filter);
+        console.log("Page effect filter type:", typeof $filter, "isNull:", $filter === null);
+        
+        // Only proceed with data fetching if both DB and filter are available
+        if (!!$db && $filter) {
+            console.log("Calling debouncedFetchData with filter:", $filter);
+            debouncedFetchData($db, $filter);
+        } else {
+            console.log("DB or filter not available:", { db: !!$db, filter: !!$filter });
+            
+            // If DB is available but filter is not, wait for filter to be initialized
+            if (!!$db && !$filter) {
+                console.log("DB is available but filter is not yet initialized");
+            }
+        }
+    });
+    
     function filterServerList(priceMin: number, priceMax: number) {
         const countryCode = $settingsStore.vatSelection.countryCode as keyof typeof vatOptions;
         const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
@@ -173,21 +202,20 @@
     }
 
     const debouncedFilterServerList = debounce(filterServerList, 500);
-    $: if (priceMin !== null || priceMax !== null) {
-        debouncedFilterServerList(priceMin, priceMax);
-    } else {
-        filteredServerList = serverList;
-    }
-
-    let hasFilter: boolean = false;
-    let updateStoredFilterDisabled: boolean = false;
-
-    $: hasFilter = storedFilter !== null;
-    $: updateStoredFilterDisabled = isIdenticalFilter($filter, storedFilter);
+    $effect(() => {
+        if (priceMin !== null || priceMax !== null) {
+            debouncedFilterServerList(priceMin, priceMax);
+        } else {
+            filteredServerList = serverList;
+        }
+    });
+    
+    let hasFilter = $derived(storedFilter !== null);
+    let updateStoredFilterDisabled = $derived(isIdenticalFilter($filter, storedFilter));
 </script>
 
 <div class="mx-auto max-w-[1680px]">
-    <OutdatedDataAlert {lastUpdate} />
+    <OutdatedDataAlert lastUpdate={lastUpdate as number} />
     <AlertModal
         bind:open={alertDialogOpen}
         alert={selectedAlert}
@@ -201,17 +229,21 @@
         md:border-r-2 md:border-r-gray-100"
         >
             <aside
-                class="border-r border-gray-200 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto"
+                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out {isFilterCollapsed ? 'w-14' : 'w-64'}"
             >
-                <div
-                    class="h-full bg-white px-3 py-2 dark:bg-gray-800 md:border-l-gray-100 md:border-l-2 dark:md:border-gray-700"
-                >
-                    <ServerFilter {datacenters} {cpuModels} />
-                    <div class="mt-4">
-                        <hr class="mb-5" />
-                        <div class="my-2">
+                <!-- ServerFilter Container - Grows and Scrolls -->
+                <div class="flex-grow overflow-y-auto px-3 py-2">
+                    <ServerFilter {datacenters} {cpuModels} bind:isFilterCollapsed />
+                </div>
+                <!-- Timestamp/Loading Info - Fixed at bottom -->
+                {#if !isFilterCollapsed}
+                <div class="px-3 py-2">
+                    <!-- Content should always be visible -->
+                    <div>
+                        <hr class="mb-2" />
+                        <div class="my-1">
                             {#if lastUpdate}
-                                <p
+                            <p
                                     class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400"
                                 >
                                     <FontAwesomeIcon
@@ -242,6 +274,7 @@
                         </div>
                     </div>
                 </div>
+                {/if}
             </aside>
 
             <main class="flex-grow overflow-y-auto bg-white">
@@ -267,7 +300,7 @@
                                         data-testid="price-min-input"
                                         class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMin}
-                                        on:change={() => {
+                                        onchange={() => {
                                           if (priceMin !== null) {
                                             priceMin = Number(priceMin);
                                           }
@@ -281,7 +314,7 @@
                                         data-testid="price-max-input"
                                         class="h-9 text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMax}
-                                        on:change={() => {
+                                        onchange={() => {
                                           if (priceMax !== null) {
                                             priceMax = Number(priceMax);
                                           }
@@ -301,7 +334,7 @@
                                         class="shadow-sm"
                                         data-testid="filter-save"
                                         disabled={updateStoredFilterDisabled}
-                                        on:click={handleSaveFilter}
+                                        onclick={handleSaveFilter}
                                     >
                                         {#if hasFilter}
                                             Update
@@ -315,7 +348,7 @@
                                             color="alternative"
                                             class="shadow-sm"
                                             data-testid="filter-clear"
-                                            on:click={handleClearFilter}
+                                            onclick={handleClearFilter}
                                             >Delete</Button
                                         >
                                     {/if}
@@ -341,7 +374,7 @@
                                                 color="alternative"
                                                 size="xs"
                                                 id="price-alert"
-                                                on:click={(e) => {
+                                                onclick={(e: MouseEvent) => {
                                                     alertDialogOpen = true;
                                                     selectedAlert = alert;
                                                     e.stopPropagation();
@@ -373,7 +406,7 @@
                                                     size="xs"
                                                     id="price-alert-delete"
                                                     type="submit"
-                                                    on:click={(e) => {
+                                                    onclick={(e: MouseEvent) => {
                                                         selectedAlert = null;
                                                         e.stopPropagation();
                                                     }}
@@ -386,7 +419,7 @@
                                                 color="alternative"
                                                 size="xs"
                                                 id="price-alert"
-                                                on:click={(e) => {
+                                                onclick={(e: MouseEvent) => {
                                                     alertDialogOpen = true;
                                                     e.stopPropagation();
                                                 }}
