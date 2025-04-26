@@ -11,6 +11,7 @@
     import { type ServerConfiguration } from "$lib/api/frontend/filter";
     import ServerCard from "$lib/components/ServerCard.svelte";
     import PriceControls from '$lib/components/PriceControls.svelte';
+    import Spinner from 'flowbite-svelte/Spinner.svelte';
 
     import {
         convertServerConfigurationToFilter,
@@ -103,26 +104,37 @@
                 without compromising essential features.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {#each cheapestConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-                <ServerCard
-                    timeUnitPrice={$settingsStore.timeUnitPrice}
-                    {config}
-                    {loading}
-                    displayStoragePrice={undefined}
-                    displayRamPrice={undefined}
-                >
-                    <Button
-                        slot="buttons"
-                        outline
-                        href="/analyze?filter={encodeFilter(
-                            convertServerConfigurationToFilter(config),
-                        )}"
-                        class="px-4 py-2 text-sm"
+                {#if loading}
+                    <!-- Loading placeholders -->
+                    {#each Array(4) as _, i}
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                            <div class="flex items-center justify-center h-full">
+                                <Spinner size="8" />
+                            </div>
+                        </div>
+                    {/each}
+                {:else}
+                    {#each cheapestConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
+                    <ServerCard
+                        timeUnitPrice={$settingsStore.timeUnitPrice}
+                        {config}
+                        loading={false}
+                        displayStoragePrice={undefined}
+                        displayRamPrice={undefined}
                     >
-                        Find
-                    </Button>
-                </ServerCard>
-                {/each}
+                        <Button
+                            slot="buttons"
+                            outline
+                            href="/analyze?filter={encodeFilter(
+                                convertServerConfigurationToFilter(config),
+                            )}"
+                            class="px-4 py-2 text-sm"
+                        >
+                            Find
+                        </Button>
+                    </ServerCard>
+                    {/each}
+                {/if}
             </div>
         </div>
 
@@ -136,26 +148,37 @@
                 storage-heavy projects requiring ample disk space.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {#each cheapDiskConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-                <ServerCard
-                    timeUnitPrice={$settingsStore.timeUnitPrice}
-                    {config}
-                    {loading}
-                    displayStoragePrice="perTB"
-                    displayRamPrice={undefined}
-                >
-                    <Button
-                        slot="buttons"
-                        outline
-                        href="/analyze?filter={encodeFilter(
-                            convertServerConfigurationToFilter(config),
-                        )}"
-                        class="px-4 py-2 text-sm"
+                {#if loading}
+                    <!-- Loading placeholders -->
+                    {#each Array(4) as _, i}
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                            <div class="flex items-center justify-center h-full">
+                                <Spinner size="8" />
+                            </div>
+                        </div>
+                    {/each}
+                {:else}
+                    {#each cheapDiskConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
+                    <ServerCard
+                        timeUnitPrice={$settingsStore.timeUnitPrice}
+                        {config}
+                        loading={false}
+                        displayStoragePrice="perTB"
+                        displayRamPrice={undefined}
                     >
-                        Find
-                    </Button>
-                </ServerCard>
-                {/each}
+                        <Button
+                            slot="buttons"
+                            outline
+                            href="/analyze?filter={encodeFilter(
+                                convertServerConfigurationToFilter(config),
+                            )}"
+                            class="px-4 py-2 text-sm"
+                        >
+                            Find
+                        </Button>
+                    </ServerCard>
+                    {/each}
+                {/if}
             </div>
         </div>
 
@@ -169,26 +192,37 @@
                 databases, virtual machines, and high-traffic websites.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {#each cheapRamConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-                <ServerCard
-                    timeUnitPrice={$settingsStore.timeUnitPrice}
-                    {config}
-                    {loading}
-                    displayRamPrice="perGB"
-                    displayStoragePrice={undefined}
-                >
-                    <Button
-                        slot="buttons"
-                        outline
-                        href="/analyze?filter={encodeFilter(
-                            convertServerConfigurationToFilter(config),
-                        )}"
-                        class="px-4 py-2 text-sm"
+                {#if loading}
+                    <!-- Loading placeholders -->
+                    {#each Array(4) as _, i}
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                            <div class="flex items-center justify-center h-full">
+                                <Spinner size="8" />
+                            </div>
+                        </div>
+                    {/each}
+                {:else}
+                    {#each cheapRamConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
+                    <ServerCard
+                        timeUnitPrice={$settingsStore.timeUnitPrice}
+                        {config}
+                        loading={false}
+                        displayRamPrice="perGB"
+                        displayStoragePrice={undefined}
                     >
-                        Find
-                    </Button>
-                </ServerCard>
-                {/each}
+                        <Button
+                            slot="buttons"
+                            outline
+                            href="/analyze?filter={encodeFilter(
+                                convertServerConfigurationToFilter(config),
+                            )}"
+                            class="px-4 py-2 text-sm"
+                        >
+                            Find
+                        </Button>
+                    </ServerCard>
+                    {/each}
+                {/if}
             </div>
         </div>
 
@@ -202,26 +236,37 @@
                 sites, and latency-sensitive applications.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {#each cheapNvmeConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-                <ServerCard
-                    timeUnitPrice={$settingsStore.timeUnitPrice}
-                    {config}
-                    {loading}
-                    displayStoragePrice="perTB"
-                    displayRamPrice={undefined}
-                >
-                    <Button
-                        slot="buttons"
-                        outline
-                        href="/analyze?filter={encodeFilter(
-                            convertServerConfigurationToFilter(config),
-                        )}"
-                        class="px-4 py-2 text-sm"
+                {#if loading}
+                    <!-- Loading placeholders -->
+                    {#each Array(4) as _, i}
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                            <div class="flex items-center justify-center h-full">
+                                <Spinner size="8" />
+                            </div>
+                        </div>
+                    {/each}
+                {:else}
+                    {#each cheapNvmeConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
+                    <ServerCard
+                        timeUnitPrice={$settingsStore.timeUnitPrice}
+                        {config}
+                        loading={false}
+                        displayStoragePrice="perTB"
+                        displayRamPrice={undefined}
                     >
-                        Find
-                    </Button>
-                </ServerCard>
-                {/each}
+                        <Button
+                            slot="buttons"
+                            outline
+                            href="/analyze?filter={encodeFilter(
+                                convertServerConfigurationToFilter(config),
+                            )}"
+                            class="px-4 py-2 text-sm"
+                        >
+                            Find
+                        </Button>
+                    </ServerCard>
+                    {/each}
+                {/if}
             </div>
         </div>
 
@@ -235,26 +280,37 @@
                 storage, web hosting, and backups.
             </p>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {#each cheapSataConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-                <ServerCard
-                    timeUnitPrice={$settingsStore.timeUnitPrice}
-                    {config}
-                    {loading}
-                    displayStoragePrice="perTB"
-                    displayRamPrice={undefined}
-                >
-                    <Button
-                        slot="buttons"
-                        outline
-                        href="/analyze?filter={encodeFilter(
-                            convertServerConfigurationToFilter(config),
-                        )}"
-                        class="px-4 py-2 text-sm"
+                {#if loading}
+                    <!-- Loading placeholders -->
+                    {#each Array(4) as _, i}
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                            <div class="flex items-center justify-center h-full">
+                                <Spinner size="8" />
+                            </div>
+                        </div>
+                    {/each}
+                {:else}
+                    {#each cheapSataConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
+                    <ServerCard
+                        timeUnitPrice={$settingsStore.timeUnitPrice}
+                        {config}
+                        loading={false}
+                        displayStoragePrice="perTB"
+                        displayRamPrice={undefined}
                     >
-                        Find
-                    </Button>
-                </ServerCard>
-                {/each}
+                        <Button
+                            slot="buttons"
+                            outline
+                            href="/analyze?filter={encodeFilter(
+                                convertServerConfigurationToFilter(config),
+                            )}"
+                            class="px-4 py-2 text-sm"
+                        >
+                            Find
+                        </Button>
+                    </ServerCard>
+                    {/each}
+                {/if}
             </div>
         </div>
     </section>
