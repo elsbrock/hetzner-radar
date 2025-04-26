@@ -236,8 +236,7 @@ export async function getConfigurations(
     }
     configurations_query.append(`
     ORDER BY price asc
-    LIMIT 101
-`); // if we get more than 100 results, we limit on the ui
+`);
 
     const data = await getData<ServerConfiguration>(conn, configurations_query);
     return data.map((d: ServerConfiguration) => {

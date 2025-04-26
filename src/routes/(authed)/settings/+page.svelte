@@ -1,19 +1,69 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
-    import { Button } from "flowbite-svelte";
+    import { Button, Modal } from "flowbite-svelte";
     import { Alert, Label, Input } from "flowbite-svelte";
     import { goto } from "$app/navigation";
     import { session } from "$lib/stores/session";
     import { addToast } from "$lib/stores/toast";
+
+    let showConfirmModal = $state(false);
+    let deleteForm: HTMLFormElement | null = $state(null);
+
+    function handleDeleteClick() {
+        showConfirmModal = true;
+    }
+
+    function confirmDelete() {
+        if (deleteForm) {
+            deleteForm.requestSubmit();
+        }
+        showConfirmModal = false;
+    }
+
+    function cancelDelete() {
+        showConfirmModal = false;
+    }
 </script>
+
+
+<Modal bind:open={showConfirmModal} size="xs" autoclose={false}>
+    <div class="text-center">
+        <svg
+            aria-hidden="true"
+            class="mx-auto mb-4 w-14 h-14 text-gray-400 dark:text-gray-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path></svg
+        >
+        <h3
+            class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400"
+        >
+            Are you sure you want to delete your account? This action is
+            irreversible.
+        </h3>
+        <Button onclick={confirmDelete} color="red" class="me-2">
+            Yes, I'm sure
+        </Button>
+        <Button onclick={cancelDelete} color="alternative">
+            I changed my mind
+        </Button>
+    </div>
+</Modal>
 
 <div class="flex items-center justify-center bg-gray-50 py-10 px-3">
     <div
-        class="p-6 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray w-[450px]"
+        class="p-6 bg-white rounded-lg shadow-md dark:bg-gray w-[450px]"
     >
         {#if $session}
-            <h2 class="text-2xl font-semibolddark:text-white">Account Info</h2>
-            <p class="text-gray-800 dark:text-gray-400">
+            <h2 class="text-2xl font-semibolddark:text-white mb-4">Account Info</h2>
+            <p class="text-gray-800 dark:text-gray-400 mb-4">
                 This is your account information. We do not store any personal
                 information other than your email address.
             </p>
@@ -21,17 +71,19 @@
                 <Label for="email" class="block text-gray-800 mb-2">Email Address</Label>
                 <Input id="email" value={$session.email} disabled />
             </div>
-            <p class="text-gray-800 dark:text-gray-400">
+            <p class="text-gray-800 dark:text-gray-400 mb-4">
                 Your email address is used to alert you about price changes and
                 to send you notifications about your account.
             </p>
-            <Alert class="p-2"
-                ><span class="font-semibold">Danger Zone:</span> When deleting your account any information associated
-                to it (such as alerts) will be deleted too. This action is irreversible.
-                You may sign up again any time.</Alert
-            >
+            <hr class="my-4 border-gray-200 dark:border-gray-700" />
+            <p class="text-base font-semibold dark:text-gray-400 mb-2 text-red-600">Danger Zone</p>
+            <p class="text-gray-400 dark:text-gray-400 mb-4">
+                Deleting your account will permanently remove all associated information, including any alerts you've set up. This action cannot be undone, but you're welcome to sign up again later.
+            </p>
             <form
-                class="my-2"
+                bind:this={deleteForm}
+                id="delete-form"
+                class=""
                 method="POST"
                 action="?/delete"
                 use:enhance={() => {
@@ -44,10 +96,11 @@
                     return goto("/");
                 }}
             >
-                <Button type="submit" class="w-full"
-                    >I Understand, Delete My Account</Button
-                >
+                <!-- This form is submitted programmatically -->
             </form>
+            <Button onclick={handleDeleteClick} color="primary" class="w-full"
+                >Delete My Account</Button
+            >
         {:else}
             <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
                 Not Logged In
