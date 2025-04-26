@@ -13,10 +13,20 @@
 	// Define the type for VAT option keys based on the imported value
 	type VatCountryCode = keyof typeof vatOptions;
 
+	interface $$Props {
+		config: ServerConfiguration;
+		timeUnitPrice?: 'perHour' | 'perMonth';
+		loading?: boolean;
+		displayStoragePrice?: 'perTB'; // Allow specifying how storage price is displayed
+		displayRamPrice?: 'perGB'; // Allow specifying how RAM price is displayed
+	}
+
 	let {
 		timeUnitPrice = 'perHour',
 		config,
-		loading = false
+		loading = false,
+		displayStoragePrice, // Included but not yet used in rendering logic
+		displayRamPrice // Included but not yet used in rendering logic
 	} = $props();
 
 	let drawerHidden = $state(true);
@@ -115,7 +125,7 @@
 					{/if}
 				</span>
 			</div>
-			<!-- Removed slot name="buttons" -->
+			<slot name="buttons" />
 		</div>
 	{/if}
 </Card>
