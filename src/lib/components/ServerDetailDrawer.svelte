@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { ServerConfiguration } from '$lib/api/frontend/filter';
-	import { getFormattedDiskSize } from '$lib/disksize';
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
-	import { faHardDrive, faMemory, faSdCard, faShoppingCart, faFilter, faExternalLinkAlt, faHammer, faTicket } from '@fortawesome/free-solid-svg-icons';
+	import { faShoppingCart, faFilter, faExternalLinkAlt, faHammer, faTicket } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
-	import { Drawer, Button, CloseButton, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Badge, Indicator, Tooltip } from 'flowbite-svelte';
+	import { Drawer, Button, CloseButton, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Indicator, Tooltip } from 'flowbite-svelte';
 	import { goto } from '$app/navigation';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
@@ -13,110 +12,141 @@
 	import { vatOptions } from './VatSelector.svelte';
 	import { filter } from '$lib/stores/filter';
 	import { getHetznerLink, convertServerConfigurationToFilter } from '$lib/filter';
-  	import { sineIn } from 'svelte/easing';
-    import { withDbConnections } from '$lib/api/frontend/dbapi';
-	import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions';
-	import { db } from '../../stores/db';
-    import ServerPriceChart from './ServerPriceChart.svelte';
-    import { getPrices } from '$lib/api/frontend/filter';
+ import { sineIn } from 'svelte/easing';
+ import { withDbConnections } from '$lib/api/frontend/dbapi';
+ import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions';
+ import { db } from '../../stores/db';
+ import ServerPriceChart from './ServerPriceChart.svelte';
+import { getPrices } from '$lib/api/frontend/filter';
+import ServerFactSheet from './ServerFactSheet.svelte';
+// Runes ($state, $derived, etc.) are compiler features and don't need explicit imports.
 
-	export let config: ServerConfiguration | null = null;
-	export let hidden: boolean = true; // Two-way binding: bind:ihdden
+// Props using Svelte 5 runes
+interface $$Props {
+  config?: ServerConfiguration | null;
+  hidden?: boolean;
+ }
+ // Define props using $props. Default values are assigned directly.
+ // Type inference usually works, so <$$Props> is often optional.
+ let { config = null, hidden = $bindable(true) } = $props();
 
-	let transitionParamsRight = {
+ let transitionParamsRight = {
 		x: 320,
 		duration: 200,
 		easing: sineIn
 	};
 
-	let auctions: AuctionResult[] = [];
-	let loadingAuctions = false;
+	// State using Svelte 5 runes
+	let auctions = $state<AuctionResult[]>([]);
+	let loadingAuctions = $state(false);
 
-	// Fetch auctions when config changes or db is ready
-	$: (async () => { // Make the reactive block async
+	// Fetch auctions when config changes or db is ready using $effect
+	$effect(() => {
+		const currentConfig = config; // Capture current value for the effect
+		const currentDb = $db; // Capture current value for the effect
+
 		// Ensure both config and $db are ready before fetching
-		if (config && $db) {
+		if (currentConfig && currentDb) {
 			loadingAuctions = true;
 			auctions = []; // Clear previous results
-			try {
-				// Use withDbConnections to get a connection
-				await withDbConnections($db, async (conn) => {
-					auctions = await getAuctionsForConfiguration(conn, config, $filter?.recentlySeen ?? false);
-				});
-			} catch (error) {
-				console.error('Error fetching auctions:', error);
-				auctions = []; // Ensure auctions is empty on error
-			} finally {
-				loadingAuctions = false;
-			}
+			let cancelled = false;
+
+			(async () => {
+				try {
+					// Use withDbConnections to get a connection
+					await withDbConnections(currentDb, async (conn) => {
+						const result = await getAuctionsForConfiguration(conn, currentConfig, $filter?.recentlySeen ?? false);
+						if (!cancelled) {
+							auctions = result;
+						}
+					});
+				} catch (error) {
+					console.error('Error fetching auctions:', error);
+					if (!cancelled) {
+						auctions = []; // Ensure auctions is empty on error
+					}
+				} finally {
+					if (!cancelled) {
+						loadingAuctions = false;
+					}
+				}
+			})();
+
+			// Cleanup function for the effect
+			return () => {
+				cancelled = true;
+			};
+
 		} else {
 			// Reset if config is null or db not ready
 			auctions = [];
 			loadingAuctions = false;
 		}
-	})();
+	});
 
 	function closeDrawer() {
 		hidden = true;
 	}
 
-	interface NumberSummary {
-		count: number;
-		value: number;
-	}
-
-	function summarizeNumbers(numbers: number[]): NumberSummary[] {
-		const counts = new Map<number, number>();
-		const order: number[] = [];
-
-		for (const num of numbers) {
-			if (counts.has(num)) {
-				counts.set(num, counts.get(num)! + 1);
-			} else {
-				counts.set(num, 1);
-				order.push(num);
-			}
-		}
-
-		const result: NumberSummary[] = [];
-
-		for (const num of order) {
-			const count = counts.get(num)!;
-			result.push({ count, value: num });
-		}
-
-		return result;
-	}
-
 	type VatCountryCode = keyof typeof vatOptions;
 
-	$: countryCode = $settingsStore.vatSelection.countryCode;
-	$: validCountryCode = (countryCode && countryCode in vatOptions) ? countryCode as VatCountryCode : 'NET';
-	$: selectedOption = config ? vatOptions[validCountryCode] : vatOptions['NET'];
-	$: displayPrice = config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0;
-	$: vatSuffix = selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)';
+	// Derived values using Svelte 5 runes
+	let countryCode = $derived($settingsStore.vatSelection.countryCode);
+	let validCountryCode = $derived((countryCode && countryCode in vatOptions) ? countryCode as VatCountryCode : 'NET');
+	// Explicitly cast validCountryCode to VatCountryCode for type safety when indexing vatOptions
+	let selectedOption = $derived(config ? vatOptions[validCountryCode as VatCountryCode] : vatOptions['NET']);
+	let displayPrice = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
+	let vatSuffix = $derived(selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)');
 
-	   let serverPrices: any[] = [];
-	   let loadingPrices = true;
+	// Calculate color hue for markup percentage (green=0% to red=100%)
+	// Hue range: 120 (green) down to 0 (red)
+	let markupColorHue = $derived(
+		config && config.markup_percentage !== null
+			? Math.max(0, 120 - (config.markup_percentage / 100) * 120)
+			: 120 // Default to green if no markup
+	);
 
-	   $: (async () => {
-	       if (config && $db) {
-	           loadingPrices = true;
-	           try {
-	               await withDbConnections($db, async (conn) => {
-	                   serverPrices = await getPrices(conn, convertServerConfigurationToFilter(config));
-	               });
-	           } catch (error) {
-	               console.error('Error fetching server prices:', error);
-	               serverPrices = [];
-	           } finally {
-	               loadingPrices = false;
-	           }
-	       } else {
-	           serverPrices = [];
-	           loadingPrices = false;
-	       }
-	   })();
+	let serverPrices = $state<any[]>([]);
+	let loadingPrices = $state(true);
+
+	// Fetch prices using $effect
+	$effect(() => {
+	 const currentConfig = config; // Capture current value
+	 const currentDb = $db; // Capture current value
+
+	 if (currentConfig && currentDb) {
+	  loadingPrices = true;
+	  let cancelled = false;
+
+	  (async () => {
+	   try {
+	   	await withDbConnections(currentDb, async (conn) => {
+	   		const prices = await getPrices(conn, convertServerConfigurationToFilter(currentConfig));
+	   		if (!cancelled) {
+	   			serverPrices = prices;
+	   		}
+	   	});
+	   } catch (error) {
+	   	console.error('Error fetching server prices:', error);
+	   	if (!cancelled) {
+	   		serverPrices = [];
+	   	}
+	   } finally {
+	   	if (!cancelled) {
+	   		loadingPrices = false;
+	   	}
+	   }
+	  })();
+
+	  // Cleanup function
+	  return () => {
+	   cancelled = true;
+	  };
+	 } else {
+	  serverPrices = [];
+	  loadingPrices = false;
+	 }
+	});
 </script>
 
 <Drawer bind:hidden={hidden} backdrop={true} bgOpacity="bg-black/25" placement="right" transitionType="fly" transitionParams={transitionParamsRight} id="server-detail-drawer" width="w-96" class="border-l-1">
@@ -124,7 +154,7 @@
 		<h5 class="inline-flex items-center text-base font-semibold text-gray-500 dark:text-gray-400">
 			Server Details
 		</h5>
-		<CloseButton on:click={closeDrawer} class="ms-auto" />
+		<CloseButton onclick={closeDrawer} class="ms-auto" />
 	</div>
 
 	{#if config}
@@ -133,9 +163,10 @@
 				<h5 class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
 					{config.cpu}
 				</h5>
-				<Button size="xs" color="alternative" on:click={() => {
-					if (config) {
-						const newFilter = convertServerConfigurationToFilter(config);
+				<Button size="xs" color="alternative" onclick={() => {
+					const currentConfig = config; // Use captured value
+					if (currentConfig) {
+						const newFilter = convertServerConfigurationToFilter(currentConfig);
 						filter.set(newFilter);
 						if (window.location.pathname !== '/analyze') {
 							goto('/analyze');
@@ -156,93 +187,24 @@
 				</span>
 				<span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{vatSuffix}</span>
 				<span class="text-gray-400 text-xs ml-1">monthly</span>
+				<!-- Markup Percentage Display -->
 				{#if config.markup_percentage !== null}
 					<div class="text-gray-400 text-xs mt-1">
-						<span class="text-gray-500">
-							{#if (config.markup_percentage ?? 0) > 0}
-								<span
-									style={`color: hsl(${Math.max(
-										0,
-										Math.min(
-											120,
-											(120 *
-												(10 -
-													(config.markup_percentage ?? 0))) /
-												10,
-										),
-									)}, 70%,
-				50%);`}>{(config.markup_percentage ?? 0).toFixed(0)}%</span
-								> higher than best
-							{:else}
-								best price
-							{/if}
-						</span>
+						{#if config.markup_percentage > 0}
+							<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}>
+								{(config.markup_percentage ?? 0).toFixed(0)}%
+							</span> higher than best
+						{:else}
+							best price
+						{/if}
 					</div>
 				{/if}
-			</div>
-
-			<!-- Aligned Hardware Details -->
-			<div class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[50px,1fr] gap-x-3 gap-y-1 mb-3">
-				<!-- RAM -->
-				<div class="flex items-center text-sm">
-					<Fa icon={faMemory} class="me-1 w-4 text-gray-500" />
-					RAM
-				</div>
-				<div class="text-sm">
-					{config.ram_size} GB
-				</div>
-
-				<!-- NVMe Drives -->
-				{#if config.nvme_drives.length > 0}
-					<div class="flex items-center text-sm">
-						<Fa icon={faSdCard} class="me-1 w-4 text-gray-500" />
-						NVMe
-					</div>
-					<div class="text-sm">
-						{summarizeNumbers(config.nvme_drives)
-							.map((d) => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`)
-							.join(', ')}
-					</div>
-				{/if}
-
-				<!-- SATA Drives -->
-				{#if config.sata_drives.length > 0}
-					<div class="flex items-center text-sm">
-						<Fa icon={faSdCard} class="me-1 w-4 text-gray-500" />
-						SATA
-					</div>
-					<div class="text-sm">
-						{summarizeNumbers(config.sata_drives)
-							.map((d) => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`)
-							.join(', ')}
-					</div>
-				{/if}
-
-				<!-- HDD Drives -->
-				{#if config.hdd_drives.length > 0}
-					<div class="flex items-center text-sm">
-						<Fa icon={faHardDrive} class="me-1 w-4 text-gray-500" />
-						HDD
-					</div>
-					<div class="text-sm">
-						{summarizeNumbers(config.hdd_drives)
-							.map((d) => `${d.count}× ${getFormattedDiskSize(d.value, 1)}`)
-							.join(', ')}
-					</div>
-				{/if}
-			</div>
-
-			<!-- Badges -->
-			<div class="flex flex-wrap gap-2">
-				{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
-				{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
-				{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
-				{#if config.with_hwr}<span><Badge border>HWR</Badge></span>{/if}
-				{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
 			</div>
 
 		</div>
 
+<!-- Server Hardware Details -->
+			<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} class="mb-3" />
 		<div class="flex items-center justify-between mb-1">
 			<h6 class="text-lg font-medium text-gray-900 dark:text-white">Auctions</h6>
 			{#if config}

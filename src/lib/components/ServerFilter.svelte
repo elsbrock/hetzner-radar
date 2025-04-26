@@ -127,10 +127,10 @@
     $: if (filter) {
         ramSizeLower = getFormattedMemorySize(filter.ramInternalSize[0]);
         ramSizeUpper = getFormattedMemorySize(filter.ramInternalSize[1]);
-        ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0]);
-        ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1]);
-        ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0]);
-        ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1]);
+        ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0], 500);
+        ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1], 500);
+        ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0], 500);
+        ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1], 500);
         hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
         hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
     }
