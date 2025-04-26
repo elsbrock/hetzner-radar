@@ -110,22 +110,10 @@
   <!-- Hero Section -->
   <section class="mx-auto my-10 max-w-7xl text-center">
     <h1 class="mb-6 text-5xl font-extrabold text-gray-800">
-      Find the Best Deals on Hetzner Dedicated Servers
+      Stop Overpaying for Hetzner Auction Servers
     </h1>
     <p class="text-lg text-gray-600 mb-10">
-      <strong>Server Radar</strong> monitors
-      <span class="underline decoration-orange-500 decoration-2"
-        >Hetzner Auctions' prices</span
-      >, providing valuable insights to help you navigate the marketplace
-      confidently. Now, you can also
-      <span class="underline decoration-orange-500 decoration-2"
-        >configure email alerts</span
-      >
-      to be notified when your target price is reached for your desired server configuration.
-      Track daily price updates, analyze server configurations, and
-      <span class="underline decoration-orange-500 decoration-2"
-        >make informed decisions effortlessly.</span
-      >
+      Tired of missing the best deals on Hetzner's Server Auction? <strong>Server Radar</strong> tracks prices over time, providing the historical insights, advanced filtering, and <span class="underline decoration-orange-500 decoration-2">free email alerts</span> you need. Find the right server at the right price, effortlessly.
     </p>
     <div class="flex justify-center space-x-4">
       <Button
@@ -152,10 +140,7 @@
       Key Features
     </h2>
     <p class="mb-10 mx-auto md:w-2/3 text-center text-gray-600">
-      Discover the powerful tools that make <strong>Server Radar</strong> your ultimate
-      companion for finding the best Hetzner server deals. From comprehensive price
-      tracking to advanced filtering and alerts, we've got you covered with features
-      designed to optimize your server purchasing experience.
+      <strong>Server Radar</strong> equips you with the tools to navigate the Hetzner Server Auction market effectively. Save time, save money, and find the perfect configuration with features designed for smart purchasing:
     </p>
     <div
       class="grid grid-cols-1 justify-items-center gap-x-4 gap-y-10 md:grid-cols-2 lg:grid-cols-3"
@@ -170,9 +155,9 @@
           Price History Tracking
         </h3>
         <p class="text-gray-600">
-          Monitor price trends over time for specific server configurations to
-          ensure you get the best deal. Understand the market fluctuations and
-          make strategic purchasing decisions based on historical data.
+          Monitor price trends for specific server configurations. Understand
+          market fluctuations and make strategic purchasing decisions based on
+          historical data to secure the best value.
         </p>
       </Card>
 
@@ -186,9 +171,9 @@
           Advanced Filtering
         </h3>
         <p class="text-gray-600">
-          Filter servers by precise specs, such as exact disk configurations,
-          ensuring you find exactly what you need with ease. Customize your
-          search to match your specific requirements.
+          Filter servers by precise specs, including CPU, RAM, and exact disk
+          configurations. Find exactly what you need quickly and customize
+          your search to match specific requirements.
         </p>
       </Card>
 
@@ -200,9 +185,9 @@
         />
         <h3 class="mb-4 text-2xl font-bold text-gray-800">Price Alerts</h3>
         <p class="text-gray-600">
-          Get notified via email when your preferred price is reached to plan
-          your purchases better and avoid missing out on deals. And the best
-          part is: it's free!
+          Set your target price and get notified via email when a matching server
+          hits the auction. Plan your purchases effectively and never miss out
+          on the perfect deal again – completely free!
         </p>
       </Card>
     </div>
@@ -214,10 +199,7 @@
       How It Works
     </h2>
     <p class="mb-10 mx-auto md:w-2/3 text-center text-gray-600">
-      Our streamlined process ensures you can effortlessly find and secure the
-      best Hetzner server deals. <strong>Server Radar</strong> empowers you to make
-      smart purchasing decisions through intuitive tools and notifications. Here's
-      how it works:
+      Finding the right Hetzner auction server at the best price is simple with <strong>Server Radar</strong>. Follow these steps to make smarter purchasing decisions:
     </p>
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
       <Card class="flex flex-col items-center text-center shadow-md h-full">
@@ -227,12 +209,12 @@
           size="3x"
         />
         <h3 class="mb-4 text-2xl font-bold text-gray-800">
-          Step 1: Define Preferences
+          Step 1: Filter & Find
         </h3>
         <p class="text-gray-600">
-          Choose the server specifications that meet your needs, including CPU,
-          RAM, storage configurations, and datacenter location. View all the
-          matching configurations we have observed.
+          Use advanced filters to specify the exact server specifications you need
+          – CPU, RAM, storage, location, and more. Instantly see all matching
+          configurations observed in the auction history.
         </p>
       </Card>
 
@@ -246,9 +228,9 @@
           Step 2: Analyze Price Trends
         </h3>
         <p class="text-gray-600">
-          Utilize our analytics tools to review price histories and availability
-          trends for your selected configurations, ensuring you stay informed
-          about market movements and make data-driven decisions.
+          Review detailed price histories and availability trends for your chosen
+          configurations. Understand market movements and make data-driven
+          decisions based on comprehensive historical insights.
         </p>
       </Card>
 
@@ -262,9 +244,9 @@
           Step 3: Configure Alerts
         </h3>
         <p class="text-gray-600">
-          Leverage the insights gained to purchase servers at the optimal price
-          and configuration. Receive email notifications when your desired price
-          is met, ensuring you never miss a great deal.
+          Set your target price for desired configurations and receive free email
+          notifications the moment a matching server appears in the auction.
+          Purchase confidently, knowing you've secured a great deal.
         </p>
       </Card>
     </div>
@@ -275,8 +257,7 @@
       At A Glance
     </h2>
     <p class="mb-10 mx-auto md:w-2/3 text-center text-gray-600">
-      Real-time insights into the servers we track, the users we serve, and the
-      alerts we deliver.
+      Key metrics showcasing the activity and reach of the Server Radar platform.
     </p>
     <div
       class="mx-auto my-12 max-w-7xl p-8 bg-white rounded-lg shadow-sm flex flex-col sm:flex-row gap-8 sm:gap-0 items-center sm:items-center justify-center"
@@ -494,5 +475,12 @@
         Report an Issue
       </Button>
     </div>
+  </section>
+
+  <!-- Disclaimer Note -->
+  <section class="mx-auto mt-16 mb-4 max-w-4xl text-center">
+    <p class="text-xs text-gray-500">
+      Server Radar is an independent project and is not affiliated with, endorsed, or sponsored by Hetzner Online GmbH. "Hetzner" is a trademark of Hetzner Online GmbH. Data accuracy is not guaranteed. Use at your own risk. See <a href="/terms" class="underline hover:text-orange-500">Terms</a> and <a href="/privacy" class="underline hover:text-orange-500">Privacy Policy</a>.
+    </p>
   </section>
 </main>
