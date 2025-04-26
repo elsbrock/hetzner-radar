@@ -201,7 +201,11 @@ export async function getConfigurations(
             MAX(seen) AS last_seen,
             MIN(price + ${HETZNER_IPV4_COST_CENTS/100}) AS min_price, -- Add IPv4 cost
             MAX_BY(price + ${HETZNER_IPV4_COST_CENTS/100}, seen) AS price, -- Add IPv4 cost
-            (MAX_BY(price + ${HETZNER_IPV4_COST_CENTS/100}, seen) - MIN(price + ${HETZNER_IPV4_COST_CENTS/100})) AS markup_percentage -- Add IPv4 cost
+            CASE
+                WHEN MIN(price + ${HETZNER_IPV4_COST_CENTS/100}) > 0 THEN
+                    ((MAX_BY(price + ${HETZNER_IPV4_COST_CENTS/100}, seen) - MIN(price + ${HETZNER_IPV4_COST_CENTS/100})) / MIN(price + ${HETZNER_IPV4_COST_CENTS/100})) * 100
+                ELSE 0 -- Avoid division by zero, assume 0% markup if min price is 0
+            END AS markup_percentage -- Calculate percentage markup
         from server
         WHERE `;
             configurations_query.append(configurations_filter_query);

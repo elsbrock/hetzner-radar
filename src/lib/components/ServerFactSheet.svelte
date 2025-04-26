@@ -67,7 +67,7 @@
 <div class={className}>
 	<!-- Hardware Details Grid -->
 	<div
-		class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[10px,40px,100px,70px] gap-x-3 gap-y-1 mb-3"
+		class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[10px,40px,70px,80px] gap-x-3 gap-y-1 mb-3"
 	>
 		<!-- RAM -->
 		<div class="flex items-center justify-center text-sm"> <!-- Col 1: Icon -->

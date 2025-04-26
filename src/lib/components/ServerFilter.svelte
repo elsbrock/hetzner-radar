@@ -145,11 +145,23 @@
                 <FontAwesomeIcon class="w-4 h-4 me-1" icon={faGlobe} /> Location
             </h2>
         </li>
-        <li>
-            <Toggle size="small" bind:checked={filter.locationGermany}>Germany</Toggle>
-        </li>
-        <li>
-            <Toggle size="small" bind:checked={filter.locationFinland}>Finland</Toggle>
+        <li class="flex gap-2 h-10">
+            <Button
+                color="alternative"
+                class="flex-1 flex flex-row items-center justify-center p-1 text-center {filter!.locationGermany ? 'border-l-2 border-primary-600' : ''}"
+                onclick={() => (filter!.locationGermany = !filter!.locationGermany)}
+            >
+                <span class="me-1">🇩🇪</span>
+                <span class="text-md">Germany</span>
+            </Button>
+            <Button
+                color="alternative"
+                class="flex-1 flex flex-row items-center justify-center p-1 text-center {filter!.locationFinland ? 'border-l-2 border-primary-600' : ''}"
+                onclick={() => (filter!.locationFinland = !filter!.locationFinland)}
+            >
+                <span class="me-1">🇫🇮</span>
+                <span class="text-md">Finland</span>
+            </Button>
         </li>
 
         <!-- Datacenter Filters -->
@@ -177,11 +189,23 @@
             </h2>
         </li>
         <li><Label class="text-sm">Vendor</Label></li>
-        <li>
-            <Toggle size="small" bind:checked={filter.cpuIntel}>Intel</Toggle>
-        </li>
-        <li>
-            <Toggle size="small" bind:checked={filter.cpuAMD}>AMD</Toggle>
+        <li class="flex gap-2 h-10">
+             <Button
+                color="alternative"
+                class="flex-1 flex flex-row items-center justify-center p-1 text-center {filter!.cpuIntel ? 'border-l-2 border-primary-600' : ''}"
+                onclick={() => (filter!.cpuIntel = !filter!.cpuIntel)}
+            >
+                <FontAwesomeIcon class="w-3 h-3 me-1" icon={faMicrochip} />
+                <span class="text-md">Intel</span>
+            </Button>
+             <Button
+                color="alternative"
+                class="flex-1 flex flex-row items-center justify-center p-1 text-center {filter!.cpuAMD ? 'border-l-2 border-primary-600' : ''}"
+                onclick={() => (filter!.cpuAMD = !filter!.cpuAMD)}
+            >
+                <FontAwesomeIcon class="w-3 h-3 me-1" icon={faMicrochip} />
+                <span class="text-md">AMD</span>
+            </Button>
         </li>
         <li><h2>Model</h2></li>
         <li>
@@ -219,7 +243,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter!.ramInternalSize = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) => (filter!.ramInternalSize = e.detail.values as [number, number])}
             />
         </li>
         <li>
@@ -229,17 +253,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasECC = true)}
+                            onclick={() => (filter!.extrasECC = true)}
                             checked={filter.extrasECC === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasECC = false)}
+                            onclick={() => (filter!.extrasECC = false)}
                             checked={filter.extrasECC === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasECC = null)}
+                            onclick={() => (filter!.extrasECC = null)}
                             checked={filter.extrasECC === null}>any</Button
                         >
                     </ButtonGroup>
@@ -280,7 +304,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter!.ssdNvmeCount = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) => (filter!.ssdNvmeCount = e.detail.values as [number, number])}
             />
         </li>
         <li class="flex justify-between">
@@ -303,8 +327,8 @@
                 pips
                 range
                 pushy
-                on:change={(e) =>
-                    (filter!.ssdNvmeInternalSize = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) =>
+                    (filter!.ssdNvmeInternalSize = e.detail.values as [number, number])}
             />
         </li>
 
@@ -334,7 +358,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter!.ssdSataCount = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) => (filter!.ssdSataCount = e.detail.values as [number, number])}
             />
         </li>
         <li class="flex justify-between">
@@ -357,8 +381,8 @@
                 pips
                 range
                 pushy
-                on:change={(e) =>
-                    (filter!.ssdSataInternalSize = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) =>
+                    (filter!.ssdSataInternalSize = e.detail.values as [number, number])}
             />
         </li>
 
@@ -386,7 +410,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter!.hddCount = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) => (filter!.hddCount = e.detail.values as [number, number])}
             />
         </li>
         <li class="flex justify-between">
@@ -409,7 +433,7 @@
                 pips
                 range
                 pushy
-                on:change={(e) => (filter!.hddInternalSize = e.detail.values)}
+                on:change={(e: CustomEvent<{ values: number[] }>) => (filter!.hddInternalSize = e.detail.values as [number, number])}
             />
         </li>
 
@@ -427,17 +451,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasINIC = true)}
+                            onclick={() => (filter!.extrasINIC = true)}
                             checked={filter.extrasINIC === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasINIC = false)}
+                            onclick={() => (filter!.extrasINIC = false)}
                             checked={filter.extrasINIC === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasINIC = null)}
+                            onclick={() => (filter!.extrasINIC = null)}
                             checked={filter.extrasINIC === null}>any</Button
                         >
                     </ButtonGroup>
@@ -452,17 +476,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasHWR = true)}
+                            onclick={() => (filter!.extrasHWR = true)}
                             checked={filter.extrasHWR === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasHWR = false)}
+                            onclick={() => (filter!.extrasHWR = false)}
                             checked={filter.extrasHWR === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasHWR = null)}
+                            onclick={() => (filter!.extrasHWR = null)}
                             checked={filter.extrasHWR === null}>any</Button
                         >
                     </ButtonGroup>
@@ -477,17 +501,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasGPU = true)}
+                            onclick={() => (filter!.extrasGPU = true)}
                             checked={filter.extrasGPU === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasGPU = false)}
+                            onclick={() => (filter!.extrasGPU = false)}
                             checked={filter.extrasGPU === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasGPU = null)}
+                            onclick={() => (filter!.extrasGPU = null)}
                             checked={filter.extrasGPU === null}>any</Button
                         >
                     </ButtonGroup>
@@ -502,17 +526,17 @@
                     <ButtonGroup class="flex">
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasRPS = true)}
+                            onclick={() => (filter!.extrasRPS = true)}
                             checked={filter.extrasRPS === true}>yes</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasRPS = false)}
+                            onclick={() => (filter!.extrasRPS = false)}
                             checked={filter.extrasRPS === false}>no</Button
                         >
                         <Button
                             size="xs"
-                            on:click={() => (filter!.extrasRPS = null)}
+                            onclick={() => (filter!.extrasRPS = null)}
                             checked={filter.extrasRPS === null}>any</Button
                         >
                     </ButtonGroup>
@@ -544,3 +568,4 @@
         --range-handle-focus: var(--tw-primary-600);
     }
 </style>
+

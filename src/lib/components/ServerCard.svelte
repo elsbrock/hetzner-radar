@@ -58,7 +58,7 @@
 </script>
 
 <Card
-	class={defaultClasses}
+	class={`${defaultClasses} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-500' : ''}`}
 	data-testid="server-card"
 	style="padding: 15px"
 	onclick={() => {
