@@ -67,7 +67,7 @@
 <div class={className}>
 	<!-- Hardware Details Grid -->
 	<div
-		class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[10px,40px,70px,80px] gap-x-3 gap-y-1 mb-3"
+		class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[10px,40px,80px,80px] gap-x-3 gap-y-1 mb-3"
 	>
 		<!-- RAM -->
 		<div class="flex items-center justify-center text-sm"> <!-- Col 1: Icon -->
@@ -96,7 +96,7 @@
 					{/each}
 				</span>
 			</div>
-			<div class="text-sm text-right"> <!-- Col 4: Price -->
+			<div class="text-sm text-right flex items-center justify-end"> <!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbNvme > 0}
 					<span class="text-xs text-gray-500">({pricePerTbNvme.toFixed(2)} €/TB)</span>
 				{/if}
@@ -116,7 +116,7 @@
 					{/each}
 				</span>
 			</div>
-			<div class="text-sm text-right"> <!-- Col 4: Price -->
+			<div class="text-sm text-right flex items-center justify-end"> <!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbSata > 0}
 					<span class="text-xs text-gray-500">({pricePerTbSata.toFixed(2)} €/TB)</span>
 				{/if}
@@ -136,7 +136,7 @@
 					{/each}
 				</span>
 			</div>
-			<div class="text-sm text-right"> <!-- Col 4: Price -->
+			<div class="text-sm text-right flex items-center justify-end"> <!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbHdd > 0}
 					<span class="text-xs text-gray-500">({pricePerTbHdd.toFixed(2)} €/TB)</span>
 				{/if}
