@@ -13,11 +13,14 @@
     import HetznerModal from "./HetznerModal.svelte";
     import ServerCard from "./ServerCard.svelte";
 
-    export let loading = true;
-    export let serverList: ServerConfiguration[];
-    export let timeUnitPrice: "perHour" | "perMonth" = "perHour";
-
-    let showDisclaimer = false;
+    interface $$Props {
+        loading?: boolean;
+        serverList: ServerConfiguration[];
+        timeUnitPrice?: "perHour" | "perMonth";
+    }
+    let { loading = true, serverList, timeUnitPrice = "perHour" } = $props(); // <-- Remove type argument
+    
+    let showDisclaimer = $state(false); // Use $state for local reactive state
     let acceptedDisclaimer = false;
 </script>
 
@@ -26,7 +29,7 @@
 w-full gap-4 px-5 mb-5"
 >
     {#each serverList.slice(0, 100) as config}
-        <ServerCard {config} {loading} {timeUnitPrice} displayMarkupPercentage>
+        <ServerCard {config} {loading} {timeUnitPrice} displayStoragePrice={undefined} displayRamPrice={undefined}>
             <ButtonGroup
                 slot="buttons"
                 size="xs"
@@ -44,7 +47,7 @@ w-full gap-4 px-5 mb-5"
                 "
             >
                 <Button
-                    on:click={() => {
+                    onclick={() => { // <-- Use onclick
                         const newFilter =
                             convertServerConfigurationToFilter(config);
                         if (!isIdenticalFilter(newFilter, $filter)) {
@@ -56,7 +59,7 @@ w-full gap-4 px-5 mb-5"
                     <FontAwesomeIcon icon={faMagnifyingGlass} class="w-4 h-4" />
                 </Button>
                 <Button
-                    on:click={(e) => {
+                    onclick={(e: MouseEvent) => { // <-- Use onclick and type event
                         if (!acceptedDisclaimer) {
                             showDisclaimer = true;
                             e.preventDefault();
