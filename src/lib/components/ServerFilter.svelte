@@ -743,4 +743,7 @@
         --range-handle-inactive: var(--tw-primary-600);
         --range-handle-focus: var(--tw-primary-600);
     }
+    :global(.rangeSlider) {
+        font-size: 12px;
+    }
 </style>
