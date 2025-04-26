@@ -67,7 +67,7 @@
 <div class={className}>
 	<!-- Hardware Details Grid -->
 	<div
-		class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[10px,40px,80px,80px] gap-x-3 gap-y-1 mb-3"
+		class="font-normal text-gray-700 dark:text-gray-400 leading-tight grid grid-cols-[10px,40px,100px,70px] gap-x-3 gap-y-1 mb-3"
 	>
 		<!-- RAM -->
 		<div class="flex items-center justify-center text-sm"> <!-- Col 1: Icon -->
@@ -92,7 +92,7 @@
 			<div class="text-sm"> <!-- Col 3: Details -->
 				<span>
 					{#each summarizeNumbers(config.nvme_drives) as summary, i (summary.value)}
-						{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(summary.value)}{i < summarizeNumbers(config.nvme_drives).length - 1 ? ', ' : ''}
+						<span class="whitespace-nowrap">{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(summary.value)}</span>{i < summarizeNumbers(config.nvme_drives).length - 1 ? ', ' : ''}
 					{/each}
 				</span>
 			</div>
@@ -112,7 +112,7 @@
 			<div class="text-sm"> <!-- Col 3: Details -->
 				<span>
 					{#each summarizeNumbers(config.sata_drives) as summary, i (summary.value)}
-						{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(summary.value)}{i < summarizeNumbers(config.sata_drives).length - 1 ? ', ' : ''}
+						<span class="whitespace-nowrap">{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(summary.value)}</span>{i < summarizeNumbers(config.sata_drives).length - 1 ? ', ' : ''}
 					{/each}
 				</span>
 			</div>
@@ -132,7 +132,7 @@
 			<div class="text-sm"> <!-- Col 3: Details -->
 				<span>
 					{#each summarizeNumbers(config.hdd_drives) as summary, i (summary.value)}
-						{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(summary.value)}{i < summarizeNumbers(config.hdd_drives).length - 1 ? ', ' : ''}
+						<span class="whitespace-nowrap">{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(summary.value)}</span>{i < summarizeNumbers(config.hdd_drives).length - 1 ? ', ' : ''}
 					{/each}
 				</span>
 			</div>
