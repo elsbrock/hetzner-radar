@@ -12,7 +12,13 @@
     faForwardStep,
   } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { Button, Card } from "flowbite-svelte";
+  import {
+    Button,
+    Card,
+    Timeline,
+    TimelineItem,
+    // Reverted: Removed Avatar, Blockquote
+  } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { cubicOut } from "svelte/easing";
   import { tweened } from "svelte/motion";
@@ -201,55 +207,59 @@
     <p class="mb-10 mx-auto md:w-2/3 text-center text-gray-600">
       Finding the right Hetzner auction server at the best price is simple with <strong>Server Radar</strong>. Follow these steps to make smarter purchasing decisions:
     </p>
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-      <Card class="flex flex-col items-center text-center shadow-md h-full">
-        <FontAwesomeIcon
-          class="mb-4 w-8 h-8 text-orange-500"
-          icon={faForwardStep}
-          size="3x"
-        />
-        <h3 class="mb-4 text-2xl font-bold text-gray-800">
-          Step 1: Filter & Find
-        </h3>
-        <p class="text-gray-600">
-          Use advanced filters to specify the exact server specifications you need
-          – CPU, RAM, storage, location, and more. Instantly see all matching
-          configurations observed in the auction history.
+    <Timeline order="vertical" class="mx-auto max-w-3xl bg-white rounded-lg shadow-sm p-6">
+      <TimelineItem title="Step 1: Filter & Find">
+        <svelte:fragment slot="icon">
+          <span
+            class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
+          >
+            <FontAwesomeIcon
+              icon={faForwardStep}
+              class=" text-orange-600 dark:text-orange-300"
+            />
+          </span>
+        </svelte:fragment>
+        <p class="text-base font-normal text-gray-500 dark:text-gray-400">
+          Use advanced filters to specify the exact server specifications you
+          need – CPU, RAM, storage, location, and more. Instantly see all
+          matching configurations observed in the auction history.
         </p>
-      </Card>
-
-      <Card class="flex flex-col items-center text-center shadow-md h-full">
-        <FontAwesomeIcon
-          class="mb-4 w-8 h-8 text-orange-500"
-          icon={faChartLine}
-          size="3x"
-        />
-        <h3 class="mb-4 text-2xl font-bold text-gray-800">
-          Step 2: Analyze Price Trends
-        </h3>
-        <p class="text-gray-600">
-          Review detailed price histories and availability trends for your chosen
-          configurations. Understand market movements and make data-driven
-          decisions based on comprehensive historical insights.
+      </TimelineItem>
+      <TimelineItem title="Step 2: Analyze Price Trends">
+        <svelte:fragment slot="icon">
+          <span
+            class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
+          >
+            <FontAwesomeIcon
+              icon={faChartLine}
+              class=" text-orange-600 dark:text-orange-300"
+            />
+          </span>
+        </svelte:fragment>
+        <p class="text-base font-normal text-gray-500 dark:text-gray-400">
+          Review detailed price histories and availability trends for your
+          chosen configurations. Understand market movements and make
+          data-driven decisions based on comprehensive historical insights.
         </p>
-      </Card>
-
-      <Card class="flex flex-col items-center text-center shadow-md h-full">
-        <FontAwesomeIcon
-          class="mb-4 w-8 h-8 text-orange-500"
-          icon={faBell}
-          size="3x"
-        />
-        <h3 class="mb-4 text-2xl font-bold text-gray-800">
-          Step 3: Configure Alerts
-        </h3>
-        <p class="text-gray-600">
-          Set your target price for desired configurations and receive free email
-          notifications the moment a matching server appears in the auction.
-          Purchase confidently, knowing you've secured a great deal.
+      </TimelineItem>
+      <TimelineItem title="Step 3: Configure Alerts">
+        <svelte:fragment slot="icon">
+          <span
+            class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
+          >
+            <FontAwesomeIcon
+              icon={faBell}
+              class=" text-orange-600 dark:text-orange-300"
+            />
+          </span>
+        </svelte:fragment>
+        <p class="text-base font-normal text-gray-500 dark:text-gray-400 -mb-10">
+          Set your target price for desired configurations and receive free
+          email notifications the moment a matching server appears in the
+          auction. Purchase confidently, knowing you've secured a great deal.
         </p>
-      </Card>
-    </div>
+      </TimelineItem>
+    </Timeline>
   </section>
 
   <section id="features" class="mx-auto mb-20 max-w-7xl">
@@ -429,7 +439,7 @@
       </h2>
 
       <!-- Paragraph and Button -->
-      <p class="mx-3 md:w-2/3 mx-auto mb-6 text-gray-700">
+      <p class="md:w-2/3 mx-auto mb-6 text-gray-700">
         <strong>Server Radar</strong> is proudly open-source. We believe in transparency
         and community collaboration to continuously improve our tool. Explore our
         code, contribute to the project, or suggest new features on GitHub.
