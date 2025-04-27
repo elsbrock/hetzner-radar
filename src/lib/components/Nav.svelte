@@ -27,14 +27,34 @@
     import { enhance } from "$app/forms";
     import { goto } from "$app/navigation";
     import { session } from "$lib/stores/session";
+    import { settingsStore } from "$lib/stores/settings"; // <-- Import settings store
     import { faGithub } from "@fortawesome/free-brands-svg-icons";
-
+  
     let alertShakeAnim = $state(false);
 
     let activeUrl = $derived($page.url.pathname);
-</script>
-
-<Navbar class="h-15 w-full">
+  
+    // Local reactive state for the theme, initialized from the store
+    let theme = $state($settingsStore.theme);
+  
+    // Effect to update the store when the local theme state changes
+    $effect(() => {
+        // Avoid writing back to the store if the change originated from the store itself
+        if (theme !== $settingsStore.theme) {
+            settingsStore.updateSetting('theme', theme);
+        }
+    });
+  
+     // Effect to update local state if the store changes externally (e.g., another tab)
+     // Using .pre ensures this runs before the effect above if both trigger in the same tick
+     $effect.pre(() => {
+         if ($settingsStore.theme !== theme) {
+             theme = $settingsStore.theme;
+         }
+     });
+  </script>
+  
+  <Navbar class="h-15 w-full">
     <NavBrand href="/">
         <div style="width: 32px; height: 32px">
             <Radar />
@@ -75,6 +95,7 @@
         </Button>
         <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-3"></div>
         <div class="flex items-center">
+            <!-- Use DarkMode component directly -->
             <DarkMode />
         </div>
     </div>
@@ -143,17 +164,40 @@
             <NavLi href="/settings">
                 <FontAwesomeIcon class="me-1 w-4 h-4" icon={faUser} /> Settings
             </NavLi>
-            <form
+            <!-- Mobile only container for controls -->
+            <div class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700">
+                <form
+                    action="/auth/logout"
+                    method="POST"
+                    use:enhance={() => {
+                        session.set(null);
+                        return goto("/auth/logout");
+                    }}
+                    class="flex-grow mr-2"
+                >
+                    <Button outline class="w-full bg-white dark:bg-inherit" type="submit">
+                        <FontAwesomeIcon
+                            class="me-1 w-4 h-4"
+                            icon={faRightFromBracket}
+                        /> Sign Out
+                    </Button>
+                </form>
+                 <!-- Use DarkMode component directly -->
+                <DarkMode />
+            </div>
+            <!-- Desktop only Sign Out -->
+             <form
                 action="/auth/logout"
                 method="POST"
                 use:enhance={() => {
                     session.set(null);
                     return goto("/auth/logout");
                 }}
+                 class="hidden md:block"
             >
                 <Button
                     outline
-                    class="w-full md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
+                    class="md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
                     type="submit"
                 >
                     <FontAwesomeIcon
@@ -163,14 +207,24 @@
                 </Button>
             </form>
         {:else}
+             <!-- Mobile only container for controls -->
+            <div class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700">
+                 <Button outline class="flex-grow mr-2 bg-white dark:bg-inherit" href="/auth/login">
+                    <FontAwesomeIcon class="me-1 w-4 h-4" icon={faKey} /> Sign In
+                </Button>
+                 <!-- Use DarkMode component directly -->
+                <DarkMode />
+            </div>
+             <!-- Desktop only Sign In -->
             <Button
                 outline
-                class="w-full md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
+                class="hidden md:block md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
                 href="/auth/login"
             >
                 <FontAwesomeIcon class="me-1 w-4 h-4" icon={faKey} /> Sign In
             </Button>
         {/if}
+        <!-- Removed separate mobile DarkMode NavLi -->
     </NavUl>
 </Navbar>
 
