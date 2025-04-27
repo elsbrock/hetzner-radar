@@ -138,7 +138,7 @@
                     maxlength={MAX_NAME_LENGTH}
                     required
                     value={alert?.name}
-                    class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
             </Label>
 
@@ -156,7 +156,7 @@
                     min="20"
                     max="1000"
                     value={alert?.price}
-                    class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    class="px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
             </Label>
 

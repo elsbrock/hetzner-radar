@@ -75,13 +75,13 @@
     });
 </script>
 
-<main class="p-8 bg-gray-50">
+<main class="p-8 bg-gray-50 dark:bg-gray-900">
     <!-- Page Header -->
     <section class="mx-auto my-12 max-w-7xl text-center">
-        <h1 class="mb-6 text-5xl font-extrabold text-gray-800">
+        <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
             Choose the Right Server for Your Needs
         </h1>
-        <p class="text-lg mb-5 text-gray-600">
+        <p class="text-lg mb-5 text-gray-600 dark:text-gray-400">
             Explore our curated server configurations tailored to different
             usage scenarios. Find the best options that fit your specific needs.
         </p>
@@ -96,10 +96,10 @@
     <section class="mx-auto mb-10 max-w-7xl">
         <!-- Most Affordable Configurations -->
         <div class="mb-16">
-            <h2 class="mb-4 text-3xl font-bold text-gray-800">
+            <h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
                 Most Affordable Configurations
             </h2>
-            <p class="mb-8 text-gray-600">
+            <p class="mb-8 text-gray-600 dark:text-gray-400">
                 Perfect for budget-conscious users looking to maximize value
                 without compromising essential features.
             </p>
@@ -107,7 +107,7 @@
                 {#if loading}
                     <!-- Loading placeholders -->
                     {#each Array(4) as _, i}
-                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                             <div class="flex items-center justify-center h-full">
                                 <Spinner size="8" />
                             </div>
@@ -140,10 +140,10 @@
 
         <!-- Best Value for Disk Space -->
         <div class="mb-16">
-            <h2 class="mb-4 text-3xl font-bold text-gray-800">
+            <h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
                 Best Value for Disk Space
             </h2>
-            <p class="mb-8 text-gray-600">
+            <p class="mb-8 text-gray-600 dark:text-gray-400">
                 Ideal for data-intensive applications, backups, and
                 storage-heavy projects requiring ample disk space.
             </p>
@@ -151,7 +151,7 @@
                 {#if loading}
                     <!-- Loading placeholders -->
                     {#each Array(4) as _, i}
-                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                             <div class="flex items-center justify-center h-full">
                                 <Spinner size="8" />
                             </div>
@@ -184,10 +184,10 @@
 
         <!-- Best Value for Memory -->
         <div class="mb-16">
-            <h2 class="mb-4 text-3xl font-bold text-gray-800">
+            <h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
                 Best Value for Memory
             </h2>
-            <p class="mb-8 text-gray-600">
+            <p class="mb-8 text-gray-600 dark:text-gray-400">
                 Optimize performance for memory-intensive applications such as
                 databases, virtual machines, and high-traffic websites.
             </p>
@@ -195,7 +195,7 @@
                 {#if loading}
                     <!-- Loading placeholders -->
                     {#each Array(4) as _, i}
-                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                             <div class="flex items-center justify-center h-full">
                                 <Spinner size="8" />
                             </div>
@@ -228,10 +228,10 @@
 
         <!-- Cheapest NVMe Storage -->
         <div class="mb-16">
-            <h2 class="mb-4 text-3xl font-bold text-gray-800">
+            <h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
                 High-Performance NVMe Storage
             </h2>
-            <p class="mb-8 text-gray-600">
+            <p class="mb-8 text-gray-600 dark:text-gray-400">
                 Maximize I/O with NVMe SSDs, perfect for databases, high-traffic
                 sites, and latency-sensitive applications.
             </p>
@@ -239,7 +239,7 @@
                 {#if loading}
                     <!-- Loading placeholders -->
                     {#each Array(4) as _, i}
-                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                             <div class="flex items-center justify-center h-full">
                                 <Spinner size="8" />
                             </div>
@@ -272,10 +272,10 @@
 
         <!-- Cheapest SATA Storage -->
         <div class="mb-16">
-            <h2 class="mb-4 text-3xl font-bold text-gray-800">
+            <h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
                 Affordable SATA SSDs
             </h2>
-            <p class="mb-8 text-gray-600">
+            <p class="mb-8 text-gray-600 dark:text-gray-400">
                 Affordable SATA SSDs balancing speed and cost for general
                 storage, web hosting, and backups.
             </p>
@@ -283,7 +283,7 @@
                 {#if loading}
                     <!-- Loading placeholders -->
                     {#each Array(4) as _, i}
-                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white rounded-lg shadow-md p-4">
+                        <div class="relative flex flex-col justify-between min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                             <div class="flex items-center justify-center h-full">
                                 <Spinner size="8" />
                             </div>
@@ -317,23 +317,23 @@
 
     <!-- Usage Scenarios Section -->
     <section class="mx-auto my-20 max-w-7xl">
-        <h2 class="mb-10 text-center text-4xl font-semibold text-gray-800">
+        <h2 class="mb-10 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100">
             Common Usage Scenarios
         </h2>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             <!-- High-Memory Applications -->
             <div
-                class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"
             >
                 <FontAwesomeIcon
                     class="mb-4 text-orange-500"
                     icon={faMemory}
                     size="3x"
                 />
-                <h3 class="mb-4 text-2xl font-bold text-gray-800">
+                <h3 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
                     High-Memory Applications
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-400">
                     Perfect for running large databases, virtual machines, and
                     applications that require substantial memory resources.
                 </p>
@@ -341,17 +341,17 @@
 
             <!-- Backup Solutions -->
             <div
-                class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"
             >
                 <FontAwesomeIcon
                     class="mb-4 text-orange-500"
                     icon={faDatabase}
                     size="3x"
                 />
-                <h3 class="mb-4 text-2xl font-bold text-gray-800">
+                <h3 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Backup Solutions
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-400">
                     Ideal for storing backups and ensuring data redundancy,
                     providing peace of mind for your critical information.
                 </p>
@@ -359,17 +359,17 @@
 
             <!-- Game Servers -->
             <div
-                class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"
             >
                 <FontAwesomeIcon
                     class="mb-4 text-orange-500"
                     icon={faGamepad}
                     size="3x"
                 />
-                <h3 class="mb-4 text-2xl font-bold text-gray-800">
+                <h3 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Game Servers
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-400">
                     Host multiplayer game servers with low latency and reliable
                     performance to ensure a smooth gaming experience.
                 </p>
@@ -378,51 +378,51 @@
             <!-- Additional Scenarios (Optional) -->
             <!-- You can add more scenarios as needed -->
             <div
-                class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"
             >
                 <FontAwesomeIcon
                     class="mb-4 text-orange-500"
                     icon={faCloud}
                     size="3x"
                 />
-                <h3 class="mb-4 text-2xl font-bold text-gray-800">
+                <h3 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Cloud Applications
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-400">
                     Deploy scalable cloud applications that can handle varying
                     workloads with ease and flexibility.
                 </p>
             </div>
 
             <div
-                class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"
             >
                 <FontAwesomeIcon
                     class="mb-4 text-orange-500"
                     icon={faShieldAlt}
                     size="3x"
                 />
-                <h3 class="mb-4 text-2xl font-bold text-gray-800">
+                <h3 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Secure Hosting
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-400">
                     Host your websites and applications with robust security
                     measures to protect against threats and vulnerabilities.
                 </p>
             </div>
 
             <div
-                class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"
             >
                 <FontAwesomeIcon
                     class="mb-4 text-orange-500"
                     icon={faCode}
                     size="3x"
                 />
-                <h3 class="mb-4 text-2xl font-bold text-gray-800">
+                <h3 class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Development Environments
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-400">
                     Set up reliable and customizable development environments to
                     streamline your software development process.
                 </p>
@@ -432,10 +432,10 @@
 
     <!-- Call to Action -->
     <section class="mx-auto my-12 max-w-7xl text-center">
-        <h2 class="mb-6 text-4xl font-extrabold text-gray-800">
+        <h2 class="mb-6 text-4xl font-extrabold text-gray-800 dark:text-gray-100">
             Ready to Explore More?
         </h2>
-        <p class="text-lg text-gray-600 mb-10">
+        <p class="text-lg text-gray-600 dark:text-gray-400 mb-10">
             Dive into our server configurations and find the perfect setup for
             your projects.
         </p>

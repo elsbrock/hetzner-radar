@@ -10,7 +10,7 @@
     const buildDate = __BUILD_STAMP__;
 </script>
 
-<Footer class="border-t">
+<Footer class="border-t dark:border-gray-700 bg-white dark:bg-gray-800">
     <div class="p-5 sm:flex sm:items-center sm:justify-between">
         <FooterCopyright
             href="/"

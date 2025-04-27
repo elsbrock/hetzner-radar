@@ -44,9 +44,9 @@
 
 {#if showElement}
     <Alert
-        class="border-b border-x border-x-orange-200 rounded-none text-center py-5"
+        class="border-b border-x border-gray-200 dark:border-gray-700 border-x-orange-200 dark:border-x-orange-800 rounded-none text-center py-5"
     >
-        <p class="pb-3">Newer data is available.</p>
+        <p class="pb-3 text-gray-700 dark:text-gray-300">Newer data is available.</p>
         <Button
             color="primary"
             size="xs"

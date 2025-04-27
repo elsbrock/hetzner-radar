@@ -15,6 +15,7 @@
     import {
         Badge,
         Button,
+        DarkMode,
         Navbar,
         NavBrand,
         NavHamburger,
@@ -28,9 +29,9 @@
     import { session } from "$lib/stores/session";
     import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
-    let alertShakeAnim = false;
+    let alertShakeAnim = $state(false);
 
-    $: activeUrl = $page.url.pathname;
+    let activeUrl = $derived($page.url.pathname);
 </script>
 
 <Navbar class="h-15 w-full">
@@ -51,27 +52,31 @@
         </div>
     </NavBrand>
 
-    <div class="hidden lg:flex md:order-2">
+    <div class="hidden lg:flex items-center md:order-2">
         <Button
             size="md"
             color="alternative"
             href="https://github.com/elsbrock/hetzner-radar"
             class="
-            border-gray-400
-            bg-gray-50
+            border-gray-400 dark:border-gray-500
+            bg-gray-50 dark:bg-gray-700
             p-2
             px-4
             ring-4
-            ring-orange-100
-            hover:ring-orange-200
-            hover:border-orange-400
-            text-gray-800
-            hover:text-gray-800
+            ring-orange-100 dark:ring-orange-900/50
+            hover:ring-orange-200 dark:hover:ring-orange-800/50
+            hover:border-orange-400 dark:hover:border-orange-500
+            text-gray-800 dark:text-gray-200
+            hover:text-gray-800 dark:hover:text-gray-100
         "
         >
             <FontAwesomeIcon class="w-5 h-5 me-2" icon={faGithub} />
             Star
         </Button>
+        <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-3"></div>
+        <div class="flex items-center">
+            <DarkMode />
+        </div>
     </div>
 
     <div class="flex md:order-2 lg:hidden">
@@ -103,7 +108,7 @@
         </NavLi>
         {#if $session}
             <div
-                class="border-b"
+                class="border-b dark:border-gray-700"
                 role="menuitem"
                 tabindex="-1"
                 on:mouseenter={() => (alertShakeAnim = true)}

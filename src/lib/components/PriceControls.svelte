@@ -18,7 +18,7 @@
     <!-- Inner container for scrolling content -->
     <div class="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide">
         <ButtonGroup class="flex-shrink-0">
-            <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+            <InputAddon size="sm" class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
                 <FontAwesomeIcon
                     icon={faClock}
                     class="mr-2"

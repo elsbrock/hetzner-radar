@@ -4,8 +4,8 @@
   import { Button } from "flowbite-svelte";
 </script>
 
-<div class="flex items-center justify-center bg-gray-50 py-10 px-3">
-    <div class="p-6 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray w-[450px]">
+<div class="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-10 px-3">
+    <div class="p-6 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800 w-[450px]">
         <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">Goodbye.</h2>
         <div class="text-center">
             <FontAwesomeIcon class="text-8xl text-gray-400

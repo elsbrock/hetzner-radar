@@ -72,12 +72,12 @@
   }
 </script>
 
-<div class="p-8 bg-gray-50">
+<div class="p-8 bg-gray-50 dark:bg-gray-900">
   <section class="mx-auto my-12 max-w-7xl text-center">
-    <h1 class="mb-6 text-5xl font-extrabold text-gray-800">
+    <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
       Dive into our Auction Statistics
     </h1>
-    <p class="text-lg text-gray-600 mb-10">
+    <p class="text-lg text-gray-600 dark:text-gray-400 mb-10">
       Explore comprehensive insights into server availability, pricing trends,
       and configuration distributions to optimize your infrastructure
       investments.

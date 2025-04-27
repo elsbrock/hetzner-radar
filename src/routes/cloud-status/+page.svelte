@@ -241,7 +241,7 @@
 </script>
 
 <div class="p-4 dark:bg-gray-900 dark:text-gray-100">
-	<Heading tag="h1" class="text-3xl font-bold mt-4 mb-4 text-center">Cloud Server Availability</Heading>
+	<Heading tag="h1" class="text-3xl font-bold mt-4 mb-4 text-center dark:text-gray-100">Cloud Server Availability</Heading>
 	<P class="text-center text-lg text-gray-600 dark:text-gray-400 mb-4">
 		Track the real-time availability of Hetzner Cloud server types across different locations.
 	</P>
@@ -259,7 +259,7 @@
 		<!-- Wrapper for Map and Table -->
 		<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
 			<!-- Map Container -->
-			<div class="w-full shadow border dark:border-gray-700 rounded-t-lg overflow-hidden">
+			<div class="w-full shadow border dark:border-gray-700 rounded-t-lg overflow-hidden bg-white dark:bg-gray-800">
 				{#if browser}
 					<div id="map" class="h-96 w-full"></div>
 				{:else}

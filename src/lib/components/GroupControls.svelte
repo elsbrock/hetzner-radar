@@ -26,7 +26,7 @@
 
 <div class="flex items-center">
 	<ButtonGroup size="xs" class="divide-x divide-gray-300 dark:divide-gray-600 font-semibold">
-		<InputAddon size="sm" class="bg-gray-50 text-gray-900 border-r-0">
+		<InputAddon size="sm" class="bg-gray-50 text-gray-900 border-r-0 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
 			<FontAwesomeIcon
 				icon={faSort}
 				class="mr-2"
@@ -36,7 +36,7 @@
 			id="group-by-field"
 			items={groupByFields}
 			bind:value={groupByField}
-			class="w-[120px] rounded-none rounded-r-lg bg-white text-xs"
+			class="w-[120px] rounded-none rounded-r-lg bg-white text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white"
 			size="sm"
 		/>
 		<!-- No direction button needed for grouping -->

@@ -38,7 +38,7 @@
     on:success={() => invalidateAll()}
 />
 
-<div class="p-8 bg-gray-50">
+<div class="p-8 bg-gray-50 dark:bg-gray-900">
     <div class="w-full max-w-4xl mx-auto pb-8 space-y-8">
         <!-- Alerts Section -->
         <section>
@@ -83,7 +83,7 @@
                     <div class="space-y-4">
                         {#each active as alert}
                             <div
-                                class="flex flex-col md:flex-row md:items-start p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-l-4 border-l-gray-300"
+                                class="flex flex-col md:flex-row md:items-start p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-l-4 border-l-gray-300 dark:border-l-gray-700"
                             >
                                 <div class="mb-4 md:mb-0 w-full md:w-1/3">
                                     <span

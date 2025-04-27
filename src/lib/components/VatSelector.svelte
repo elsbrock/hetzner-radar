@@ -61,7 +61,7 @@
 </script>
 
 <ButtonGroup size="xs">
-    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+    <InputAddon size="sm" class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
     <FontAwesomeIcon
             icon={faPercentage}
             class="mr-2"
@@ -76,6 +76,6 @@
             name: formatOptionText(option.flag, option.name, option.rate)
         }))}
         size="sm"
-        class="!rounded-s-none text-xs w-24 bg-white dark:bg-gray-700"
+        class="!rounded-s-none text-xs w-24 bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600"
     />
 </ButtonGroup>

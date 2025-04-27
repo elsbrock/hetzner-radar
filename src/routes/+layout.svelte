@@ -88,7 +88,7 @@
   <meta name="theme-color" content="#FF7F50" />
 </svelte:head>
 
-<div class="bg-gray-50">
+<div class="bg-gray-50 dark:bg-gray-900">
   <Banner version={2} id="vat-auctions">
     <strong>New Feature:</strong> Auction View 🧑‍⚖️
   </Banner>

@@ -57,27 +57,27 @@
     </div>
 </Modal>
 
-<div class="flex items-center justify-center bg-gray-50 py-10 px-3">
+<div class="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-10 px-3">
     <div
-        class="p-6 bg-white rounded-lg shadow-md dark:bg-gray w-[450px]"
+        class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800 w-[450px]"
     >
         {#if $session}
-            <h2 class="text-2xl font-semibolddark:text-white mb-4">Account Info</h2>
-            <p class="text-gray-800 dark:text-gray-400 mb-4">
+            <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Account Info</h2>
+            <p class="text-gray-800 dark:text-gray-300 mb-4">
                 This is your account information. We do not store any personal
                 information other than your email address.
             </p>
             <div class="mb-6">
-                <Label for="email" class="block text-gray-800 mb-2">Email Address</Label>
+                <Label for="email" class="block text-gray-800 dark:text-gray-100 mb-2">Email Address</Label>
                 <Input id="email" value={$session.email} disabled />
             </div>
-            <p class="text-gray-800 dark:text-gray-400 mb-4">
+            <p class="text-gray-800 dark:text-gray-300 mb-4">
                 Your email address is used to alert you about price changes and
                 to send you notifications about your account.
             </p>
             <hr class="my-4 border-gray-200 dark:border-gray-700" />
-            <p class="text-base font-semibold dark:text-gray-400 mb-2 text-red-600">Danger Zone</p>
-            <p class="text-gray-400 dark:text-gray-400 mb-4">
+            <p class="text-base font-semibold text-red-600 dark:text-red-500 mb-2">Danger Zone</p>
+            <p class="text-gray-500 dark:text-gray-400 mb-4">
                 Deleting your account will permanently remove all associated information, including any alerts you've set up. This action cannot be undone, but you're welcome to sign up again later.
             </p>
             <form
@@ -105,7 +105,7 @@
             <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
                 Not Logged In
             </h2>
-            <p class="text-gray-800 dark:text-gray-400">
+            <p class="text-gray-800 dark:text-gray-300">
                 You are not logged in.
             </p>
             <Button href="/auth/login" size="sm">Sign In</Button>

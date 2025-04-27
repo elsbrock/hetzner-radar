@@ -46,6 +46,7 @@
         chart: {
             height: "100%",
             width: "100%",
+            background: 'transparent', // Ensure chart background is transparent
             dropShadow: {
                 enabled: false,
             },
@@ -70,6 +71,9 @@
                 enabled: true,
                 allowMouseWheelZoom: false,
             },
+        },
+        theme: { // Add theme config here for dark mode
+            mode: 'dark'
         },
         colors: ["#F97316", "#9CA3AF"],
         fill: {
@@ -263,7 +267,7 @@
         </div>
     {:else if noResults}
         <div class="absolute inset-0 z-10 flex items-center justify-center">
-            <p class="text-2xl">No results.</p>
+            <p class="text-2xl dark:text-gray-400">No results.</p>
         </div>
     {/if}
 </div>

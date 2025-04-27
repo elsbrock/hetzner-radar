@@ -54,11 +54,11 @@
 	});
 
 	const defaultClasses =
-		'relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer';
+		'relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer';
 </script>
 
 <Card
-	class={`${defaultClasses} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-500' : ''}`}
+	class={`${defaultClasses} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700' : ''}`}
 	data-testid="server-card"
 	style="padding: 15px"
 	onclick={() => {
@@ -77,7 +77,7 @@
 			<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
 				{config.cpu}
 			</h5>
-			<div class="text-gray-400 text-xs mb-3">
+			<div class="text-gray-400 dark:text-gray-500 text-xs mb-3">
 				<span class="inline-flex items-center">
 					{#if dayjs.unix(config.last_seen ?? 0) > dayjs().subtract(80, 'minutes')}
 						<Indicator color="green" class="animate-pulse mr-2" size="xs" />
@@ -104,7 +104,7 @@
 						{/if}
 					</span>
 					<span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{vatSuffix}</span>
-					<span class="text-gray-400 text-xs ml-1">
+					<span class="text-gray-400 dark:text-gray-500 text-xs ml-1">
 						{#if timeUnitPrice === 'perMonth'}
 							monthly
 						{:else if timeUnitPrice === 'perHour'}
@@ -112,7 +112,7 @@
 						{/if}
 					</span>
 					{#if config.markup_percentage !== null}
-						<div class="text-gray-400 text-xs mt-1">
+						<div class="text-gray-400 dark:text-gray-500 text-xs mt-1">
 							{#if config.markup_percentage > 0}
 								<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}
 									>{(config.markup_percentage ?? 0).toFixed(0)}%</span

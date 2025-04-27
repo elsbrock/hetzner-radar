@@ -179,7 +179,7 @@
 <div class="flex flex-col w-full sm:w-auto">
     <!-- Regular Layout - Hidden when collapsed on desktop but visible on mobile -->
     <div class="flex items-center justify-between py-2 {isFilterCollapsed ? 'sm:hidden' : ''}">
-        <h1 class="text-xl font-semibold">Filter Settings</h1>
+        <h1 class="text-xl font-semibold dark:text-white">Filter Settings</h1>
         <Button
             color="alternative"
             size="sm"
@@ -217,7 +217,7 @@
     <ul class="space-y-2 font-medium {isFilterCollapsed ? 'hidden' : ''}" data-testid="server-filter">
         <!-- Location Filters -->
         <li class="flex items-center justify-between">
-            <h2 class="flex items-center">
+            <h2 class="flex items-center dark:text-white">
             <FontAwesomeIcon class="w-4 h-4 me-1" icon={faGlobe} /> Location
         </h2>
     </li>
@@ -246,7 +246,7 @@
 
     <!-- Datacenter Filters -->
     <li>
-        <h2>
+        <h2 class="dark:text-white">
             <FontAwesomeIcon
                 class="w-4 h-4 me-2"
                 icon={faBoxesStacked}
@@ -264,7 +264,7 @@
 
     <!-- CPU Filters -->
     <li>
-        <h2>
+        <h2 class="dark:text-white">
             <FontAwesomeIcon class="w-4 h-4 me-2" icon={faMicrochip} />CPU
         </h2>
     </li>
@@ -291,7 +291,7 @@
             }}
         >AMD</Toggle>
     </li>
-    <li><h2>Model</h2></li>
+    <li><h2 class="dark:text-white">Model</h2></li>
     <li>
         <MultiSelect
             class="text-sm"
@@ -303,13 +303,13 @@
 
     <!-- Memory Filters -->
     <li>
-        <h2>
+        <h2 class="dark:text-white">
             <FontAwesomeIcon class="w-4 h-4 me-2" icon={faMemory} />Memory
         </h2>
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">Size</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if ramSizeLower === ramSizeUpper}
                 {ramSizeLower}
             {:else}
@@ -376,18 +376,18 @@
 
     <!-- Disk Filters -->
     <li>
-        <h2>
+        <h2 class="dark:text-white">
             <FontAwesomeIcon class="w-4 h-4 me-2" icon={faHardDrive} />Disks
         </h2>
     </li>
 
     <!-- SSD (NVMe) Filters -->
     <li>
-        <h3>SSDs (NVMe)</h3>
+        <h3 class="dark:text-white">SSDs (NVMe)</h3>
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">Devices</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if filter.ssdNvmeCount[0] === filter.ssdNvmeCount[1]}
                 {filter.ssdNvmeCount[0] === 0
                     ? "none"
@@ -416,7 +416,7 @@
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">Size</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if ssdNvmeSizeLower === ssdNvmeSizeUpper}
                 {ssdNvmeSizeLower}
             {:else}
@@ -444,11 +444,11 @@
 
     <!-- SSD (SATA) Filters -->
     <li>
-        <h3>SSDs (SATA)</h3>
+        <h3 class="dark:text-white">SSDs (SATA)</h3>
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">Devices</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if filter.ssdSataCount[0] === filter.ssdSataCount[1]}
                 {filter.ssdSataCount[0] === 0
                     ? "none"
@@ -477,7 +477,7 @@
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">Size</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if ssdSataSizeLower === ssdSataSizeUpper}
                 {ssdSataSizeLower}
             {:else}
@@ -505,11 +505,11 @@
 
     <!-- HDD Filters -->
     <li>
-        <h3>HDDs</h3>
+        <h3 class="dark:text-white">HDDs</h3>
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">Devices</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if filter.hddCount[0] === filter.hddCount[1]}
                 {filter.hddCount[0] === 0 ? "none" : filter.hddCount[0]}
             {:else}
@@ -536,7 +536,7 @@
     </li>
     <li class="flex justify-between">
         <Label class="text-sm">HDD Size</Label>
-        <span class="ml-2 text-right">
+        <span class="ml-2 text-right dark:text-gray-400">
             {#if hddSizeLower === hddSizeUpper}
                 {hddSizeLower}
             {:else}
@@ -564,7 +564,7 @@
 
     <!-- Extras Filters -->
     <li>
-        <h2>
+        <h2 class="dark:text-white">
             <FontAwesomeIcon class="w-4 h-4 me-2" icon={faTags} />Extras
         </h2>
     </li>
@@ -731,11 +731,15 @@
         --range-handle: var(--tw-primary-600);
         --range-range: var(--tw-primary-600);
         --range-range-inactive: var(--tw-primary-400);
-        --range-slider: rgb(237, 237, 237);
+        --range-slider: rgb(237, 237, 237); /* Default light mode: light gray */
         --range-handle-inactive: var(--tw-primary-600);
         --range-handle-focus: var(--tw-primary-600);
     }
-    
+
+    :root.dark {
+        --range-slider: rgb(55, 65, 81); /* Dark mode: dark gray (gray-700) */
+    }
+
     /* Vertical text for collapsed filter */
     .vertical-text {
         writing-mode: vertical-rl;

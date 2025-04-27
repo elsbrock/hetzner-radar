@@ -10,21 +10,21 @@
     import { Button, Card } from "flowbite-svelte";
 </script>
 
-<div class="bg-gray-50">
+<div class="bg-gray-50 dark:bg-gray-900">
     <div class="max-w-4xl mx-auto p-8">
-        <h1 class="text-4xl font-bold mb-6 text-center text-gray-800">
+        <h1 class="text-4xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
             Contact Us
         </h1>
 
         <!-- Introduction Section -->
         <div class="mb-12 text-center">
-            <p class="text-lg text-gray-600 mb-5">
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-5">
                 Thank you for your interest in Server Radar! We're passionate
                 individuals dedicated to providing valuable tools for the
                 community. Whether you have questions, feedback, or just want to
                 say hello, we'd love to hear from you.
             </p>
-            <p class="text-lg text-gray-600">
+            <p class="text-lg text-gray-600 dark:text-gray-400">
                 Your support and feedback help me improve and continue
                 developing this project. Feel free to reach out through any of
                 the methods below.
@@ -35,18 +35,18 @@
         <section class="grid grid-cols-1 gap-8 md:grid-cols-2">
             <!-- Email Contact Card -->
             <Card
-                class="flex flex-col items-center text-center shadow-lg justify-between"
+                class="flex flex-col items-center text-center shadow-lg justify-between dark:bg-gray-800"
             >
                 <div>
                     <FontAwesomeIcon
                         icon={faEnvelope}
                         size="3x"
-                        class="text-blue-500 mb-4"
+                        class="text-blue-500 dark:text-blue-400 mb-4"
                     />
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-2">
+                    <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                         Email Us
                     </h3>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
                         Have questions or need support? Reach out to us via
                         email, and I'll get back to you as soon as possible.
                     </p>
@@ -63,18 +63,18 @@
 
             <!-- GitHub Sponsorship Card -->
             <Card
-                class="flex flex-col items-center text-center shadow-lg justify-between"
+                class="flex flex-col items-center text-center shadow-lg justify-between dark:bg-gray-800"
             >
                 <div>
                     <FontAwesomeIcon
                         icon={faHandsHelping}
                         size="3x"
-                        class="text-green-500 mb-4"
+                        class="text-green-500 dark:text-green-400 mb-4"
                     />
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-2">
+                    <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                         Support Us
                     </h3>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
                         If you appreciate what we do and would like to support
                         the project, consider becoming a sponsor on GitHub. Your
                         support helps us maintain and improve Server Radar.
@@ -97,12 +97,12 @@
             <FontAwesomeIcon
                 icon={faInfoCircle}
                 size="2x"
-                class="text-gray-500 mb-4"
+                class="text-gray-500 dark:text-gray-400 mb-4"
             />
-            <h2 class="text-3xl font-semibold text-gray-800 mb-4">
+            <h2 class="text-3xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
                 More Ways to Connect
             </h2>
-            <p class="text-gray-600 mb-6">
+            <p class="text-gray-600 dark:text-gray-400 mb-6">
                 You can also discuss on Github. Stay updated with the latest
                 developments and engage with the community!
             </p>

@@ -2,16 +2,16 @@
     import { A } from "flowbite-svelte";
 </script>
 
-<main class="p-8 bg-gray-50">
+<main class="p-8 bg-gray-50 dark:bg-gray-900">
     <section class="mx-auto my-12 max-w-7xl text-center">
-        <h1 class="mb-6 text-5xl font-extrabold text-gray-800">
+        <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
             Terms of Service
         </h1>
     </section>
 
-    <div class="max-w-4xl mx-auto pb-8">
+    <div class="max-w-4xl mx-auto pb-8 text-gray-700 dark:text-gray-300">
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">1. Acceptance of Terms</h2>
             <p>
                 By accessing or using <strong>Server Radar</strong> ("Service"),
                 you agree to comply with and be bound by these Terms. If you do not
@@ -20,7 +20,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">2. Eligibility</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">2. Eligibility</h2>
             <ul class="list-disc ml-5 space-y-2">
                 <li>
                     <strong>Age Requirement:</strong> There are no specific age restrictions
@@ -47,7 +47,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">3. Use of the Service</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">3. Use of the Service</h2>
             <ul class="list-disc ml-5 space-y-2">
                 <li>
                     <strong>Permitted Use:</strong> The Service is designed to track
@@ -81,7 +81,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">4. User Accounts</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">4. User Accounts</h2>
             <ul class="list-disc ml-5 space-y-2">
                 <li>
                     <strong>Account Maintenance:</strong> Users are responsible for
@@ -107,7 +107,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">
                 5. Data Collection and Privacy
             </h2>
             <ul class="list-disc ml-5 space-y-2">
@@ -176,6 +176,7 @@
                     access, rectify, or delete their personal data. To exercise
                     these rights, please contact us at <A
                         href="mailto:mail@radar.iodev.org"
+                        class="text-blue-500 hover:underline dark:text-blue-400 dark:hover:underline"
                         >mail@radar.iodev.org</A
                     >.
                 </li>
@@ -188,7 +189,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">6. Termination</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">6. Termination</h2>
             <p>
                 <strong>Server Radar</strong> reserves the right to suspend or terminate
                 your access to the Service without prior notice if you violate these
@@ -197,7 +198,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">7. Disclaimers</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">7. Disclaimers</h2>
             <ul class="list-disc ml-5 space-y-2">
                 <li>
                     <strong>Service Availability:</strong> The Service is provided
@@ -224,7 +225,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">
                 8. Limitation of Liability
             </h2>
             <p>
@@ -236,7 +237,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">9. Changes to Terms</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">9. Changes to Terms</h2>
             <ul class="list-disc ml-5 space-y-2">
                 <li>
                     <strong>Modification:</strong> We may modify these Terms at any
@@ -255,7 +256,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">10. Governing Law</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">10. Governing Law</h2>
             <p>
                 These Terms are governed by and construed in accordance with the
                 laws of <strong>Germany</strong>, without regard to its conflict
@@ -264,7 +265,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">
                 11. Disclaimer of Affiliation
             </h2>
             <p>
@@ -278,7 +279,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">12. Contact Us</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">12. Contact Us</h2>
             <p>
                 If you have any questions or concerns about these Terms, please
                 contact us at:
@@ -287,6 +288,7 @@
                 <li>
                     <strong>Email:</strong>
                     <A href="mailto:mail@radar.iodev.org"
+                       class="text-blue-500 hover:underline dark:text-blue-400 dark:hover:underline"
                         >mail@radar.iodev.org</A
                     >
                 </li>
@@ -299,7 +301,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">13. Indemnification</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">13. Indemnification</h2>
             <p>
                 Users agree to indemnify, defend, and hold harmless <strong
                     >Server Radar</strong
@@ -312,7 +314,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">14. Severability</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">14. Severability</h2>
             <p>
                 If any provision of these Terms is found to be invalid or
                 unenforceable by a court of competent jurisdiction, the
@@ -321,7 +323,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">15. Entire Agreement</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">15. Entire Agreement</h2>
             <p>
                 These Terms constitute the entire agreement between you and <strong
                     >Server Radar</strong
@@ -331,7 +333,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">16. Acceptable Use</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">16. Acceptable Use</h2>
             <p>
                 Users agree to use the Service solely for its intended purpose
                 of tracking Hetzner server prices, creating alerts, and
@@ -341,7 +343,7 @@
         </section>
 
         <section class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">17. Feedback</h2>
+            <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">17. Feedback</h2>
             <p>
                 Users may provide feedback or suggestions regarding the Service.
                 By submitting feedback, users grant <strong>Server Radar</strong

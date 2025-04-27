@@ -153,14 +153,14 @@
     }
 </script>
 
-<div class="flex items-center justify-center bg-gray-50 py-10 px-3">
+<div class="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-10 px-3">
     <div
-        class="p-6 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray w-[450px]"
+        class="p-6 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800 w-[450px]"
     >
         <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
             Welcome Back!
         </h2>
-        <StepIndicator {currentStep} steps={stepValues} size="h-1.5" />
+        <StepIndicator {currentStep} steps={stepValues} size="h-1.5" class="[&>li>div]:dark:bg-gray-700" />
 
         {#if currentStep === 1}
             <form
@@ -187,19 +187,20 @@
                     };
                 }}
             >
-                <p>
+                <p class="text-gray-600 dark:text-gray-400">
                     Just enter your email, and we will send you a magic link to
                     sign in. <strong>No sign-up required!</strong>
                 </p>
 
                 <div class="mb-6">
-                    <Label for="email" class="mb-2">Email address</Label>
+                    <Label for="email" class="mb-2 dark:text-gray-100">Email address</Label>
                     <Input
                         type="email"
                         name="email"
                         placeholder="john.doe@example.com"
                         required
                         bind:value={email}
+                        class="dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     />
                 </div>
                 <!-- Removed inconsistent form.email check -->
@@ -272,7 +273,7 @@
                     };
                 }}
             >
-                <p>Please check your inbox and enter the received code.</p>
+                <p class="text-gray-600 dark:text-gray-400">Please check your inbox and enter the received code.</p>
                 {#if form?.error}
                     <Alert color="red">
                         <span class="font-medium">Error:</span>
@@ -288,9 +289,9 @@
                             class="block size-[40px] lg:size-[55px] shadow-inner text-center text-lg md:text-3xl border-gray-200 rounded-md
                                  [&::-webkit-outer-spin-button]:appearance-none
                                  [&::-webkit-inner-spin-button]:appearance-none
-                                 focus:outline-none focus:ring-1 focus:ring-orange-500
+                                 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:focus:ring-orange-400
                                  disabled:opacity-50 disabled:pointer-events-none
-                                 caret-transparent dark:bg-neutral-900 dark:border-neutral-700
+                                 caret-transparent dark:bg-gray-700 dark:border-gray-600
                                 dark:text-neutral-400 dark:placeholder-neutral-500
                                 dark:focus:ring-neutral-600 focus:border-0"
                            type="tel"
@@ -306,6 +307,7 @@
                 <div class="flex justify-between items-center w-full">
                     <Button
                         outline
+                        color="alternative"
                         type="button"
                         on:click={() => (currentStep = 1)}
                     >

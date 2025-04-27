@@ -398,7 +398,7 @@
     {:else}
         <div
             class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]
-        md:border-r-2 md:border-r-gray-100"
+        md:border-r-2 md:border-r-gray-100 dark:border-r-gray-700"
         >
             <aside
                 class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out 
@@ -413,7 +413,7 @@
                 <div class="px-3 py-2">
                     <!-- Content should always be visible -->
                     <div>
-                        <hr class="mb-2" />
+                        <hr class="mb-2 border-gray-200 dark:border-gray-700" />
                         <div class="my-1">
                             {#if lastUpdate}
                             <p
@@ -450,16 +450,16 @@
                 {/if}
             </aside>
 
-            <main class="flex-grow overflow-y-auto bg-white">
+            <main class="flex-grow overflow-y-auto bg-white dark:bg-gray-900">
                 <div class="w-full">
                     <div
                         class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-start text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700"
                     >
                         <!-- Left-aligned controls: scrollable on mobile with fixed fade -->
                         <div class="relative md:col-span-1 after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden">
-                            <div class="flex flex-nowrap gap-3 items-start overflow-x-auto scrollbar-hide text-xs text-gray-900">
+                            <div class="flex flex-nowrap gap-3 items-start overflow-x-auto scrollbar-hide text-xs text-gray-900 dark:text-gray-300">
                                 <ButtonGroup class="flex-shrink-0">
-                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300">
                                         <FontAwesomeIcon
                                             icon={faEuroSign}
                                             class="me-2 dark:text-gray-400"
@@ -471,7 +471,7 @@
                                         min="0" step="1"
                                         placeholder="min"
                                         data-testid="price-min-input"
-                                        class="text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        class="text-xs w-12 bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMin}
                                         onchange={handlePriceMinChange}
                                     />
@@ -481,13 +481,13 @@
                                         min="0" step="1"
                                         placeholder="max"
                                         data-testid="price-max-input"
-                                        class="text-xs w-12 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        class="text-xs w-12 bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         bind:value={priceMax}
                                         onchange={handlePriceMaxChange}
                                     />
                                 </ButtonGroup>
                                 <ButtonGroup class="flex-shrink-0">
-                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300">
                                         <FontAwesomeIcon
                                             class="me-2"
                                             icon={faFilter}
@@ -527,7 +527,7 @@
                                 </Tooltip>
 
                                 <ButtonGroup class="flex-shrink-0">
-                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900">
+                                    <InputAddon size="sm" class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300">
                                         <FontAwesomeIcon
                                             class="text-orange-500 me-2"
                                             icon={faBell}
@@ -608,11 +608,11 @@
                         </div>
                     </div>
                     <h1
-                        class="bg-white px-5 text-left text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
+                        class="px-5 text-left text-xl font-semibold text-gray-900 dark:text-white"
                     >
                         Price History
                     </h1>
-                    <div class="border-b h-[320px]">
+                    <div class="border-b border-gray-200 dark:border-gray-700 h-[320px]">
                         <ServerPriceChart
                             data={serverPrices}
                             {loading}
@@ -627,7 +627,7 @@
                     <!-- Group heading and badge -->
                     <div class="flex items-baseline">
                         <h3
-                            class="bg-white text-left text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
+                            class="text-left text-xl font-semibold text-gray-900 dark:text-white me-2"
                         >
                             Configurations
                         </h3>
@@ -646,7 +646,7 @@
                     </div>
                     {#if !loading}
                         <!-- Sort & Group controls: Stacked on mobile, right-aligned on larger screens -->
-                        <div class="flex flex-wrap items-center justify-start sm:justify-end gap-x-4 gap-y-2 text-gray-500 text-sm mt-2 sm:mt-0">
+                        <div class="flex flex-wrap items-center justify-start sm:justify-end gap-x-4 gap-y-2 text-gray-500 dark:text-gray-400 text-sm mt-2 sm:mt-0">
                             <GroupControls bind:groupByField />
                             <SortControls bind:sortField bind:sortDirection />
                         </div>

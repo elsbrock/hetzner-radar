@@ -149,7 +149,7 @@ interface $$Props {
 	});
 </script>
 
-<Drawer bind:hidden={hidden} backdrop={true} bgOpacity="bg-black/25" placement="right" transitionType="fly" transitionParams={transitionParamsRight} id="server-detail-drawer" width="w-96" class="border-l-1">
+<Drawer bind:hidden={hidden} backdrop={true} bgOpacity="bg-black/25" placement="right" transitionType="fly" transitionParams={transitionParamsRight} id="server-detail-drawer" width="w-96" class="border-l border-gray-200 dark:border-gray-700">
 	<div class="flex items-center mb-4">
 		<h5 class="inline-flex items-center text-base font-semibold text-gray-500 dark:text-gray-400">
 			Server Details
@@ -186,10 +186,10 @@ interface $$Props {
 					{displayPrice.toFixed(2)} €
 				</span>
 				<span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{vatSuffix}</span>
-				<span class="text-gray-400 text-xs ml-1">monthly</span>
+				<span class="text-gray-400 dark:text-gray-500 text-xs ml-1">monthly</span>
 				<!-- Markup Percentage Display -->
 				{#if config.markup_percentage !== null}
-					<div class="text-gray-400 text-xs mt-1">
+					<div class="text-gray-400 dark:text-gray-500 text-xs mt-1">
 						{#if config.markup_percentage > 0}
 							<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}>
 								{(config.markup_percentage ?? 0).toFixed(0)}%
@@ -219,7 +219,7 @@ interface $$Props {
 				{#if loadingAuctions}
 					<TableBodyRow>
 						<TableBodyCell colspan={3} class="text-center py-4">
-							<p>Loading auctions...</p>
+							<p class="text-gray-700 dark:text-gray-400">Loading auctions...</p>
 						</TableBodyCell>
 					</TableBodyRow>
 				{:else if auctions.length > 0}
@@ -227,7 +227,7 @@ interface $$Props {
 						<TableBodyRow>
 							<TableBodyCell class="px-1 py-4">
 								<div>#{auction.id}</div>
-								<div class="text-gray-400 text-xs mt-1">
+								<div class="text-gray-400 dark:text-gray-500 text-xs mt-1">
 									<span class="inline-flex items-center">
 										{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
 											<Indicator color="green" class="animate-pulse mr-1.5" size="xs" />
@@ -257,7 +257,7 @@ interface $$Props {
 				{:else}
 					<TableBodyRow>
 						<TableBodyCell colspan={3} class="text-center py-4">
-							<p>No matching auctions found.</p>
+							<p class="text-gray-700 dark:text-gray-400">No matching auctions found.</p>
 						</TableBodyCell>
 					</TableBodyRow>
 				{/if}

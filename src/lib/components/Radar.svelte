@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let radarBackgroundColor = "rgb(240, 240, 240)"; // Default radar background color
   export let lineCount = 12; // Default number of lines (8 lines = every 45 degrees)
 
   function setAnimationEnabled(bool: boolean) {
@@ -21,7 +20,7 @@
   class="radar radar--animate"
   role="button"
   tabindex="0"
-  style="border: 1px solid #ccc; height: 40px; width: 40px; margin-top: -5px; --radar-bg-color: {radarBackgroundColor};"
+  style="height: 40px; width: 40px; margin-top: -5px;"
   aria-label="Server Radar Logo"
   on:mouseenter={() => setAnimationEnabled(true)}
   on:mouseleave={() => setAnimationEnabled(false)}
@@ -39,33 +38,45 @@
 
 <style>
   .radar {
+    --radar-border-color: #ccc; /* Light mode default */
+    --radar-bg-color: rgb(240, 240, 240); /* Light mode default */
+    --radar-gradient-color: rgb(228, 228, 228); /* Light mode default */
+
     position: relative;
     width: 100%;
     height: 100%;
     border-radius: 50%;
     overflow: hidden;
     box-sizing: border-box;
+    border: 1px solid var(--radar-border-color);
     background-color: var(--radar-bg-color);
     background-image: radial-gradient(
         circle at center,
         transparent 0px,
-        rgb(228, 228, 228) 1px,
+        var(--radar-gradient-color) 1px,
         transparent 3px
       ),
       radial-gradient(
         circle at center,
         transparent 5px,
-        rgb(228, 228, 228) 6px,
+        var(--radar-gradient-color) 6px,
         transparent 8px
       ),
       radial-gradient(
         circle at center,
         transparent 12px,
-        rgb(228, 228, 228) 13px,
+        var(--radar-gradient-color) 13px,
         transparent 15px
       );
     background-size: cover;
-    z-index: 1; /* Layer this below the animation */
+    z-index: 1;
+  }
+
+  /* Apply dark mode colors when .dark class is present on an ancestor */
+  :global(.dark) .radar {
+    --radar-border-color: rgb(75, 75, 75);
+    --radar-bg-color: rgb(55, 55, 55);
+    --radar-gradient-color: rgb(75, 75, 75);
   }
 
   /* ::after handles the rotating conic gradient */
@@ -76,7 +87,7 @@
     opacity: 0;
     background-image: conic-gradient(transparent 85%, rgba(80, 255, 0, 0.45));
     border-radius: 50%;
-    border: 1px solid lightgray;
+    border: 1px solid var(--radar-border-color); /* Use variable for border */
     z-index: 3; /* Layer this above the static background */
   }
 
