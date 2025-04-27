@@ -6,10 +6,13 @@
     faBinoculars,
     faBug,
     faChartLine,
+    faClock, // Added
     faEnvelope,
     faEye,
     faFilter,
     faForwardStep,
+    faGavel, // Added
+    faUsers, // Added
   } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
@@ -31,7 +34,7 @@
   let loadingHistory = true;
 
   // Create tweened stores for all counters
-  const serverCounter = tweened(0, {
+  const auctionCounter = tweened(0, { // Renamed from serverCounter
     duration: 1000,
     easing: cubicOut,
   });
@@ -47,32 +50,79 @@
     duration: 1000,
     easing: cubicOut,
   });
-
-  // Server count using $effect
+  const latestBatchCounter = tweened(0, { // New counter for latest batch
+    duration: 1000,
+    easing: cubicOut,
+  });
+ 
+  // Auction count using $effect
   $effect(() => {
     const unsubscribe = db.subscribe(async (dbInstance) => {
       if (!dbInstance) return;
-
+ 
       try {
         await withDbConnections(dbInstance, async (conn) => {
+          // Query renamed from server to auction table
           const result = await conn.query(
             `SELECT COUNT(id) as count
             FROM server`
           );
           const count = Number(result.toArray()[0].count);
           if (!isNaN(count)) {
-            serverCounter.set(count);
+            auctionCounter.set(count); // Renamed from serverCounter
           }
         });
       } catch (error) {
-        console.error("Error fetching server count:", error);
-        serverCounter.set(0);
+        console.error("Error fetching auction count:", error); // Updated error message
+        auctionCounter.set(0); // Renamed from serverCounter
       }
-
-      unsubscribe();
+ 
+      // Unsubscribe is handled within the effect cleanup now for robustness
+      // unsubscribe(); // Removed from here
     });
+ 
+    // Cleanup function for the effect
+    return () => {
+      // No explicit unsubscribe needed here as db.subscribe might handle it,
+      // but good practice if manual cleanup were required.
+    };
   });
-
+ 
+  // Latest batch count using $effect
+  $effect(() => {
+    const unsubscribe = db.subscribe(async (dbInstance) => {
+      if (!dbInstance) return;
+ 
+      try {
+        await withDbConnections(dbInstance, async (conn) => {
+          // Query to get the count of distinct auction IDs in the most recent batch
+          const result = await conn.query(`
+            WITH LatestBatch AS (
+              SELECT MAX(seen) as max_last_seen FROM server
+            )
+            SELECT COUNT(DISTINCT id) as count
+            FROM server
+            WHERE seen = (SELECT max_last_seen FROM LatestBatch)
+          `);
+          const count = Number(result.toArray()[0].count);
+          if (!isNaN(count)) {
+            latestBatchCounter.set(count);
+          } else {
+            latestBatchCounter.set(0); // Set to 0 if count is NaN
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching latest batch count:", error);
+        latestBatchCounter.set(0);
+      }
+    });
+ 
+    // Cleanup function for the effect
+    return () => {
+      // Cleanup logic if needed
+    };
+  });
+ 
   // Handle server-side stats with $effect
   $effect(() => {
     if (data.userStats !== undefined) {
@@ -110,6 +160,58 @@
     if (data.alertStats !== undefined) loadingAlerts = false;
     if (data.historyStats !== undefined) loadingHistory = false;
   });
+
+  // --- Shake Animation Logic ---
+  const NUM_ICONS = 5; // Number of icons in the "At A Glance" section
+  const SHAKE_INTERVAL = 5000; // ms between sequence starts
+  const SHAKE_DELAY = 150; // ms between each icon shake
+  const SHAKE_DURATION = 500; // ms for the shake animation itself
+
+  let shakingIconIndex = $state(-1); // -1 means no icon is shaking
+
+  $effect(() => {
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    let timeoutIds: ReturnType<typeof setTimeout>[] = [];
+
+    const startSequence = () => {
+      // Clear any pending timeouts from previous sequences
+      timeoutIds.forEach(clearTimeout);
+      timeoutIds = [];
+      shakingIconIndex = -1; // Reset just in case
+
+      for (let i = 0; i < NUM_ICONS; i++) {
+        // Timeout to start the shake
+        const startTimeoutId = setTimeout(() => {
+          shakingIconIndex = i;
+        }, i * SHAKE_DELAY);
+        timeoutIds.push(startTimeoutId);
+
+        // Timeout to stop the shake (after start delay + animation duration)
+        const stopTimeoutId = setTimeout(() => {
+          // Only reset if this icon is still the one supposed to be shaking
+          if (shakingIconIndex === i) {
+            shakingIconIndex = -1;
+          }
+        }, i * SHAKE_DELAY + SHAKE_DURATION);
+        timeoutIds.push(stopTimeoutId);
+      }
+    };
+
+    // Start the first sequence immediately
+    startSequence();
+
+    // Then repeat every SHAKE_INTERVAL
+    intervalId = setInterval(startSequence, SHAKE_INTERVAL);
+
+    // Cleanup function
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      timeoutIds.forEach(clearTimeout);
+    };
+  });
+  // --- End Shake Animation Logic ---
 </script>
 
 <main class="p-8 bg-gray-50 dark:bg-gray-900">
@@ -276,71 +378,111 @@
       Key metrics showcasing the activity and reach of the Server Radar platform.
     </p>
     <div
-      class="mx-auto my-12 max-w-7xl p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-8 sm:gap-0 items-center sm:items-center justify-center"
+      class="mx-auto my-12 max-w-7xl flex flex-col sm:flex-row flex-wrap gap-y-8 gap-x-4 items-center justify-around"
     >
-      <!-- Servers Tracked -->
-      <div class="flex flex-col items-center relative px-20">
-        {#if $serverCounter === 0}
-          <div class="h-12 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <!-- Auctions Tracked -->
+      <div class="flex flex-col items-center text-center px-4">
+        {#if $auctionCounter === 0}
+          <div class="flex items-center justify-center gap-3 mb-2 h-10"> <!-- Adjusted height for loading -->
+             <div class="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+             <div class="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div class="h-5 w-36 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div> <!-- Placeholder for label -->
         {:else}
-          <p
-            class="text-4xl font-semibold pb-2 text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
-          >
-            {Math.round($serverCounter).toLocaleString()}
-          </p>
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <FontAwesomeIcon icon={faGavel} class="w-6 h-6 text-orange-500 {shakingIconIndex === 0 ? 'subtle-bounce-it' : ''}" />
+            <p
+              class="text-4xl font-semibold text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
+            >
+              {Math.round($auctionCounter).toLocaleString()}
+            </p>
+          </div>
+          <span class="text-base text-gray-500 dark:text-gray-400 antialiased">Total Auctions Tracked</span>
         {/if}
-        <p class="text-base text-gray-500 dark:text-gray-400 antialiased">Auctions Tracked</p>
-        <div
-          class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 transform -translate-y-1/2"
-        ></div>
+      </div>
+
+      <!-- Auctions in Last Batch -->
+      <div class="flex flex-col items-center text-center px-4">
+         {#if $latestBatchCounter === 0}
+          <div class="flex items-center justify-center gap-3 mb-2 h-10">
+             <div class="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+             <div class="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div class="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        {:else}
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <FontAwesomeIcon icon={faClock} class="w-6 h-6 text-orange-500 {shakingIconIndex === 1 ? 'subtle-bounce-it' : ''}" />
+            <p
+              class="text-4xl font-semibold text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
+            >
+              {Math.round($latestBatchCounter).toLocaleString()}
+            </p>
+          </div>
+          <span class="text-base text-gray-500 dark:text-gray-400 antialiased">Auctions in Last Batch</span>
+        {/if}
       </div>
 
       <!-- Active Users -->
-      <div class="flex flex-col items-center relative px-20">
-        {#if $userCounter < 0}
-          <div class="h-12 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <div class="flex flex-col items-center text-center px-4">
+         {#if $userCounter < 0}
+          <div class="flex items-center justify-center gap-3 mb-2 h-10">
+             <div class="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+             <div class="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         {:else}
-          <p
-            class="text-4xl font-semibold pb-2 text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
-          >
-            {Math.round($userCounter).toLocaleString()}
-          </p>
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <FontAwesomeIcon icon={faUsers} class="w-6 h-6 text-orange-500 {shakingIconIndex === 2 ? 'subtle-bounce-it' : ''}" />
+            <p
+              class="text-4xl font-semibold text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
+            >
+              {Math.round($userCounter).toLocaleString()}
+            </p>
+          </div>
+          <span class="text-base text-gray-500 dark:text-gray-400 antialiased">Active Users</span>
         {/if}
-        <p class="text-base text-gray-500 dark:text-gray-400 antialiased">Active Users</p>
-        <div
-          class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 transform -translate-y-1/2"
-        ></div>
       </div>
 
       <!-- Active Alerts -->
-      <div class="flex flex-col items-center relative px-20">
-        {#if $alertCounter < 0}
-          <div class="h-12 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <div class="flex flex-col items-center text-center px-4">
+         {#if $alertCounter < 0}
+          <div class="flex items-center justify-center gap-3 mb-2 h-10">
+             <div class="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+             <div class="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         {:else}
-          <p
-            class="text-4xl font-semibold pb-2 text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
-          >
-            {Math.round($alertCounter).toLocaleString()}
-          </p>
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <FontAwesomeIcon icon={faBell} class="w-6 h-6 text-orange-500 {shakingIconIndex === 3 ? 'subtle-bounce-it' : ''}" />
+            <p
+              class="text-4xl font-semibold text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
+            >
+              {Math.round($alertCounter).toLocaleString()}
+            </p>
+          </div>
+          <span class="text-base text-gray-500 dark:text-gray-400 antialiased">Active Alerts</span>
         {/if}
-        <p class="text-base text-gray-500 dark:text-gray-400 antialiased">Active Alerts</p>
-        <div
-          class="hidden sm:block absolute right-[-12px] top-1/2 h-24 w-px bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 transform -translate-y-1/2"
-        ></div>
       </div>
 
-      <!-- Alerts Triggered -->
-      <div class="flex flex-col items-center px-20">
-        {#if $historyCounter < 0}
-          <div class="h-12 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <!-- Notifications sent -->
+      <div class="flex flex-col items-center text-center px-4">
+         {#if $historyCounter < 0}
+          <div class="flex items-center justify-center gap-3 mb-2 h-10">
+             <div class="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+             <div class="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div class="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         {:else}
-          <p
-            class="text-4xl font-semibold pb-2 text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
-          >
-            {Math.round($historyCounter).toLocaleString()}
-          </p>
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <FontAwesomeIcon icon={faEnvelope} class="w-6 h-6 text-orange-500 {shakingIconIndex === 4 ? 'subtle-bounce-it' : ''}" />
+            <p
+              class="text-4xl font-semibold text-gray-700 dark:text-gray-200 tracking-tight leading-tight antialiased"
+            >
+              {Math.round($historyCounter).toLocaleString()}
+            </p>
+          </div>
+          <span class="text-base text-gray-500 dark:text-gray-400 antialiased">Notifications Sent</span>
         {/if}
-        <p class="text-base text-gray-500 dark:text-gray-400 antialiased">Alerts Triggered</p>
       </div>
     </div>
   </section>
@@ -501,3 +643,29 @@
     </p>
   </section>
 </main>
+
+<style lang="postcss">
+  /* Ensure cards have consistent height */
+  section#features .grid > div {
+    @apply flex flex-col;
+  }
+  section#features .grid > div > p {
+    @apply flex-grow;
+  }
+
+  /* Testimonial border color */
+  section#testimonials .grid > div {
+     @apply border-orange-500;
+  }
+
+  /* Subtle Bounce Animation */
+  @keyframes subtle-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  .subtle-bounce-it {
+    animation: subtle-bounce 0.5s ease-in-out;
+  }
+
+</style>
