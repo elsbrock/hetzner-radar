@@ -118,9 +118,15 @@
     <h1 class="mb-6 text-5xl font-extrabold text-gray-800">
       Stop Overpaying for Hetzner Auction Servers
     </h1>
-    <p class="text-lg text-gray-600 mb-10">
+    <p class="text-lg text-gray-600 mb-5">
       Tired of missing the best deals on Hetzner's Server Auction? <strong>Server Radar</strong> tracks prices over time, providing the historical insights, advanced filtering, and <span class="underline decoration-orange-500 decoration-2">free email alerts</span> you need. Find the right server at the right price, effortlessly.
     </p>
+
+    <!-- Product Demo Section -->
+    <section id="demo" class="mx-auto max-w-7xl text-center mb-5">
+      <!--ARCADE EMBED START--><div style="position: relative; padding-bottom: calc(55.677083333333336% + 41px); height: 0; width: 100%;"><iframe src="https://demo.arcade.software/KVRZCAXbeIJw0GyOs6Ob?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" title="Effortlessly Track and Optimize Server Auction Prices with Server Radar" frameborder="0" loading="lazy" webkitallowfullscreen mozallowfullscreen allowfullscreen allow="clipboard-write" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; color-scheme: light;" ></iframe></div><!--ARCADE EMBED END-->
+    </section>
+
     <div class="flex justify-center space-x-4">
       <Button
         color="primary"
