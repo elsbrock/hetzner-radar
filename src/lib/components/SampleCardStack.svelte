@@ -2,77 +2,75 @@
   import type { ServerConfiguration } from '$lib/api/frontend/filter';
   import ServerCard from '$lib/components/ServerCard.svelte';
 
-  // Sample configuration data (originally in +page.svelte)
-  const sampleServerConfig: ServerConfiguration = {
-    cpu: 'Intel Core i7-8700',
-    ram_size: 16, // GB
-    is_ecc: false,
-    hdd_arr: ['1 x 1TB NVMe SSD'],
-    nvme_size: 1000,
-    nvme_drives: [1000],
-    sata_size: null,
-    sata_drives: [],
-    hdd_size: null,
-    hdd_drives: [],
-    price: 49.99,
-    min_price: 45.00,
-    last_price: 49.99,
-    markup_percentage: 5.5,
-    last_seen: Math.floor(Date.now() / 1000),
-    count: 25,
-    with_hwr: false,
-    with_gpu: true,
-    with_rps: false,
-    with_inic: false,
-    ram: [],
-  };
-
+  // Sample configuration data based on real examples
   const sampleConfigs: ServerConfiguration[] = [
-    sampleServerConfig,
     {
-      cpu: 'AMD Ryzen 5 5600X',
-      ram_size: 32,
+      cpu: 'Intel Core i7-7700',
+      ram_size: 64, // GB
       is_ecc: false,
-      hdd_arr: ['2 x 2TB SATA SSD'],
+      hdd_arr: ['2 x 2TB HDD'],
       nvme_size: null,
       nvme_drives: [],
-      sata_size: 4000,
-      sata_drives: [2000, 2000],
-      hdd_size: null,
-      hdd_drives: [],
-      price: 55.50,
-      min_price: 52.00,
-      last_price: 55.50,
-      markup_percentage: 6.0,
-      last_seen: Math.floor(Date.now() / 1000) - 3600,
-      count: 15,
+      sata_size: null,
+      sata_drives: [],
+      hdd_size: 4000, // 2 * 2TB
+      hdd_drives: [2000, 2000],
+      price: 37.72, // Assuming net price for simplicity in sample
+      min_price: 37.72,
+      last_price: 37.72,
+      markup_percentage: 0, // Best price
+      last_seen: Math.floor(Date.now() / 1000) - 22 * 60, // Approx 22 mins ago
+      count: 1, // Placeholder count
+      with_hwr: false, // Assuming no hardware RAID
+      with_gpu: false, // Assuming no GPU
+      with_rps: false, // Assuming no redundant power supply
+      with_inic: true, // Has Intel NIC
+      ram: [], // Placeholder
+    },
+    {
+      cpu: 'AMD Ryzen 5 3600',
+      ram_size: 64,
+      is_ecc: false,
+      hdd_arr: ['2 x 6TB HDD'],
+      nvme_size: null,
+      nvme_drives: [],
+      sata_size: null,
+      sata_drives: [],
+      hdd_size: 12000, // 2 * 6TB
+      hdd_drives: [6000, 6000],
+      price: 44.86, // Assuming net price
+      min_price: 44.86,
+      last_price: 44.86,
+      markup_percentage: 0, // Best price
+      last_seen: Math.floor(Date.now() / 1000) - 22 * 60,
+      count: 1,
       with_hwr: false,
       with_gpu: false,
-      with_rps: true,
-      with_inic: false,
+      with_rps: false,
+      with_inic: false, // Assuming no Intel NIC
       ram: [],
     },
     {
-      cpu: 'Intel Xeon E-2336',
+      cpu: 'Intel Xeon E3-1275v6',
       ram_size: 64,
-      is_ecc: true,
+      is_ecc: true, // Has ECC
       hdd_arr: ['2 x 4TB HDD'],
       nvme_size: null,
       nvme_drives: [],
       sata_size: null,
       sata_drives: [],
-      hdd_size: 8000,
+      hdd_size: 8000, // 2 * 4TB
       hdd_drives: [4000, 4000],
-      price: 62.00,
-      min_price: 60.00,
-      last_price: 62.00,
-      markup_percentage: 4.8,
-      last_seen: Math.floor(Date.now() / 1000) - 7200,
-      count: 8,
+      price: 48.43, // Assuming net price
+      min_price: 43.63, // Calculated approx best price (48.43 / 1.11)
+      last_price: 48.43,
+      markup_percentage: 11, // 11% higher than best
+      last_seen: Math.floor(Date.now() / 1000) - 22 * 60,
+      count: 1,
       with_hwr: false,
       with_gpu: false,
       with_rps: false,
-      with_inic: true,
+      with_inic: true, // Has Intel NIC
       ram: [],
     },
   ];
@@ -122,7 +120,7 @@
       style:transform="scale({scale})"
       style:opacity={opacity}
     >
-      <ServerCard {config} displayStoragePrice={undefined} displayRamPrice={undefined} timeUnitPrice="perMonth" />
+      <ServerCard {config} displayStoragePrice={undefined} displayRamPrice={undefined} timeUnitPrice="perMonth" clickable={false} />
     </div>
   {/each}
 </div>

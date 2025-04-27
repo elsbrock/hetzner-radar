@@ -19,6 +19,7 @@
 		loading?: boolean;
 		displayStoragePrice?: 'perTB'; // Allow specifying how storage price is displayed
 		displayRamPrice?: 'perGB'; // Allow specifying how RAM price is displayed
+		clickable?: boolean; // Add prop to control click behavior
 	}
 
 	let {
@@ -26,14 +27,15 @@
 		config,
 		loading = false,
 		displayStoragePrice, // Included but not yet used in rendering logic
-		displayRamPrice // Included but not yet used in rendering logic
+		displayRamPrice, // Included but not yet used in rendering logic
+		clickable = true // Default to clickable
 	} = $props();
 
 	let drawerHidden = $state(true);
 	let selectedConfig = $state<ServerConfiguration | null>(null);
 
 	// VAT related derived state
-	const countryCode = $derived($settingsStore.vatSelection.countryCode);
+	const countryCode = $derived($settingsStore?.vatSelection?.countryCode ?? 'NET'); // Default to 'NET' if undefined
 	const validCountryCode = $derived(
 		countryCode && countryCode in vatOptions ? (countryCode as VatCountryCode) : 'NET'
 	);
@@ -53,17 +55,20 @@
 		return 120 * (1 - clampedPercentage / 100);
 	});
 
-	const defaultClasses =
-		'relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer';
+	const baseClasses =
+		'relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
+	const clickableClasses = 'hover:cursor-pointer';
 </script>
 
 <Card
-	class={`${defaultClasses} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700' : ''}`}
+	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700' : ''}`}
 	data-testid="server-card"
 	style="padding: 15px"
 	onclick={() => {
-		selectedConfig = config;
-		drawerHidden = false;
+		if (clickable) {
+			selectedConfig = config;
+			drawerHidden = false;
+		}
 	}}
 >
 	{#if loading}
