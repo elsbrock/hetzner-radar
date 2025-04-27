@@ -188,29 +188,14 @@
             aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
         >
             {#if isFilterCollapsed}
-                <FontAwesomeIcon class="block sm:hidden" icon={faChevronDown} />
+                <FontAwesomeIcon class="block sm:hidden" icon={faChevronDown} /> <!-- Corrected: Down when collapsed -->
                 <FontAwesomeIcon class="hidden sm:block" icon={faChevronRight} />
             {:else}
-                <FontAwesomeIcon class="block sm:hidden" icon={faChevronUp} />
+                <FontAwesomeIcon class="block sm:hidden" icon={faChevronUp} /> <!-- Corrected: Up when expanded -->
                 <FontAwesomeIcon class="hidden sm:block" icon={faChevronLeft} />
             {/if}
         </Button>
     </div>
-
-    <!-- Mobile collapse button (full width, visible only on small screens when collapsed) -->
-    {#if isFilterCollapsed}
-    <div class="block sm:hidden w-full mt-2 mb-4">
-        <Button
-            color="alternative"
-            size="sm"
-            class="w-full flex items-center justify-center py-2"
-            onclick={() => isFilterCollapsed = !isFilterCollapsed}
-        >
-            <span class="mr-2">Show Filter</span>
-            <FontAwesomeIcon icon={faChevronDown} />
-        </Button>
-    </div>
-    {/if}
 
     <!-- Collapsed Desktop View - Only visible when collapsed on desktop -->
     {#if isFilterCollapsed}

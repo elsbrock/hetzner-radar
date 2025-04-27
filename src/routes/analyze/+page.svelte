@@ -464,7 +464,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-start mt-5 px-5 pb-5">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mt-5 px-5 pb-5">
                     <!-- Group heading and badge -->
                     <div class="flex items-baseline gap-2">
                         <h3
@@ -486,8 +486,8 @@
                         {/if}
                     </div>
                     {#if !loading}
-                        <!-- Sort controls remain right-aligned -->
-                        <div class="flex items-center gap-4 text-gray-500 text-sm mt-1">
+                        <!-- Sort controls: Stacked on mobile, right-aligned on larger screens -->
+                        <div class="flex items-center gap-4 text-gray-500 text-sm mt-2 sm:mt-0">
                             <SortControls bind:sortField bind:sortDirection />
                         </div>
                     {/if}
