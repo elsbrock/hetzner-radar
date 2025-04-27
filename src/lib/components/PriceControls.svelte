@@ -5,8 +5,8 @@
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faClock } from '@fortawesome/free-solid-svg-icons';
 
-  // Default to 'perHour' if not set in the store yet
-  $: timeUnitPrice = $settingsStore.timeUnitPrice ?? 'perHour';
+  // Default to 'perMonth' if not set in the store yet
+  $: timeUnitPrice = $settingsStore.timeUnitPrice ?? 'perMonth';
 
   function setTimeUnitPrice(unit: 'perHour' | 'perMonth') {
     settingsStore.updateSetting('timeUnitPrice', unit);

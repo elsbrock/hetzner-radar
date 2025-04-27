@@ -42,7 +42,9 @@
     <div class="w-full max-w-4xl mx-auto pb-8 space-y-8">
         <!-- Alerts Section -->
         <section>
-            <h2 class="text-2xl font-bold mb-6">
+            <h2
+                class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6"
+            >
                 <FontAwesomeIcon
                     icon={faFire}
                     class="text-orange-500 w-6 h-6 mr-1"
@@ -101,11 +103,18 @@
                                         class="block text-sm font-medium text-gray-600 dark:text-gray-400"
                                         >Target Price</span
                                     >
-                                    <span
-                                        class="text-xl font-semibold text-gray-900 dark:text-white"
-                                    >
-                                        {alert.price} € (incl. {alert.vat_rate}%)
-                                    </span>
+                                    <div>
+                                        <span
+                                            class="text-xl font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            {alert.price} €
+                                        </span>
+                                        <span
+                                            class="block text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            (incl. {alert.vat_rate}% VAT)
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/3">
                                     <span
@@ -135,7 +144,7 @@
                                         </Button>
                                         <Button
                                             size="xs"
-                                            on:click={() => {
+                                            onclick={() => {
                                                 selectedAlert = alert;
                                                 showEdit = true;
                                             }}
@@ -232,20 +241,34 @@
                                         class="block text-sm font-medium text-gray-600 dark:text-gray-400"
                                         >Target Price</span
                                     >
-                                    <span
-                                        class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{alert.price} € (incl. {alert.vat_rate}%)</span
-                                    >
+                                    <div>
+                                        <span
+                                            class="text-xl font-semibold text-gray-900 dark:text-white"
+                                            >{alert.price} €</span
+                                        >
+                                        <span
+                                            class="block text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            (incl. {alert.vat_rate}%)
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/6">
                                     <span
                                         class="block text-sm font-medium text-gray-600 dark:text-gray-400"
                                         >Trigger Price</span
                                     >
-                                    <span
-                                        class="text-xl font-semibold text-gray-900 dark:text-white"
-                                        >{alert.trigger_price} € (incl. {alert.vat_rate}%)</span
-                                    >
+                                    <div>
+                                        <span
+                                            class="text-xl font-semibold text-gray-900 dark:text-white"
+                                            >{alert.trigger_price} €</span
+                                        >
+                                        <span
+                                            class="block text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            (incl. {alert.vat_rate}%)
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="mb-4 md:mb-0 w-full md:w-1/4">
                                     <span
