@@ -1,5 +1,7 @@
 <script lang="ts">
   import { withDbConnections } from "$lib/api/frontend/dbapi";
+  // Removed ServerConfiguration import as it's now only used in SampleCardStack
+  import SampleCardStack from '$lib/components/SampleCardStack.svelte'; // Import the new component
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
   import {
     faBell,
@@ -22,6 +24,7 @@
     TimelineItem,
     // Reverted: Removed Avatar, Blockquote
   } from "flowbite-svelte";
+  import { ArrowRightOutline } from 'flowbite-svelte-icons'; // Added icon import
   import { onMount } from "svelte";
   import { cubicOut } from "svelte/easing";
   import { tweened } from "svelte/motion";
@@ -212,40 +215,51 @@
     };
   });
   // --- End Shake Animation Logic ---
+
+  // Sample data and animation logic moved to SampleCardStack.svelte
 </script>
 
 <main class="p-8 bg-gray-50 dark:bg-gray-900">
-  <!-- Hero Section -->
-  <section class="mx-auto my-10 max-w-7xl text-center">
-    <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
-      Stop Overpaying for Hetzner Auction Servers
-    </h1>
-    <p class="text-lg text-gray-600 dark:text-gray-400 mb-5">
-      Tired of missing the best deals on Hetzner's Server Auction? <strong>Server Radar</strong> tracks prices over time, providing the historical insights, advanced filtering, and <span class="underline decoration-orange-500 decoration-2">free email alerts</span> you need. Find the right server at the right price, effortlessly.
-    </p>
+  <!-- New Hero Section -->
+  <section class="mx-auto my-10 max-w-6xl grid grid-cols-1 md:grid-cols-5 gap-12 items-start"> <!-- Reduced max-width, changed grid cols -->
+      <!-- Left Column: Text and Button -->
+      <div class="justify-center text-left md:col-span-3">
+          <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100 tracking-tight">
+              Stop Overpaying for Hetzner Auction Servers
+          </h1>
+          <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+              Tired of missing the best deals? <strong>Server Radar</strong> tracks prices, provides historical insights, advanced filtering, and <span class="underline decoration-orange-500 decoration-2">free email alerts</span>. Find the right server at the right price, effortlessly.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+              <Button
+                  color="primary"
+                  href="/analyze"
+                  size="lg"
+                  class="shadow-sm"
+              >
+                  Get Started
+                  <ArrowRightOutline class="ms-2 w-5 h-5" />
+              </Button>
+               <Button
+                  color="alternative"
+                  href="https://github.com/elsbrock/hetzner-radar"
+                  size="lg"
+                  class="shadow-sm"
+              >
+                  <FontAwesomeIcon icon={faGithub} class="mr-2" />
+                  View on GitHub
+              </Button>
+          </div>
+      </div>
+      <!-- Right Column: Sample Card Stack -->
+      <div class="mt-4 md:mt-8 md:col-span-2"> <!-- Span 2 cols on md+ -->
+          <SampleCardStack/>
+      </div>
+  </section>
 
-    <!-- Product Demo Section -->
-    <section id="demo" class="mx-auto max-w-7xl text-center mb-5">
+  <!-- Product Demo Section -->
+  <section id="demo" class="mx-auto max-w-7xl text-center mb-12 hidden md:block"> <!-- Adjusted margin, hidden on mobile -->
       <!--ARCADE EMBED START--><div style="position: relative; padding-bottom: calc(55.677083333333336% + 41px); height: 0; width: 100%;"><iframe src="https://demo.arcade.software/KVRZCAXbeIJw0GyOs6Ob?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" title="Effortlessly Track and Optimize Server Auction Prices with Server Radar" frameborder="0" loading="lazy" allowfullscreen allow="clipboard-write" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; color-scheme: light;" ></iframe></div><!--ARCADE EMBED END-->
-    </section>
-
-    <div class="flex justify-center space-x-4">
-      <Button
-        color="primary"
-        href="/analyze"
-        class="px-5 py-3 text-lg shadow-sm"
-      >
-        <FontAwesomeIcon icon={faBinoculars} class="mr-2" />Start Analyzing</Button
-      >
-      <Button
-        color="alternative"
-        href="https://github.com/elsbrock/hetzner-radar"
-        class="px-5 py-3 text-lg shadow-sm"
-      >
-        <FontAwesomeIcon icon={faGithub} class="mr-2" />
-        View on GitHub
-      </Button>
-    </div>
   </section>
 
   <!-- Features Section -->
@@ -643,29 +657,3 @@
     </p>
   </section>
 </main>
-
-<style lang="postcss">
-  /* Ensure cards have consistent height */
-  section#features .grid > div {
-    @apply flex flex-col;
-  }
-  section#features .grid > div > p {
-    @apply flex-grow;
-  }
-
-  /* Testimonial border color */
-  section#testimonials .grid > div {
-     @apply border-orange-500;
-  }
-
-  /* Subtle Bounce Animation */
-  @keyframes subtle-bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
-  }
-
-  .subtle-bounce-it {
-    animation: subtle-bounce 0.5s ease-in-out;
-  }
-
-</style>
