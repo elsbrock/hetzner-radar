@@ -330,9 +330,9 @@ export const POST: RequestHandler = async (event) => {
 good news! The target price for one of your alerts has been reached.
 
          Filter: ${alert.name}
-   Target Price (incl. ${alert.vat_rate}% VAT): ${alert.price} EUR
-  Trigger Price: ${alert.trigger_price} EUR
-${alert.includes_ipv4_cost ? '          (Price comparison included standard IPv4 cost)\n' : ''}
+   Target Price: ${alert.price.toFixed(2)} EUR (incl. ${alert.vat_rate}% VAT)
+  Trigger Price: ${alert.trigger_price.toFixed(2)} EUR
+${alert.includes_ipv4_cost ? '(Price comparison included standard IPv4 cost)\n' : ''}
 Visit your alerts section to see further details:
 
   https://radar.iodev.org/alerts
