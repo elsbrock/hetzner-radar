@@ -24,6 +24,7 @@
     import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
     import PriceControls from '$lib/components/PriceControls.svelte';
     import SortControls from '$lib/components/SortControls.svelte';
+    import GroupControls from '$lib/components/GroupControls.svelte'; // Added import
     import {
         type ServerFilter as ServerFilterType,
         clearFilter,
@@ -61,14 +62,17 @@
     import Spinner from "flowbite-svelte/Spinner.svelte";
     import { onMount } from "svelte";
     import { db, dbInitProgress } from "../../stores/db";
-
+    import { browser } from '$app/environment';
+    
     type SortField = 'price' | 'ram' | 'storage';
-
+    type GroupByField = 'none' | 'cpu_vendor' | 'cpu_model' | 'best_price'; // Updated type
+    type GroupedServerList = Array<{ groupName: string; servers: ServerConfiguration[] }>;
+   
     let { data } = $props<{ data: import('./$types').PageData }>();
     
     let lastUpdate = $state<number | undefined>(undefined);
     let serverList = $state<ServerConfiguration[]>([]);
-    let filteredServerList = $state<ServerConfiguration[]>([]);
+    // let filteredServerList = $state<ServerConfiguration[]>([]); // No longer needed directly for display
     let serverPrices = $state<ServerPriceStat[]>([]);
     let cpuModels = $state<NameValuePair[]>([]);
     let datacenters = $state<NameValuePair[]>([]);
@@ -76,15 +80,18 @@
     let priceMax: number | null = $state(null);
     let sortField = $state<SortField>('price');
     let sortDirection = $state<'asc' | 'desc'>('asc');
+    let groupByField = $state<GroupByField>('none'); // Updated state type
     let queryTime = $state<number | undefined>(undefined);
     let loading = $state(true);
     let selectedAlert: PriceAlert | null = $state(null);
     let alertDialogOpen = $state(false);
     let storedFilter: ServerFilterType | null = $state(null);
     
-    // State to hold the final list for display
-    let displayList: ServerConfiguration[] = $state([]);
+    // State to hold the final grouped list for display
+    // let displayList: ServerConfiguration[] = $state([]); // Replaced by groupedDisplayList
+    let groupedDisplayList: GroupedServerList = $state([]); // Added state
     let isFilterCollapsed = $state(false);
+    let mounted = $state(false); // State to track client-side mount
 
     function handleSaveFilter(e: Event) {
         saveFilter($filter);
@@ -104,6 +111,12 @@
 
     onMount(() => {
         storedFilter = loadFilter();
+    });
+
+    onMount(() => {
+        // Delay rendering of dynamic content until client has mounted
+        // This helps prevent hydration mismatches for complex conditional UI
+        mounted = true;
     });
 
     async function fetchData(dbInstance: AsyncDuckDB, currentFilter: ServerFilterType) {
@@ -134,7 +147,9 @@
             console.error("Error fetching data:", error);
             addToast({ message: 'Failed to fetch server data.', color: 'red', icon: 'error' });
         } finally {
+            console.log("Setting loading = false (before)"); // Added for debugging
             loading = false;
+            console.log("Setting loading = false (after)"); // Added for debugging
         }
     };
 
@@ -147,9 +162,36 @@
         }
     });
 
-    // Effect to filter and sort the server list for display
+    // --- Helper functions for grouping ---
+    function calculateMedian(prices: number[]): number | null {
+        if (prices.length === 0) return null;
+        const sortedPrices = [...prices].sort((a, b) => a - b);
+        const mid = Math.floor(sortedPrices.length / 2);
+        return sortedPrices.length % 2 !== 0
+            ? sortedPrices[mid]
+            : (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
+    }
+
+    function calculatePercentile(prices: number[], percentile: number): number | null {
+        if (prices.length === 0) return null;
+        const sortedPrices = [...prices].sort((a, b) => a - b);
+        const index = (percentile / 100) * (sortedPrices.length - 1); // N-1 adjustment
+        if (Number.isInteger(index)) {
+            return sortedPrices[index];
+        } else {
+            const lowerIndex = Math.floor(index);
+            const upperIndex = Math.ceil(index);
+            // Handle edge case where upperIndex might be out of bounds if index is very close to length-1
+            if (upperIndex >= sortedPrices.length) return sortedPrices[lowerIndex];
+            // Linear interpolation
+            return sortedPrices[lowerIndex] + (index - lowerIndex) * (sortedPrices[upperIndex] - sortedPrices[lowerIndex]);
+        }
+    }
+    // --- End Helper functions ---
+
+    // Effect to filter, sort, and group the server list for display
     $effect(() => {
-        console.log(`Filtering/Sorting Effect running. serverList: ${serverList.length}, priceMin: ${priceMin}, priceMax: ${priceMax}, sort: ${sortField} ${sortDirection}`);
+        console.log(`Filtering/Sorting/Grouping Effect running. serverList: ${serverList.length}, priceMin: ${priceMin}, priceMax: ${priceMax}, sort: ${sortField} ${sortDirection}, group: ${groupByField}`);
 
         let list = serverList; // Start with the raw list
 
@@ -162,7 +204,8 @@
 
         if (minPriceBeforeVat !== null || maxPriceBeforeVat !== null) {
             list = list.filter(server => {
-                const price = server.price ?? 0;
+                const price = server.price ?? null; // Treat missing price as null
+                if (price === null) return false; // Exclude servers without price from price range filtering
                 const meetsMin = minPriceBeforeVat === null || price >= minPriceBeforeVat;
                 const meetsMax = maxPriceBeforeVat === null || price <= maxPriceBeforeVat;
                 return meetsMin && meetsMax;
@@ -178,11 +221,11 @@
 
             switch (sortField) {
                 case 'price':
-                    valA = a.price ?? Infinity;
+                    valA = a.price ?? Infinity; // Null prices sort last when ascending
                     valB = b.price ?? Infinity;
                     break;
                 case 'ram':
-                    valA = a.ram_size ?? 0;
+                    valA = a.ram_size ?? 0; // Null RAM sort first when ascending
                     valB = b.ram_size ?? 0;
                     break;
                 case 'storage':
@@ -193,25 +236,139 @@
                     break;
             }
 
-            if (valA === null || valB === null) {
-                if (valA === null && valB !== null) return sortDirection === 'asc' ? 1 : -1;
-                if (valA !== null && valB === null) return sortDirection === 'asc' ? -1 : 1;
-                return 0;
-            }
+            // Handle nulls consistently based on sort direction
+            if (valA === Infinity && valB !== Infinity) return sortDirection === 'asc' ? 1 : -1;
+            if (valA !== Infinity && valB === Infinity) return sortDirection === 'asc' ? -1 : 1;
+            if (valA === 0 && valB !== 0 && (sortField === 'ram' || sortField === 'storage')) return sortDirection === 'asc' ? -1 : 1;
+            if (valA !== 0 && valB === 0 && (sortField === 'ram' || sortField === 'storage')) return sortDirection === 'asc' ? 1 : -1;
+            if (valA === valB) return 0; // Includes null == null or Infinity == Infinity
 
-            const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+            const comparison = (valA as number) < (valB as number) ? -1 : 1;
             return sortDirection === 'asc' ? comparison : comparison * -1;
         });
         console.log(` -> After sorting: ${listToSort.length} items`);
 
-        // Update the display list state
-        displayList = listToSort;
-    });
+        // 3. Apply grouping
+        let groupedResult: GroupedServerList = [];
+        // Use a Map where the value holds the group name and the server list
+        const groups = new Map<string, { groupName: string; servers: ServerConfiguration[] }>();
+        const unknownVendorKey = '__unknown_vendor__';
+        const unknownModelKey = '__unknown_model__';
+        const unknownVendorName = 'Unknown Vendor';
+        const unknownModelName = 'Unknown Model';
 
+        switch (groupByField) {
+            case 'none':
+                // For 'none', we don't use the Map structure, just assign directly
+                groupedResult = [{ groupName: 'All Servers', servers: listToSort }];
+                break;
+
+            case 'cpu_vendor':
+                listToSort.forEach(server => {
+                    let key: string;
+                    let name: string;
+                    // Derive vendor from cpu string, handle null/undefined cpu
+                    if (server.cpu) {
+                        const vendor = server.cpu.split(' ')[0];
+                        // Basic check for known vendors
+                        if (vendor === 'Intel' || vendor === 'AMD') {
+                            key = vendor;
+                            name = vendor;
+                        } else {
+                            // Treat others as unknown
+                            key = unknownVendorKey;
+                            name = unknownVendorName;
+                        }
+                    } else {
+                        // Handle null/undefined server.cpu
+                        key = unknownVendorKey;
+                        name = unknownVendorName;
+                    }
+
+                    if (!groups.has(key)) {
+                        groups.set(key, { groupName: name, servers: [] });
+                    }
+                    // Push server to the 'servers' array within the map value
+                    groups.get(key)!.servers.push(server);
+                });
+                // Convert map values to the final array structure
+                groupedResult = Array.from(groups.values());
+                // Sort groups by name, placing Unknown last
+                groupedResult.sort((a, b) => {
+                    if (a.groupName === unknownVendorName) return 1;
+                    if (b.groupName === unknownVendorName) return -1;
+                    return a.groupName.localeCompare(b.groupName);
+                });
+                break;
+
+            case 'cpu_model':
+                 listToSort.forEach(server => {
+                    // Use cpu string as key, handle null/undefined cpu
+                    const key = server.cpu ?? unknownModelKey;
+                    const name = server.cpu ?? unknownModelName; // User-friendly name
+
+                    if (!groups.has(key)) {
+                        groups.set(key, { groupName: name, servers: [] });
+                    }
+                    // Push server to the 'servers' array within the map value
+                    groups.get(key)!.servers.push(server);
+                });
+                 // Convert map values to the final array structure
+                groupedResult = Array.from(groups.values());
+                 // Sort groups by name, placing Unknown last
+                 groupedResult.sort((a, b) => {
+                    if (a.groupName === unknownModelName) return 1;
+                    if (b.groupName === unknownModelName) return -1;
+                    return a.groupName.localeCompare(b.groupName);
+                });
+                break;
+
+            case 'best_price':
+            	const bestPriceGroupName = 'Best Price';
+            	const aboveBestPriceGroupName = 'Above Best Price';
+            	const epsilon = 0.001; // Tolerance for float comparison
+         
+            	// Initialize final groups
+            	groups.set(bestPriceGroupName, { groupName: bestPriceGroupName, servers: [] });
+            	groups.set(aboveBestPriceGroupName, { groupName: aboveBestPriceGroupName, servers: [] });
+         
+            	// Assign servers based on pre-calculated markup_percentage
+            	listToSort.forEach(server => {
+            		// Check if markup_percentage is effectively zero (within epsilon)
+            		if (server.markup_percentage !== null && Math.abs(server.markup_percentage) < epsilon) {
+            			groups.get(bestPriceGroupName)!.servers.push(server);
+            		} else {
+            			// Includes servers with markup > 0 or null markup_percentage
+            			groups.get(aboveBestPriceGroupName)!.servers.push(server);
+            		}
+            	});
+         
+            	// Convert map values to array, filtering empty groups
+            	groupedResult = Array.from(groups.values())
+            		.filter(groupData => groupData.servers.length > 0);
+         
+            	// Sort groups: Best Price first
+            	groupedResult.sort((a, b) => {
+            		if (a.groupName === bestPriceGroupName) return -1;
+            		if (b.groupName === bestPriceGroupName) return 1;
+            		return 0;
+            	});
+            	break;
+           }
+           console.log(` -> After grouping (${groupByField}): ${groupedResult.reduce((sum, g) => sum + g.servers.length, 0)} items in ${groupedResult.length} groups`);
+         
+           // Update the grouped display list state
+        groupedDisplayList = groupedResult;
+    });
 
     // Derived state for total offers (can remain derived)
     let totalOffers = $derived(
         Array.isArray(serverPrices) ? serverPrices.reduce((acc, val) => acc + val.count, 0) : 0
+    );
+
+    // Derived state for total results count from grouped list
+    let totalResults = $derived(
+        groupedDisplayList.reduce((sum, group) => sum + group.servers.length, 0)
     );
 
     // Derived state for UI flags (can remain derived)
@@ -464,35 +621,38 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mt-5 px-5 pb-5">
+                {#if browser && mounted}
+                <!-- Defer rendering this section until client-side mount to avoid hydration issues -->
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mt-5 px-5">
                     <!-- Group heading and badge -->
-                    <div class="flex items-baseline gap-2">
+                    <div class="flex items-baseline">
                         <h3
                             class="bg-white text-left text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white"
                         >
                             Configurations
                         </h3>
                         {#if !loading}
-                            <!-- Make badge slightly smaller -->
+                            <!-- Use the derived totalResults state -->
                             <Badge
                                 color="green"
                                 data-testid="results-count"
                                 rounded
                                 class="text-xs"
-                                >{displayList.length > 100
+                                >{totalResults > 100
                                     ? "100+"
-                                    : displayList.length} results</Badge
+                                    : totalResults} results</Badge
                             >
                         {/if}
                     </div>
                     {#if !loading}
-                        <!-- Sort controls: Stacked on mobile, right-aligned on larger screens -->
-                        <div class="flex items-center gap-4 text-gray-500 text-sm mt-2 sm:mt-0">
+                        <!-- Sort & Group controls: Stacked on mobile, right-aligned on larger screens -->
+                        <div class="flex flex-wrap items-center justify-start sm:justify-end gap-x-4 gap-y-2 text-gray-500 text-sm mt-2 sm:mt-0">
+                            <GroupControls bind:groupByField />
                             <SortControls bind:sortField bind:sortDirection />
                         </div>
                     {/if}
                 </div>
-                {#if !loading && displayList.length > 100}
+                {#if !loading && totalResults > 100}
                     <Alert class="mx-5 mb-5" color="red">
                         <FontAwesomeIcon
                             icon={faWarning}
@@ -503,21 +663,32 @@
                     >
                 {/if}
                 {#if loading}
-                    <p
-                        class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400
-                ml-5"
-                    >
+                    <!-- Loading Spinner -->
+                    <p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400 ml-5">
                         <Spinner class="mr-2" /> Loading...
                     </p>
-                {:else if displayList.length === 0}
-                    <Alert class="mx-5"
-                        ><InfoCircleSolid slot="icon" class="w-5 h-5" />No
-                        servers matching the criteria were found. Try changing
-                        some of the parameters.</Alert
-                    >
                 {:else}
-                    <ServerList serverList={displayList} {loading} timeUnitPrice={$settingsStore.timeUnitPrice} />
+                    <!-- Content to show when NOT loading -->
+                    {#if totalResults > 0}
+                        <!-- Show >100 Alert if needed -->
+                        {#if totalResults > 100}
+                            <Alert class="mx-5 mb-5" color="red">
+                                <FontAwesomeIcon icon={faWarning} class="w-4 h-4 me-1" />
+                                We found more than 100 configurations and limited the results. Please use the filter to narrow down the results.
+                            </Alert>
+                        {/if}
+
+                        <!-- Show Server List -->
+                        <ServerList groupedList={groupedDisplayList} {groupByField} timeUnitPrice={$settingsStore.timeUnitPrice} />
+                    {:else}
+                        <!-- Show No Results Alert -->
+                        <Alert class="mx-5">
+                            <InfoCircleSolid slot="icon" class="w-5 h-5" />
+                            No servers matching the criteria were found. Try changing some of the parameters.
+                        </Alert>
+                    {/if}
                 {/if}
+                {/if} <!-- End of browser && mounted block -->
             </main>
         </div>
     {/if}
