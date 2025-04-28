@@ -64,6 +64,7 @@
     import { InfoCircleSolid } from "flowbite-svelte-icons";
     import Spinner from "flowbite-svelte/Spinner.svelte";
     import { onMount } from "svelte";
+    import { slide } from 'svelte/transition'; // Import slide transition
     import { db, dbInitProgress } from "../../stores/db";
     import { browser } from '$app/environment';
     
@@ -474,16 +475,16 @@ function handleSaveFilter(e: Event) {
             <!-- ID for Intersection Observer -->
             <aside
                 id="filter-section"
-                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out
-                    {isFilterCollapsed ? 'max-h-[6rem] sm:max-h-none sm:w-16 md:w-16' : 'sm:w-72 md:w-72'}"
+                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-[width] duration-300 ease-in-out
+                    {isFilterCollapsed ? 'sm:w-16 md:w-16' : 'sm:w-72 md:w-72'}"
             >
                 <!-- ServerFilter Container - Grows and Scrolls -->
                 <div class="flex-grow overflow-y-auto px-3 py-2">
                     <ServerFilter {datacenters} {cpuModels} bind:isFilterCollapsed />
                 </div>
-                <!-- Timestamp/Loading Info - Fixed at bottom -->
+                <!-- Timestamp/Loading Info - Fixed at bottom, animated with slide -->
                 {#if !isFilterCollapsed}
-                <div class="px-3 py-2">
+                <div class="px-3 py-2" transition:slide={{ duration: 300, axis: 'y' }}>
                     <!-- Content should always be visible -->
                     <div>
                         <hr class="mb-2 border-gray-200 dark:border-gray-700" />
