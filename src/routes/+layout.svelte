@@ -3,13 +3,16 @@
   import Nav from "$lib/components/Nav.svelte";
   import Toast from "$lib/components/Toast.svelte";
   import "../app.css";
+  import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
+  import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
+  import { browser } from '$app/environment';
 
   import Banner from "$lib/components/Banner.svelte";
   import { session } from "$lib/stores/session";
   import { onDestroy, onMount } from "svelte";
   import { initializeDB, tearDownDB } from "../stores/db";
 
-  export let data;
+  let { data } = $props<import('./$types').LayoutData>();
   if (data.session) {
     session.set(data.session);
   } else {
@@ -17,12 +20,31 @@
     // session.set(null); // Or some default session object
   }
 
+  let showScrollToTop = $state(false);
+
   onMount(async () => {
     return initializeDB();
   });
 
   onDestroy(async () => {
     await tearDownDB();
+  });
+
+  // Effect for scroll-to-top FAB visibility
+  $effect(() => {
+      if (!browser) return;
+
+      const scrollThreshold = window.innerHeight / 2;
+      const handleScroll = () => {
+          showScrollToTop = window.scrollY > scrollThreshold;
+      };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll(); // Initial check
+
+      // Cleanup function
+      return () => {
+          window.removeEventListener('scroll', handleScroll);
+      };
   });
 </script>
 
@@ -99,3 +121,11 @@
 <Footer />
 
 <Toast duration={2000} />
+
+<!-- Global Scroll-to-Top FAB -->
+<FloatingActionButton
+    icon={faArrowUp}
+    visible={showScrollToTop}
+    priority={100}
+    ariaLabel="Scroll to top"
+/>

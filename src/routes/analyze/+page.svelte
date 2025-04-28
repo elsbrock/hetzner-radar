@@ -24,7 +24,8 @@
     import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
     import PriceControls from '$lib/components/PriceControls.svelte';
     import SortControls from '$lib/components/SortControls.svelte';
-    import GroupControls from '$lib/components/GroupControls.svelte'; // Added import
+    import GroupControls from '$lib/components/GroupControls.svelte';
+    import FloatingActionButton from '$lib/components/FloatingActionButton.svelte'; // FAB component
     import {
         type ServerFilter as ServerFilterType,
         clearFilter,
@@ -46,6 +47,8 @@
         faWarning,
         faChevronLeft,
         faChevronRight,
+        faArrowDown, // FAB icon
+        faArrowUp,   // FAB icon
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import dayjs from "dayjs";
@@ -93,7 +96,11 @@
     let isFilterCollapsed = $state(false);
     let mounted = $state(false); // State to track client-side mount
 
-    function handleSaveFilter(e: Event) {
+    // FAB Visibility State
+    let filterIsIntersecting = $state(false);
+    let resultsAreIntersecting = $state(false);
+    let isSmallScreen = $state(false); // Track if viewport is small (e.g., <= 1024px)
+function handleSaveFilter(e: Event) {
         saveFilter($filter);
         addToast({ message: "Filter saved.", color: "green", icon: "success" });
         storedFilter = $filter;
@@ -113,10 +120,74 @@
         storedFilter = loadFilter();
     });
 
-    onMount(() => {
+    // Effect for setting up Intersection Observers and screen size checks (client-side only)
+    $effect(() => {
+        if (!browser) return; // Ensure this runs only in the browser
+
         // Delay rendering of dynamic content until client has mounted
         // This helps prevent hydration mismatches for complex conditional UI
         mounted = true;
+
+        // Media Query for small screens
+        const mediaQuery = window.matchMedia('(max-width: 1024px)'); // lg breakpoint
+        const updateScreenSize = () => {
+            isSmallScreen = mediaQuery.matches;
+            console.log("isSmallScreen:", isSmallScreen);
+        };
+        updateScreenSize(); // Initial check
+        mediaQuery.addEventListener('change', updateScreenSize);
+
+        // Intersection Observers
+        const filterSection = document.getElementById('filter-section');
+        const resultsSection = document.getElementById('results-section');
+        let filterObserver: IntersectionObserver | null = null;
+        let resultsObserver: IntersectionObserver | null = null;
+
+        const observerOptions = {
+            root: null, // Use the viewport as the root
+            rootMargin: '0px',
+            threshold: 0.1 // Trigger when 10% is visible
+        };
+
+        const setupObservers = () => {
+            // Disconnect previous observers if they exist
+            filterObserver?.disconnect();
+            resultsObserver?.disconnect();
+
+            if (isSmallScreen && filterSection && resultsSection) {
+                console.log("Setting up observers for small screen");
+                filterObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        filterIsIntersecting = entry.isIntersecting;
+                        console.log("Filter intersecting:", filterIsIntersecting);
+                    });
+                }, observerOptions);
+                filterObserver.observe(filterSection);
+
+                resultsObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        resultsAreIntersecting = entry.isIntersecting;
+                        console.log("Results intersecting:", resultsAreIntersecting);
+                    });
+                }, observerOptions);
+                resultsObserver.observe(resultsSection);
+            } else {
+                console.log("Disconnecting observers (not small screen or elements missing)");
+                // Ensure state is reset if not on small screen
+                filterIsIntersecting = false;
+                resultsAreIntersecting = false;
+            }
+        };
+
+        setupObservers(); // Initial setup based on current screen size
+
+        // Cleanup function
+        return () => {
+            console.log("Cleaning up observers and listeners");
+            mediaQuery.removeEventListener('change', updateScreenSize);
+            filterObserver?.disconnect();
+            resultsObserver?.disconnect();
+        };
     });
 
     async function fetchData(dbInstance: AsyncDuckDB, currentFilter: ServerFilterType) {
@@ -196,7 +267,7 @@
         let list = serverList; // Start with the raw list
 
         // 1. Apply price filtering
-        const countryCode = $settingsStore.vatSelection.countryCode as keyof typeof vatOptions;
+        const countryCode = $settingsStore?.vatSelection?.countryCode as keyof typeof vatOptions ?? 'NET'; // Default to NET if undefined
         const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
         const vatRate = selectedOption.rate;
         const minPriceBeforeVat = priceMin !== null ? Math.round((priceMin / (1 + vatRate)) * 100) / 100 : null;
@@ -400,8 +471,10 @@
             class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]
         md:border-r-2 md:border-r-gray-100 dark:border-r-gray-700"
         >
+            <!-- ID for Intersection Observer -->
             <aside
-                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out 
+                id="filter-section"
+                class="flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out
                     {isFilterCollapsed ? 'max-h-[6rem] sm:max-h-none sm:w-16 md:w-16' : 'sm:w-72 md:w-72'}"
             >
                 <!-- ServerFilter Container - Grows and Scrolls -->
@@ -623,7 +696,8 @@
 
                 {#if browser && mounted}
                 <!-- Defer rendering this section until client-side mount to avoid hydration issues -->
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mt-5 px-5">
+                <!-- ID for Intersection Observer -->
+                <div id="results-section" class="flex flex-col sm:flex-row sm:justify-between sm:items-start mt-5 px-5">
                     <!-- Group heading and badge -->
                     <div class="flex items-baseline">
                         <h3
@@ -691,5 +765,21 @@
                 {/if} <!-- End of browser && mounted block -->
             </main>
         </div>
+
+        <!-- Floating Action Buttons for Small Screens -->
+        <FloatingActionButton
+            icon={faArrowDown}
+            targetSelector="#results-section"
+            visible={isSmallScreen && filterIsIntersecting && !resultsAreIntersecting}
+            priority={10}
+            ariaLabel="Scroll to results"
+        />
+        <FloatingActionButton
+            icon={faArrowUp}
+            targetSelector="#filter-section"
+            visible={isSmallScreen && !filterIsIntersecting && resultsAreIntersecting}
+            priority={10}
+            ariaLabel="Scroll to filter"
+        />
     {/if}
 </div>
