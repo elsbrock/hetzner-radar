@@ -30,7 +30,7 @@
     {
       cpu: 'AMD Ryzen 5 3600',
       ram_size: 64,
-      is_ecc: false,
+      is_ecc: true,
       hdd_arr: ['2 x 6TB HDD'],
       nvme_size: null,
       nvme_drives: [],
