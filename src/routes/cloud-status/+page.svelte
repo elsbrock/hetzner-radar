@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment';
 	import 'leaflet/dist/leaflet.css';
 	import type L from 'leaflet';
+	import { settingsStore } from '$lib/stores/settings'; // Import settings store
 	import {
 		Table,
 		TableHead,
@@ -25,6 +26,14 @@
 	} from 'flowbite-svelte-icons';
 
 	export let data: PageData;
+
+	// --- Tile Layer Configuration ---
+	const lightTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+	const lightTileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+	const darkTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+	const darkTileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+	// --- End Tile Layer Configuration ---
+
 
 	interface ServerTypeInfo {
 		id: number;
@@ -118,7 +127,7 @@
 		if (!data.statusData?.availability || !data.statusData?.serverTypes || data.statusData.serverTypes.length === 0) return 'none';
 
 		const locationAvailability = data.statusData.availability[locationId];
-		
+
 		// Consider only non-deprecated server types for status calculation
 		const activeServerTypes = data.statusData.serverTypes.filter(st => !st.deprecated);
 		const totalActiveCount = activeServerTypes.length;
@@ -130,7 +139,7 @@
 		}
 
 		// Count how many *active* server types are available in this location
-		const availableActiveCount = locationAvailability.filter(id => 
+		const availableActiveCount = locationAvailability.filter(id =>
 			activeServerTypes.some(st => st.id === id)
 		).length;
 
@@ -145,24 +154,54 @@
 
 	let map: L.Map | null = null;
 	let mapInitialized = false;
+	let currentTileLayer: L.TileLayer | null = null; // Reference to the current tile layer
+	let isDarkMode = false; // Reactive variable for theme state
+	let L_Instance: typeof L | null = null; // Store Leaflet instance
+	let themeObserver: MutationObserver | null = null; // Observer for <html> class changes
+
+	function updateMapTheme() {
+		if (!browser || !map || !L_Instance) return;
+
+		const currentlyDark = document.documentElement.classList.contains('dark');
+		if (currentlyDark === isDarkMode && currentTileLayer) return; // No change needed
+
+		isDarkMode = currentlyDark;
+
+		// Remove existing layer if it exists
+		if (currentTileLayer) {
+			map.removeLayer(currentTileLayer);
+			currentTileLayer = null;
+		}
+
+		// Add new layer
+		const tileUrl = isDarkMode ? darkTileUrl : lightTileUrl;
+		const tileAttribution = isDarkMode ? darkTileAttribution : lightTileAttribution;
+
+		currentTileLayer = L_Instance.tileLayer(tileUrl, {
+			attribution: tileAttribution,
+			maxZoom: 18, // Standard max zoom
+			minZoom: 2   // Prevent zooming out too far
+		}).addTo(map);
+	}
+
 
 	onMount(async () => {
 		if (browser) {
-			const L = await import('leaflet');
+			L_Instance = await import('leaflet'); // Store L instance
 
-			delete (L.Icon.Default.prototype as any)._getIconUrl;
-			L.Icon.Default.mergeOptions({
+			delete (L_Instance.Icon.Default.prototype as any)._getIconUrl;
+			L_Instance.Icon.Default.mergeOptions({
 				iconRetinaUrl: '/node_modules/leaflet/dist/images/marker-icon-2x.png',
 				iconUrl: '/node_modules/leaflet/dist/images/marker-icon.png',
 				shadowUrl: '/node_modules/leaflet/dist/images/marker-shadow.png'
 			});
 
 			const createDivIcon = (color: string) => {
-				return L.divIcon({
+				return L_Instance!.divIcon({ // Use L_Instance
 					html: `<span style="background-color: ${color}; width: 1rem; height: 1rem; display: block; border-radius: 50%; border: 1px solid white;"></span>`,
-					className: 'custom-div-icon', // Important for potential CSS overrides
+					className: 'custom-div-icon',
 					iconSize: [16, 16],
-					iconAnchor: [8, 8] // Center the icon
+					iconAnchor: [8, 8]
 				});
 			};
 
@@ -170,18 +209,17 @@
 			const iconSomeAvailable = createDivIcon('orange');
 			const iconNoneAvailable = createDivIcon('red');
 
+			// Use setTimeout to ensure the DOM element is ready
 			setTimeout(() => {
 				if (data.statusData?.locations && document.getElementById('map') && !mapInitialized) {
 					try {
-						map = L.map('map', {}); // Initialize without setView
+						map = L_Instance!.map('map', {}); // Initialize map
 
-						L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-							attribution:
-								'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-						}).addTo(map);
+						// Initial theme setup
+						updateMapTheme(); // Set initial tile layer based on theme
 
 						const markers: L.Marker[] = [];
-						const bounds = L.latLngBounds([]); // Create empty bounds
+						const bounds = L_Instance!.latLngBounds([]);
 
 						data.statusData.locations.forEach((location) => {
 							if (location.latitude && location.longitude) {
@@ -201,33 +239,43 @@
 										break;
 									case 'none':
 									default:
-										icon = iconNoneAvailable; // Use red icon for none
+										icon = iconNoneAvailable;
 										popupText += '<br>Status: No server types available';
 										break;
 								}
 
-								const marker = L.marker(latLng, { icon: icon }) // Use the determined icon
-									.bindPopup(popupText) // Updated popup text
+								const marker = L_Instance!.marker(latLng, { icon: icon })
+									.bindPopup(popupText)
 									.addTo(map!);
 								markers.push(marker);
-								bounds.extend(latLng); // Extend bounds with marker location
+								bounds.extend(latLng);
 							}
 						});
 
-						// Fit map to bounds if there are markers
 						if (markers.length > 0 && bounds.isValid()) {
-							map.fitBounds(bounds, { padding: [50, 50] }); // Add some padding
+							map.fitBounds(bounds, { padding: [50, 50] });
 						} else {
-							// Fallback if no locations or bounds are invalid
 							map.setView([51.1657, 10.4515], 5);
 						}
 
 						mapInitialized = true;
+
+						// --- Observe theme changes ---
+						themeObserver = new MutationObserver((mutationsList) => {
+							for(let mutation of mutationsList) {
+								if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+									updateMapTheme(); // Update map on class change
+								}
+							}
+						});
+						themeObserver.observe(document.documentElement, { attributes: true });
+						// --- End Observe theme changes ---
+
 					} catch (error) {
 						console.error('Leaflet map initialization failed:', error);
 					}
 				}
-			}, 100);
+			}, 100); // Delay slightly
 		}
 	});
 
@@ -237,6 +285,12 @@
 			map = null;
 			mapInitialized = false;
 		}
+		if (themeObserver) {
+			themeObserver.disconnect(); // Clean up observer
+			themeObserver = null;
+		}
+		L_Instance = null; // Clear L instance
+		currentTileLayer = null;
 	});
 </script>
 
