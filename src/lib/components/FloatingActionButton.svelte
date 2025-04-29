@@ -6,14 +6,6 @@
 	import { onDestroy } from 'svelte';
 	import { activeFabId, registerFab, unregisterFab } from '$lib/stores/fabStore';
 
-	interface $$Props {
-		icon: IconDefinition;
-		targetSelector?: string | null;
-		visible: boolean;
-		priority: number;
-		ariaLabel: string;
-	}
-
 	let {
 		icon,
 		targetSelector = null,
@@ -60,7 +52,7 @@
 
 {#if shouldRender}
 	<div
-		class="fixed bottom-6 right-6 z-50"
+		class="fixed bottom-12 right-6 z-50"
 		transition:fly={{ y: 100, duration: 300 }}
 	>
 		<Button
