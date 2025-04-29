@@ -101,7 +101,7 @@
   });
 </script>
 
-<div class="relative mb-10 max-w-xs mx-auto min-h-[12rem]"> <!-- Container for the stack, added min-h -->
+<div class="relative max-w-xs mx-auto min-h-[12rem]"> <!-- Container for the stack, added min-h -->
   {#each sampleConfigs as config, index}
     {@const distance = (index - activeCardIndex + sampleConfigs.length) % sampleConfigs.length}
     {@const isVisible = distance <= MAX_VISIBLE_DISTANCE}

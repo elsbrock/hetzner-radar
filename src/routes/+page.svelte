@@ -252,7 +252,7 @@
           </div>
       </div>
       <!-- Right Column: Sample Card Stack -->
-      <div class="mt-4 md:mt-8 md:col-span-2"> <!-- Span 2 cols on md+ -->
+      <div class="mt-4 md:mt-12 md:col-span-2"> <!-- Span 2 cols on md+ -->
           <SampleCardStack/>
       </div>
   </section>
