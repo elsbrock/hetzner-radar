@@ -27,6 +27,7 @@
 				type: 'line',
 				height: '95%',
 				width: '100%',
+background: 'transparent',
 				toolbar: {
 					tools: {
 						download: true,
@@ -45,6 +46,9 @@
 					enabled: true,
 					allowMouseWheelZoom: false
 				},
+			},
+			theme: {
+				mode: 'dark'
 			},
 			series: series,
 			xaxis: {
@@ -66,10 +70,17 @@
 			legend: {
 				position: 'bottom',
 				horizontalAlign: 'center',
+				labels: {
+					colors: '#ffffff' // Set legend text color for dark mode
+				}
 			},
 			stroke: {
 				curve: 'smooth', // Replicates the Catmull-Rom curve
 				width: 3,
+			},
+			grid: {
+				borderColor: '#555', // Dark mode grid color
+				strokeDashArray: 5,
 			},
 		};
 
