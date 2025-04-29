@@ -13,15 +13,6 @@
 	// Define the type for VAT option keys based on the imported value
 	type VatCountryCode = keyof typeof vatOptions;
 
-	interface $$Props {
-		config: ServerConfiguration;
-		timeUnitPrice?: 'perHour' | 'perMonth';
-		loading?: boolean;
-		displayStoragePrice?: 'perTB'; // Allow specifying how storage price is displayed
-		displayRamPrice?: 'perGB'; // Allow specifying how RAM price is displayed
-		clickable?: boolean; // Add prop to control click behavior
-	}
-
 	let {
 		timeUnitPrice = 'perHour',
 		config,
@@ -61,7 +52,7 @@
 </script>
 
 <Card
-	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700' : ''}`}
+	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 !border-l-green-700' : ''}`}
 	data-testid="server-card"
 	style="padding: 15px"
 	onclick={() => {

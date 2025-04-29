@@ -78,13 +78,13 @@
   // Card Stack Animation Logic
   const CYCLE_INTERVAL = 3000; // ms between card cycles
   const MAX_VISIBLE_DISTANCE = 2; // How many cards behind the active one are visible (0 = active, 1 = next, 2 = next+1)
-  const OFFSET_INCREMENT_REM = 1.0; // Offset increment per card distance (down and right)
+  const OFFSET_INCREMENT_REM = 1.5; // Offset increment per card distance (down and right)
   const BASE_Z_INDEX = 20; // z-index of the active card
   const Z_INDEX_DECREMENT = 10; // How much z-index decreases per card distance
   const BASE_SCALE = 1.0; // Scale of the active card
   const SCALE_DECREMENT = 0.05;
   const BASE_OPACITY = 1.0;
-  const OPACITY_DECREMENT = 0.25;
+  const OPACITY_DECREMENT = 0;
   const HIDDEN_SCALE = 0.85;
   const HIDDEN_OPACITY = 0;
 
