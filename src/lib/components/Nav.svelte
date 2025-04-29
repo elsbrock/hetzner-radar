@@ -124,15 +124,15 @@
         class="order-1"
         {activeUrl}
     >
-        <NavLi href="/" class="flex items-center" activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700">
+        <NavLi href="/" class="flex items-center">
             <FontAwesomeIcon class="me-2 w-4 h-4" icon={faHouse} />
             <span class="text-black dark:text-gray-400 {activeUrl === '/' ? 'border-b-2 border-primary-500' : ''}">Home</span>
         </NavLi>
-        <NavLi href="/configurations" class="flex items-center" activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700">
+        <NavLi href="/configurations" class="flex items-center">
             <FontAwesomeIcon class="me-2 w-4 h-4" icon={faServer} />
             <span class="text-black dark:text-gray-400 {activeUrl === '/configurations' ? 'border-b-2 border-primary-500' : ''}">Configurations</span>
         </NavLi>
-        <NavLi href="/analyze" class="flex items-center" activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700">
+        <NavLi href="/analyze" class="flex items-center">
             <FontAwesomeIcon class="me-2 w-4 h-4" icon={faBinoculars} />
             <span class="text-black dark:text-gray-400 {activeUrl === '/analyze' ? 'border-b-2 border-primary-500' : ''}">Analyze</span>
         </NavLi>
@@ -140,7 +140,7 @@
             <NavLi
                 href="/alerts"
                 class="flex items-center"
-                activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700"
+               
                 onmouseenter={() => isHoveringAlerts = true}
                 onmouseleave={() => isHoveringAlerts = false}
             >
@@ -159,17 +159,17 @@
                 <span class="text-black dark:text-gray-400 {activeUrl === '/alerts' ? 'border-b-2 border-primary-500' : ''}">Alerts</span>
             </NavLi>
         {:else}
-            <NavLi href="/statistics" class="flex items-center" activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700">
+            <NavLi href="/statistics" class="flex items-center">
                 <FontAwesomeIcon class="me-2 w-4 h-4" icon={faChartSimple} /> <span class="text-inherit {activeUrl === '/statistics' ? 'border-b-2 border-primary-500' : ''}">Statistics</span>
             </NavLi>
-            <NavLi href="/about" class="flex items-center" activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700">
+            <NavLi href="/about" class="flex items-center">
                 <FontAwesomeIcon class="me-2 w-4 h-4" icon={faCircleInfo} />
                 <span class="text-black dark:text-gray-400 {activeUrl === '/about' ? 'border-b-2 border-primary-500' : ''}">About</span>
             </NavLi>
         {/if}
 
         {#if $session}
-            <NavLi href="/settings" class="flex items-center" activeClass="bg-transparent dark:bg-transparent md:bg-primary-700 md:text-white md:dark:bg-gray-700">
+            <NavLi href="/settings" class="flex items-center">
                 <FontAwesomeIcon class="me-2 w-4 h-4" icon={faUser} />
                 <span class="text-black dark:text-gray-400 {activeUrl === '/settings' ? 'border-b-2 border-primary-500' : ''}">Settings</span>
             </NavLi>
