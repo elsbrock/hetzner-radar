@@ -252,6 +252,7 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <Button
+                    data-testid="cta-get-started"
                     color="primary"
                     href="/analyze"
                     size="lg"
@@ -261,6 +262,7 @@
                     <ArrowRightOutline class="ms-2 w-5 h-5" />
                 </Button>
                 <Button
+                    data-testid="cta-view-github"
                     color="alternative"
                     href="https://github.com/elsbrock/hetzner-radar"
                     size="lg"
@@ -473,7 +475,10 @@
             class="mx-auto my-12 max-w-7xl flex flex-col sm:flex-row flex-wrap gap-y-8 gap-x-4 items-center justify-around"
         >
             <!-- Auctions Tracked -->
-            <div class="flex flex-col items-center text-center px-4">
+            <div
+                data-testid="glance-auctions-tracked"
+                class="flex flex-col items-center text-center px-4"
+            >
                 {#if $auctionCounter === 0}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
@@ -513,7 +518,10 @@
             </div>
 
             <!-- Auctions in Last Batch -->
-            <div class="flex flex-col items-center text-center px-4">
+            <div
+                data-testid="glance-last-batch"
+                class="flex flex-col items-center text-center px-4"
+            >
                 {#if $latestBatchCounter === 0}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
@@ -551,7 +559,10 @@
             </div>
 
             <!-- Active Users -->
-            <div class="flex flex-col items-center text-center px-4">
+            <div
+                data-testid="glance-active-users"
+                class="flex flex-col items-center text-center px-4"
+            >
                 {#if $userCounter < 0}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
@@ -589,7 +600,10 @@
             </div>
 
             <!-- Active Alerts -->
-            <div class="flex flex-col items-center text-center px-4">
+            <div
+                data-testid="glance-active-alerts"
+                class="flex flex-col items-center text-center px-4"
+            >
                 {#if $alertCounter < 0}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
@@ -627,7 +641,10 @@
             </div>
 
             <!-- Notifications sent -->
-            <div class="flex flex-col items-center text-center px-4">
+            <div
+                data-testid="glance-notifications-sent"
+                class="flex flex-col items-center text-center px-4"
+            >
                 {#if $historyCounter < 0}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"

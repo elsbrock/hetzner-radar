@@ -1,18 +1,17 @@
-<script>
+<script lang="ts">
     import {
-      Badge,
         Footer,
         FooterCopyright,
         FooterLink,
         FooterLinkGroup,
-        Indicator,
     } from "flowbite-svelte";
-    const buildDate = __BUILD_STAMP__;
+    const buildDate = import.meta.env.VITE_BUILD_STAMP;
 </script>
 
 <Footer class="border-t dark:border-gray-700 bg-white dark:bg-gray-800">
     <div class="p-5 sm:flex sm:items-center sm:justify-between">
         <FooterCopyright
+            data-testid="footer-copyright"
             href="/"
             by="Server Radar."
             year={new Date().getFullYear()}
@@ -21,16 +20,27 @@
             <FooterLinkGroup
                 ulClass="flex flex-wrap order-1 items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
             >
-                <FooterLink href="/cloud-status">Cloud Status</FooterLink>
-                <FooterLink href="/privacy">Privacy</FooterLink>
-                <FooterLink href="/terms">Terms</FooterLink>
-                <FooterLink href="/contact">Contact</FooterLink>
+                <FooterLink
+                    data-testid="footer-link-cloud-status"
+                    href="/cloud-status">Cloud Status</FooterLink
+                >
+                <FooterLink data-testid="footer-link-privacy" href="/privacy"
+                    >Privacy</FooterLink
+                >
+                <FooterLink data-testid="footer-link-terms" href="/terms"
+                    >Terms</FooterLink
+                >
+                <FooterLink data-testid="footer-link-contact" href="/contact"
+                    >Contact</FooterLink
+                >
             </FooterLinkGroup>
         </div>
         <div class="order-1">
-            <p class="text-xs text-gray-500 dark:text-gray-400 text-italic">
-                Last Update {buildDate} (Europe/Berlin)
-            </p>
+            {#if buildDate}
+                <p class="text-xs text-gray-500 dark:text-gray-400 text-italic">
+                    Last Update {buildDate} (Europe/Berlin)
+                </p>
+            {/if}
         </div>
     </div>
 </Footer>

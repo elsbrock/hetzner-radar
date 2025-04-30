@@ -27,41 +27,43 @@
     import { enhance } from "$app/forms";
     import { goto } from "$app/navigation";
     import { session } from "$lib/stores/session";
-    import { settingsStore } from "$lib/stores/settings"; // <-- Import settings store
+    import { settingsStore } from "$lib/stores/settings";
+    // <-- Import settings store
     import { faGithub } from "@fortawesome/free-brands-svg-icons";
-  
+
     let activeUrl = $derived($page.url.pathname);
     let isHoveringAlerts = $state(false);
     let isNavOpen = $state(false); // State for mobile nav visibility
 
     // Local reactive state for the theme, initialized from the store
     let theme = $state($settingsStore.theme);
-  
+
     // Effect to update the store when the local theme state changes
     $effect(() => {
         // Avoid writing back to the store if the change originated from the store itself
         if (theme !== $settingsStore.theme) {
-            settingsStore.updateSetting('theme', theme);
+            settingsStore.updateSetting("theme", theme);
         }
     });
-  
-     // Effect to update local state if the store changes externally (e.g., another tab)
-     // Using .pre ensures this runs before the effect above if both trigger in the same tick
-     $effect.pre(() => {
-         if ($settingsStore.theme !== theme) {
-             theme = $settingsStore.theme;
-         }
-     });
 
-   // Close nav on navigation
-   $effect(() => {
-       if ($page.url) { // Ensure url is available
+    // Effect to update local state if the store changes externally (e.g., another tab)
+    // Using .pre ensures this runs before the effect above if both trigger in the same tick
+    $effect.pre(() => {
+        if ($settingsStore.theme !== theme) {
+            theme = $settingsStore.theme;
+        }
+    });
+
+    // Close nav on navigation
+    $effect(() => {
+        if ($page.url) {
+            // Ensure url is available
             isNavOpen = false;
-       }
-   });
- </script>
-  
-  <Navbar class="h-15 w-full">
+        }
+    });
+</script>
+
+<Navbar class="h-15 w-full">
     <NavBrand href="/">
         <div style="width: 32px; height: 32px">
             <Radar />
@@ -115,7 +117,11 @@
                 Analyze</span
             >
         </Button>
-        <NavHamburger class="md:flex" onclick={() => isNavOpen = !isNavOpen} />
+        <NavHamburger
+            data-testid="nav-hamburger"
+            class="md:flex"
+            onclick={() => (isNavOpen = !isNavOpen)}
+        />
     </div>
 
     <NavUl
@@ -124,25 +130,46 @@
         class="order-1"
         {activeUrl}
     >
-        <NavLi href="/" class="flex items-center">
+        <NavLi href="/" data-testid="nav-link-home" class="flex items-center">
             <FontAwesomeIcon class="me-2 w-4 h-4" icon={faHouse} />
-            <span class="text-black dark:text-gray-400 {activeUrl === '/' ? 'border-b-2 border-primary-500' : ''}">Home</span>
+            <span
+                class="text-black dark:text-gray-400 {activeUrl === '/'
+                    ? 'border-b-2 border-primary-500'
+                    : ''}">Home</span
+            >
         </NavLi>
-        <NavLi href="/configurations" class="flex items-center">
+        <NavLi
+            href="/configurations"
+            data-testid="nav-link-configurations"
+            class="flex items-center"
+        >
             <FontAwesomeIcon class="me-2 w-4 h-4" icon={faServer} />
-            <span class="text-black dark:text-gray-400 {activeUrl === '/configurations' ? 'border-b-2 border-primary-500' : ''}">Configurations</span>
+            <span
+                class="text-black dark:text-gray-400 {activeUrl ===
+                '/configurations'
+                    ? 'border-b-2 border-primary-500'
+                    : ''}">Configurations</span
+            >
         </NavLi>
-        <NavLi href="/analyze" class="flex items-center">
+        <NavLi
+            href="/analyze"
+            data-testid="nav-link-analyze"
+            class="flex items-center"
+        >
             <FontAwesomeIcon class="me-2 w-4 h-4" icon={faBinoculars} />
-            <span class="text-black dark:text-gray-400 {activeUrl === '/analyze' ? 'border-b-2 border-primary-500' : ''}">Analyze</span>
+            <span
+                class="text-black dark:text-gray-400 {activeUrl === '/analyze'
+                    ? 'border-b-2 border-primary-500'
+                    : ''}">Analyze</span
+            >
         </NavLi>
         {#if $session}
             <NavLi
                 href="/alerts"
+                data-testid="nav-link-alerts"
                 class="flex items-center"
-               
-                onmouseenter={() => isHoveringAlerts = true}
-                onmouseleave={() => isHoveringAlerts = false}
+                onmouseenter={() => (isHoveringAlerts = true)}
+                onmouseleave={() => (isHoveringAlerts = false)}
             >
                 {#if isHoveringAlerts}
                     <FontAwesomeIcon
@@ -156,25 +183,58 @@
                         icon={faBell}
                     />
                 {/if}
-                <span class="text-black dark:text-gray-400 {activeUrl === '/alerts' ? 'border-b-2 border-primary-500' : ''}">Alerts</span>
+                <span
+                    class="text-black dark:text-gray-400 {activeUrl ===
+                    '/alerts'
+                        ? 'border-b-2 border-primary-500'
+                        : ''}">Alerts</span
+                >
             </NavLi>
         {:else}
-            <NavLi href="/statistics" class="flex items-center">
-                <FontAwesomeIcon class="me-2 w-4 h-4" icon={faChartSimple} /> <span class="text-inherit {activeUrl === '/statistics' ? 'border-b-2 border-primary-500' : ''}">Statistics</span>
+            <NavLi
+                href="/statistics"
+                data-testid="nav-link-statistics"
+                class="flex items-center"
+            >
+                <FontAwesomeIcon class="me-2 w-4 h-4" icon={faChartSimple} />
+                <span
+                    class="text-inherit {activeUrl === '/statistics'
+                        ? 'border-b-2 border-primary-500'
+                        : ''}">Statistics</span
+                >
             </NavLi>
-            <NavLi href="/about" class="flex items-center">
+            <NavLi
+                href="/about"
+                data-testid="nav-link-about"
+                class="flex items-center"
+            >
                 <FontAwesomeIcon class="me-2 w-4 h-4" icon={faCircleInfo} />
-                <span class="text-black dark:text-gray-400 {activeUrl === '/about' ? 'border-b-2 border-primary-500' : ''}">About</span>
+                <span
+                    class="text-black dark:text-gray-400 {activeUrl === '/about'
+                        ? 'border-b-2 border-primary-500'
+                        : ''}">About</span
+                >
             </NavLi>
         {/if}
 
         {#if $session}
-            <NavLi href="/settings" class="flex items-center">
+            <NavLi
+                href="/settings"
+                data-testid="nav-link-settings"
+                class="flex items-center"
+            >
                 <FontAwesomeIcon class="me-2 w-4 h-4" icon={faUser} />
-                <span class="text-black dark:text-gray-400 {activeUrl === '/settings' ? 'border-b-2 border-primary-500' : ''}">Settings</span>
+                <span
+                    class="text-black dark:text-gray-400 {activeUrl ===
+                    '/settings'
+                        ? 'border-b-2 border-primary-500'
+                        : ''}">Settings</span
+                >
             </NavLi>
             <!-- Mobile only container for controls -->
-            <div class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700">
+            <div
+                class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700"
+            >
                 <form
                     action="/auth/logout"
                     method="POST"
@@ -184,27 +244,33 @@
                     }}
                     class="flex-grow mr-2"
                 >
-                    <Button outline class="w-full bg-white dark:bg-inherit" type="submit">
+                    <Button
+                        data-testid="nav-signout-mobile"
+                        outline
+                        class="w-full bg-white dark:bg-inherit"
+                        type="submit"
+                    >
                         <FontAwesomeIcon
                             class="me-2 w-4 h-4"
                             icon={faRightFromBracket}
                         /> Sign Out
                     </Button>
                 </form>
-                 <!-- Use DarkMode component directly -->
+                <!-- Use DarkMode component directly -->
                 <DarkMode />
             </div>
             <!-- Desktop only Sign Out -->
-             <form
+            <form
                 action="/auth/logout"
                 method="POST"
                 use:enhance={() => {
                     session.set(null);
                     return goto("/auth/logout");
                 }}
-                 class="hidden md:block"
+                class="hidden md:block"
             >
                 <Button
+                    data-testid="nav-signout-desktop"
                     outline
                     class="md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
                     type="submit"
@@ -216,17 +282,25 @@
                 </Button>
             </form>
         {:else}
-             <!-- Mobile only container for controls -->
-            <div class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700">
-                 <Button outline class="flex-grow mr-2 bg-white dark:bg-inherit" href="/auth/login">
+            <!-- Mobile only container for controls -->
+            <div
+                class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700"
+            >
+                <Button
+                    data-testid="nav-signin-mobile"
+                    outline
+                    class="flex-grow mr-2 bg-white dark:bg-inherit"
+                    href="/auth/login"
+                >
                     <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} /> Sign In
                 </Button>
-                 <!-- Use DarkMode component directly -->
+                <!-- Use DarkMode component directly -->
                 <DarkMode />
             </div>
-            
-             <!-- Desktop only Sign In -->
+
+            <!-- Desktop only Sign In -->
             <Button
+                data-testid="nav-signin-desktop"
                 outline
                 class="hidden md:block md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
                 href="/auth/login"
@@ -243,4 +317,3 @@
         class="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent h-[2px]"
     ></div>
 </div>
-
