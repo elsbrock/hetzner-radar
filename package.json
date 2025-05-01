@@ -28,6 +28,7 @@
         "@sveltejs/kit": "2.20.8",
         "@sveltejs/vite-plugin-svelte": "5.0.3",
         "@types/eslint": "9.6.1",
+        "@types/leaflet": "1.9.17",
         "@types/node": "22.15.3",
         "@types/svelte-range-slider-pips": "2.0.4",
         "autoprefixer": "10.4.21",
@@ -41,9 +42,8 @@
         "flowbite-svelte": "0.48.6",
         "flowbite-svelte-icons": "2.1.1",
         "globals": "16.0.0",
-        "lz-string": "1.5.0",
         "leaflet": "1.9.4",
-        "@types/leaflet": "1.9.17",
+        "lz-string": "1.5.0",
         "oslo": "1.2.1",
         "postcss": "8.5.3",
         "prettier": "3.5.3",
@@ -63,5 +63,11 @@
         "vite-plugin-remove-console": "2.2.0",
         "vitest": "3.1.2"
     },
-    "type": "module"
+    "type": "module",
+    "dependencies": {
+        "chart.js": "^4.4.9",
+        "chartjs": "^0.3.24",
+        "chartjs-adapter-date-fns": "^3.0.0",
+        "date-fns": "^4.1.0"
+    }
 }
