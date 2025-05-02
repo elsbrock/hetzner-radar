@@ -48,6 +48,7 @@
     faClockRotateLeft,
     faEuroSign,
     faFilter,
+    faFire,
     faStopwatch,
     faWarning,
   } from "@fortawesome/free-solid-svg-icons";
@@ -914,23 +915,8 @@
               <PriceControls />
             </div>
           </div>
-          <h1
-            class="px-5 text-left text-xl font-semibold text-gray-900 dark:text-white"
-          >
-            Price History
-          </h1>
-          <div class="h-[320px] p-5">
-            <ServerPriceChart
-              data={serverPrices}
-              {loading}
-              timeUnitPrice={$settingsStore.timeUnitPrice}
-            />
-          </div>
-        </div>
-
-        <!-- QuickStats Section -->
-        <div class="px-5">
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 px-5">
             <!-- Total Available Configurations -->
             <QuickStat
               data-testid="total-configurations"
@@ -943,7 +929,7 @@
 
             <!-- Available Auctions -->
             <QuickStat
-              icon={faStopwatch}
+              icon={faFire}
               title="Available Auctions"
               value={availableAuctionsValue}
               subtitle="Currently available auctions"
@@ -993,6 +979,14 @@
               value={priceRangeFormatted}
               subtitle="Highest minus lowest price"
               size="sm"
+            />
+          </div>
+
+          <div class="h-[320px] pt-5">
+            <ServerPriceChart
+              data={serverPrices}
+              {loading}
+              timeUnitPrice={$settingsStore.timeUnitPrice}
             />
           </div>
         </div>
