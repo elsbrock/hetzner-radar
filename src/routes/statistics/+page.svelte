@@ -14,7 +14,6 @@
     type TemporalStat,
   } from "$lib/api/frontend/stats";
   import GenericChart from "$lib/components/GenericChart.svelte";
-  import LineChart from "$lib/components/LineChart.svelte";
   import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
   import {
     faArrowDown,
@@ -475,7 +474,8 @@
         </p>
       </div>
       <div class="h-80 w-full">
-        <LineChart
+        <GenericChart
+          type="line"
           data={[{ name: "Price Index", data: dailyPriceIndexStats }]}
           options={{
             scales: {
@@ -518,7 +518,8 @@
             </p>
           </div>
           <div class="h-80 w-full">
-            <LineChart
+            <GenericChart
+              type="line"
               data={[
                 { name: "With ECC", data: ramWithECCPriceStats },
                 { name: "Without ECC", data: ramWithoutECCPriceStats },
@@ -542,7 +543,10 @@
             </p>
           </div>
           <div class="h-80 w-full">
-            <LineChart data={[{ name: "HDD Price", data: hddPriceStats }]} />
+            <GenericChart
+              type="line"
+              data={[{ name: "HDD Price", data: hddPriceStats }]}
+            />
           </div>
         </div>
 
@@ -561,7 +565,8 @@
             </p>
           </div>
           <div class="h-80 w-full">
-            <LineChart
+            <GenericChart
+              type="line"
               data={[
                 { name: "NVMe", data: nvmePriceStats },
                 { name: "SATA", data: sataPriceStats },
