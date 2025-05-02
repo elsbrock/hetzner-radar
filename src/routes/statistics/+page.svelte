@@ -304,7 +304,7 @@
         icon={faMemory}
         title="ECC Premium"
         value={ramPriceComparison !== null
-          ? `${ramPriceComparison.difference * -1}%`
+          ? `${parseFloat(ramPriceComparison.difference) * -1}%`
           : null}
         subtitle="ECC RAM cost markup per GB"
       />
@@ -475,10 +475,10 @@
           </div>
           <div class="h-80 w-full">
             <GenericChart
-              type="bar"
+              type="line"
               data={[
-                { name: "Finland", data: volumeFinlandStats },
-                { name: "Germany", data: volumeGermanyStats },
+                { name: "Finland", data: volumeFinlandStats, fill: true },
+                { name: "Germany", data: volumeGermanyStats, fill: true },
               ]}
               options={{
                 scales: {
@@ -505,7 +505,7 @@
                   tooltip: {
                     mode: "index",
                   },
-                },
+                }
               }}
             />
           </div>
@@ -527,12 +527,18 @@
           </div>
           <div class="h-80 w-full">
             <GenericChart
-              type="bar"
+              type="line"
               data={finlandDatacenters.map((dc) => ({
                 name: dc,
                 data: datacenterVolumeFinlandStats[dc] || [],
+                fill: true
               }))}
               options={{
+                plugins: {
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
                 scales: {
                   y: {
                     stacked: true,
@@ -591,12 +597,18 @@
           </div>
           <div class="h-80 w-full">
             <GenericChart
-              type="bar"
+              type="line"
               data={germanyDatacenters.map((dc) => ({
                 name: dc,
                 data: datacenterVolumeGermanyStats[dc] || [],
+                fill: true
               }))}
               options={{
+                plugins: {
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
                 scales: {
                   y: {
                     stacked: true,
@@ -657,10 +669,10 @@
           </div>
           <div class="h-80 w-full">
             <GenericChart
-              type="bar"
+              type="line"
               data={[
-                { name: "AMD", data: volumeAMDStats },
-                { name: "Intel", data: volumeIntelStats },
+                { name: "AMD", data: volumeAMDStats, fill: true },
+                { name: "Intel", data: volumeIntelStats, fill: true },
               ]}
               options={{
                 scales: {
@@ -717,11 +729,12 @@
           </div>
           <div class="h-80 w-full">
             <GenericChart
-              type="bar"
+              type="line"
               data={Object.entries(intelCPUModelStats).map(
                 ([model, stats]) => ({
                   name: model,
                   data: stats,
+                  fill: true
                 })
               )}
               options={{
@@ -785,10 +798,11 @@
           </div>
           <div class="h-80 w-full">
             <GenericChart
-              type="bar"
+              type="line"
               data={Object.entries(amdCPUModelStats).map(([model, stats]) => ({
                 name: model,
                 data: stats,
+                fill: true
               }))}
               options={{
                 scales: {

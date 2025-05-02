@@ -11,11 +11,10 @@
   import "chartjs-adapter-date-fns";
   import merge from "deepmerge";
   import { onDestroy } from "svelte";
-  // Keep deepmerge for merging options
 
   // --- Props ---
   type InputDataPoint = { x: number; y: number };
-  type InputSeries = { name: string; data: InputDataPoint[] };
+  type InputSeries = { name: string; data: InputDataPoint[], fill?: boolean, color?: string };
 
   let {
     data = [], // Default value directly
@@ -53,17 +52,17 @@
       ? "rgba(75, 85, 99, 0.2)" // gray-500 dark, reduced opacity
       : "rgba(209, 213, 219, 0.3)"; // gray-300 light, reduced opacity
     const legendColor = isDarkMode ? "#ffffff" : "#000000";
-
-    // --- Data Transformation ---
+    
     const chartDatasets = data.map((series, index) => {
+      const color = series.color || getRandomColor();
       const baseConfig = {
         label: series.name,
         data: series.data.map((d) => ({
           x: d.x * 1000, // Convert timestamp (assumed seconds) to milliseconds
           y: d.y,
         })),
-        // Generate a color that will be used for both border and background
-        borderColor: getRandomColor(),
+        // Use provided color or generate one
+        borderColor: color,
       };
 
       // Type-specific styling
@@ -73,7 +72,8 @@
           borderWidth: 3,
           tension: 0.4, // Approximation for 'smooth' curve
           pointRadius: 0, // Hide points by default
-          fill: false, // No fill under the line by default
+          fill: series.fill === true, // Use fill if specified
+          backgroundColor: series.fill === true ? addAlpha(color, 0.5) : undefined,
         };
       } else if (type === "bar") {
         const color = baseConfig.borderColor;
