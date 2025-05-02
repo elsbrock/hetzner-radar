@@ -933,6 +933,7 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <!-- Total Available Configurations -->
             <QuickStat
+              data-testid="total-configurations"
               icon={faFilter}
               title="Total Configurations"
               value={totalResultsValue}

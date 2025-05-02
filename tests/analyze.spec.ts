@@ -11,7 +11,7 @@ test('analyze: we have data', async ({ page }) => {
   await expect(page.getByTestId('filter-clear')).toBeVisible();
   await page.getByTestId('filter-clear').click();
   await expect(page.getByTestId('filter-clear')).not.toBeVisible();
-  await expect(page.getByTestId('results-count')).toHaveText(/^\d+ results/);
+  await expect(page.getByTestId('total-configurations')).toBeVisible();
 });
 
 test('analyze: price filter works', async ({ page }) => {
@@ -20,9 +20,9 @@ test('analyze: price filter works', async ({ page }) => {
   // Wait for initial data load to complete
   await page.getByTestId('server-card').first().waitFor({ timeout: 10000 });
 
-  // Get initial count of servers
-  const initialResultsText = await page.getByTestId('results-count').textContent();
-  const initialCount = parseInt(initialResultsText?.match(/^(\d+) results/)?.[1] || '0');
+  // Get initial count of servers from the QuickStat component
+  const initialResultsText = await page.getByTestId('total-configurations').textContent();
+  const initialCount = parseInt(initialResultsText?.match(/(\d+)/)?.[1] || '0');
 
   // Enter a minimum price to filter servers
   await page.getByTestId('price-min-input').fill('50');
@@ -31,8 +31,8 @@ test('analyze: price filter works', async ({ page }) => {
   await page.waitForTimeout(600);
 
   // Verify filtered results
-  const minFilteredResultsText = await page.getByTestId('results-count').textContent();
-  const minFilteredCount = parseInt(minFilteredResultsText?.match(/^(\d+) results/)?.[1] || '0');
+  const minFilteredResultsText = await page.getByTestId('total-configurations').textContent();
+  const minFilteredCount = parseInt(minFilteredResultsText?.match(/(\d+)/)?.[1] || '0');
 
   // The count should be less than or equal to the initial count
   expect(minFilteredCount).toBeLessThanOrEqual(initialCount);
@@ -45,8 +45,8 @@ test('analyze: price filter works', async ({ page }) => {
   await page.waitForTimeout(600);
 
   // Verify max price filtered results
-  const maxFilteredResultsText = await page.getByTestId('results-count').textContent();
-  const maxFilteredCount = parseInt(maxFilteredResultsText?.match(/^(\d+) results/)?.[1] || '0');
+  const maxFilteredResultsText = await page.getByTestId('total-configurations').textContent();
+  const maxFilteredCount = parseInt(maxFilteredResultsText?.match(/(\d+)/)?.[1] || '0');
 
   // Count should be less than or equal to the initial count
   expect(maxFilteredCount).toBeLessThanOrEqual(initialCount);
@@ -59,8 +59,8 @@ test('analyze: price filter works', async ({ page }) => {
   await page.waitForTimeout(600);
 
   // Verify range filtered results
-  const rangeFilteredResultsText = await page.getByTestId('results-count').textContent();
-  const rangeFilteredCount = parseInt(rangeFilteredResultsText?.match(/^(\d+) results/)?.[1] || '0');
+  const rangeFilteredResultsText = await page.getByTestId('total-configurations').textContent();
+  const rangeFilteredCount = parseInt(rangeFilteredResultsText?.match(/(\d+)/)?.[1] || '0');
 
   // Count should be less than or equal to both the initial and previous filtered counts
   expect(rangeFilteredCount).toBeLessThanOrEqual(initialCount);
@@ -73,7 +73,7 @@ test('analyze: price filter works', async ({ page }) => {
   await page.waitForTimeout(600);
 
   // Count should return to initial
-  const finalResultsText = await page.getByTestId('results-count').textContent();
-  const finalCount = parseInt(finalResultsText?.match(/^(\d+) results/)?.[1] || '0');
+  const finalResultsText = await page.getByTestId('total-configurations').textContent();
+  const finalCount = parseInt(finalResultsText?.match(/(\d+)/)?.[1] || '0');
   expect(finalCount).toEqual(initialCount);
 });
