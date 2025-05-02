@@ -5,20 +5,20 @@
     import dayjs from "dayjs";
     import relativeTime from "dayjs/plugin/relativeTime";
     import {
-        Button,
-        CloseButton,
-        Drawer,
-        Spinner,
-        Table,
-        TableBody,
-        TableBodyCell,
-        TableBodyRow
-    } from "flowbite-svelte";
-    import { sineIn } from "svelte/easing";
-    import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
-    import { FontAwesomeIcon as Fa } from "@fortawesome/svelte-fontawesome";
-    import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
-    import { addToast } from "$lib/stores/toast";
+            Button,
+            CloseButton,
+            Drawer,
+            Spinner,
+            Table,
+            TableBody,
+            TableBodyCell,
+            TableBodyRow
+        } from "flowbite-svelte";
+        import { sineIn } from "svelte/easing";
+        import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
+        import { FontAwesomeIcon as Fa } from "@fortawesome/svelte-fontawesome";
+        import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
+        import { addToast } from "$lib/stores/toast";
     
     dayjs.extend(relativeTime);
 
@@ -188,8 +188,16 @@
     width="w-96"
     class="border-l border-gray-200 dark:border-gray-700"
     activateClickOutside={true}
+    on:hidden={() => {
+        // Ensure URL is updated when drawer is closed by any means
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('view')) {
+            url.searchParams.delete('view');
+            goto(url.toString(), { replaceState: true, keepFocus: true });
+        }
+    }}
 >
-    <div class="flex items-center mb-4">
+    <div class="flex items-center mb-2">
         <h5
             class="inline-flex items-center text-base font-semibold text-gray-500 dark:text-gray-400"
         >
@@ -200,7 +208,7 @@
 
     {#if alertId && !hidden}
         <div class="mb-6">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between mb-1">
                 <h5
                     class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white"
                 >
@@ -210,19 +218,10 @@
         </div>
 
         <!-- Auctions Table -->
-        <div class="flex items-center justify-between mb-1">
+        <div class="mb-1">
             <h6 class="text-lg font-medium text-gray-900 dark:text-white">
                 Auctions
             </h6>
-            <Button
-                href="https://www.hetzner.com/sb"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="xs"
-                color="alternative"
-            >
-                <Fa icon={faExternalLinkAlt} />
-            </Button>
         </div>
         <Table hoverable={true} striped={true}>
             <TableBody class="divide-y">
@@ -248,7 +247,6 @@
                     {#each auctions as auction (auction.id)}
                         <TableBodyRow>
                             <TableBodyCell class="px-1 py-4">
-                                <div class="font-medium">#{auction.auction_id}</div>
                                 <div class="text-sm text-gray-700 dark:text-gray-300">
                                     {auction.cpu}
                                 </div>
@@ -294,11 +292,11 @@
                                     />
                                     <Button
                                         type="submit"
-                                        size="xs"
-                                        color="primary"
+                                        size="md"
                                         aria-label="View on Hetzner"
+                                        class="px-4"
                                     >
-                                        View
+                                        <Fa icon={faShoppingCart} />
                                     </Button>
                                 </form>
                             </TableBodyCell>
@@ -327,7 +325,7 @@
         >
             <p>
                 These are the auctions that matched your alert criteria when it was triggered.
-                Click the "View" button to see the auction on Hetzner's website.
+                Click the <Fa icon={faShoppingCart} class="inline mx-1" /> button to see the auction on Hetzner's website.
             </p>
             <p>
                 Please note: Auctions may no longer be available as they can be purchased quickly.
