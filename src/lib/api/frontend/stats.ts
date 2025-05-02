@@ -182,30 +182,58 @@ export async function getPriceIndexStats(conn: AsyncDuckDBConnection): Promise<T
 						with_gpu, with_inic, with_hwr, with_rps,
 						date_trunc('d', seen)
 		),
-		config_deviations AS (
-				-- Calculate normalized deviation for each configuration
+		-- Calculate a baseline reference price for each configuration
+		config_baseline AS (
 				SELECT
-						date,
-						daily_min_price,
-						server_count,
-						avg(daily_min_price) OVER (
-								PARTITION BY
-										cpu, ram_size, is_ecc, hdd_arr,
-										nvme_size, nvme_drives,
-										sata_size, sata_drives,
-										hdd_size, hdd_drives,
-										with_gpu, with_inic, with_hwr, with_rps
-								ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-						) AS rolling_avg_price
+						cpu, ram_size, is_ecc, hdd_arr,
+						nvme_size, nvme_drives,
+						sata_size, sata_drives,
+						hdd_size, hdd_drives,
+						with_gpu, with_inic, with_hwr, with_rps,
+						-- Use median price over the last 90 days as the baseline
+						percentile_cont(0.5) WITHIN GROUP (ORDER BY daily_min_price) AS baseline_price
 				FROM config_daily_prices
+				WHERE date >= current_date - INTERVAL '90 days'
+				GROUP BY
+						cpu, ram_size, is_ecc, hdd_arr,
+						nvme_size, nvme_drives,
+						sata_size, sata_drives,
+						hdd_size, hdd_drives,
+						with_gpu, with_inic, with_hwr, with_rps
+		),
+		-- Calculate the price index by comparing daily prices to the baseline
+		config_price_index AS (
+				SELECT
+						cdp.date,
+						cdp.daily_min_price,
+						cdp.server_count,
+						cb.baseline_price,
+						-- Calculate ratio of current price to baseline
+						cdp.daily_min_price / NULLIF(cb.baseline_price, 0) AS price_ratio
+				FROM config_daily_prices cdp
+				JOIN config_baseline cb ON
+						cdp.cpu = cb.cpu AND
+						cdp.ram_size = cb.ram_size AND
+						cdp.is_ecc = cb.is_ecc AND
+						cdp.hdd_arr = cb.hdd_arr AND
+						cdp.nvme_size = cb.nvme_size AND
+						cdp.nvme_drives = cb.nvme_drives AND
+						cdp.sata_size = cb.sata_size AND
+						cdp.sata_drives = cb.sata_drives AND
+						cdp.hdd_size = cb.hdd_size AND
+						cdp.hdd_drives = cb.hdd_drives AND
+						cdp.with_gpu = cb.with_gpu AND
+						cdp.with_inic = cb.with_inic AND
+						cdp.with_hwr = cb.with_hwr AND
+						cdp.with_rps = cb.with_rps
 		),
 		daily_price_index AS (
 				-- Consolidate to a single price index per day
 				SELECT
 						date,
-						SUM((daily_min_price / NULLIF(rolling_avg_price, 0)) * server_count) AS weighted_sum,
+						SUM(price_ratio * server_count) AS weighted_sum,
 						SUM(server_count) AS total_servers
-				FROM config_deviations
+				FROM config_price_index
 				GROUP BY date
 		)
 		-- Final result: one price index value per day
