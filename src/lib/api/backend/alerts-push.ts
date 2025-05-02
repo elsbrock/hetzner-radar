@@ -353,9 +353,8 @@ good news! The target price for one of your alerts has been reached.
 
          Filter: ${alertInfo.name}
    Target Price: ${alertInfo.price.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT)
-  Trigger Price: ${triggerPrice.toFixed(2)} EUR
+  Trigger Price: ${triggerPrice.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT${alertInfo.includes_ipv4_cost ? ' and IPv4 cost' : ''})
 
-${alertInfo.includes_ipv4_cost ? '(Price comparison includes standard IPv4 cost)\n' : ''}
 
 View the matched auctions directly:
 
@@ -389,7 +388,11 @@ export async function processAlert(
 ): Promise<void> {
   try {
     // Find the lowest price among matched auctions
-    const triggerPrice = Math.min(...matchedAuctions.map(auction => auction.price));
+    const lowestAuctionPrice = Math.min(...matchedAuctions.map(auction => auction.price));
+    
+    // Calculate trigger price including VAT and IPv4 cost if applicable
+    const ipv4Cost = alertInfo.includes_ipv4_cost ? HETZNER_IPV4_COST_CENTS / 100 : 0;
+    const triggerPrice = (lowestAuctionPrice + ipv4Cost) * (1 + alertInfo.vat_rate / 100.0);
     
     // Send notification email
     await sendAlertNotification(platform, alertInfo, triggerPrice);
