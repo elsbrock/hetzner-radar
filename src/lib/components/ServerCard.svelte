@@ -1,128 +1,142 @@
 <script lang="ts">
-	import { type ServerConfiguration } from '$lib/api/frontend/filter';
-	import { settingsStore } from '$lib/stores/settings';
-	import ServerDetailDrawer from './ServerDetailDrawer.svelte';
-	import ServerFactSheet from './ServerFactSheet.svelte';
-	import { vatOptions } from './VatSelector.svelte';
-	import dayjs from 'dayjs';
-	import relativeTime from 'dayjs/plugin/relativeTime';
-	import { Card, Indicator, Spinner } from 'flowbite-svelte';
+  import { type ServerConfiguration } from "$lib/api/frontend/filter";
+  import { settingsStore } from "$lib/stores/settings";
+  import dayjs from "dayjs";
+  import relativeTime from "dayjs/plugin/relativeTime";
+  import { Card, Indicator, Spinner } from "flowbite-svelte";
+  import ServerDetailDrawer from "./ServerDetailDrawer.svelte";
+  import ServerFactSheet from "./ServerFactSheet.svelte";
+  import { vatOptions } from "./VatSelector.svelte";
 
-	dayjs.extend(relativeTime);
+  dayjs.extend(relativeTime);
 
-	// Define the type for VAT option keys based on the imported value
-	type VatCountryCode = keyof typeof vatOptions;
+  // Define the type for VAT option keys based on the imported value
+  type VatCountryCode = keyof typeof vatOptions;
 
-	let {
-		timeUnitPrice = 'perHour',
-		config,
-		loading = false,
-		displayStoragePrice, // Included but not yet used in rendering logic
-		displayRamPrice, // Included but not yet used in rendering logic
-		clickable = true // Default to clickable
-	} = $props();
+  let {
+    timeUnitPrice = "perMonth",
+    config,
+    loading = false,
+    displayStoragePrice, // Included but not yet used in rendering logic
+    displayRamPrice, // Included but not yet used in rendering logic
+    clickable = true, // Default to clickable
+  } = $props();
 
-	let drawerHidden = $state(true);
-	let selectedConfig = $state<ServerConfiguration | null>(null);
+  let drawerHidden = $state(true);
+  let selectedConfig = $state<ServerConfiguration | null>(null);
 
-	// VAT related derived state
-	const countryCode = $derived($settingsStore?.vatSelection?.countryCode ?? 'NET'); // Default to 'NET' if undefined
-	const validCountryCode = $derived(
-		countryCode && countryCode in vatOptions ? (countryCode as VatCountryCode) : 'NET'
-	);
-	const selectedOption = $derived(vatOptions[validCountryCode]);
-	const displayPrice = $derived((config.price ?? 0) * (1 + selectedOption.rate));
-	const vatSuffix = $derived(
-		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
-	);
+  // VAT related derived state
+  const countryCode = $derived(
+    $settingsStore?.vatSelection?.countryCode ?? "NET"
+  ); // Default to 'NET' if undefined
+  const validCountryCode = $derived(
+    countryCode && countryCode in vatOptions
+      ? (countryCode as VatCountryCode)
+      : "NET"
+  );
+  const selectedOption = $derived(vatOptions[validCountryCode]);
+  const displayPrice = $derived(
+    (config.price ?? 0) * (1 + selectedOption.rate)
+  );
+  const vatSuffix = $derived(
+    selectedOption.rate > 0
+      ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)`
+      : "(net)"
+  );
 
-	// Calculate color hue based on markup percentage (0% = green, 100% = red)
-	// Hue range: 120 (green) down to 0 (red)
-	const markupColorHue = $derived(() => {
-		const percentage = config.markup_percentage ?? 0;
-		// Clamp percentage between 0 and 100 for hue calculation
-		const clampedPercentage = Math.max(0, Math.min(100, percentage));
-		// Linear interpolation: hue = 120 * (1 - (clampedPercentage / 100))
-		return 120 * (1 - clampedPercentage / 100);
-	});
+  // Calculate color hue based on markup percentage (0% = green, 100% = red)
+  // Hue range: 120 (green) down to 0 (red)
+  const markupColorHue = $derived(() => {
+    const percentage = config.markup_percentage ?? 0;
+    // Clamp percentage between 0 and 100 for hue calculation
+    const clampedPercentage = Math.max(0, Math.min(100, percentage));
+    // Linear interpolation: hue = 120 * (1 - (clampedPercentage / 100))
+    return 120 * (1 - clampedPercentage / 100);
+  });
 
-	const baseClasses =
-		'relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
-	const clickableClasses = 'hover:cursor-pointer';
+  const baseClasses =
+    "relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300";
+  const clickableClasses = "hover:cursor-pointer";
 </script>
 
 <Card
-	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 !border-l-green-700' : ''}`}
-	data-testid="server-card"
-	style="padding: 15px"
-	onclick={() => {
-		if (clickable) {
-			selectedConfig = config;
-			drawerHidden = false;
-		}
-	}}
+  class={`${baseClasses} ${clickable ? clickableClasses : ""} ${(config.markup_percentage ?? 0) <= 0 ? "border-l-4 !border-l-green-700" : ""}`}
+  data-testid="server-card"
+  style="padding: 15px"
+  onclick={() => {
+    if (clickable) {
+      selectedConfig = config;
+      drawerHidden = false;
+    }
+  }}
 >
-	{#if loading}
-		<!-- Loading Spinner -->
-		<div class="flex items-center justify-center h-full">
-			<Spinner />
-		</div>
-	{:else}
-		<!-- Main Content -->
-		<div class="flex-grow">
-			<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-				{config.cpu}
-			</h5>
-			<div class="text-gray-400 dark:text-gray-500 text-xs mb-3">
-				<span class="inline-flex items-center">
-					{#if dayjs.unix(config.last_seen ?? 0) > dayjs().subtract(80, 'minutes')}
-						<Indicator color="green" class="animate-pulse mr-2" size="xs" />
-					{:else}
-						<Indicator color="red" class="mr-2" size="xs" />
-					{/if}
-					seen {config.last_seen ? dayjs.unix(config.last_seen).fromNow() : 'unknown'}
-				</span>
-			</div>
+  {#if loading}
+    <!-- Loading Spinner -->
+    <div class="flex items-center justify-center h-full">
+      <Spinner />
+    </div>
+  {:else}
+    <!-- Main Content -->
+    <div class="flex-grow">
+      <h5
+        class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white"
+      >
+        {config.cpu}
+      </h5>
+      <div class="text-gray-400 dark:text-gray-500 text-xs mb-3">
+        <span class="inline-flex items-center">
+          {#if dayjs.unix(config.last_seen ?? 0) > dayjs().subtract(80, "minutes")}
+            <Indicator color="green" class="animate-pulse mr-2" size="xs" />
+          {:else}
+            <Indicator color="red" class="mr-2" size="xs" />
+          {/if}
+          seen {config.last_seen
+            ? dayjs.unix(config.last_seen).fromNow()
+            : "unknown"}
+        </span>
+      </div>
 
-			<!-- Server Fact Sheet -->
-			<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} />
-		</div>
+      <!-- Server Fact Sheet -->
+      <ServerFactSheet {config} {displayPrice} showPricePerUnit={true} />
+    </div>
 
-		<!-- Footer -->
-		<div class="flex justify-between items-center mt-4">
-			<div>
-				<span>
-					<span class="text-xl font-bold text-gray-900 dark:text-white">
-						{#if timeUnitPrice === 'perMonth'}
-							{displayPrice.toFixed(2)} €
-						{:else if timeUnitPrice === 'perHour'}
-							{(displayPrice / (30 * 24)).toFixed(4)} €
-						{/if}
-					</span>
-					<span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{vatSuffix}</span>
-					<span class="text-gray-400 dark:text-gray-500 text-xs ml-1">
-						{#if timeUnitPrice === 'perMonth'}
-							monthly
-						{:else if timeUnitPrice === 'perHour'}
-							hourly
-						{/if}
-					</span>
-					{#if config.markup_percentage !== null}
-						<div class="text-gray-400 dark:text-gray-500 text-xs mt-1">
-							{#if config.markup_percentage > 0}
-								<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}
-									>{(config.markup_percentage ?? 0).toFixed(0)}%</span
-								>
-								higher than best
-							{:else}
-								best price
-							{/if}
-						</div>
-					{/if}
-				</span>
-			</div>
-			<slot name="buttons" />
-		</div>
-	{/if}
+    <!-- Footer -->
+    <div class="flex justify-between items-center mt-4">
+      <div>
+        <span>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">
+            {#if timeUnitPrice === "perMonth"}
+              {displayPrice.toFixed(2)} €
+            {:else if timeUnitPrice === "perHour"}
+              {(displayPrice / (30 * 24)).toFixed(4)} €
+            {/if}
+          </span>
+          <span class="text-sm text-gray-600 dark:text-gray-400 ml-1"
+            >{vatSuffix}</span
+          >
+          <span class="text-gray-400 dark:text-gray-500 text-xs ml-1">
+            {#if timeUnitPrice === "perMonth"}
+              monthly
+            {:else if timeUnitPrice === "perHour"}
+              hourly
+            {/if}
+          </span>
+          {#if config.markup_percentage !== null}
+            <div class="text-gray-400 dark:text-gray-500 text-xs mt-1">
+              {#if config.markup_percentage > 0}
+                <span style={`color: hsl(${markupColorHue}, 100%, 40%)`}
+                  >{(config.markup_percentage ?? 0).toFixed(0)}%</span
+                >
+                higher than best
+              {:else}
+                best price
+              {/if}
+            </div>
+          {/if}
+        </span>
+      </div>
+      <slot name="buttons" />
+    </div>
+  {/if}
 </Card>
 <ServerDetailDrawer bind:hidden={drawerHidden} config={selectedConfig} />
