@@ -1,6 +1,9 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
+    import { goto } from "$app/navigation";
+    import { onMount } from "svelte";
     import AlertModal from "$lib/components/AlertModal.svelte";
+    import AlertAuctionsDrawer from "$lib/components/AlertAuctionsDrawer.svelte";
     import { encodeFilter } from "$lib/filter";
     import { addToast } from "$lib/stores/toast";
     import {
@@ -9,6 +12,7 @@
         faMagnifyingGlass,
         faPenToSquare,
         faTrash,
+        faBoxOpen,
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { A, Banner, Button, ButtonGroup, Spinner } from "flowbite-svelte";
@@ -24,12 +28,64 @@
 
     import { invalidate, invalidateAll } from "$app/navigation";
     import { MAX_ALERTS } from "$lib/api/backend/alerts.js";
+    import { page } from "$app/stores";
 
     /** @type {{ data: import('./$types').PageData }} */
     export let data;
 
     let showEdit = false;
     let selectedAlert: PriceAlert | null = null;
+    let drawerHidden = true;
+    let selectedAlertId: string | null = null;
+    let selectedVatRate = 0;
+
+    // Check URL parameters on mount to auto-open drawer
+    onMount(async () => {
+        const viewParam = $page.url.searchParams.get('view');
+        if (viewParam && drawerHidden) {
+            try {
+                // Check if the alert exists before opening the drawer
+                const response = await fetch(`/alerts/${viewParam}/auctions`);
+                
+                if (!response.ok) {
+                    // Show error toast if the alert doesn't exist
+                    addToast({
+                        message: "Alert not found or auctions unavailable.",
+                        color: "red",
+                        icon: "error"
+                    });
+                    
+                    // Remove the view parameter from the URL
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('view');
+                    goto(url.toString(), { replaceState: true, keepFocus: true });
+                    return;
+                }
+                
+                // If the alert exists, open the drawer
+                selectedAlertId = viewParam;
+                selectedVatRate = 0; // We don't know the VAT rate from the URL, use default
+                drawerHidden = false;
+            } catch (err) {
+                console.error("Error checking alert:", err);
+                addToast({
+                    message: "Failed to check alert. Please try again later.",
+                    color: "red",
+                    icon: "error"
+                });
+                
+                // Remove the view parameter from the URL
+                const url = new URL(window.location.href);
+                url.searchParams.delete('view');
+                goto(url.toString(), { replaceState: true, keepFocus: true });
+            }
+        }
+    });
+    
+    // Reset selectedAlertId when drawer is closed
+    $: if (drawerHidden) {
+        selectedAlertId = null;
+    }
 </script>
 
 <AlertModal
@@ -37,6 +93,14 @@
     bind:open={showEdit}
     on:success={() => invalidateAll()}
 />
+
+{#if !drawerHidden && selectedAlertId}
+    <AlertAuctionsDrawer
+        alertId={selectedAlertId}
+        bind:hidden={drawerHidden}
+        vatRate={selectedVatRate}
+    />
+{/if}
 
 <div class="p-8 bg-gray-50 dark:bg-gray-900">
     <div class="w-full max-w-4xl mx-auto pb-8 space-y-8">
@@ -297,17 +361,55 @@
                                     >
                                 </div>
                                 <div class="mt-4 md:mt-0 self-center">
-                                    <Button
-                                        size="xs"
-                                        color="alternative"
-                                        href={`/analyze?filter=${encodeFilter(
-                                            JSON.parse(alert.filter),
-                                        )}`}
-                                    >
-                                        <FontAwesomeIcon
-                                            icon={faMagnifyingGlass}
-                                        />
-                                    </Button>
+                                    <ButtonGroup>
+                                        <Button
+                                            size="xs"
+                                            color="alternative"
+                                            href={`/analyze?filter=${encodeFilter(
+                                                JSON.parse(alert.filter),
+                                            )}`}
+                                        >
+                                            <FontAwesomeIcon
+                                                icon={faMagnifyingGlass}
+                                            />
+                                        </Button>
+                                        <Button
+                                            size="xs"
+                                            color="alternative"
+                                            onclick={async () => {
+                                                try {
+                                                    // Check if the alert exists before opening the drawer
+                                                    const response = await fetch(`/alerts/${alert.id}/auctions`);
+                                                    
+                                                    if (!response.ok) {
+                                                        // Show error toast if the alert doesn't exist
+                                                        addToast({
+                                                            message: "Alert not found or auctions unavailable.",
+                                                            color: "red",
+                                                            icon: "error"
+                                                        });
+                                                        return;
+                                                    }
+                                                    
+                                                    // If the alert exists, open the drawer
+                                                    selectedAlertId = alert.id;
+                                                    selectedVatRate = alert.vat_rate;
+                                                    drawerHidden = false;
+                                                } catch (err) {
+                                                    console.error("Error checking alert:", err);
+                                                    addToast({
+                                                        message: "Failed to check alert. Please try again later.",
+                                                        color: "red",
+                                                        icon: "error"
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <FontAwesomeIcon
+                                                icon={faBoxOpen}
+                                            />
+                                        </Button>
+                                    </ButtonGroup>
                                 </div>
                             </div>
                         {/each}
