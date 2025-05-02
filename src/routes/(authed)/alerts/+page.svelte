@@ -157,7 +157,7 @@
                                         >Name</span
                                     >
                                     <span
-                                        class="text-xl font-semibold text-gray-900 dark:text-white"
+                                        class="text-xl font-semibold text-gray-900 dark:text-white text-ellipsis whitespace-nowrap"
                                     >
                                         {alert.name}
                                     </span>
@@ -171,7 +171,7 @@
                                         <span
                                             class="text-xl font-semibold text-gray-900 dark:text-white"
                                         >
-                                            {alert.price} €
+                                            {alert.price.toFixed(2)} €
                                         </span>
                                         <span
                                             class="block text-xs text-gray-500 dark:text-gray-400"
@@ -296,7 +296,7 @@
                                     >
                                     <span
                                         class="text-xl font-semibold text-gray-900
-                                    dark:text-white whitespace-break-spaces"
+                                    dark:text-white text-ellipsis whitespace-nowrap"
                                         >{alert.name}</span
                                     >
                                 </div>
@@ -308,7 +308,7 @@
                                     <div>
                                         <span
                                             class="text-xl font-semibold text-gray-900 dark:text-white"
-                                            >{alert.price} €</span
+                                            >{alert.price.toFixed(2)} €</span
                                         >
                                         <span
                                             class="block text-xs text-gray-500 dark:text-gray-400"

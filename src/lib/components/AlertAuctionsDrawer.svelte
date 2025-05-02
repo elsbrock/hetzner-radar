@@ -6,20 +6,20 @@
     import relativeTime from "dayjs/plugin/relativeTime";
     import utc from "dayjs/plugin/utc";
     import {
-            Button,
-            CloseButton,
-            Drawer,
-            Spinner,
-            Table,
-            TableBody,
-            TableBodyCell,
-            TableBodyRow
-        } from "flowbite-svelte";
-        import { sineIn } from "svelte/easing";
-        import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
-        import { FontAwesomeIcon as Fa } from "@fortawesome/svelte-fontawesome";
-        import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
-        import { addToast } from "$lib/stores/toast";
+        Button,
+        CloseButton,
+        Drawer,
+        Spinner,
+        Table,
+        TableBody,
+        TableBodyCell,
+        TableBodyRow
+    } from "flowbite-svelte";
+    import { sineIn } from "svelte/easing";
+    import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
+    import { FontAwesomeIcon as Fa } from "@fortawesome/svelte-fontawesome";
+    import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
+    import { addToast } from "$lib/stores/toast";
     
     dayjs.extend(relativeTime);
     dayjs.extend(utc);
@@ -252,12 +252,8 @@
                                 <div class="text-sm text-gray-700 dark:text-gray-300">
                                     {auction.cpu}
                                 </div>
-                                <div
-                                    class="text-gray-400 dark:text-gray-500 text-xs mt-1"
-                                >
-                                    <span class="inline-flex items-center">
-                                        Matched {dayjs.utc(auction.matched_at).local().fromNow()}
-                                    </span>
+                                <div class="text-xs text-gray-500">
+                                    Matched {dayjs.utc(auction.matched_at).local().fromNow()}
                                 </div>
                             </TableBodyCell>
                             <TableBodyCell class="px-2 py-4 text-right">
