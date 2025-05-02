@@ -102,7 +102,7 @@
   let mounted = $state(false); // State to track client-side mount
 
   // FAB Visibility State
-  let filterIsIntersecting = $state(false);
+  let filterIsIntersecting = $state(true);  // Start with filter section visible
   let resultsAreIntersecting = $state(false);
   let isSmallScreen = $state(false); // Track if viewport is small (e.g., <= 1024px)
   function handleSaveFilter(e: Event) {
@@ -138,6 +138,18 @@
     const updateScreenSize = () => {
       isSmallScreen = mediaQuery.matches;
       console.log("isSmallScreen:", isSmallScreen);
+      
+      // If screen size changes, we need to re-evaluate visibility immediately
+      // This ensures FAB state is correct before observers fire
+      if (isSmallScreen) {
+        // On small screens, assume filter is visible initially (top of page)
+        filterIsIntersecting = true;
+        resultsAreIntersecting = false;
+      } else {
+        // On larger screens, reset the state
+        filterIsIntersecting = false;
+        resultsAreIntersecting = false;
+      }
     };
     updateScreenSize(); // Initial check
     mediaQuery.addEventListener("change", updateScreenSize);
@@ -180,7 +192,7 @@
         console.log(
           "Disconnecting observers (not small screen or elements missing)"
         );
-        // Ensure state is reset if not on small screen
+        // On larger screens, reset the state
         filterIsIntersecting = false;
         resultsAreIntersecting = false;
       }
