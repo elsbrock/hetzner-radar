@@ -313,7 +313,7 @@
                                         <span
                                             class="block text-xs text-gray-500 dark:text-gray-400"
                                         >
-                                            (incl. {alert.vat_rate}%)
+                                            (incl. {alert.vat_rate}% VAT)
                                         </span>
                                     </div>
                                 </div>
@@ -325,12 +325,12 @@
                                     <div>
                                         <span
                                             class="text-xl font-semibold text-gray-900 dark:text-white"
-                                            >{alert.trigger_price} €</span
+                                            >{alert.trigger_price.toFixed(2)} €</span
                                         >
                                         <span
                                             class="block text-xs text-gray-500 dark:text-gray-400"
                                         >
-                                            (incl. {alert.vat_rate}%)
+                                            (incl. {alert.vat_rate}% VAT)
                                         </span>
                                     </div>
                                 </div>
