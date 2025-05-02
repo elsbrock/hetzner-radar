@@ -160,6 +160,115 @@ export async function getVolumeStats(conn: AsyncDuckDBConnection, country?: stri
 	return getData<TemporalStat>(conn, query);
 }
 
+export async function getVolumeByDatacenterStats(conn: AsyncDuckDBConnection, datacenter: string, country: string): Promise<TemporalStat[]> {
+	const query = SQL`
+		select
+			x, count(distinct id)::int as y
+		from (
+			select
+				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
+				id
+			from
+				server
+			where
+				datacenter = ${datacenter}
+				and location = ${country}
+		)
+		group by
+			x
+		order by
+			x
+	`;
+	return getData<TemporalStat>(conn, query);
+}
+
+export async function getVolumeByDatacenterByCountryStats(conn: AsyncDuckDBConnection): Promise<{[datacenter: string]: {[country: string]: TemporalStat[]}}> {
+	// Get all datacenters and countries
+	const datacentersQuery = SQL`
+		select distinct datacenter
+		from server
+		where datacenter is not null and datacenter != ''
+		order by datacenter
+	`;
+
+	const countriesQuery = SQL`
+		select distinct location as country
+		from server
+		where location is not null and location != ''
+		order by location
+	`;
+
+	const [datacenters, countries] = await Promise.all([
+		getData<{datacenter: string}>(conn, datacentersQuery),
+		getData<{country: string}>(conn, countriesQuery)
+	]);
+
+	const result: {[datacenter: string]: {[country: string]: TemporalStat[]}} = {};
+
+	// Initialize the result structure
+	for (const dc of datacenters) {
+		result[dc.datacenter] = {};
+	}
+
+	// Query for each datacenter and country combination
+	const promises = [];
+
+	for (const dc of datacenters) {
+		for (const country of countries) {
+			const promise = getVolumeByDatacenterStats(conn, dc.datacenter, country.country)
+				.then(stats => {
+					if (!result[dc.datacenter]) {
+						result[dc.datacenter] = {};
+					}
+					result[dc.datacenter][country.country] = stats;
+				});
+			promises.push(promise);
+		}
+	}
+
+	await Promise.all(promises);
+
+	return result;
+}
+
+export async function getDatacenterList(conn: AsyncDuckDBConnection, country?: string): Promise<string[]> {
+	const query = SQL`
+		select distinct datacenter
+		from server
+		where datacenter is not null and datacenter != ''
+	`;
+
+	if (country) {
+		query.append(SQL` and location = ${country}`);
+	}
+
+	query.append(SQL` order by datacenter`);
+
+	const result = await getData<{datacenter: string}>(conn, query);
+	return result.map(item => item.datacenter);
+}
+
+export async function getVolumeByCPUVendorStats(conn: AsyncDuckDBConnection, vendor: string): Promise<TemporalStat[]> {
+	const query = SQL`
+		select
+			x, count(distinct id)::int as y
+		from (
+			select
+				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
+				id
+			from
+				server
+			where
+				cpu_vendor = ${vendor}
+		)
+		group by
+			x
+		order by
+			x
+	`;
+	return getData<TemporalStat>(conn, query);
+}
+
 export async function getPriceIndexStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
 	const query = SQL`
 		WITH config_daily_prices AS (
@@ -255,4 +364,91 @@ export function getLastUpdated(conn: AsyncDuckDBConnection): Promise<LastUpdate[
     conn,
     SQL`select extract('epoch' from seen)::int as last_updated from server order by last_updated desc limit 1`
   );
+}
+
+/**
+ * Get volume statistics for a specific CPU model from a specific vendor
+ * @param conn DuckDB connection
+ * @param vendor CPU vendor (Intel or AMD)
+ * @param model CPU model (optional) - if provided, filters to this specific model
+ * @param limit Maximum number of models to return (optional) - if provided and model is not specified, returns top N models by volume
+ * @returns Array of TemporalStat objects
+ */
+export async function getVolumeByCPUModelStats(
+  conn: AsyncDuckDBConnection,
+  vendor: string,
+  model?: string,
+  limit?: number
+): Promise<{[model: string]: TemporalStat[]}> {
+  // If a specific model is requested, get volume data for just that model
+  if (model) {
+    const query = SQL`
+      select
+        EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
+        count(distinct id)::int as y
+      from
+        server
+      where
+        cpu_vendor = ${vendor}
+        and cpu = ${model}
+      group by
+        x
+      order by
+        x
+    `;
+
+    const result = await getData<TemporalStat>(conn, query);
+    return { [model]: result };
+  }
+
+  // Otherwise, get the top N models by volume
+  const topModelsQuery = SQL`
+    select
+      cpu as model,
+      count(distinct id) as count
+    from
+      server
+    where
+      cpu_vendor = ${vendor}
+      and cpu is not null
+      and cpu != ''
+    group by
+      cpu
+    order by
+      count desc
+  `;
+
+  if (limit) {
+    topModelsQuery.append(SQL` limit ${limit}`);
+  }
+
+  const topModels = await getData<{model: string, count: number}>(conn, topModelsQuery);
+
+  // Initialize result object
+  const result: {[model: string]: TemporalStat[]} = {};
+
+  // Query volume data for each top model
+  const promises = topModels.map(async ({ model }) => {
+    const modelQuery = SQL`
+      select
+        EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
+        count(distinct id)::int as y
+      from
+        server
+      where
+        cpu_vendor = ${vendor}
+        and cpu = ${model}
+      group by
+        x
+      order by
+        x
+    `;
+
+    const modelStats = await getData<TemporalStat>(conn, modelQuery);
+    result[model] = modelStats;
+  });
+
+  await Promise.all(promises);
+
+  return result;
 }

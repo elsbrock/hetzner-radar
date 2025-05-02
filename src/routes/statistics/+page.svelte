@@ -2,13 +2,18 @@
   import { withDbConnections } from "$lib/api/frontend/dbapi";
   import {
     getCPUVendorPriceStats,
+    getDatacenterList,
     getDiskPriceStats,
     getGPUPriceStats,
     getPriceIndexStats,
     getRamPriceStats,
+    getVolumeByCPUModelStats,
+    getVolumeByCPUVendorStats,
+    getVolumeByDatacenterStats,
     getVolumeStats,
     type TemporalStat,
   } from "$lib/api/frontend/stats";
+  import GenericChart from "$lib/components/GenericChart.svelte";
   import LineChart from "$lib/components/LineChart.svelte";
   import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
   import {
@@ -36,6 +41,26 @@
   let cpuVendorIntelStats = $state<TemporalStat[]>([]);
   let volumeFinlandStats = $state<TemporalStat[]>([]);
   let volumeGermanyStats = $state<TemporalStat[]>([]);
+
+  // New state variables for the additional charts
+  let volumeAMDStats = $state<TemporalStat[]>([]);
+  let volumeIntelStats = $state<TemporalStat[]>([]);
+
+  // CPU model volume stats
+  let intelCPUModelStats = $state<{ [model: string]: TemporalStat[] }>({});
+  let amdCPUModelStats = $state<{ [model: string]: TemporalStat[] }>({});
+
+  // Datacenter volume stats by country
+  let finlandDatacenters = $state<string[]>([]);
+  let germanyDatacenters = $state<string[]>([]);
+
+  // Datacenter volume stats by country
+  let datacenterVolumeFinlandStats = $state<{
+    [datacenter: string]: TemporalStat[];
+  }>({});
+  let datacenterVolumeGermanyStats = $state<{
+    [datacenter: string]: TemporalStat[];
+  }>({});
 
   // Derived values for quick stats
   let currentPriceIndex = $derived(
@@ -120,27 +145,47 @@
       : null
   );
 
-  // 5. Server availability by location
-  let serverAvailability = $derived(
-    volumeFinlandStats.length > 0 && volumeGermanyStats.length > 0
-      ? {
-          finland: volumeFinlandStats[volumeFinlandStats.length - 1]?.y,
-          germany: volumeGermanyStats[volumeGermanyStats.length - 1]?.y,
-          mostAvailable:
-            volumeFinlandStats[volumeFinlandStats.length - 1]?.y >
-            volumeGermanyStats[volumeGermanyStats.length - 1]?.y
-              ? "Finland"
-              : "Germany",
-        }
-      : null
-  );
-
   async function fetchData(db: AsyncDuckDB) {
     let queryTime = performance.now();
     loading = true;
 
     await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
       try {
+        // Get the list of datacenters for each country
+        finlandDatacenters = await getDatacenterList(conn1, "Finland");
+        germanyDatacenters = await getDatacenterList(conn2, "Germany");
+
+        // Fetch datacenter volume stats for Finland datacenters
+        const datacenterFinlandPromises = finlandDatacenters.map((dc) =>
+          getVolumeByDatacenterStats(conn3, dc, "Finland").then((stats) => [
+            dc,
+            stats,
+          ])
+        );
+
+        // Fetch datacenter volume stats for Germany datacenters
+        const datacenterGermanyPromises = germanyDatacenters.map((dc) =>
+          getVolumeByDatacenterStats(conn4, dc, "Germany").then((stats) => [
+            dc,
+            stats,
+          ])
+        );
+
+        const [datacenterFinlandResults, datacenterGermanyResults] =
+          await Promise.all([
+            Promise.all(datacenterFinlandPromises),
+            Promise.all(datacenterGermanyPromises),
+          ]);
+
+        // Convert results to objects
+        datacenterVolumeFinlandStats = Object.fromEntries(
+          datacenterFinlandResults
+        );
+        datacenterVolumeGermanyStats = Object.fromEntries(
+          datacenterGermanyResults
+        );
+
+        // Fetch basic stats
         [
           dailyPriceIndexStats,
           ramWithECCPriceStats,
@@ -153,6 +198,8 @@
           cpuVendorIntelStats,
           volumeFinlandStats,
           volumeGermanyStats,
+          volumeAMDStats,
+          volumeIntelStats,
         ] = await Promise.all([
           getPriceIndexStats(conn1),
           getRamPriceStats(conn2, true),
@@ -165,7 +212,21 @@
           getCPUVendorPriceStats(conn2, "Intel"),
           getVolumeStats(conn3, "Finland"),
           getVolumeStats(conn3, "Germany"),
+          getVolumeByCPUVendorStats(conn4, "AMD"),
+          getVolumeByCPUVendorStats(conn4, "Intel"),
         ]);
+
+        // Fetch CPU model volume stats (top 7 models for each vendor)
+        [intelCPUModelStats, amdCPUModelStats] = await Promise.all([
+          getVolumeByCPUModelStats(conn5, "Intel", undefined, 7),
+          getVolumeByCPUModelStats(conn5, "AMD", undefined, 7),
+        ]);
+
+        // This section is no longer needed as we're now showing datacenter volumes by country
+        // instead of overall datacenter volumes
+
+        // No longer needed
+
         queryTime = performance.now() - queryTime;
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -195,7 +256,10 @@
   </section>
 
   <!-- Quick Stats Section -->
-  <div class="mx-auto mb-8 max-w-7xl">
+  <section class="mx-auto mb-12 max-w-7xl">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+      Key Metrics at a Glance
+    </h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <!-- Current Price Index -->
       <div
@@ -380,11 +444,15 @@
         {/if}
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="mx-auto my-12 max-w-7xl">
+  <!-- Price Index Section -->
+  <section class="mx-auto my-12 max-w-7xl">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+      Price Index
+    </h2>
     <div
-      class="my-6 overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800"
+      class="my-6 overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
     >
       <div class="p-6">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -430,162 +498,460 @@
         />
       </div>
     </div>
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <!-- RAM Price Over Time -->
-      <div
-        class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-      >
-        <div class="p-6">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-            RAM Price Over Time
-          </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Track the price trends for RAM over time. Use this to gauge when
-            it's most cost-effective to invest in memory-intensive servers.
-          </p>
+    <!-- Price Statistics Section -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        Price Statistics
+      </h2>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <!-- RAM Price Over Time -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              RAM Price Over Time
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Track the price trends for RAM over time. Use this to gauge when
+              it's most cost-effective to invest in memory-intensive servers.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <LineChart
+              data={[
+                { name: "With ECC", data: ramWithECCPriceStats },
+                { name: "Without ECC", data: ramWithoutECCPriceStats },
+              ]}
+            />
+          </div>
         </div>
-        <div class="h-80 w-full">
-          <LineChart
-            data={[
-              { name: "With ECC", data: ramWithECCPriceStats },
-              { name: "Without ECC", data: ramWithoutECCPriceStats },
-            ]}
-          />
+
+        <!-- Disk Price Over Time -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Disk Price Over Time
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Explore how the price of one GB HDD storage has fluctuated over
+              time. This data can help you determine the best time to purchase
+              storage-heavy configurations.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <LineChart data={[{ name: "HDD Price", data: hddPriceStats }]} />
+          </div>
+        </div>
+
+        <!-- SSD Price Over Time -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              SSD Price Over Time
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              See how one GB of SSD storage have changed over time, allowing you
+              to plan your purchases for configurations that rely on fast
+              storage solutions.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <LineChart
+              data={[
+                { name: "NVMe", data: nvmePriceStats },
+                { name: "SATA", data: sataPriceStats },
+              ]}
+            />
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Disk Price Over Time -->
-      <div
-        class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-      >
-        <div class="p-6">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-            Disk Price Over Time
-          </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Explore how the price of one GB HDD storage has fluctuated over
-            time. This data can help you determine the best time to purchase
-            storage-heavy configurations.
-          </p>
-        </div>
-        <div class="h-80 w-full">
-          <LineChart data={[{ name: "HDD Price", data: hddPriceStats }]} />
-        </div>
-      </div>
-
-      <!-- SSD Price Over Time -->
-      <div
-        class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-      >
-        <div class="p-6">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-            SSD Price Over Time
-          </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            See how one GB of SSD storage have changed over time, allowing you
-            to plan your purchases for configurations that rely on fast storage
-            solutions.
-          </p>
-        </div>
-        <div class="h-80 w-full">
-          <LineChart
-            data={[
-              { name: "NVMe", data: nvmePriceStats },
-              { name: "SATA", data: sataPriceStats },
-            ]}
-          />
-        </div>
-      </div>
-
-      <!-- Cheapest GPU Configuration -->
-      <div
-        class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-      >
-        <div class="p-6">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-            Cheapest GPU Configuration
-          </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Compare the price trends for servers with GPUs to make informed
-            decisions when selecting a graphics card for your server.
-          </p>
-        </div>
-        <div class="h-80 w-full">
-          <LineChart data={[{ name: "GPU", data: gpuPriceStats }]} />
-        </div>
-      </div>
-
-      <!-- Volume by Country -->
-      <div
-        class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-      >
-        <div class="p-6">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-            Volume by Country
-          </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Analyze the volume of servers deployed in different regions to
-            identify trends and make informed decisions about where to expand
-            your infrastructure.
-          </p>
-        </div>
-        <div class="h-80 w-full">
-          <LineChart
-            data={[
-              { name: "Finland", data: volumeFinlandStats },
-              { name: "Germany", data: volumeGermanyStats },
-            ]}
-            options={{
-              scales: {
-                y: {
-                  stacked: true,
-                  title: {
-                    display: true,
-                    text: "Volume",
-                  },
-                  ticks: {
-                    callback: function (tickValue: number | string) {
-                      if (typeof tickValue === "number") {
-                        return tickValue.toFixed(0);
-                      }
-                      return tickValue;
+    <!-- Volume Statistics Section -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        Volume Statistics
+      </h2>
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Volume by Country -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Volume by Country
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Analyze the volume of servers deployed in different regions to
+              identify trends and make informed decisions about where to expand
+              your infrastructure.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              type="bar"
+              data={[
+                { name: "Finland", data: volumeFinlandStats },
+                { name: "Germany", data: volumeGermanyStats },
+              ]}
+              options={{
+                scales: {
+                  y: {
+                    stacked: true,
+                    title: {
+                      display: true,
+                      text: "Volume",
+                    },
+                    ticks: {
+                      callback: function (tickValue: number | string) {
+                        if (typeof tickValue === "number") {
+                          return tickValue.toFixed(0);
+                        }
+                        return tickValue;
+                      },
                     },
                   },
+                  x: {
+                    stacked: true,
+                  },
                 },
-              },
-              plugins: {
-                tooltip: {
-                  mode: "index",
+                plugins: {
+                  tooltip: {
+                    mode: "index",
+                  },
                 },
-              },
-            }}
-          />
+              }}
+            />
+          </div>
+        </div>
+
+        <!-- Volume by Datacenter - Finland -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Volume by Datacenter - Finland
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Compare server volume across different datacenters in Finland to
+              identify availability patterns and make informed decisions about
+              where to deploy your infrastructure.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              type="bar"
+              data={finlandDatacenters.map((dc) => ({
+                name: dc,
+                data: datacenterVolumeFinlandStats[dc] || [],
+              }))}
+              options={{
+                scales: {
+                  y: {
+                    stacked: true,
+                    title: {
+                      display: true,
+                      text: "Available Servers",
+                    },
+                    ticks: {
+                      callback: function (tickValue: number | string) {
+                        if (typeof tickValue === "number") {
+                          return tickValue.toFixed(0);
+                        }
+                        return tickValue;
+                      },
+                    },
+                  },
+                  x: {
+                    stacked: true,
+                  },
+                },
+                plugins: {
+                  legend: {
+                    align: "start",
+                    labels: {
+                      boxWidth: 15,
+                      padding: 10,
+                      font: {
+                        size: 11,
+                      },
+                    },
+                    maxHeight: 250,
+                    display: true,
+                  },
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        <!-- Volume by Datacenter - Germany -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Volume by Datacenter - Germany
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Compare server volume across different datacenters in Germany to
+              identify availability patterns and make informed decisions about
+              where to deploy your infrastructure.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              type="bar"
+              data={germanyDatacenters.map((dc) => ({
+                name: dc,
+                data: datacenterVolumeGermanyStats[dc] || [],
+              }))}
+              options={{
+                scales: {
+                  y: {
+                    stacked: true,
+                    title: {
+                      display: true,
+                      text: "Available Servers",
+                    },
+                    ticks: {
+                      callback: function (tickValue: number | string) {
+                        if (typeof tickValue === "number") {
+                          return tickValue.toFixed(0);
+                        }
+                        return tickValue;
+                      },
+                    },
+                  },
+                  x: {
+                    stacked: true,
+                  },
+                },
+                plugins: {
+                  legend: {
+                    align: "start",
+                    labels: {
+                      boxWidth: 15,
+                      padding: 10,
+                      font: {
+                        size: 11,
+                      },
+                    },
+                    maxHeight: 250,
+                    display: true,
+                  },
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      <!-- CPU Vendors -->
-      <div
-        class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-      >
-        <div class="p-6">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-            CPU Vendors
-          </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Compare the minimum prices for servers with CPUs from different
-            vendors to make informed decisions when selecting a processor for
-            your server.
-          </p>
-        </div>
-        <div class="h-80 w-full">
-          <LineChart
-            data={[
-              { name: "AMD", data: cpuVendorAMDStats },
-              { name: "Intel", data: cpuVendorIntelStats },
-            ]}
-          />
+      <div class="grid grid-cols-1 gap-6 mt-6">
+        <!-- Volume Intel vs. AMD -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Volume Intel vs. AMD
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Compare the volume of servers with Intel and AMD processors to
+              understand market trends and availability patterns for different
+              CPU architectures.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              type="bar"
+              data={[
+                { name: "AMD", data: volumeAMDStats },
+                { name: "Intel", data: volumeIntelStats },
+              ]}
+              options={{
+                scales: {
+                  y: {
+                    stacked: true,
+                    title: {
+                      display: true,
+                      text: "Available Servers",
+                    },
+                    ticks: {
+                      callback: function (tickValue: number | string) {
+                        if (typeof tickValue === "number") {
+                          return tickValue.toFixed(0);
+                        }
+                        return tickValue;
+                      },
+                    },
+                  },
+                  x: {
+                    stacked: true,
+                  },
+                },
+                plugins: {
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
+              }}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <!-- CPU Statistics Section -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        CPU Statistics
+      </h2>
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Volume by Intel CPU Models -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Volume by Intel CPU Models
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Compare the volume of servers with different Intel CPU models to
+              identify which models are most commonly available in the auction
+              marketplace.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              type="bar"
+              data={Object.entries(intelCPUModelStats).map(
+                ([model, stats]) => ({
+                  name: model,
+                  data: stats,
+                })
+              )}
+              options={{
+                scales: {
+                  y: {
+                    stacked: true,
+                    title: {
+                      display: true,
+                      text: "Available Servers",
+                    },
+                    ticks: {
+                      callback: function (tickValue: number | string) {
+                        if (typeof tickValue === "number") {
+                          return tickValue.toFixed(0);
+                        }
+                        return tickValue;
+                      },
+                    },
+                  },
+                  x: {
+                    stacked: true,
+                  },
+                },
+                plugins: {
+                  legend: {
+                    align: "start",
+                    labels: {
+                      boxWidth: 15,
+                      padding: 10,
+                      font: {
+                        size: 11,
+                      },
+                    },
+                    maxHeight: 250,
+                    display: true,
+                  },
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 mt-6">
+        <!-- Volume by AMD CPU Models -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Volume by AMD CPU Models
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Compare the volume of servers with different AMD CPU models to
+              identify which models are most commonly available in the auction
+              marketplace.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              type="bar"
+              data={Object.entries(amdCPUModelStats).map(([model, stats]) => ({
+                name: model,
+                data: stats,
+              }))}
+              options={{
+                scales: {
+                  y: {
+                    stacked: true,
+                    title: {
+                      display: true,
+                      text: "Available Servers",
+                    },
+                    ticks: {
+                      callback: function (tickValue: number | string) {
+                        if (typeof tickValue === "number") {
+                          return tickValue.toFixed(0);
+                        }
+                        return tickValue;
+                      },
+                    },
+                  },
+                  x: {
+                    stacked: true,
+                  },
+                },
+                plugins: {
+                  legend: {
+                    align: "start",
+                    labels: {
+                      boxWidth: 15,
+                      padding: 10,
+                      font: {
+                        size: 11,
+                      },
+                    },
+                    maxHeight: 250,
+                    display: true,
+                  },
+                  tooltip: {
+                    mode: "index",
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
 </div>
