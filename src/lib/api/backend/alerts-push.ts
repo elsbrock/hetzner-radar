@@ -355,7 +355,6 @@ good news! The target price for one of your alerts has been reached.
    Target Price: ${alertInfo.price.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT)
   Trigger Price: ${triggerPrice.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT${alertInfo.includes_ipv4_cost ? ' and IPv4 cost' : ''})
 
-
 View the matched auctions directly:
 
   https://radar.iodev.org/alerts?view=${alertInfo.id}
