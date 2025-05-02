@@ -1,9 +1,8 @@
 import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
-import type { ServerConfiguration } from "$lib/api/frontend/filter";
+import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 import { sendMail } from "$lib/mail";
 import type { RequestHandler } from "@sveltejs/kit";
-import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 // Define the structure for the incoming raw server data
 interface RawServerData {
   id: number;
@@ -77,20 +76,26 @@ export const POST: RequestHandler = async (event) => {
 
   // Prepare the SQL statement with dynamic placeholders
   const placeholders = `(${columns.map(() => '?').join(', ')})`;
-  const sql = `
+  const stagingSql = `
     INSERT INTO temp_servers_staging (${columns.join(', ')})
     VALUES ${placeholders}
   `;
+  const auctionsSql = `
+    INSERT OR IGNORE INTO auctions (${columns.join(', ')})
+    VALUES ${placeholders}
+  `;
 
-  // Prepare the statement
-  const stmt = await db.prepare(sql);
+  // Prepare the statements
+  const stagingStmt = await db.prepare(stagingSql);
+  const auctionStmt = await db.prepare(auctionsSql);
 
   // split config into batches of 100 and do batch insert
   const configs = await request.json() as RawServerData[];
   const batch: PreparedStatement[] = [];
+  const auctionBatch: PreparedStatement[] = [];
   for (let i = 0; i < configs.length; i++) {
     const config = configs[i];
-    batch.push(stmt.bind(
+    const boundData = [
         config.id,
         config.information,
         config.datacenter,
@@ -120,8 +125,10 @@ export const POST: RequestHandler = async (event) => {
         config.bandwidth,
         config.price,
         config.fixed_price,
-        config.seen,
-    ));
+        config.seen
+    ];
+    batch.push(stagingStmt.bind(...boundData));
+    auctionBatch.push(auctionStmt.bind(...boundData));
   }
 
   const matchStmt = await db.prepare(`
@@ -306,7 +313,7 @@ export const POST: RequestHandler = async (event) => {
   `);
 
   const rollbackStmt = await db.prepare(`delete from temp_servers_staging`);
-  const results = await db.batch([...batch, matchStmt, rollbackStmt]);
+  const results = await db.batch([...batch, ...auctionBatch, matchStmt, rollbackStmt]);
 
   const triggeredStmt = await db.prepare(`
     insert into price_alert_history (id, name, filter, price, vat_rate, trigger_price, user_id, created_at, triggered_at)
