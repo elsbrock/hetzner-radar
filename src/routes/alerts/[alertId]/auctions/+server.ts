@@ -63,7 +63,7 @@ export async function GET({ params, locals, platform }: RequestEvent) {
         WHERE 
           aam.alert_history_id = ?
         ORDER BY 
-          aam.matched_at DESC
+          aam.match_price ASC
       `)
       .bind(alertId)
       .all();

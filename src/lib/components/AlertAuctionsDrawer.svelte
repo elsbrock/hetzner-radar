@@ -4,6 +4,7 @@
     import { onMount } from "svelte";
     import dayjs from "dayjs";
     import relativeTime from "dayjs/plugin/relativeTime";
+    import utc from "dayjs/plugin/utc";
     import {
             Button,
             CloseButton,
@@ -21,6 +22,7 @@
         import { addToast } from "$lib/stores/toast";
     
     dayjs.extend(relativeTime);
+    dayjs.extend(utc);
 
     // Define the auction match interface
     interface AuctionMatch {
@@ -254,7 +256,7 @@
                                     class="text-gray-400 dark:text-gray-500 text-xs mt-1"
                                 >
                                     <span class="inline-flex items-center">
-                                        Matched {dayjs(auction.matched_at).fromNow()}
+                                        Matched {dayjs.utc(auction.matched_at).local().fromNow()}
                                     </span>
                                 </div>
                             </TableBodyCell>
