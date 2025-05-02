@@ -452,3 +452,72 @@ export async function getVolumeByCPUModelStats(
 
   return result;
 }
+
+/**
+ * Get popularity statistics comparing current auction count to historical average
+ * @param conn DuckDB connection
+ * @param filter Server filter to apply (optional)
+ * @returns A number representing the ratio of current auction count to 30-day average
+ */
+export async function getPopularityStats(
+  conn: AsyncDuckDBConnection,
+  filter?: ServerFilter
+): Promise<number> {
+  // Start with base query
+  let query = SQL`
+    WITH daily_counts AS (
+      SELECT
+        date_trunc('day', seen) AS day,
+        COUNT(DISTINCT id) AS daily_count
+      FROM
+        auctions
+  `;
+
+  // Apply filter if provided
+  if (filter) {
+    const filterQuery = generateFilterQuery(filter, false, false);
+    if (filterQuery.text.trim() !== '') {
+      query.append(SQL` WHERE `).append(filterQuery);
+    }
+  }
+
+  // Complete the query to calculate current count vs 30-day average
+  query.append(SQL`
+      GROUP BY
+        day
+      ORDER BY
+        day
+    ),
+    
+    stats AS (
+      SELECT
+		-- Only count auctions with price updates in the last 70 minutes
+		(SELECT COUNT(DISTINCT id) FROM auctions 
+		WHERE seen >= NOW() - INTERVAL '70 minutes'
+		-- Apply the same filter conditions here if provided
+		) AS current_count,
+		AVG(daily_count) AS avg_count_30d
+      FROM
+        daily_counts
+      WHERE
+        day >= (SELECT MAX(day) FROM daily_counts) - INTERVAL '30 days'
+    )
+    
+    SELECT
+      CASE
+        WHEN avg_count_30d = 0 THEN 1
+        ELSE current_count / avg_count_30d
+      END AS popularity_ratio
+    FROM
+      stats
+  `);
+
+  const result = await getData<{popularity_ratio: number}>(conn, query);
+  
+  // Return 1 (neutral) if no data is available
+  if (result.length === 0) {
+    return 1;
+  }
+  
+  return result[0].popularity_ratio;
+}

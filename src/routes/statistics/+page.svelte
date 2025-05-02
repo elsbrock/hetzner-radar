@@ -14,6 +14,7 @@
     type TemporalStat,
   } from "$lib/api/frontend/stats";
   import GenericChart from "$lib/components/GenericChart.svelte";
+  import QuickStat from "$lib/components/QuickStat.svelte";
   import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
   import {
     faArrowDown,
@@ -24,7 +25,6 @@
     faMicrochip,
     faServer,
   } from "@fortawesome/free-solid-svg-icons";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { db } from "../../stores/db";
 
   let loading = $state(true);
@@ -261,187 +261,63 @@
     </h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <!-- Current Price Index -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 flex flex-col"
-      >
-        <div class="flex items-center mb-2">
-          <FontAwesomeIcon
-            icon={faChartLine}
-            class="w-5 h-5 text-orange-500 mr-2"
-          />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Price Index
-          </h3>
-        </div>
-        {#if currentPriceIndex !== null}
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
-            {currentPriceIndex.toFixed(3)}
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Values &gt; 1.0 = higher prices
-          </p>
-        {:else}
-          <div
-            class="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 mb-1"
-          ></div>
-          <div
-            class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-          ></div>
-        {/if}
-      </div>
+      <QuickStat
+        icon={faChartLine}
+        title="Price Index"
+        value={currentPriceIndex !== null ? currentPriceIndex.toFixed(3) : null}
+        subtitle="Values > 1.0 = higher prices"
+      />
 
       <!-- 30-Day Price Trend -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 flex flex-col"
-      >
-        <div class="flex items-center mb-2">
-          <FontAwesomeIcon
-            icon={isPriceRising ? faArrowUp : faArrowDown}
-            class="w-5 h-5 text-orange-500 mr-2"
-          />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            30-Day Trend
-          </h3>
-        </div>
-        {#if priceIndexTrend !== null}
-          <p
-            class="text-2xl font-bold {isPriceRising
-              ? 'text-red-500'
-              : 'text-green-500'}"
-          >
-            {isPriceRising ? "+" : ""}{priceIndexTrend.toFixed(2)}%
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Prices {isPriceRising ? "rising" : "falling"} vs 30 days ago
-          </p>
-        {:else}
-          <div
-            class="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 mb-1"
-          ></div>
-          <div
-            class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-          ></div>
-        {/if}
-      </div>
+      <QuickStat
+        icon={isPriceRising ? faArrowUp : faArrowDown}
+        title="30-Day Trend"
+        value={priceIndexTrend !== null
+          ? `${isPriceRising ? "+" : ""}${priceIndexTrend.toFixed(2)}%`
+          : null}
+        valueClass={isPriceRising ? "text-red-500" : "text-green-500"}
+        subtitle={`Prices ${isPriceRising ? "rising" : "falling"} vs 30 days ago`}
+      />
 
       <!-- Lowest Server Price -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 flex flex-col"
-      >
-        <div class="flex items-center mb-2">
-          <FontAwesomeIcon
-            icon={faServer}
-            class="w-5 h-5 text-orange-500 mr-2"
-          />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Lowest Price
-          </h3>
-        </div>
-        {#if lowestServerPrice !== null}
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
-            €{lowestServerPrice.toFixed(2)}
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Cheapest server available
-          </p>
-        {:else}
-          <div
-            class="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 mb-1"
-          ></div>
-          <div
-            class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-          ></div>
-        {/if}
-      </div>
+      <QuickStat
+        icon={faServer}
+        title="Lowest Price"
+        value={lowestServerPrice !== null
+          ? `€${lowestServerPrice.toFixed(2)}`
+          : null}
+        subtitle="Cheapest server available"
+      />
 
       <!-- AMD vs Intel Price -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 flex flex-col"
-      >
-        <div class="flex items-center mb-2">
-          <FontAwesomeIcon
-            icon={faMicrochip}
-            class="w-5 h-5 text-orange-500 mr-2"
-          />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            AMD vs Intel
-          </h3>
-        </div>
-        {#if amdVsIntelPrice !== null}
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
-            {amdVsIntelPrice.difference}%
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            AMD {parseFloat(amdVsIntelPrice.difference) < 0
-              ? "cheaper"
-              : "pricier"} than Intel
-          </p>
-        {:else}
-          <div
-            class="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 mb-1"
-          ></div>
-          <div
-            class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-          ></div>
-        {/if}
-      </div>
+      <QuickStat
+        icon={faMicrochip}
+        title="AMD vs Intel"
+        value={amdVsIntelPrice !== null
+          ? `${amdVsIntelPrice.difference}%`
+          : null}
+        subtitle={`AMD ${amdVsIntelPrice !== null && parseFloat(amdVsIntelPrice.difference) < 0 ? "cheaper" : "pricier"} than Intel`}
+      />
 
       <!-- RAM Price Comparison -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 flex flex-col"
-      >
-        <div class="flex items-center mb-2">
-          <FontAwesomeIcon
-            icon={faMemory}
-            class="w-5 h-5 text-orange-500 mr-2"
-          />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            ECC Premium
-          </h3>
-        </div>
-        {#if ramPriceComparison !== null}
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
-            {ramPriceComparison.difference}%
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            ECC RAM cost markup per GB
-          </p>
-        {:else}
-          <div
-            class="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 mb-1"
-          ></div>
-          <div
-            class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-          ></div>
-        {/if}
-      </div>
+      <QuickStat
+        icon={faMemory}
+        title="ECC Premium"
+        value={ramPriceComparison !== null
+          ? `${ramPriceComparison.difference * -1}%`
+          : null}
+        subtitle="ECC RAM cost markup per GB"
+      />
 
       <!-- Storage Price Comparison -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 flex flex-col"
-      >
-        <div class="flex items-center mb-2">
-          <FontAwesomeIcon icon={faHdd} class="w-5 h-5 text-orange-500 mr-2" />
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            NVMe vs HDD
-          </h3>
-        </div>
-        {#if storagePriceComparison !== null}
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">
-            {storagePriceComparison.ratio}x
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            NVMe premium per TB
-          </p>
-        {:else}
-          <div
-            class="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 mb-1"
-          ></div>
-          <div
-            class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-          ></div>
-        {/if}
-      </div>
+      <QuickStat
+        icon={faHdd}
+        title="NVMe vs HDD"
+        value={storagePriceComparison !== null
+          ? `${storagePriceComparison.ratio}x`
+          : null}
+        subtitle="NVMe premium per TB"
+      />
     </div>
   </section>
 

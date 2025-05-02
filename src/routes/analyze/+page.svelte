@@ -14,6 +14,7 @@
     getCPUModels,
     getDatacenters,
     getLastUpdated,
+    getPopularityStats,
   } from "$lib/api/frontend/stats";
   import AlertModal from "$lib/components/AlertModal.svelte";
   import DbLoadingProgress from "$lib/components/DBLoadingProgress.svelte";
@@ -21,6 +22,7 @@
   import GroupControls from "$lib/components/GroupControls.svelte";
   import OutdatedDataAlert from "$lib/components/OutdatedDataAlert.svelte";
   import PriceControls from "$lib/components/PriceControls.svelte";
+  import QuickStat from "$lib/components/QuickStat.svelte";
   import ServerFilter from "$lib/components/ServerFilter.svelte";
   import ServerList from "$lib/components/ServerList.svelte";
   import ServerPriceChart from "$lib/components/ServerPriceChart.svelte";
@@ -53,7 +55,6 @@
   import dayjs from "dayjs";
   import {
     Alert,
-    Badge,
     Button,
     ButtonGroup,
     Input,
@@ -206,14 +207,35 @@
     try {
       await withDbConnections(
         dbInstance,
-        async (conn1, conn2, conn3, conn4) => {
-          [cpuModels, datacenters, serverPrices, serverList] =
+        async (conn1, conn2, conn3, conn4, conn5) => {
+          const [cpuModelsResult, datacentersResult, serverPricesResult, serverListResult, popularityResult] =
             await Promise.all([
               getCPUModels(conn1, currentFilter),
               getDatacenters(conn2, currentFilter),
               getPrices(conn3, currentFilter),
               getConfigurations(conn4, currentFilter),
+              getPopularityStats(conn5, currentFilter),
             ]);
+            
+          cpuModels = cpuModelsResult;
+          datacenters = datacentersResult;
+          serverPrices = serverPricesResult;
+          serverList = serverListResult;
+          
+          // Update popularity value and convert it to a qualitative label
+          popularityValue = popularityResult;
+          if (popularityValue !== null) {
+            // Convert ratio to label based on thresholds
+            if (popularityValue > 1.2) {
+              popularityFormatted = "High";
+            } else if (popularityValue >= 0.8) {
+              popularityFormatted = "Normal";
+            } else {
+              popularityFormatted = "Low";
+            }
+          } else {
+            popularityFormatted = "Normal";
+          }
           queryTime = performance.now() - queryStart;
           console.log(
             `fetchData completed. serverList length: ${serverList.length}`
@@ -506,16 +528,143 @@
       : 0
   );
 
+  // Derived state for available auctions (from last data point)
+  let availableAuctions = $derived(
+    Array.isArray(serverPrices) && serverPrices.length > 0
+      ? (serverPrices[serverPrices.length - 1]?.count ?? 0)
+      : 0
+  );
+
   // Derived state for total results count from grouped list
   let totalResults = $derived(
     groupedDisplayList.reduce((sum, group) => sum + group.servers.length, 0)
   );
+
+  // Non-derived variables for QuickStats
+  let totalResultsValue = $state(0);
+  let lowestPriceValue = $state<number | null>(null);
+  let averagePriceValue = $state<number | null>(null);
+  let priceRangeValue = $state<number | null>(null);
+  let availableAuctionsValue = $state(0);
+  let popularityValue = $state<number | null>(1); // Default to 1 (neutral)
+  let lowestPriceFormatted = $state("N/A");
+  let averagePriceFormatted = $state("N/A");
+  let priceRangeFormatted = $state("N/A");
+  let popularityFormatted = $state("Normal");
 
   // Derived state for UI flags (can remain derived)
   let hasFilter = $derived(storedFilter !== null);
   let updateStoredFilterDisabled = $derived(
     isIdenticalFilter($filter, storedFilter)
   );
+
+  // Helper function to get filtered prices
+  function getFilteredPrices(): number[] {
+    return groupedDisplayList
+      .flatMap((group) => group.servers)
+      .map((server) => server.price)
+      .filter((price) => price !== null && price !== undefined) as number[];
+  }
+
+  // Derived state for QuickStats
+  let lowestPrice = $derived(() => {
+    const prices = getFilteredPrices();
+    return prices.length > 0 ? Math.min(...prices) : null;
+  });
+
+  let highestPrice = $derived(() => {
+    const prices = getFilteredPrices();
+    return prices.length > 0 ? Math.max(...prices) : null;
+  });
+
+  // Format price with VAT and timeUnitPrice for display
+  function formatPrice(price: number | null): string {
+    if (price === null || Number.isNaN(price) || !Number.isFinite(price))
+      return "N/A";
+  
+    const countryCode =
+      ($settingsStore?.vatSelection?.countryCode as keyof typeof vatOptions) ??
+      "NET";
+    const selectedOption =
+      countryCode in vatOptions ? vatOptions[countryCode] : vatOptions["NET"];
+    const vatRate = selectedOption.rate || 0; // Ensure rate is a number
+    const timeUnit = $settingsStore.timeUnitPrice || "perMonth";
+  
+    // Apply VAT
+    const priceWithVat = price * (1 + vatRate);
+    
+    if (!Number.isFinite(priceWithVat)) return "N/A";
+    
+    // Format based on time unit
+    if (timeUnit === "perHour") {
+      // Convert monthly price to hourly (divide by hours in a month)
+      const hourlyPrice = priceWithVat / (30 * 24);
+      return `${hourlyPrice.toFixed(4)} €/h`;
+    } else {
+      // Monthly price
+      return `${priceWithVat.toFixed(2)} €/mo`;
+    }
+  }
+
+  // Effect to update non-derived variables for QuickStats
+  $effect(() => {
+    // Calculate the actual values from derived state
+    const totalResultsVal = groupedDisplayList.reduce(
+      (sum, group) => sum + group.servers.length,
+      0
+    );
+    const lowestPriceVal = (() => {
+      const prices = getFilteredPrices();
+      return prices.length > 0 ? Math.min(...prices) : null;
+    })();
+    const averagePriceVal = (() => {
+      const prices = getFilteredPrices();
+      if (prices.length === 0) return null;
+      const sum = prices.reduce((acc, price) => acc + price, 0);
+      return prices.length > 0 ? sum / prices.length : null;
+    })();
+    const priceRangeVal = (() => {
+      const prices = getFilteredPrices();
+      if (prices.length === 0) return null;
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      if (Number.isNaN(min) || Number.isNaN(max)) return null;
+      const range = max - min;
+      return Number.isFinite(range) ? range : null;
+    })();
+    const availableAuctionsVal =
+      Array.isArray(serverPrices) && serverPrices.length > 0
+        ? (serverPrices[serverPrices.length - 1]?.count ?? 0)
+        : 0;
+
+    // Update total results
+    totalResultsValue = totalResultsVal;
+
+    // Update available auctions
+    availableAuctionsValue = availableAuctionsVal;
+
+    // Update price statistics
+    if (lowestPriceVal !== null && Number.isFinite(lowestPriceVal)) {
+      lowestPriceValue = lowestPriceVal;
+      lowestPriceFormatted = formatPrice(lowestPriceVal);
+    } else {
+      lowestPriceFormatted = "N/A";
+    }
+
+    if (averagePriceVal !== null && Number.isFinite(averagePriceVal)) {
+      averagePriceValue = averagePriceVal;
+      averagePriceFormatted = formatPrice(averagePriceVal);
+    } else {
+      averagePriceFormatted = "N/A";
+    }
+
+    if (priceRangeVal !== null && Number.isFinite(priceRangeVal)) {
+      priceRangeValue = priceRangeVal;
+      priceRangeFormatted = formatPrice(priceRangeVal);
+    } else {
+      priceRangeFormatted = "N/A";
+    }
+  });
 
   // Ensure priceMin/Max are numbers when changed
   function handlePriceMinChange(event: Event) {
@@ -758,13 +907,79 @@
           >
             Price History
           </h1>
-          <div
-            class="border-b border-gray-200 dark:border-gray-700 h-[320px] p-5"
-          >
+          <div class="h-[320px] p-5">
             <ServerPriceChart
               data={serverPrices}
               {loading}
               timeUnitPrice={$settingsStore.timeUnitPrice}
+            />
+          </div>
+        </div>
+
+        <!-- QuickStats Section -->
+        <div class="px-5">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- Total Available Configurations -->
+            <QuickStat
+              icon={faFilter}
+              title="Total Configurations"
+              value={totalResultsValue}
+              subtitle="Available server configurations"
+              size="sm"
+            />
+
+            <!-- Available Auctions -->
+            <QuickStat
+              icon={faStopwatch}
+              title="Available Auctions"
+              value={availableAuctionsValue}
+              subtitle="Currently available auctions"
+              size="sm"
+            />
+            
+            <!-- Server Popularity -->
+            <QuickStat
+              data-testid="popularity-stat"
+              icon={popularityValue && popularityValue > 1.2 ? faArrowUp : (popularityValue && popularityValue < 0.8 ? faArrowDown : faStopwatch)}
+              title="Server Popularity"
+              value={popularityFormatted}
+              subtitle="Compared to 30-day average"
+              valueClass={
+                popularityValue && popularityValue > 1.2
+                  ? "text-green-600 dark:text-green-400"
+                  : (popularityValue && popularityValue < 0.8
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-gray-900 dark:text-white")
+              }
+              size="sm"
+            />
+
+            <!-- Lowest Price -->
+            <QuickStat
+              icon={faEuroSign}
+              title="Lowest Price"
+              value={lowestPriceFormatted}
+              subtitle="Most affordable option"
+              valueClass="text-green-600 dark:text-green-400"
+              size="sm"
+            />
+
+            <!-- Average Price -->
+            <QuickStat
+              icon={faEuroSign}
+              title="Average Price"
+              value={averagePriceFormatted}
+              subtitle="Across all configurations"
+              size="sm"
+            />
+
+            <!-- Price Range -->
+            <QuickStat
+              icon={faArrowDown}
+              title="Price Range"
+              value={priceRangeFormatted}
+              subtitle="Highest minus lowest price"
+              size="sm"
             />
           </div>
         </div>
@@ -783,16 +998,6 @@
               >
                 Configurations
               </h3>
-              {#if !loading}
-                <!-- Use the derived totalResults state -->
-                <Badge
-                  color="green"
-                  data-testid="results-count"
-                  rounded
-                  class="text-xs"
-                  >{totalResults > 100 ? "100+" : totalResults} results</Badge
-                >
-              {/if}
             </div>
             {#if !loading}
               <!-- Sort & Group controls: Stacked on mobile, right-aligned on larger screens -->
@@ -838,7 +1043,7 @@
               />
             {:else}
               <!-- Show No Results Alert -->
-              <Alert class="mx-5">
+              <Alert class="mx-5 mt-4">
                 <InfoCircleSolid slot="icon" class="w-5 h-5" />
                 No servers matching the criteria were found. Try changing some of
                 the parameters.
