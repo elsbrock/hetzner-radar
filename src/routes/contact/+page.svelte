@@ -1,11 +1,12 @@
 <script>
     import { faGithub } from "@fortawesome/free-brands-svg-icons";
     import {
-        faEnvelope,
-        faHandsHelping,
-        faInfoCircle,
-        faRocket,
-    } from "@fortawesome/free-solid-svg-icons";
+            faCoffee,
+            faEnvelope,
+            faHandsHelping,
+            faInfoCircle,
+            faRocket,
+        } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { Button, Card } from "flowbite-svelte";
 </script>
@@ -32,7 +33,7 @@
         </div>
 
         <!-- Contact Methods Section -->
-        <section class="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <section class="grid grid-cols-1 gap-8 md:grid-cols-3">
             <!-- Email Contact Card -->
             <Card
                 class="flex flex-col items-center text-center shadow-lg justify-between dark:bg-gray-800"
@@ -88,6 +89,35 @@
                 >
                     <FontAwesomeIcon icon={faRocket} class="h-5 w-5 mr-2" />
                     Sponsor on Github
+                </Button>
+            </Card>
+
+            <!-- Buy Me a Coffee Card -->
+            <Card
+                class="flex flex-col items-center text-center shadow-lg justify-between dark:bg-gray-800"
+            >
+                <div>
+                    <FontAwesomeIcon
+                        icon={faCoffee}
+                        size="3x"
+                        class="text-amber-500 dark:text-amber-400 mb-4"
+                    />
+                    <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                        Buy Me a Coffee
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Enjoy using Server Radar? Consider buying me a coffee to fuel
+                        future development and show your appreciation for this project.
+                    </p>
+                </div>
+
+                <Button
+                    href="https://www.buymeacoffee.com/elsbrock"
+                    color="yellow"
+                    class="w-full"
+                >
+                    <FontAwesomeIcon icon={faCoffee} class="mr-2" />
+                    Buy Me a Coffee
                 </Button>
             </Card>
         </section>
