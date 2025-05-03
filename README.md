@@ -1,9 +1,9 @@
-# Hetzner Radar
+# Server Radar
 
-Hetzner Radar is a tool that tracks the prices of Hetzner's [Dedicated Server
+Server Radar is a tool that tracks the prices of Hetzner's [Dedicated Server
 Auction](https://www.hetzner.com/sb/) over time, helping customers identify the
 best configurations and prices. While Hetzner's auction site allows filtering by
-certain criteria, it only provides a snapshot at a given moment. Hetzner Radar
+certain criteria, it only provides a snapshot at a given moment. Server Radar
 aims to enhance this by offering advanced filtering, a comprehensive pricing
 history and target price alerts. Additionally, we track server volumes and other
 relevant statistics.
@@ -87,7 +87,7 @@ npm run dev
 ## Contributions
 
 Contributions are welcome and encouraged! Whether it's fixing a bug, adding a
-new feature, or optimizing performance, your input can make Hetzner Radar even
+new feature, or optimizing performance, your input can make Server Radar even
 better. If you have an idea or a patch, feel free to submit a pull request or
 open an issue.
 
@@ -96,7 +96,7 @@ goals and architecture. If you're unsure or would like to discuss your ideas,
 don't hesitate to start a discussion in the issues section.
 
 I'm happy to review and merge any meaningful contributions that improve the
-project. Thank you for helping to make Hetzner Radar better for everyone!
+project. Thank you for helping to make Server Radar better for everyone!
 
 ## Disclaimer
 
