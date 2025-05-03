@@ -1,39 +1,33 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let lineCount = 12; // Default number of lines (8 lines = every 45 degrees)
+  let { lineCount = 12 } = $props<{ lineCount?: number }>();
+  let isAnimating = $state(false);
 
-  function setAnimationEnabled(bool: boolean) {
-    const radar = document.querySelector(".radar");
-    const dots = document.querySelectorAll(".radar__dot");
-
-    radar?.classList.remove("radar--animate");
-    dots.forEach((dot) => dot.classList.remove("radar__dot--animate"));
-    if (bool) {
-      radar?.classList.add("radar--animate");
-      dots.forEach((dot) => dot.classList.add("radar__dot--animate"));
-    }
-  }
+  // Use a reference to the radar element instead of querySelector
+  let radarElement: HTMLDivElement;
 </script>
 
 <div
-  class="radar radar--animate"
+  class="radar"
+  class:radar--animate={isAnimating}
   role="button"
   tabindex="0"
   style="height: 40px; width: 40px; margin-top: -5px;"
   aria-label="Server Radar Logo"
-  on:mouseenter={() => setAnimationEnabled(true)}
-  on:mouseleave={() => setAnimationEnabled(false)}
+  bind:this={radarElement}
+  onmouseenter={() => isAnimating = true}
+  onmouseleave={() => isAnimating = false}
 >
-  <div class="radar__dot radar__dot--animate"></div>
-  <div class="radar__dot radar__dot--animate"></div>
+  <div class="radar__dot" class:radar__dot--animate={isAnimating}></div>
+  <div class="radar__dot" class:radar__dot--animate={isAnimating}></div>
   {#each Array(lineCount) as _, i}
     <div
     class="radar__line"
     style="transform: rotate({360 / lineCount * i}deg) translateX(-50%);"
     ></div>
   {/each}
-  <div class="radar__dot radar__dot--animate"></div>
+  <div class="radar__dot" class:radar__dot--animate={isAnimating}></div>
 </div>
 
 <style>
@@ -135,7 +129,7 @@
 
   .radar__dot--animate {
     opacity: 0; /* Initially hidden */
-    animation: blink 3s ease-out infinite;
+    animation: blink 3s ease-out;
     animation-iteration-count: 1;
     animation-fill-mode: forwards; /* Keep the final state after animation ends */
   }
