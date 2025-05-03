@@ -89,19 +89,52 @@
   const HIDDEN_OPACITY = 0;
 
   let activeCardIndex = $state(0);
+  let isHovering = $state(false);
+  let intervalId: ReturnType<typeof setInterval> | null = null;
 
-  $effect(() => {
-    const intervalId = setInterval(() => {
-      activeCardIndex = (activeCardIndex + 1) % sampleConfigs.length;
-    }, CYCLE_INTERVAL);
+  // Function to start the animation
+  function startAnimation() {
+    if (!intervalId) {
+      intervalId = setInterval(() => {
+        activeCardIndex = (activeCardIndex + 1) % sampleConfigs.length;
+      }, CYCLE_INTERVAL);
+    }
+  }
 
-    return () => {
+  // Function to stop the animation
+  function stopAnimation() {
+    if (intervalId) {
       clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
+  // Start animation on component mount
+  $effect(() => {
+    startAnimation();
+    
+    return () => {
+      stopAnimation();
     };
   });
+
+  // Handle hover state changes
+  function handleMouseEnter() {
+    isHovering = true;
+    stopAnimation();
+  }
+
+  function handleMouseLeave() {
+    isHovering = false;
+    startAnimation();
+  }
 </script>
 
-<div class="relative max-w-xs mx-auto min-h-[12rem]"> <!-- Container for the stack, added min-h -->
+<div
+  class="relative max-w-xs mx-auto min-h-[12rem]"
+  onmouseenter={handleMouseEnter}
+  onmouseleave={handleMouseLeave}
+> <!-- Container for the stack -->
   {#each sampleConfigs as config, index}
     {@const distance = (index - activeCardIndex + sampleConfigs.length) % sampleConfigs.length}
     {@const isVisible = distance <= MAX_VISIBLE_DISTANCE}
@@ -109,7 +142,11 @@
     {@const topRem = isVisible ? -distance * OFFSET_INCREMENT_REM : 0}
     {@const leftRem = isVisible ? distance * OFFSET_INCREMENT_REM : 0}
     {@const zIndex = isVisible ? BASE_Z_INDEX - distance * Z_INDEX_DECREMENT : -10}
-    {@const scale = isVisible ? BASE_SCALE - distance * SCALE_DECREMENT : HIDDEN_SCALE}
+    {@const scale = isVisible
+      ? (distance === 0 && isHovering
+          ? BASE_SCALE + 0.05 // Slightly larger when hovering on top card
+          : BASE_SCALE - distance * SCALE_DECREMENT)
+      : HIDDEN_SCALE}
     {@const opacity = isVisible ? BASE_OPACITY - distance * OPACITY_DECREMENT : HIDDEN_OPACITY}
 
     <div
