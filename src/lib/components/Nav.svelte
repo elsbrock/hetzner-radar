@@ -125,8 +125,7 @@
     </div>
     <div class="ml-5 leading-none md:-mt-1">
       <p
-        class="self-center whitespace-nowrap text-xl font-semibold
-			dark:text-white"
+        class="self-center whitespace-nowrap text-xl font-semibold text-black dark:text-white"
       >
         Server Radar <Badge>beta</Badge>
       </p>
