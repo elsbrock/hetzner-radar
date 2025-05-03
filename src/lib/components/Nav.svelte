@@ -72,10 +72,9 @@
                   hideTimeoutId = null;
                   
                   // Schedule fade out after animation stops
-                  fadeTimeoutId = setTimeout(() => {
-                      isVisible = false; // Fade out
-                      fadeTimeoutId = null;
-                  }, 200);
+                  // Start fade-in immediately without additional delay
+                  isVisible = false; // Fade out
+                  fadeTimeoutId = null;
                   
               }, animationDuration); // Wait exactly one animation cycle
           }
@@ -118,7 +117,7 @@
   });
 </script>
 
-<Navbar class="h-15 w-full">
+<Navbar class="h-15 w-full relative">
   <NavBrand href="/">
     <div style="width: 32px; height: 32px">
       <Radar />
@@ -358,6 +357,11 @@
     {/if}
     <!-- Removed separate mobile DarkMode NavLi -->
   </NavUl>
+
+  <div
+    class="{isVisible ? 'fade-out-gradient' : 'fade-in-gradient'} absolute inset-x-0 bottom-0 translate-y-[0px] h-[50px] overflow-hidden"
+    style="background: radial-gradient(ellipse 80% 50px at 50% 100%, rgba(249, 115, 22, 0.15), transparent 60%); pointer-events: none;"
+  ></div>
 </Navbar>
 
 <!-- Loading Indicator -->
@@ -387,5 +391,16 @@
   }
   .animate-loading-bar {
     animation: loading-bar 0.7s infinite linear;
+  }
+  
+  /* Separate transition durations for fade-in and fade-out */
+  .fade-out-gradient {
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+  
+  .fade-in-gradient {
+    opacity: 1;
+    transition: opacity 300ms ease; /* Faster fade-in */
   }
 </style>
