@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from "$app/stores";
+  import { navigating, page } from "$app/stores"; // <-- Import navigating
   import {
     faBell,
     faBinoculars,
@@ -28,12 +28,67 @@
   import { goto } from "$app/navigation";
   import { session } from "$lib/stores/session";
   import { settingsStore } from "$lib/stores/settings";
-  // <-- Import settings store
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
   let activeUrl = $derived($page.url.pathname);
   let isHoveringAlerts = $state(false);
   let isNavOpen = $state(false); // State for mobile nav visibility
+  let isActuallyNavigating = $derived($navigating !== null);
+  let isVisible = $state(false); // Controls opacity
+  let isAnimating = $state(false); // Controls animation class
+  let hideTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let fadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  // Effect to manage the loading bar states gracefully
+  $effect(() => {
+    if (isActuallyNavigating) {
+      // --- Navigation Started ---
+      // Clear any pending hide/fade timeouts
+      if (hideTimeoutId) clearTimeout(hideTimeoutId);
+      if (fadeTimeoutId) clearTimeout(fadeTimeoutId);
+      hideTimeoutId = null;
+      fadeTimeoutId = null;
+  
+      // Make visible and start animating immediately
+      isVisible = true;
+      isAnimating = true;
+  
+    } else {
+      // --- Navigation Ended (or initial load) ---
+      // Only proceed if it was previously visible/animating
+      if (isVisible || isAnimating) {
+          // Don't start hiding if already scheduled
+          if (!hideTimeoutId && !fadeTimeoutId) {
+              // Let the animation complete its current cycle
+              // The animation duration is 0.7s (700ms) as defined in the CSS
+              const animationDuration = 700;
+              
+              // Wait for the current animation cycle to complete
+              // This ensures we don't interrupt mid-animation
+              hideTimeoutId = setTimeout(() => {
+                  // Let the animation finish its current cycle completely
+                  // before stopping it and fading out
+                  isAnimating = false; // Stop animation at the end of cycle
+                  hideTimeoutId = null;
+                  
+                  // Schedule fade out after animation stops
+                  fadeTimeoutId = setTimeout(() => {
+                      isVisible = false; // Fade out
+                      fadeTimeoutId = null;
+                  }, 200);
+                  
+              }, animationDuration); // Wait exactly one animation cycle
+          }
+      }
+    }
+  
+    // Cleanup timeouts on component destroy
+    return () => {
+      if (hideTimeoutId) clearTimeout(hideTimeoutId);
+      if (fadeTimeoutId) clearTimeout(fadeTimeoutId);
+    };
+  });
+
 
   // Local reactive state for the theme, initialized from the store
   let theme = $state($settingsStore.theme);
@@ -306,8 +361,32 @@
   </NavUl>
 </Navbar>
 
-<div class="relative w-full h-[2px]">
+<!-- Loading Indicator -->
+<div class="relative w-full h-[2px] overflow-hidden">
+  <!-- Static bar, visible when animated bar is not -->
   <div
-    class="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500 to-transparent h-[2px]"
+    class="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
+      ? 'opacity-0'
+      : 'opacity-100'}"
+  ></div>
+  <!-- Animated bar -->
+  <div
+    class="absolute inset-0 h-[2px] w-[300%] left-[-100%] bg-gradient-to-r from-transparent via-orange-500 to-transparent bg-[length:33.33%_100%] bg-repeat-x transition-opacity duration-300 {isVisible
+      ? 'opacity-100'
+      : 'opacity-0'} {isAnimating ? 'animate-loading-bar' : ''}"
   ></div>
 </div>
+
+<style>
+  @keyframes loading-bar {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(33.33%); /* Move exactly one pattern width */
+    }
+  }
+  .animate-loading-bar {
+    animation: loading-bar 0.7s infinite linear;
+  }
+</style>
