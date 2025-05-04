@@ -239,8 +239,8 @@ export const ALERT_DELETE_SQL = `DELETE FROM price_alert WHERE id = ?`;
 
 // SQL query to insert data into the alert_auction_matches table
 export const ALERT_AUCTION_MATCHES_INSERT_SQL = `
-  INSERT INTO alert_auction_matches (alert_history_id, auction_id, match_price)
-  VALUES (?, ?, ?)
+  INSERT INTO alert_auction_matches (alert_history_id, auction_id, auction_seen_at, match_price)
+  VALUES (?, ?, ?, ?)
 `;
 
 /**
@@ -304,7 +304,7 @@ export async function findMatchingAlerts(db: DB): Promise<any[]> {
  */
 export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
   alertInfo: any;
-  matchedAuctions: { auction_id: number; price: number }[];
+  matchedAuctions: { auction_id: number; price: number; seen: string }[];
 }> {
   const alertMap = new Map();
   
@@ -329,7 +329,8 @@ export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
     // Add this auction to the alert's matched auctions
     alertMap.get(match.alert_id).matchedAuctions.push({
       auction_id: match.auction_id,
-      price: match.auction_price
+      price: match.auction_price,
+      seen: match.seen
     });
   }
   
@@ -380,10 +381,10 @@ https://radar.iodev.org/
  * 4. Deleting the processed alert
  */
 export async function processAlert(
-  db: DB, 
-  platform: any, 
-  alertInfo: any, 
-  matchedAuctions: { auction_id: number; price: number }[]
+  db: DB,
+  platform: any,
+  alertInfo: any,
+  matchedAuctions: { auction_id: number; price: number; seen: string }[]
 ): Promise<void> {
   try {
     // Find the lowest price among matched auctions
@@ -419,8 +420,9 @@ export async function processAlert(
     // Execute all statements in a batch to get the alert history ID
     const results = await db.batch(statements);
     
-    // Get the ID of the newly inserted alert history record
-    const alertHistoryId = alertInfo.id; // Same as the original alert ID
+    // Get the ID of the newly inserted alert history record (same as the original alert ID)
+    // This ID is used in the email notification URL and for storing matched auctions
+    const alertHistoryId = alertInfo.id;
     
     // Store matched auctions in a separate batch
     const auctionMatchStatements: PreparedStatement[] = [];
@@ -430,6 +432,7 @@ export async function processAlert(
       auctionMatchStatements.push(matchesStmt.bind(
         alertHistoryId,
         auction.auction_id,
+        auction.seen,
         auction.price
       ));
     }

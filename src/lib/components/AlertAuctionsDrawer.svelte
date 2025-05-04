@@ -26,7 +26,6 @@
 
     // Define the auction match interface
     interface AuctionMatch {
-        id: number;
         auction_id: number;
         alert_history_id: number;
         match_price: number;
@@ -246,7 +245,7 @@
                         </TableBodyCell>
                     </TableBodyRow>
                 {:else if auctions.length > 0}
-                    {#each auctions as auction (auction.id)}
+                    {#each auctions as auction (auction.alert_history_id + '-' + auction.auction_id)}
                         <TableBodyRow>
                             <TableBodyCell class="px-1 py-4">
                                 <div class="text-sm text-gray-700 dark:text-gray-300">

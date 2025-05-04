@@ -39,10 +39,10 @@ export async function GET({ params, locals, platform }: RequestEvent) {
 
       // Fetch auction matches with auction details
       const matchesResult = await db.prepare(`
-        SELECT DISTINCT
-          aam.id,
+        SELECT
           aam.alert_history_id,
           aam.auction_id,
+          aam.auction_seen_at,
           aam.match_price,
           aam.matched_at,
           a.cpu,
@@ -54,10 +54,9 @@ export async function GET({ params, locals, platform }: RequestEvent) {
         FROM
           alert_auction_matches aam
         INNER JOIN
-          auctions a ON aam.auction_id = a.id
+          auctions a ON aam.auction_id = a.id AND aam.auction_seen_at = a.seen
         WHERE
           aam.alert_history_id = ?
-          AND aam.id IS NOT NULL
           AND aam.auction_id IS NOT NULL
         ORDER BY
           aam.match_price ASC
