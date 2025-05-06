@@ -34,7 +34,6 @@ export type TemporalStat = {
 	x: number;
 	y: number;
 };
-
 export async function getRamPriceStats(conn: AsyncDuckDBConnection, withECC?: boolean, country?: string): Promise<TemporalStat[]> {
 	const query = SQL`
 		select
@@ -358,6 +357,41 @@ export async function getPriceIndexStats(conn: AsyncDuckDBConnection): Promise<T
 export type LastUpdate = {
   last_updated: number;
 };
+
+export async function getSoldAuctionPriceStats(c: AsyncDuckDBConnection): Promise<TemporalStat[]> {
+	const query = SQL`
+		WITH RankedAuctions AS (
+			SELECT
+				id,
+				price,
+				seen,
+				fixed_price,
+				ROW_NUMBER() OVER (PARTITION BY id ORDER BY seen DESC) as rn
+			FROM server
+		),
+		SoldAuctions AS (
+			SELECT
+				id,
+				price,
+				seen
+			FROM RankedAuctions
+			WHERE rn = 1 AND fixed_price = FALSE -- Only latest entry for each ID, and not fixed price
+		)
+		SELECT
+			EXTRACT(epoch FROM date_trunc('day', seen))::int AS x, -- Date as Unix epoch timestamp
+			AVG(price) AS y                     -- Average price
+		FROM SoldAuctions
+		GROUP BY 1 -- Group by the first selected column (date_trunc('day', seen))
+		ORDER BY 1; -- Order by the first selected column (date_trunc('day', seen))
+	`;
+	try {
+		const result = await getData<TemporalStat>(c, query);
+		return result;
+	} catch (error) {
+		console.error("Error in getSoldAuctionPriceStats:", error);
+		return [];
+	}
+}
 
 export function getLastUpdated(conn: AsyncDuckDBConnection): Promise<LastUpdate[]> {
   return getData<LastUpdate>(

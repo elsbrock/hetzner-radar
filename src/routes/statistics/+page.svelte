@@ -11,6 +11,7 @@
     getVolumeByCPUVendorStats,
     getVolumeByDatacenterStats,
     getVolumeStats,
+    getSoldAuctionPriceStats,
     type TemporalStat,
   } from "$lib/api/frontend/stats";
   import GenericChart from "$lib/components/GenericChart.svelte";
@@ -44,6 +45,7 @@
   // New state variables for the additional charts
   let volumeAMDStats = $state<TemporalStat[]>([]);
   let volumeIntelStats = $state<TemporalStat[]>([]);
+  let soldAuctionPriceStats = $state<TemporalStat[]>([]);
 
   // CPU model volume stats
   let intelCPUModelStats = $state<{ [model: string]: TemporalStat[] }>({});
@@ -199,6 +201,7 @@
           volumeGermanyStats,
           volumeAMDStats,
           volumeIntelStats,
+          soldAuctionPriceStats,
         ] = await Promise.all([
           getPriceIndexStats(conn1),
           getRamPriceStats(conn2, true),
@@ -213,6 +216,7 @@
           getVolumeStats(conn3, "Germany"),
           getVolumeByCPUVendorStats(conn4, "AMD"),
           getVolumeByCPUVendorStats(conn4, "Intel"),
+          getSoldAuctionPriceStats(conn1),
         ]);
 
         // Fetch CPU model volume stats (top 7 models for each vendor)
@@ -446,6 +450,29 @@
               data={[
                 { name: "NVMe", data: nvmePriceStats },
                 { name: "SATA", data: sataPriceStats },
+              ]}
+            />
+          </div>
+        </div>
+
+        <!-- Average Sold Auction Price (Daily) -->
+        <div
+          class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
+        >
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+              Average Sold Auction Price (Daily)
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Tracks the average daily price of server auctions that have been
+              sold (latest price entry, excluding fixed-price offers). This
+              helps understand actual market transaction values.
+            </p>
+          </div>
+          <div class="h-80 w-full">
+            <GenericChart
+              data={[
+                { name: "Avg. Sold Auction Price", data: soldAuctionPriceStats }
               ]}
             />
           </div>
