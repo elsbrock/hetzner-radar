@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { enhance } from "$app/forms";
-    import { Button, Modal } from "flowbite-svelte";
-    import { Alert, Label, Input } from "flowbite-svelte";
-    import { goto } from "$app/navigation";
     import { session } from "$lib/stores/session";
     import { addToast } from "$lib/stores/toast";
+    import { enhance } from "$app/forms";
+    import { goto } from "$app/navigation";
+    import { Button, Modal, Alert, Label, Input } from "flowbite-svelte";
 
     let showConfirmModal = $state(false);
     let deleteForm: HTMLFormElement | null = $state(null);
@@ -59,7 +58,7 @@
 
 <div class="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-10 px-3">
     <div
-        class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800 w-[450px]"
+        class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
     >
         {#if $session}
             <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Account Info</h2>
@@ -75,9 +74,19 @@
                 Your email address is used to alert you about price changes and
                 to send you notifications about your account.
             </p>
+<hr class="my-4 border-gray-200 dark:border-gray-700" />
+            <div>
+                <h2 class="text-base font-semibold text-gray-800 dark:text-white mb-4">Data Export</h2>
+                <p class="text-gray-800 dark:text-gray-300 mb-4">
+                    You can download all your account information, including your profile, sessions, price alerts, and alert history, as a JSON file.
+                </p>
+                <div class="mb-6">
+                    <Button href="/settings/export" color="alternative">Export My Data</Button>
+                </div>
+            </div>
             <hr class="my-4 border-gray-200 dark:border-gray-700" />
             <p class="text-base font-semibold text-red-600 dark:text-red-500 mb-2">Danger Zone</p>
-            <p class="text-gray-500 dark:text-gray-400 mb-4">
+            <p class="mb-4">
                 Deleting your account will permanently remove all associated information, including any alerts you've set up. This action cannot be undone, but you're welcome to sign up again later.
             </p>
             <form
@@ -98,7 +107,7 @@
             >
                 <!-- This form is submitted programmatically -->
             </form>
-            <Button onclick={handleDeleteClick} color="primary" class="w-full"
+            <Button onclick={handleDeleteClick} color="red"
                 >Delete My Account</Button
             >
         {:else}
