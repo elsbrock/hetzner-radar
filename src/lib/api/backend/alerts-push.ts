@@ -84,7 +84,8 @@ export const MATCH_ALERTS_SQL = `
       pa.created_at,
       pa.filter,
       c.id AS auction_id,
-      c.price AS auction_price
+      c.price AS auction_price,
+      c.seen -- Select the auction's seen timestamp
   FROM
       price_alert pa
   JOIN
