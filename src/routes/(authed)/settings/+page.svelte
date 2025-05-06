@@ -86,7 +86,7 @@
             </div>
             <hr class="my-4 border-gray-200 dark:border-gray-700" />
             <p class="text-base font-semibold text-red-600 dark:text-red-500 mb-2">Danger Zone</p>
-            <p class="mb-4">
+            <p class="text-gray-800 dark:text-gray-300 mb-4">
                 Deleting your account will permanently remove all associated information, including any alerts you've set up. This action cannot be undone, but you're welcome to sign up again later.
             </p>
             <form
