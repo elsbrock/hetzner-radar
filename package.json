@@ -29,7 +29,7 @@
         "@sveltejs/vite-plugin-svelte": "5.0.3",
         "@types/eslint": "9.6.1",
         "@types/leaflet": "1.9.17",
-        "@types/node": "22.15.18",
+        "@types/node": "22.15.19",
         "@types/svelte-range-slider-pips": "2.0.4",
         "autoprefixer": "10.4.21",
         "dayjs": "1.11.13",
