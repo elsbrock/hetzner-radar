@@ -36,7 +36,7 @@
         "deepmerge": "4.3.1",
         "eslint": "9.27.0",
         "eslint-config-prettier": "10.1.5",
-        "eslint-plugin-svelte": "3.8.2",
+        "eslint-plugin-svelte": "3.9.0",
         "filesize": "10.1.6",
         "flowbite": "3.1.2",
         "flowbite-svelte": "0.48.6",
