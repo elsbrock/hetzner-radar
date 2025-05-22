@@ -60,7 +60,7 @@
 </script>
 
 <Card
-  class={`${baseClasses} ${clickable ? clickableClasses : ""} ${(config.markup_percentage ?? 0) <= 0 ? "border-l-4 !border-l-green-700" : ""}`}
+  class={`${baseClasses} ${clickable ? clickableClasses : ""} ${(config.markup_percentage ?? 0) <= 0 ? "border-l-4 border-l-green-700!" : ""}`}
   data-testid="server-card"
   style="padding: 15px"
   onclick={() => {
@@ -77,7 +77,7 @@
     </div>
   {:else}
     <!-- Main Content -->
-    <div class="flex-grow">
+    <div class="grow">
       <h5
         class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white"
       >

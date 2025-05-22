@@ -701,7 +701,7 @@
     <DbLoadingProgress />
   {:else}
     <div
-      class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]
+      class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto_1fr]
         md:border-r-2 md:border-r-gray-100 dark:border-r-gray-700"
     >
       <!-- ID for Intersection Observer -->
@@ -711,7 +711,7 @@
                     {isFilterCollapsed ? 'sm:w-16 md:w-16' : 'sm:w-72 md:w-72'}"
       >
         <!-- ServerFilter Container - Grows and Scrolls -->
-        <div class="flex-grow overflow-y-auto px-3 py-2">
+        <div class="grow overflow-y-auto px-3 py-2">
           <ServerFilter {datacenters} {cpuModels} bind:isFilterCollapsed />
         </div>
         <!-- Timestamp/Loading Info - Fixed at bottom, animated with slide -->
@@ -757,19 +757,19 @@
         {/if}
       </aside>
 
-      <main class="flex-grow overflow-y-auto bg-white dark:bg-gray-900">
+      <main class="grow overflow-y-auto bg-white dark:bg-gray-900">
         <div class="w-full">
           <div
             class="bg-white px-5 sm:border-t md:border-t-0 py-3 mb-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-start text-left text-lg font-semibold text-gray-900 dark:bg-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700"
           >
             <!-- Left-aligned controls: scrollable on mobile with fixed fade -->
             <div
-              class="relative md:col-span-1 after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden"
+              class="relative md:col-span-1 after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-linear-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden"
             >
               <div
                 class="flex flex-nowrap gap-3 items-start overflow-x-auto scrollbar-hide text-xs text-gray-900 dark:text-gray-300"
               >
-                <ButtonGroup class="flex-shrink-0">
+                <ButtonGroup class="shrink-0">
                   <InputAddon
                     size="sm"
                     class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -802,7 +802,7 @@
                     onchange={handlePriceMaxChange}
                   />
                 </ButtonGroup>
-                <ButtonGroup class="flex-shrink-0">
+                <ButtonGroup class="shrink-0">
                   <InputAddon
                     size="sm"
                     class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -838,7 +838,7 @@
                   on your computer.
                 </Tooltip>
 
-                <ButtonGroup class="flex-shrink-0">
+                <ButtonGroup class="shrink-0">
                   <InputAddon
                     size="sm"
                     class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"

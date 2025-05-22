@@ -131,7 +131,7 @@
 </script>
 
 <div
-  class="relative max-w-xs mx-auto min-h-[12rem]"
+  class="relative max-w-xs mx-auto min-h-48"
   onmouseenter={handleMouseEnter}
   onmouseleave={handleMouseLeave}
 > <!-- Container for the stack -->

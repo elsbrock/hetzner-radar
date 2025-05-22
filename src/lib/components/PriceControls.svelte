@@ -14,10 +14,10 @@
 </script>
 
 <!-- Outer container for relative positioning and fade effect -->
-<div class="relative text-xs text-gray-900 dark:text-white after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden">
+<div class="relative text-xs text-gray-900 dark:text-white after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-linear-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden">
     <!-- Inner container for scrolling content -->
     <div class="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide">
-        <ButtonGroup class="flex-shrink-0">
+        <ButtonGroup class="shrink-0">
             <InputAddon size="sm" class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
                 <FontAwesomeIcon
                     icon={faClock}
@@ -39,9 +39,9 @@
                 >monthly</Button
             >
         </ButtonGroup>
-        <Tooltip placement="left" class="z-50 flex-shrink-0">
+        <Tooltip placement="left" class="z-50 shrink-0">
             Display prices per hour or per month.
         </Tooltip>
-        <div class="flex-shrink-0"> <VatSelector /> </div>
+        <div class="shrink-0"> <VatSelector /> </div>
     </div>
 </div>

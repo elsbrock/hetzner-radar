@@ -802,7 +802,7 @@
         <!-- Content -->
         <!-- Dark Overlay for Dark Mode -->
         <div
-            class="absolute inset-0 w-full h-full bg-transparent dark:bg-black/60 z-[5]"
+            class="absolute inset-0 w-full h-full bg-transparent dark:bg-black/60 z-5"
         ></div>
         <div class="relative z-10">
             <!-- Heading -->
