@@ -76,6 +76,6 @@
             name: formatOptionText(option.flag, option.name, option.rate)
         }))}
         size="sm"
-        class="!rounded-s-none text-xs w-24 bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600"
+        class="rounded-s-none! text-xs w-24 bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600"
     />
 </ButtonGroup>

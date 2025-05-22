@@ -191,7 +191,7 @@
     <Button
       color="alternative"
       size="sm"
-      class="!p-2"
+      class="p-2!"
       onclick={() => (isFilterCollapsed = !isFilterCollapsed)}
       aria-label={isFilterCollapsed ? "Expand filter" : "Collapse filter"}
     >
@@ -213,7 +213,7 @@
       <Button
         color="alternative"
         size="sm"
-        class="!p-2 mb-4"
+        class="p-2! mb-4"
         onclick={() => (isFilterCollapsed = !isFilterCollapsed)}
         aria-label="Expand filter"
       >

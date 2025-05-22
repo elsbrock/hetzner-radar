@@ -186,7 +186,7 @@
     <NavLi
       href="/"
       data-testid="nav-link-home"
-      class="flex items-center !bg-transparent"
+      class="flex items-center bg-transparent!"
     >
       <FontAwesomeIcon class="me-2 w-4 h-4" icon={faHouse} />
       <span
@@ -198,7 +198,7 @@
     <NavLi
       href="/configurations"
       data-testid="nav-link-configurations"
-      class="flex items-center !bg-transparent"
+      class="flex items-center bg-transparent!"
     >
       <FontAwesomeIcon class="me-2 w-4 h-4" icon={faServer} />
       <span
@@ -210,7 +210,7 @@
     <NavLi
       href="/analyze"
       data-testid="nav-link-analyze"
-      class="flex items-center !bg-transparent"
+      class="flex items-center bg-transparent!"
     >
       <FontAwesomeIcon class="me-2 w-4 h-4" icon={faBinoculars} />
       <span
@@ -223,7 +223,7 @@
       <NavLi
         href="/alerts"
         data-testid="nav-link-alerts"
-        class="flex items-center !bg-transparent"
+        class="flex items-center bg-transparent!"
         onmouseenter={() => (isHoveringAlerts = true)}
         onmouseleave={() => (isHoveringAlerts = false)}
       >
@@ -246,7 +246,7 @@
       <NavLi
         href="/statistics"
         data-testid="nav-link-statistics"
-        class="flex items-center !bg-transparent"
+        class="flex items-center bg-transparent!"
       >
         <FontAwesomeIcon class="me-2 w-4 h-4" icon={faChartSimple} />
         <span
@@ -258,7 +258,7 @@
       <NavLi
         href="/about"
         data-testid="nav-link-about"
-        class="flex items-center !bg-transparent"
+        class="flex items-center bg-transparent!"
       >
         <FontAwesomeIcon class="me-2 w-4 h-4" icon={faCircleInfo} />
         <span
@@ -273,7 +273,7 @@
       <NavLi
         href="/settings"
         data-testid="nav-link-settings"
-        class="flex items-center !bg-transparent"
+        class="flex items-center bg-transparent!"
       >
         <FontAwesomeIcon class="me-2 w-4 h-4" icon={faUser} />
         <span
@@ -293,7 +293,7 @@
             session.set(null);
             return goto("/auth/logout");
           }}
-          class="flex-grow mr-2"
+          class="grow mr-2"
         >
           <Button
             data-testid="nav-signout-mobile"
@@ -336,7 +336,7 @@
         <Button
           data-testid="nav-signin-mobile"
           outline
-          class="flex-grow mr-2 bg-white dark:bg-inherit"
+          class="grow mr-2 bg-white dark:bg-inherit"
           href="/auth/login"
         >
           <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} /> Sign In
@@ -359,7 +359,7 @@
   </NavUl>
 
   <div
-    class="{isVisible ? 'fade-out-gradient' : 'fade-in-gradient'} absolute inset-x-0 bottom-0 translate-y-[0px] h-[50px] overflow-hidden"
+    class="{isVisible ? 'fade-out-gradient' : 'fade-in-gradient'} absolute inset-x-0 bottom-0 -translate-y-[0px] h-[50px] overflow-hidden"
     style="background: radial-gradient(ellipse 80% 50px at 50% 100%, rgba(249, 115, 22, 0.15), transparent 60%); pointer-events: none;"
   ></div>
 </Navbar>
@@ -368,13 +368,13 @@
 <div class="relative w-full h-[2px] overflow-hidden">
   <!-- Static bar, visible when animated bar is not -->
   <div
-    class="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
+    class="absolute inset-0 h-[2px] bg-linear-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
       ? 'opacity-0'
       : 'opacity-100'}"
   ></div>
   <!-- Animated bar -->
   <div
-    class="absolute inset-0 h-[2px] w-[300%] left-[-100%] bg-gradient-to-r from-transparent via-orange-500 to-transparent bg-[length:33.33%_100%] bg-repeat-x transition-opacity duration-300 {isVisible
+    class="absolute inset-0 h-[2px] w-[300%] -left-full bg-linear-to-r from-transparent via-orange-500 to-transparent bg-size-[33.33%_100%] bg-repeat-x transition-opacity duration-300 {isVisible
       ? 'opacity-100'
       : 'opacity-0'} {isAnimating ? 'animate-loading-bar' : ''}"
   ></div>
