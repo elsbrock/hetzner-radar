@@ -12,7 +12,7 @@
   import { onDestroy, onMount } from "svelte";
   import { initializeDB, tearDownDB } from "../stores/db";
 
-  let { data } = $props<import('./$types').LayoutData>();
+  let { data, children } = $props<import('./$types').LayoutData & { children: import('svelte').Snippet }>();
   if (data.session) {
     session.set(data.session);
   } else {
@@ -116,7 +116,7 @@
   </Banner>
   <Nav />
 
-  <slot></slot>
+  {@render children()}
 </div>
 <Footer />
 

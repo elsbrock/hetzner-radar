@@ -17,7 +17,7 @@
 	}
 
 	// Destructure the new prop
-	let { groupedList = [], groupByField = 'none', timeUnitPrice = 'perHour' } = $props();
+	let { groupedList = [], groupByField = 'none', timeUnitPrice = 'perHour' as const } = $props();
 
 	// Calculate total servers based on the passed groupedList
 	let totalServers = $derived(groupedList.reduce((sum: number, group: { servers: ServerConfiguration[] }) => sum + group.servers.length, 0));

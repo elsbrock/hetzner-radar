@@ -61,7 +61,7 @@
   // Log initial state for debugging
   console.log(
     "ServerFilter: Initial filter state created with defaultFilter",
-    filter
+    () => filter
   );
   console.log("ServerFilter: Initial filterStore value", $filterStore);
 
@@ -107,14 +107,14 @@
   const debouncedUpdateUrl = debounce(updateUrl, 500); // 500ms delay
 
   // Create a deep copy of the filter to track changes
-  let previousFilterState = $state(JSON.stringify(filter));
+  let previousFilterState = $state("");
 
   // This effect triggers whenever 'filter' changes
   $effect(() => {
     const currentFilterState = JSON.stringify(filter);
 
-    // Only update if the filter has actually changed
-    if (currentFilterState !== previousFilterState) {
+    // Only update if the filter has actually changed and we have a previous state
+    if (previousFilterState && currentFilterState !== previousFilterState) {
       console.log("ServerFilter: Filter changed, updating store with:", filter);
       console.log("ServerFilter: Previous filterStore value:", $filterStore);
 
@@ -123,14 +123,14 @@
 
       // Update the URL only after a delay
       debouncedUpdateUrl({ ...filter });
-
-      previousFilterState = currentFilterState;
-
-      console.log(
-        "ServerFilter: New filterStore value after update:",
-        $filterStore
-      );
     }
+
+    previousFilterState = currentFilterState;
+
+    console.log(
+      "ServerFilter: New filterStore value after update:",
+      $filterStore
+    );
   });
 
   function updateFilterFromUrl(newFilter: ServerFilter | null) {

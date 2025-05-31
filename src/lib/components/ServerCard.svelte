@@ -20,6 +20,15 @@
     displayStoragePrice, // Included but not yet used in rendering logic
     displayRamPrice, // Included but not yet used in rendering logic
     clickable = true, // Default to clickable
+    buttons,
+  }: {
+    timeUnitPrice?: "perHour" | "perMonth";
+    config: ServerConfiguration;
+    loading?: boolean;
+    displayStoragePrice?: any;
+    displayRamPrice?: any;
+    clickable?: boolean;
+    buttons?: import('svelte').Snippet;
   } = $props();
 
   let drawerHidden = $state(true);
@@ -135,7 +144,7 @@
           {/if}
         </span>
       </div>
-      <slot name="buttons" />
+      {#if buttons}{@render buttons()}{/if}
     </div>
   {/if}
 </Card>

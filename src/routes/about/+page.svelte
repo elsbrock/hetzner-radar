@@ -40,7 +40,7 @@
                 <!-- Profile Image -->
                 <img
                     src="/images/operator.webp"
-                    alt="Profile Picture of Simon"
+                    alt="Simon"
                     class="w-48 h-48 rounded-full mb-6 md:mb-0 drop-shadow-lg"
                 />
                 <!-- About Text -->

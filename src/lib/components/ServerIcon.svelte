@@ -130,7 +130,6 @@
   
   svg {
     display: block;
-    vertical-align: middle;
     max-width: 100%;
   }
   
