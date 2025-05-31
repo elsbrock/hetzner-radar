@@ -7,7 +7,7 @@ import time
 import duckdb
 import requests
 
-ENDPOINT = 'https://server-radar.pages.dev/push'
+ENDPOINT = 'https://radar.iodev.org/push'
 
 # Get API key from environment
 API_KEY = os.environ.get('API_KEY')
@@ -49,7 +49,7 @@ def push_data(data):
             headers={
                 'x-auth-key': API_KEY,
                 'content-type': 'application/json',
-                'origin': 'https://server-radar.pages.dev'
+                'origin': 'https://radar.iodev.org'
             },
             timeout=30  # Optional: set a timeout for the request
         )
