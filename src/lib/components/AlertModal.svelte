@@ -14,11 +14,29 @@
         Label,
         Modal,
         Spinner,
+        Checkbox,
+        Card,
     } from "flowbite-svelte";
+    import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
+    import { faDiscord } from "@fortawesome/free-brands-svg-icons";
+    import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { createEventDispatcher } from "svelte";
 
-    export let alert: PriceAlert | null = null;
-    export let open = false;
+    let { 
+        alert = $bindable(null),
+        open = $bindable(false),
+        user = { notification_preferences: { email: true, discord: false } }
+    }: {
+        alert: PriceAlert | null;
+        open: boolean;
+        user?: {
+            discord_webhook_url?: string | null;
+            notification_preferences: {
+                email: boolean;
+                discord: boolean;
+            };
+        };
+    } = $props();
 
     interface AlertFormErrors {
         name?: string;
@@ -26,14 +44,52 @@
         vatRate?: string;
     }
 
-    let loading = false;
-    let error: string;
+    let loading = $state(false);
+    let error: string = $state("");
     const dispatch = createEventDispatcher();
 
-    let action = "/alerts?/add";
-    $: if (alert) {
-        action = "/alerts?/edit";
-    }
+    // Notification method selection for this specific alert
+    let emailSelected = $state(true);
+    let discordSelected = $state(false);
+    
+    // Update notification selections when alert changes
+    $effect(() => {
+        if (alert) {
+            // Editing existing alert - use its notification settings, with fallbacks for migration case
+            emailSelected = alert.email_notifications ?? true; // Default to true if null/undefined
+            discordSelected = alert.discord_notifications ?? (user.notification_preferences.discord && !!user.discord_webhook_url);
+        } else {
+            // Creating new alert - use defaults based on user config
+            emailSelected = true; // Email always defaults to true
+            discordSelected = user.notification_preferences.discord && !!user.discord_webhook_url;
+        }
+    });
+    
+    // Available notification methods based on user configuration
+    const availableNotificationMethods = $derived([
+        { 
+            key: 'email', 
+            label: 'Email', 
+            icon: faEnvelope, 
+            enabled: true, // Email is always available
+            description: 'Receive notifications via email',
+            checked: emailSelected
+        },
+        { 
+            key: 'discord', 
+            label: 'Discord', 
+            icon: faDiscord, 
+            enabled: user.notification_preferences.discord && !!user.discord_webhook_url, 
+            description: 'Receive rich notifications in Discord',
+            checked: discordSelected
+        }
+    ].filter(method => method.enabled));
+
+    // Validation: at least one method must be selected
+    const hasValidNotificationSelection = $derived(emailSelected || discordSelected);
+
+
+    const action = $derived(alert ? "/alerts?/edit" : "/alerts?/add");
 </script>
 
 <Modal
@@ -49,8 +105,8 @@
             method="POST"
             {action}
             use:enhance={() => {
-                // Removed console.log for vatRate
                 loading = true;
+                error = ""; // Clear any previous errors
                 return async ({ result, update }) => {
                     loading = false;
                     // Check result type for success or failure before accessing data
@@ -74,16 +130,16 @@
                             dispatch("success"); // Dispatch success event if needed
                         } else if (result.data?.errors) {
                             const errors = result.data.errors as AlertFormErrors;
-                            error = errors.price || "";
+                            error = errors.name || errors.price || errors.vatRate || "Validation error occurred.";
                         } else if (result.data?.error) {
-                            error = typeof result.data.error === 'string' ? result.data.error : "An unknown error occurred."; // Explicit type check
+                            error = typeof result.data.error === 'string' ? result.data.error : "An unknown error occurred.";
                         } else {
                             // Handle unexpected result structure or generic failure
                             error = "An unexpected error occurred.";
                         }
                     } else if (result.type === 'error') {
                          // Handle client-side errors or network issues if necessary
-                         error = result.error.message || "An error occurred during submission.";
+                         error = result.error?.message || "An error occurred during submission.";
                     }
                     // Ensure the form state is updated if necessary, e.g., after validation errors
                     update({ reset: false });
@@ -102,7 +158,7 @@
                 </p>
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                     Please enter the desired price <em>including</em> VAT according to your current selection; the alert will trigger based on this VAT-inclusive comparison, which incorporates the standard IPv4 cost. You will receive a single
-                    email notification, and the alert will automatically disable
+                    notification, and the alert will automatically disable
                     itself afterwards.
                 </p>
                 <p class="text-sm text-gray-600 dark:text-gray-300">
@@ -125,6 +181,8 @@
             {#if !alert}
                 <input type="hidden" name="vatRate" value={$settingsStore.currentVatRate ?? 0} />
             {/if}
+            <input type="hidden" name="emailNotifications" value={emailSelected ? 'true' : 'false'} />
+            <input type="hidden" name="discordNotifications" value={discordSelected ? 'true' : 'false'} />
 
             <Label class="flex flex-col space-y-1">
                 <span
@@ -160,9 +218,66 @@
                 />
             </Label>
 
+            <!-- Notification Method Selection -->
+            {#if availableNotificationMethods.length > 0}
+                <div class="space-y-3">
+                    <Label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Notification Methods
+                    </Label>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Your active notification methods (configured in <A href="/settings" class="underline">Settings</A>)
+                    </p>
+                    <div class="space-y-2">
+                        {#each availableNotificationMethods as method}
+                            <Label class="flex items-center space-x-3 p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                {#if method.key === 'email'}
+                                    <Checkbox 
+                                        bind:checked={emailSelected}
+                                        class="text-orange-500 focus:ring-orange-500"
+                                    />
+                                {:else}
+                                    <Checkbox 
+                                        bind:checked={discordSelected}
+                                        class="text-indigo-500 focus:ring-indigo-500"
+                                    />
+                                {/if}
+                                <div class="flex items-center space-x-2 flex-1">
+                                    <FontAwesomeIcon 
+                                        icon={method.icon} 
+                                        class="w-4 h-4 {method.key === 'discord' ? 'text-indigo-500' : 'text-gray-600 dark:text-gray-300'}"
+                                    />
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {method.label}
+                                        </div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            {method.description}
+                                        </div>
+                                    </div>
+                                </div>
+                            </Label>
+                        {/each}
+                    </div>
+                    
+                    {#if !hasValidNotificationSelection}
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3">
+                            <p class="text-sm text-red-900 dark:text-red-100">
+                                Please select at least one notification method.
+                            </p>
+                        </div>
+                    {/if}
+                </div>
+            {:else}
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3">
+                    <p class="text-sm text-yellow-900 dark:text-yellow-100">
+                        No notification methods are configured. Please configure at least one notification method in <A href="/settings" class="underline">Settings</A>.
+                    </p>
+                </div>
+            {/if}
+
             <!-- Error -->
             {#if error}
-                <Alert><strong>Error:</strong> {error || "Please enter a price between 20 and 1000 EUR."}</Alert>
+                <Alert color="red"><strong>Error:</strong> {error}</Alert>
             {/if}
 
             <!-- Action Buttons -->
@@ -170,11 +285,11 @@
                 <Button
                     type="button"
                     color="alternative"
-                    on:click={() => (open = false)}
+                    onclick={() => (open = false)}
                 >
                     Cancel
                 </Button>
-                <Button type="submit" color="primary" disabled={loading}>
+                <Button type="submit" color="primary" disabled={loading || !hasValidNotificationSelection}>
                     {#if loading}
                         <Spinner size="4" class="ms-0 me-2" /> Saving
                     {:else}

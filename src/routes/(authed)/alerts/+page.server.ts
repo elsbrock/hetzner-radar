@@ -6,6 +6,7 @@ import {
     MAX_NAME_LENGTH,
     updateAlert,
 } from "$lib/api/backend/alerts";
+import { getUser } from "$lib/api/backend/user";
 import { MAX_PRICE, MIN_PRICE } from "$lib/constants";
 import { fail, type Actions, type ServerLoad, type RequestEvent, type ServerLoadEvent } from "@sveltejs/kit";
 
@@ -13,13 +14,20 @@ import { fail, type Actions, type ServerLoad, type RequestEvent, type ServerLoad
 export const load: ServerLoad = async (event: ServerLoadEvent) => {
     const db = event.platform?.env.DB;
 
-    const alertResults = await getAlertsForUser(db!, event.locals.user!.id.toString());
+    const [alertResults, user] = await Promise.all([
+        getAlertsForUser(db!, event.locals.user!.id.toString()),
+        getUser(db!, event.locals.user!.id.toString())
+    ]);
 
     return {
         alerts: {
             active: alertResults.activeResults,
             triggered: alertResults.triggeredResults,
         },
+        user: {
+            discord_webhook_url: user?.discord_webhook_url,
+            notification_preferences: user?.notification_preferences || { email: true, discord: false }
+        }
     };
 }
 
@@ -59,6 +67,13 @@ export const actions: Actions = {
         const filter = formData.get("filter") as string;
         const price = formData.get("price") as string;
         const vatRateStr = formData.get("vatRate") as string;
+        const emailNotifications = formData.get("emailNotifications") === "true";
+        const discordNotifications = formData.get("discordNotifications") === "true";
+
+        // Validate that at least one notification method is selected
+        if (!emailNotifications && !discordNotifications) {
+            return fail(400, { success: false, error: "At least one notification method must be selected." });
+        }
 
         // Validate vatRate
         const vatRateNum = parseInt(vatRateStr, 10);
@@ -79,7 +94,7 @@ export const actions: Actions = {
         }
 
         try {
-            await createAlert(db!, event.locals.user!.id.toString(), name, filter, price, vatRateNum);
+            await createAlert(db!, event.locals.user!.id.toString(), name, filter, price, vatRateNum, emailNotifications, discordNotifications);
         } catch (e) {
             console.error(e);
             return fail(500, { success: false, error: "Failed to create alert" });
@@ -93,6 +108,13 @@ export const actions: Actions = {
         const name = formData.get("name") as string;
         const price = formData.get("price") as string;
         const alertId = formData.get("alertId") as string;
+        const emailNotifications = formData.get("emailNotifications") === "true";
+        const discordNotifications = formData.get("discordNotifications") === "true";
+
+        // Validate that at least one notification method is selected
+        if (!emailNotifications && !discordNotifications) {
+            return fail(400, { success: false, error: "At least one notification method must be selected." });
+        }
 
         const { isValid, errors } = validateAlert(name, price);
 
@@ -107,6 +129,8 @@ export const actions: Actions = {
                 alertId,
                 name,
                 price,
+                emailNotifications,
+                discordNotifications,
             );
         } catch (e) {
             console.error(e);

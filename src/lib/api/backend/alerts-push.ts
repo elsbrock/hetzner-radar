@@ -1,5 +1,7 @@
 import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 import { sendMail } from "$lib/mail";
+import { getUser } from "./user";
+import { sendDiscordNotification, createAlertDiscordEmbed } from "./discord";
 
 // Define the structure for the incoming raw server data
 export interface RawServerData {
@@ -80,7 +82,10 @@ export const MATCH_ALERTS_SQL = `
       pa.vat_rate,
       pa.user_id,
       pa.includes_ipv4_cost,
+      pa.email_notifications,
+      pa.discord_notifications,
       user.email,
+      user.discord_webhook_url,
       pa.created_at,
       pa.filter,
       c.id AS auction_id,
@@ -231,8 +236,8 @@ export const MATCH_ALERTS_SQL = `
 
 // SQL query to insert data into the price_alert_history table
 export const ALERT_HISTORY_INSERT_SQL = `
-  INSERT INTO price_alert_history (id, name, filter, price, vat_rate, trigger_price, user_id, created_at, triggered_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)
+  INSERT INTO price_alert_history (id, name, filter, price, vat_rate, trigger_price, user_id, created_at, triggered_at, email_notifications, discord_notifications)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, ?, ?)
 `;
 
 // SQL query to delete a processed alert
@@ -321,6 +326,8 @@ export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
           user_id: match.user_id,
           includes_ipv4_cost: match.includes_ipv4_cost,
           email: match.email,
+          discord_webhook_url: match.discord_webhook_url,
+          notification_preferences: match.notification_preferences,
           created_at: match.created_at
         },
         matchedAuctions: []
@@ -341,7 +348,7 @@ export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
 /**
  * Sends notification email for a matched alert
  */
-export async function sendAlertNotification(platform: any, alertInfo: any, triggerPrice: number): Promise<void> {
+export async function sendEmailNotification(platform: any, alertInfo: any, triggerPrice: number): Promise<void> {
   await sendMail(platform?.env, {
     from: {
       name: "Server Radar",
@@ -375,8 +382,57 @@ https://radar.iodev.org/
 }
 
 /**
+ * Sends notifications via all configured channels for a matched alert
+ */
+export async function sendAlertNotifications(platform: any, alertInfo: any, triggerPrice: number): Promise<void> {
+  // Use per-alert notification preferences with fallbacks for migration case
+  const discordEnabled = (alertInfo.discord_notifications ?? false) && alertInfo.discord_webhook_url;
+  const emailEnabled = alertInfo.email_notifications ?? true; // Default to true if null/undefined
+
+  let discordSent = false;
+
+  // Try Discord notification first if enabled and webhook URL is configured
+  if (discordEnabled) {
+    try {
+      const auctionUrl = `https://radar.iodev.org/alerts?view=${alertInfo.id}`;
+      const embed = createAlertDiscordEmbed(
+        alertInfo.name,
+        alertInfo.price,
+        triggerPrice,
+        alertInfo.vat_rate,
+        auctionUrl
+      );
+      
+      const success = await sendDiscordNotification(alertInfo.discord_webhook_url, {
+        embeds: [embed]
+      });
+      
+      if (success) {
+        discordSent = true;
+        console.log(`Discord notification sent successfully for alert ${alertInfo.id}`);
+      } else {
+        console.error(`Failed to send Discord notification for alert ${alertInfo.id}: Webhook request failed`);
+      }
+    } catch (error) {
+      console.error(`Failed to send Discord notification for alert ${alertInfo.id}:`, error);
+    }
+  }
+
+  // Send email notification if enabled and Discord wasn't sent or if Discord failed
+  if (emailEnabled && !discordSent) {
+    try {
+      await sendEmailNotification(platform, alertInfo, triggerPrice);
+      console.log(`Email notification sent for alert ${alertInfo.id}`);
+    } catch (error) {
+      console.error(`Failed to send email notification for alert ${alertInfo.id}:`, error);
+      // If both Discord and email fail, we've done our best
+    }
+  }
+}
+
+/**
  * Processes a matched alert by:
- * 1. Sending notification email
+ * 1. Sending notifications via all configured channels
  * 2. Inserting alert history record
  * 3. Storing matched auctions
  * 4. Deleting the processed alert
@@ -395,8 +451,8 @@ export async function processAlert(
     const ipv4Cost = alertInfo.includes_ipv4_cost ? HETZNER_IPV4_COST_CENTS / 100 : 0;
     const triggerPrice = (lowestAuctionPrice + ipv4Cost) * (1 + alertInfo.vat_rate / 100.0);
     
-    // Send notification email
-    await sendAlertNotification(platform, alertInfo, triggerPrice);
+    // Send notifications via all configured channels
+    await sendAlertNotifications(platform, alertInfo, triggerPrice);
     
     // Start a transaction for database operations
     const statements: PreparedStatement[] = [];
@@ -411,7 +467,9 @@ export async function processAlert(
       alertInfo.vat_rate,
       triggerPrice,
       alertInfo.user_id,
-      alertInfo.created_at
+      alertInfo.created_at,
+      alertInfo.email_notifications ?? true, // Default to true if null/undefined
+      alertInfo.discord_notifications ?? false // Default to false if null/undefined
     ));
     
     // Delete the processed alert

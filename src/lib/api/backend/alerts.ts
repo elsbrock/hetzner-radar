@@ -8,6 +8,8 @@ export interface PriceAlert {
     filter: string;
     price: string;
     vat_rate: number; // Added VAT rate
+    email_notifications: boolean;
+    discord_notifications: boolean;
     created_at: Date;
 }
 
@@ -16,6 +18,8 @@ export interface PriceAlertHistory {
     user_id: string;
     alert_id: string;
     vat_rate: number; // Added VAT rate
+    email_notifications: boolean;
+    discord_notifications: boolean;
     triggered_at: Date;
 }
 
@@ -91,12 +95,20 @@ export async function createAlert(
     filter: string,
     price: string,
     vatRate: number,
+    emailNotifications: boolean = true,
+    discordNotifications: boolean = false,
 ): Promise<void> {
     try {
+        // Convert price from string to integer (cents)
+        const priceInt = parseInt(price, 10);
+        if (isNaN(priceInt)) {
+            throw new Error('Invalid price value');
+        }
+        
         await db.prepare(
-            "INSERT INTO price_alert (user_id, name, filter, price, vat_rate) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO price_alert (user_id, name, filter, price, vat_rate, includes_ipv4_cost, email_notifications, discord_notifications) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         )
-        .bind(userId, name, filter, price, vatRate)
+        .bind(userId, name, filter, priceInt, vatRate, true, emailNotifications, discordNotifications) // Default to true for new alerts
         .run();
     } catch (error) {
         console.error(`Failed to create alert for user ${userId}:`, error);
@@ -110,12 +122,34 @@ export async function updateAlert(
     alertId: string,
     name: string,
     price: string,
+    emailNotifications?: boolean,
+    discordNotifications?: boolean,
 ): Promise<void> {
     try {
-        const result = await db.prepare(
-            "UPDATE price_alert SET name = ?, price = ? WHERE user_id = ? AND id = ?"
-        )
-        .bind(name, price, userId, alertId)
+        // Convert price from string to integer (cents)
+        const priceInt = parseInt(price, 10);
+        if (isNaN(priceInt)) {
+            throw new Error('Invalid price value');
+        }
+        
+        let sql = "UPDATE price_alert SET name = ?, price = ?";
+        let params = [name, priceInt];
+        
+        // Add notification preferences if provided
+        if (emailNotifications !== undefined) {
+            sql += ", email_notifications = ?";
+            params.push(emailNotifications ? 1 : 0);
+        }
+        if (discordNotifications !== undefined) {
+            sql += ", discord_notifications = ?";
+            params.push(discordNotifications ? 1 : 0);
+        }
+        
+        sql += " WHERE user_id = ? AND id = ?";
+        params.push(userId, alertId);
+        
+        const result = await db.prepare(sql)
+        .bind(...params)
         .run();
     } catch (error) {
         console.error(`Failed to update alert ${alertId} for user ${userId}:`, error);

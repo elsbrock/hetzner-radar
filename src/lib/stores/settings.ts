@@ -6,6 +6,15 @@ export type Settings = {
   [key: string]: any;
 };
 
+/**
+ * Notification Behavior:
+ * - Discord notifications are preferred when enabled and configured with a valid webhook URL
+ * - Email notifications serve as automatic fallback when Discord is disabled or fails
+ * - Only one notification is sent per alert: Discord if successful, otherwise email
+ * - This prevents duplicate notifications while ensuring reliable delivery
+ * - If both Discord and email fail, the alert is still processed but user gets no notification
+ */
+
 // Function to initialize settings from localStorage
 function createSettingsStore() {
   const storedSettings = typeof window !== 'undefined'

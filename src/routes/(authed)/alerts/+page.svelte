@@ -91,6 +91,7 @@
 <AlertModal
     bind:alert={selectedAlert}
     bind:open={showEdit}
+    user={data.user}
     on:success={() => invalidateAll()}
 />
 

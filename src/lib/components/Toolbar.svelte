@@ -11,11 +11,24 @@
     import type { PriceAlert } from "$lib/api/backend/alerts";
 
     // Props
-    export let alert: PriceAlert | null = null;
-    export let timeUnitPrice: "perHour" | "perMonth" = "perHour";
+    let { 
+        alert = $bindable(null),
+        timeUnitPrice = $bindable("perHour"),
+        user = { notification_preferences: { email: true, discord: false } }
+    }: {
+        alert: PriceAlert | null;
+        timeUnitPrice: "perHour" | "perMonth";
+        user?: {
+            discord_webhook_url?: string | null;
+            notification_preferences: {
+                email: boolean;
+                discord: boolean;
+            };
+        };
+    } = $props();
 
     // Local state
-    let alertDialogOpen = false;
+    let alertDialogOpen = $state(false);
 
     // Event handlers
     function handleSave() {
@@ -40,7 +53,7 @@
     }
 
     // Computed properties
-    $: alertExists = alert !== null && alert !== undefined;
+    const alertExists = $derived(alert !== null && alert !== undefined);
 </script>
 
 <div
@@ -60,7 +73,7 @@
                 size="sm"
                 color="alternative"
                 class="shadow-sm"
-                on:click={handleSave}
+                onclick={handleSave}
             >
                 Save
             </Button>
@@ -68,7 +81,7 @@
                 size="sm"
                 color="alternative"
                 class="shadow-sm"
-                on:click={handleDelete}
+                onclick={handleDelete}
             >
                 Delete
             </Button>
@@ -90,26 +103,29 @@
                 <AlertModal
                     bind:open={alertDialogOpen}
                     {alert}
+                    {user}
                     on:success={handleAlertSuccess}
                 />
                 <Button
                     color="alternative"
                     size="sm"
                     id="price-alert"
-                    on:click={openAlertDialog}
+                    onclick={openAlertDialog}
                 >
                     Edit
                 </Button>
             {:else}
                 <AlertModal
                     bind:open={alertDialogOpen}
+                    {alert}
+                    {user}
                     on:success={handleAlertSuccess}
                 />
                 <Button
                     color="alternative"
                     size="sm"
                     id="price-alert"
-                    on:click={openAlertDialog}
+                    onclick={openAlertDialog}
                 >
                     Create
                 </Button>
@@ -134,14 +150,14 @@
             <Button
                 class="px-2"
                 disabled={timeUnitPrice === "perHour"}
-                on:click={() => selectTimeUnit("perHour")}
+                onclick={() => selectTimeUnit("perHour")}
             >
                 Hourly
             </Button>
             <Button
                 class="px-2"
                 disabled={timeUnitPrice === "perMonth"}
-                on:click={() => selectTimeUnit("perMonth")}
+                onclick={() => selectTimeUnit("perMonth")}
             >
                 Monthly
             </Button>
