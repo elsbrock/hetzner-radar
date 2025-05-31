@@ -25,22 +25,16 @@
     {
       "binding": "RATE_LIMIT",
       "service": "rate-limiter"
+    },
+    {
+      "binding": "CLOUD_STATUS",
+      "service": "cloud-availability"
     }
   ],
   "env": {
     "production": {
       "compatibility_date": "2024-09-23",
       "compatibility_flags": ["nodejs_compat"],
-      "services": [
-        {
-          "binding": "RATE_LIMIT",
-          "service": "rate-limiter"
-        },
-        {
-          "binding": "CLOUD_STATUS",
-          "service": "cloud-availability"
-        }
-      ],
       "placement": {
         "mode": "smart"
       },
@@ -58,16 +52,6 @@
     "preview": {
       "compatibility_date": "2024-09-23",
       "compatibility_flags": ["nodejs_compat"],
-      "services": [
-        {
-          "binding": "RATE_LIMIT",
-          "service": "rate-limiter"
-        },
-        {
-          "binding": "CLOUD_STATUS",
-          "service": "cloud-availability"
-        }
-      ],
       "placement": {
         "mode": "smart"
       },
