@@ -14,7 +14,7 @@ const config = {
 				include: ['/*'],
 				exclude: ['<all>']
 			},
-			config: 'wrangler.toml',
+			config: 'wrangler.jsonc',
 		})
 	}
 };
