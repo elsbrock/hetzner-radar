@@ -85,7 +85,7 @@ export function createAlertDiscordEmbed(
 export function createTestDiscordEmbed(): DiscordEmbed {
     return {
         title: '✅ Discord Webhook Test',
-        description: 'This is a test notification from Hetzner Radar. Your Discord webhook is working correctly!',
+        description: 'This is a test notification from Server Radar. Your Discord webhook is working correctly!',
         color: 0x5865f2, // Discord blurple color
         fields: [
             {
@@ -95,7 +95,7 @@ export function createTestDiscordEmbed(): DiscordEmbed {
             }
         ],
         footer: {
-            text: 'Hetzner Radar • Test Notification'
+            text: 'Server Radar • Test Notification'
         },
         timestamp: new Date().toISOString()
     };
