@@ -8,11 +8,10 @@
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { Button, ButtonGroup, Tooltip } from "flowbite-svelte";
     import AlertModal from "./AlertModal.svelte";
-    // Adjust based on your project structure
-    import type { Alert } from "./types"; // Define your Alert type accordingly
+    import type { PriceAlert } from "$lib/api/backend/alerts";
 
     // Props
-    export let alert: Alert | null = null;
+    export let alert: PriceAlert | null = null;
     export let timeUnitPrice: "perHour" | "perMonth" = "perHour";
 
     // Local state

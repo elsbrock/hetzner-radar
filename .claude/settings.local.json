@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit:*)",
+      "Bash(playwright test)",
+      "Bash(npm run check:*)",
+      "Bash(sed:*)"
+    ],
+    "deny": []
+  }
+}

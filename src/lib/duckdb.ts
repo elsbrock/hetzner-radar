@@ -1,6 +1,6 @@
 import * as duckdb from '@duckdb/duckdb-wasm';
 
-let worker;
+let worker: Worker | null = null;
 let db: duckdb.AsyncDuckDB | null = null;
 
 export async function createDB() {

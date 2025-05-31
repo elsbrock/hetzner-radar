@@ -17,11 +17,13 @@ export async function initializeDB() {
 	}
 
 	idb = await createDB();
-	await initDB(idb, (loaded, total) => {
-		const progress = Math.round((loaded / total) * 100);
-		dbInitProgress.set(progress);
-		console.log(`Initialization Progress: ${progress}%`);
-	});
+	if (idb) {
+		await initDB(idb, (loaded, total) => {
+			const progress = Math.round((loaded / total) * 100);
+			dbInitProgress.set(progress);
+			console.log(`Initialization Progress: ${progress}%`);
+		});
+	}
 
 	db.set(idb);
 	return db;

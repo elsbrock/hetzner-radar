@@ -82,7 +82,7 @@ async function withDbConnections(
     const maxConnections = callback.length; // Determines how many connections are needed based on the number of parameters in the callback
     const connections = await Promise.all(
         Array(maxConnections)
-            .fill()
+            .fill(null)
             .map(() => db.connect()),
     );
 

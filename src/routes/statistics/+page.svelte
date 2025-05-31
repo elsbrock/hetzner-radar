@@ -565,6 +565,18 @@
                   tooltip: {
                     mode: "index",
                   },
+                  legend: {
+                    align: "start",
+                    labels: {
+                      boxWidth: 15,
+                      padding: 10,
+                      font: {
+                        size: 11,
+                      },
+                    },
+                    maxHeight: 250,
+                    display: true,
+                  },
                 },
                 scales: {
                   y: {
@@ -584,23 +596,6 @@
                   },
                   x: {
                     stacked: true,
-                  },
-                },
-                plugins: {
-                  legend: {
-                    align: "start",
-                    labels: {
-                      boxWidth: 15,
-                      padding: 10,
-                      font: {
-                        size: 11,
-                      },
-                    },
-                    maxHeight: 250,
-                    display: true,
-                  },
-                  tooltip: {
-                    mode: "index",
                   },
                 },
               }}
@@ -635,6 +630,18 @@
                   tooltip: {
                     mode: "index",
                   },
+                  legend: {
+                    align: "start",
+                    labels: {
+                      boxWidth: 15,
+                      padding: 10,
+                      font: {
+                        size: 11,
+                      },
+                    },
+                    maxHeight: 250,
+                    display: true,
+                  },
                 },
                 scales: {
                   y: {
@@ -654,23 +661,6 @@
                   },
                   x: {
                     stacked: true,
-                  },
-                },
-                plugins: {
-                  legend: {
-                    align: "start",
-                    labels: {
-                      boxWidth: 15,
-                      padding: 10,
-                      font: {
-                        size: 11,
-                      },
-                    },
-                    maxHeight: 250,
-                    display: true,
-                  },
-                  tooltip: {
-                    mode: "index",
                   },
                 },
               }}

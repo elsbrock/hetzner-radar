@@ -132,6 +132,8 @@
 
 <div
   class="relative max-w-xs mx-auto min-h-[12rem]"
+  role="region"
+  aria-label="Sample server configuration cards"
   onmouseenter={handleMouseEnter}
   onmouseleave={handleMouseLeave}
 > <!-- Container for the stack -->

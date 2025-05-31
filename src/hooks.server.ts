@@ -9,7 +9,7 @@ export async function handleError({ error, event, status, message }) {
     console.error("unhandled error", event, error, errorId);
 
     return {
-        message: 'Whoops! ' + error.message, // Use error.message for clarity
+        message: 'Whoops! ' + (error instanceof Error ? error.message : 'An unexpected error occurred'), // Use error.message for clarity
         errorId
     };
 }

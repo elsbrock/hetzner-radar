@@ -1,6 +1,7 @@
 import { dev } from "$app/environment";
+import type { ActionFailure } from "@sveltejs/kit";
 
-type ActionHandler = (event: any) => Promise<{ success: boolean; error?: string }>;
+type ActionHandler = (event: any) => Promise<any>;
 
 export function rateLimit(handler: ActionHandler, action: string = "default") {
     if (dev) {

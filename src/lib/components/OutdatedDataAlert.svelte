@@ -53,8 +53,10 @@
             disabled={reloading}
             on:click={async () => {
                 reloading = true;
-                await reloadDB($db);
-                $db = $db;
+                if ($db) {
+                    await reloadDB($db);
+                    $db = $db;
+                }
                 showElement = false;
                 reloading = false;
             }}

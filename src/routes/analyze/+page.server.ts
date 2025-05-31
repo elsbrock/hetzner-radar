@@ -1,8 +1,8 @@
 import { getAlertForUser } from "$lib/api/backend/alerts";
 import { decodeFilterString } from "$lib/filter";
+import type { PageServerLoad } from './$types';
 
-/** @type {import('./$types').PageServerLoad} */
-export async function load(event: Event) {
+export const load: PageServerLoad = async (event) => {
     let alert = null;
     if (!event.locals.session) {
         return { alert };
@@ -12,11 +12,11 @@ export async function load(event: Event) {
     const db = event.platform?.env.DB;
     const filterString = event.url.searchParams.get("filter");
 
-    if (filterString) {
+    if (filterString && db && event.locals.user) {
         const filter = decodeFilterString(filterString);
         alert = getAlertForUser(
             db,
-            event.locals.user.id,
+            event.locals.user.id.toString(),
             JSON.stringify(filter),
         );
     }
@@ -24,4 +24,4 @@ export async function load(event: Event) {
     return {
         alert,
     };
-}
+};

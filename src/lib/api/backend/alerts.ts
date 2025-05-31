@@ -81,7 +81,7 @@ export async function isBelowMaxAlerts(db: DB, userId: string): Promise<boolean>
     .bind(userId)
     .first<{ count: number }>();
 
-    return (result?.count ?? 0) < MAX_ALERTS;
+    return ((result as unknown as { count: number })?.count ?? 0) < MAX_ALERTS;
 }
 
 export async function createAlert(

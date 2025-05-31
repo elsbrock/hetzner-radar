@@ -40,7 +40,7 @@
   import { faPercentage } from '@fortawesome/free-solid-svg-icons';
 
   // Intermediate variable for two-way binding, initialized from store
-  let selectedCountryCode = $settingsStore.vatSelection.countryCode;
+  let selectedCountryCode = $settingsStore.vatSelection?.countryCode || 'None';
 
   // Helper to format the option text - updated for brevity
   function formatOptionText(flag: string, name: string, rate: number): string {
