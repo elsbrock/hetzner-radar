@@ -21,6 +21,8 @@ export interface DiscordWebhookPayload {
 
 export async function sendDiscordNotification(webhookUrl: string, payload: DiscordWebhookPayload): Promise<boolean> {
     try {
+        console.log(`Sending Discord notification to webhook: ${webhookUrl.substring(0, 50)}...`);
+        
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
@@ -28,6 +30,16 @@ export async function sendDiscordNotification(webhookUrl: string, payload: Disco
             },
             body: JSON.stringify(payload),
         });
+
+        if (!response.ok) {
+            console.error(`Discord webhook returned status ${response.status}: ${response.statusText}`);
+            try {
+                const errorBody = await response.text();
+                console.error('Discord error response:', errorBody);
+            } catch (e) {
+                console.error('Could not read error response body');
+            }
+        }
 
         return response.ok;
     } catch (error) {

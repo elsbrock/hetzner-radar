@@ -327,7 +327,8 @@ export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
           includes_ipv4_cost: match.includes_ipv4_cost,
           email: match.email,
           discord_webhook_url: match.discord_webhook_url,
-          notification_preferences: match.notification_preferences,
+          email_notifications: match.email_notifications,
+          discord_notifications: match.discord_notifications,
           created_at: match.created_at
         },
         matchedAuctions: []
@@ -385,9 +386,19 @@ https://radar.iodev.org/
  * Sends notifications via all configured channels for a matched alert
  */
 export async function sendAlertNotifications(platform: any, alertInfo: any, triggerPrice: number): Promise<void> {
+  // Log the alertInfo for debugging
+  console.log(`Processing notifications for alert ${alertInfo.id}:`, {
+    discord_notifications: alertInfo.discord_notifications,
+    email_notifications: alertInfo.email_notifications,
+    discord_webhook_url: alertInfo.discord_webhook_url ? 'present' : 'missing',
+    email: alertInfo.email ? 'present' : 'missing'
+  });
+
   // Use per-alert notification preferences with fallbacks for migration case
   const discordEnabled = (alertInfo.discord_notifications ?? false) && alertInfo.discord_webhook_url;
   const emailEnabled = alertInfo.email_notifications ?? true; // Default to true if null/undefined
+
+  console.log(`Notification settings: Discord=${discordEnabled}, Email=${emailEnabled}`);
 
   let discordSent = false;
 
@@ -416,6 +427,8 @@ export async function sendAlertNotifications(platform: any, alertInfo: any, trig
     } catch (error) {
       console.error(`Failed to send Discord notification for alert ${alertInfo.id}:`, error);
     }
+  } else {
+    console.log(`Discord notification skipped for alert ${alertInfo.id}: ${!alertInfo.discord_notifications ? 'disabled' : 'no webhook URL'}`);
   }
 
   // Send email notification if enabled and Discord wasn't sent or if Discord failed
@@ -427,6 +440,8 @@ export async function sendAlertNotifications(platform: any, alertInfo: any, trig
       console.error(`Failed to send email notification for alert ${alertInfo.id}:`, error);
       // If both Discord and email fail, we've done our best
     }
+  } else if (!emailEnabled && !discordSent) {
+    console.warn(`No notifications sent for alert ${alertInfo.id}: All methods disabled or failed`);
   }
 }
 
