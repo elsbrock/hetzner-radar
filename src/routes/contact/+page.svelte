@@ -1,5 +1,5 @@
 <script>
-    import { faGithub } from "@fortawesome/free-brands-svg-icons";
+    import { faDiscord, faGithub } from "@fortawesome/free-brands-svg-icons";
     import {
             faCoffee,
             faEnvelope,
@@ -133,10 +133,19 @@
                 More Ways to Connect
             </h2>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-                You can also discuss on Github. Stay updated with the latest
-                developments and engage with the community!
+                Join our Discord community for real-time discussions, or use GitHub Discussions for longer-form conversations.
+                Stay updated with the latest developments and engage with the community!
             </p>
             <div class="flex justify-center space-x-4">
+                <Button
+                    href="https://discord.gg/dcuGfURbdc"
+                    color="primary"
+                    size="lg"
+                    class="flex items-center"
+                >
+                    <FontAwesomeIcon icon={faDiscord} class="mr-2" />
+                    Join Discord
+                </Button>
                 <Button
                     href="https://github.com/elsbrock/hetzner-radar/discussions"
                     color="light"
@@ -146,7 +155,6 @@
                     <FontAwesomeIcon icon={faGithub} class="mr-2" />
                     GitHub Discussions
                 </Button>
-                <!-- Add more buttons/links as needed -->
             </div>
         </section>
     </div>

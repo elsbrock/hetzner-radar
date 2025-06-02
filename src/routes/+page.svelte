@@ -2,7 +2,7 @@
     import { withDbConnections } from "$lib/api/frontend/dbapi";
     // Removed ServerConfiguration import as it's now only used in SampleCardStack
     import SampleCardStack from "$lib/components/SampleCardStack.svelte"; // Import the new component
-    import { faGithub } from "@fortawesome/free-brands-svg-icons";
+    import { faDiscord, faGithub } from "@fortawesome/free-brands-svg-icons";
     import {
         faBell,
         faBug,
@@ -13,10 +13,11 @@
         faFilter,
         faForwardStep,
         faGavel, // Added
+        faQuestionCircle,
         faUsers,
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-    import { Button, Card, Timeline, TimelineItem } from "flowbite-svelte";
+    import { Accordion, AccordionItem, Button, Card, Timeline, TimelineItem } from "flowbite-svelte";
     import { ArrowRightOutline } from "flowbite-svelte-icons";
     // Added icon import
     import { onMount } from "svelte";
@@ -243,12 +244,10 @@
                     >{/each}&nbsp;for Hetzner Auction Servers
             </h1>
             <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
-                Tired of missing the best deals? <strong>Server Radar</strong>
-                tracks prices, provides historical insights, advanced filtering,
-                and
-                <span class="underline decoration-orange-500 decoration-2"
-                    >free email alerts</span
-                >. Find the right server at the right price, effortlessly.
+                <strong>Server Radar</strong> is a free, open-source tool built by the community, for the community.
+                Track Hetzner auction prices, get historical insights, use advanced filtering,
+                and receive <span class="underline decoration-orange-500 decoration-2">instant notifications</span>
+                via email, Discord, and more — all without any cost or hidden fees.
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -280,199 +279,10 @@
         </div>
     </section>
 
-    <!-- Product Demo Section -->
-    <section
-        id="demo"
-        class="mx-auto max-w-7xl text-center mb-12 hidden md:block"
-    >
-        <!-- Adjusted margin, hidden on mobile -->
-        <!--ARCADE EMBED START-->
+    <!-- Live Metrics -->
+    <section class="mx-auto mb-16 max-w-7xl">
         <div
-            style="position: relative; padding-bottom: calc(55.677083333333336% + 41px); height: 0; width: 100%;"
-        >
-            <iframe
-                src="https://demo.arcade.software/KVRZCAXbeIJw0GyOs6Ob?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
-                title="Effortlessly Track and Optimize Server Auction Prices with Server Radar"
-                frameborder="0"
-                loading="lazy"
-                allowfullscreen
-                allow="clipboard-write"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; color-scheme: light;"
-            ></iframe>
-        </div>
-        <!--ARCADE EMBED END-->
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="mx-auto mb-20 max-w-7xl">
-        <h2
-            class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
-        >
-            Key Features
-        </h2>
-        <p
-            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
-        >
-            <strong>Server Radar</strong> equips you with the tools to navigate the
-            Hetzner Server Auction market effectively. Save time, save money, and
-            find the perfect configuration with features designed for smart purchasing:
-        </p>
-        <div
-            class="grid grid-cols-1 justify-items-center gap-x-4 gap-y-10 md:grid-cols-2 lg:grid-cols-3"
-        >
-            <Card class="flex flex-col items-center text-center shadow-md">
-                <FontAwesomeIcon
-                    class="mb-4 w-8 h-8 text-orange-500"
-                    icon={faChartLine}
-                    size="3x"
-                />
-                <h3
-                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
-                >
-                    Price History Tracking
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400">
-                    Monitor price trends for specific server configurations.
-                    Understand market fluctuations and make strategic purchasing
-                    decisions based on historical data to secure the best value.
-                </p>
-            </Card>
-
-            <Card class="flex flex-col items-center text-center shadow-md">
-                <FontAwesomeIcon
-                    class="mb-4 w-8 h-8 text-orange-500"
-                    icon={faFilter}
-                    size="3x"
-                />
-                <h3
-                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
-                >
-                    Advanced Filtering
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400">
-                    Filter servers by precise specs, including CPU, RAM, and
-                    exact disk configurations. Find exactly what you need
-                    quickly and customize your search to match specific
-                    requirements.
-                </p>
-            </Card>
-
-            <Card class="flex flex-col items-center text-center shadow-md">
-                <FontAwesomeIcon
-                    class="mb-4 w-8 h-8 text-orange-500"
-                    icon={faEye}
-                    size="3x"
-                />
-                <h3
-                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
-                >
-                    Price Alerts
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400">
-                    Set your target price and get notified via email when a
-                    matching server hits the auction. Plan your purchases
-                    effectively and never miss out on the perfect deal again –
-                    completely free!
-                </p>
-            </Card>
-        </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="mx-auto my-20 max-w-7xl">
-        <h2
-            class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
-        >
-            How It Works
-        </h2>
-        <p
-            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
-        >
-            Finding the right Hetzner auction server at the best price is simple
-            with <strong>Server Radar</strong>. Follow these steps to make
-            smarter purchasing decisions:
-        </p>
-        <Timeline
-            order="vertical"
-            class="mx-auto max-w-3xl bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
-        >
-            <TimelineItem title="Step 1: Filter & Find">
-                <svelte:fragment slot="icon">
-                    <span
-                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
-                    >
-                        <FontAwesomeIcon
-                            icon={faForwardStep}
-                            class=" text-orange-600 dark:text-orange-300"
-                        />
-                    </span>
-                </svelte:fragment>
-                <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400"
-                >
-                    Use advanced filters to specify the exact server
-                    specifications you need – CPU, RAM, storage, location, and
-                    more. Instantly see all matching configurations observed in
-                    the auction history.
-                </p>
-            </TimelineItem>
-            <TimelineItem title="Step 2: Analyze Price Trends">
-                <svelte:fragment slot="icon">
-                    <span
-                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
-                    >
-                        <FontAwesomeIcon
-                            icon={faChartLine}
-                            class=" text-orange-600 dark:text-orange-300"
-                        />
-                    </span>
-                </svelte:fragment>
-                <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400"
-                >
-                    Review detailed price histories and availability trends for
-                    your chosen configurations. Understand market movements and
-                    make data-driven decisions based on comprehensive historical
-                    insights.
-                </p>
-            </TimelineItem>
-            <TimelineItem title="Step 3: Configure Alerts">
-                <svelte:fragment slot="icon">
-                    <span
-                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
-                    >
-                        <FontAwesomeIcon
-                            icon={faBell}
-                            class=" text-orange-600 dark:text-orange-300"
-                        />
-                    </span>
-                </svelte:fragment>
-                <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400 -mb-10"
-                >
-                    Set your target price for desired configurations and receive
-                    free email notifications the moment a matching server
-                    appears in the auction. Purchase confidently, knowing you've
-                    secured a great deal.
-                </p>
-            </TimelineItem>
-        </Timeline>
-    </section>
-
-    <section id="features" class="mx-auto mb-20 max-w-7xl">
-        <h2
-            class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
-        >
-            At A Glance
-        </h2>
-        <p
-            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
-        >
-            Key metrics showcasing the activity and reach of the Server Radar
-            platform.
-        </p>
-        <div
-            class="mx-auto my-12 max-w-7xl flex flex-col sm:flex-row flex-wrap gap-y-8 gap-x-4 items-center justify-around"
+            class="mx-auto max-w-7xl flex flex-col sm:flex-row flex-wrap gap-y-8 gap-x-4 items-center justify-around"
         >
             <!-- Auctions Tracked -->
             <div
@@ -683,6 +493,303 @@
         </div>
     </section>
 
+    <!-- Product Demo Section -->
+    <section
+        id="demo"
+        class="mx-auto max-w-7xl text-center mb-12 hidden md:block"
+    >
+        <!-- Adjusted margin, hidden on mobile -->
+        <!--ARCADE EMBED START-->
+        <div
+            style="position: relative; padding-bottom: calc(55.677083333333336% + 41px); height: 0; width: 100%;"
+        >
+            <iframe
+                src="https://demo.arcade.software/KVRZCAXbeIJw0GyOs6Ob?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+                title="Effortlessly Track and Optimize Server Auction Prices with Server Radar"
+                frameborder="0"
+                loading="lazy"
+                allowfullscreen
+                allow="clipboard-write"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; color-scheme: light;"
+            ></iframe>
+        </div>
+        <!--ARCADE EMBED END-->
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="mx-auto mb-20 max-w-7xl">
+        <h2
+            class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
+        >
+            Key Features
+        </h2>
+        <p
+            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
+        >
+            Everything you need to navigate the Hetzner Server Auction effectively.
+            Built by the community, refined through real-world use, and completely free forever:
+        </p>
+        <div
+            class="grid grid-cols-1 justify-items-center gap-x-4 gap-y-10 md:grid-cols-2 lg:grid-cols-3"
+        >
+            <Card class="flex flex-col items-center text-center shadow-md">
+                <FontAwesomeIcon
+                    class="mb-4 w-8 h-8 text-orange-500"
+                    icon={faChartLine}
+                    size="3x"
+                />
+                <h3
+                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
+                >
+                    Price History Tracking
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Monitor price trends for specific server configurations.
+                    Understand market fluctuations and make strategic purchasing
+                    decisions based on historical data to secure the best value.
+                </p>
+            </Card>
+
+            <Card class="flex flex-col items-center text-center shadow-md">
+                <FontAwesomeIcon
+                    class="mb-4 w-8 h-8 text-orange-500"
+                    icon={faFilter}
+                    size="3x"
+                />
+                <h3
+                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
+                >
+                    Advanced Filtering
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Filter servers by precise specs, including CPU, RAM, and
+                    exact disk configurations. Find exactly what you need
+                    quickly and customize your search to match specific
+                    requirements.
+                </p>
+            </Card>
+
+            <Card class="flex flex-col items-center text-center shadow-md">
+                <FontAwesomeIcon
+                    class="mb-4 w-8 h-8 text-orange-500"
+                    icon={faEye}
+                    size="3x"
+                />
+                <h3
+                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
+                >
+                    Smart Notifications
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Set your target price and get notified via email, Discord, or other
+                    supported channels when a matching server hits the auction. Plan your purchases
+                    effectively and never miss out on the perfect deal again –
+                    completely free!
+                </p>
+            </Card>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="mx-auto my-20 max-w-7xl">
+        <h2
+            class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
+        >
+            How It Works
+        </h2>
+        <p
+            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
+        >
+            Finding the right Hetzner auction server at the best price is simple
+            with <strong>Server Radar</strong>. Follow these steps to make
+            smarter purchasing decisions:
+        </p>
+        <Timeline
+            order="vertical"
+            class="mx-auto max-w-3xl bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
+        >
+            <TimelineItem title="Step 1: Filter & Find">
+                <svelte:fragment slot="icon">
+                    <span
+                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
+                    >
+                        <FontAwesomeIcon
+                            icon={faForwardStep}
+                            class=" text-orange-600 dark:text-orange-300"
+                        />
+                    </span>
+                </svelte:fragment>
+                <p
+                    class="text-base font-normal text-gray-500 dark:text-gray-400"
+                >
+                    Use advanced filters to specify the exact server
+                    specifications you need – CPU, RAM, storage, location, and
+                    more. Instantly see all matching configurations observed in
+                    the auction history.
+                </p>
+            </TimelineItem>
+            <TimelineItem title="Step 2: Analyze Price Trends">
+                <svelte:fragment slot="icon">
+                    <span
+                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
+                    >
+                        <FontAwesomeIcon
+                            icon={faChartLine}
+                            class=" text-orange-600 dark:text-orange-300"
+                        />
+                    </span>
+                </svelte:fragment>
+                <p
+                    class="text-base font-normal text-gray-500 dark:text-gray-400"
+                >
+                    Review detailed price histories and availability trends for
+                    your chosen configurations. Understand market movements and
+                    make data-driven decisions based on comprehensive historical
+                    insights.
+                </p>
+            </TimelineItem>
+            <TimelineItem title="Step 3: Configure Alerts">
+                <svelte:fragment slot="icon">
+                    <span
+                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
+                    >
+                        <FontAwesomeIcon
+                            icon={faBell}
+                            class=" text-orange-600 dark:text-orange-300"
+                        />
+                    </span>
+                </svelte:fragment>
+                <p
+                    class="text-base font-normal text-gray-500 dark:text-gray-400 -mb-10"
+                >
+                    Set your target price for desired configurations and receive
+                    free notifications via email, Discord, or your preferred channel
+                    the moment a matching server appears in the auction. Purchase confidently,
+                    knowing you've secured a great deal.
+                </p>
+            </TimelineItem>
+        </Timeline>
+    </section>
+
+
+
+    <!-- Community Section -->
+    <section id="community" class="mx-auto my-20 max-w-7xl">
+        <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-sm p-8 text-center">
+            <h2 class="mb-4 text-4xl font-semibold text-gray-800 dark:text-gray-100">
+                Join Our Community
+            </h2>
+            <p class="mb-8 mx-auto md:w-2/3 text-gray-600 dark:text-gray-400">
+                Connect with other Server Radar users, share tips, get help, and stay updated on the latest features. Our Discord community is the perfect place to discuss server configurations and auction strategies.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Button
+                    href="https://discord.gg/dcuGfURbdc"
+                    class="px-6 py-3 text-lg flex items-center shadow-sm"
+                    color="primary"
+                >
+                    <FontAwesomeIcon icon={faDiscord} class="mr-2" />
+                    Join our Discord
+                </Button>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <FontAwesomeIcon icon={faUsers} class="mr-1" />
+                    Join 100+ community members
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Open Source & Contributors Section -->
+    <section
+        id="open-source"
+        class="mx-auto my-20 max-w-7xl"
+    >
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 justify-items-center">
+            <!-- Open Source Commitment -->
+            <Card class="shadow-sm border-t-4 border-orange-500">
+                <h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
+                    Built in the Open
+                </h2>
+                <p class="mb-6 text-gray-600 dark:text-gray-400">
+                    <strong>Server Radar</strong> is 100% open source and community-driven.
+                    Every line of code is transparent, and every feature is built with community input.
+                    We believe in building tools that serve users, not shareholders.
+                </p>
+                <ul class="space-y-3 mb-6 text-gray-600 dark:text-gray-400">
+                    <li class="flex items-start gap-2">
+                        <span class="text-orange-500 mt-1">✓</span>
+                        <span>No vendor lock-in or proprietary features</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-orange-500 mt-1">✓</span>
+                        <span>Self-hostable for complete control</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-orange-500 mt-1">✓</span>
+                        <span>Community-reviewed for security and privacy</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-orange-500 mt-1">✓</span>
+                        <span>Built with modern, maintainable tech stack</span>
+                    </li>
+                </ul>
+                <div class="flex gap-4">
+                    <Button
+                        size="sm"
+                        href="https://github.com/elsbrock/hetzner-radar"
+                        class="flex items-center"
+                    >
+                        <FontAwesomeIcon icon={faGithub} class="mr-2" />
+                        View Source Code
+                    </Button>
+                    <Button
+                        size="sm"
+                        color="alternative"
+                        href="https://github.com/elsbrock/hetzner-radar/blob/main/CONTRIBUTING.md"
+                        class="flex items-center"
+                    >
+                        Contribute
+                    </Button>
+                </div>
+            </Card>
+
+            <!-- Contributors & Support -->
+            <Card class="shadow-sm border-t-4 border-orange-500">
+                <h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
+                    Community Powered
+                </h2>
+                <p class="mb-6 text-gray-600 dark:text-gray-400">
+                    Server Radar exists thanks to contributors who donate their time and expertise.
+                    Join us in making server hunting accessible to everyone.
+                </p>
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">How to contribute:</h3>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li class="flex items-center gap-2">
+                            <FontAwesomeIcon icon={faBug} class="w-4 h-4 text-orange-500" />
+                            <span>Report bugs and suggest features</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <FontAwesomeIcon icon={faGithub} class="w-4 h-4 text-orange-500" />
+                            <span>Submit pull requests</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <FontAwesomeIcon icon={faUsers} class="w-4 h-4 text-orange-500" />
+                            <span>Help others in our Discord community</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-orange-500">☕</span>
+                            <span>Support the project with a coffee</span>
+                        </li>
+                    </ul>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+                    Special thanks to all our contributors who make this project possible!
+                </p>
+            </Card>
+        </div>
+    </section>
+
     <!-- Testimonials Section -->
     <section id="testimonials" class="mx-auto my-20 max-w-7xl">
         <h2
@@ -702,9 +809,9 @@
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             <Card class="shadow-sm flex flex-col justify-between border-l-8">
                 <p class="text-gray-600 dark:text-gray-400 mb-3 italic">
-                    "Server Radar has been instrumental in helping me find the
-                    best deals on Hetzner servers. The price tracking feature is
-                    a game-changer!"
+                    "As a startup founder, Server Radar helps me stretch our infrastructure
+                    budget. The open-source nature means I can trust it and even contribute
+                    features we need!"
                 </p>
                 <div class="flex items-center">
                     <img
@@ -728,9 +835,9 @@
 
             <Card class="shadow-sm flex flex-col justify-between border-l-8">
                 <p class="text-gray-600 dark:text-gray-400 mb-3 italic">
-                    "Thanks to Server Radar, I've been able to optimize my
-                    server purchases and save a significant amount of money. The
-                    email alerts ensure I never miss a great deal!"
+                    "The transparency of open source combined with the powerful filtering
+                    makes this my go-to tool. Saved hundreds of euros and joined an
+                    amazing community!"
                 </p>
                 <div class="flex items-center">
                     <img
@@ -754,10 +861,9 @@
 
             <Card class="shadow-sm flex flex-col justify-between border-l-8">
                 <p class="text-gray-600 dark:text-gray-400 mb-3 italic">
-                    "The advanced filtering options make it easy to find exactly
-                    what I need. Server Radar is an invaluable tool for anyone
-                    serious about server management. The notifications keep me
-                    updated instantly."
+                    "I love that it's community-driven. Filed a feature request on GitHub
+                    and it was implemented within days. This is how software should be built
+                    – by users, for users."
                 </p>
                 <div class="flex items-center">
                     <img
@@ -778,55 +884,6 @@
                     </div>
                 </div>
             </Card>
-        </div>
-    </section>
-
-    <!-- Open Source Commitment Section -->
-    <section
-        id="open-source"
-        class="mx-auto my-20 max-w-7xl text-center bg-white shadow-sm rounded-lg p-4 lg:p-8 overflow-hidden relative border border-gray-200 dark:border-gray-700"
-    >
-        <!-- Background image container -->
-        <div
-            class="absolute inset-0 w-full h-full"
-            style="
-            background-image: url('/images/code.webp');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-attachment: local;
-            filter: blur(4px) opacity(0.7);
-        "
-        ></div>
-
-        <!-- Content -->
-        <!-- Dark Overlay for Dark Mode -->
-        <div
-            class="absolute inset-0 w-full h-full bg-transparent dark:bg-black/60 z-[5]"
-        ></div>
-        <div class="relative z-10">
-            <!-- Heading -->
-            <h2
-                class="mb-6 text-4xl font-semibold text-black dark:text-gray-100"
-            >
-                Open Source Commitment
-            </h2>
-
-            <!-- Paragraph and Button -->
-            <p class="md:w-2/3 mx-auto mb-6 text-gray-700 dark:text-gray-400">
-                <strong>Server Radar</strong> is proudly open-source. We believe
-                in transparency and community collaboration to continuously improve
-                our tool. Explore our code, contribute to the project, or suggest
-                new features on GitHub.
-            </p>
-            <Button
-                size="sm"
-                href="https://github.com/elsbrock/hetzner-radar"
-                class="px-6 pb-3 text-lg items-center justify-center dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
-            >
-                <FontAwesomeIcon icon={faGithub} class="mr-2" />
-                View on GitHub
-            </Button>
         </div>
     </section>
 
@@ -860,6 +917,72 @@
                 <FontAwesomeIcon icon={faBug} class="mr-2" />
                 Report an Issue
             </Button>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="mx-auto my-20 max-w-7xl">
+        <h2
+            class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
+        >
+            Frequently Asked Questions
+        </h2>
+        <p
+            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
+        >
+            Got questions? We've got answers. Here are the most common questions about <strong>Server Radar</strong>.
+        </p>
+        <div class="mx-auto max-w-4xl">
+            <Accordion class="shadow-sm">
+                <AccordionItem>
+                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        Is Server Radar really free?
+                    </span>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Yes! Server Radar is completely free and open source. We believe in providing value to the community without barriers. You can use all features including notifications at no cost.
+                    </p>
+                </AccordionItem>
+                <AccordionItem>
+                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        How often is the auction data updated?
+                    </span>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        We check the Hetzner auction multiple times throughout the day to ensure you have access to the latest server availability and pricing. The "Auctions in Last Batch" counter shows you how many servers we found in our most recent scan.
+                    </p>
+                </AccordionItem>
+                <AccordionItem>
+                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        Can I contribute to the project?
+                    </span>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Absolutely! Server Radar is open source and we welcome contributions. Whether it's code improvements, bug reports, feature suggestions, or documentation updates, check out our GitHub repository to get started.
+                    </p>
+                </AccordionItem>
+                <AccordionItem>
+                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        How do notifications work?
+                    </span>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Create an account, set up your desired server specifications and target price, and choose how you want to be notified – via email, Discord, or other supported channels. We'll notify you instantly when a matching server appears in the auction. No spam, just the deals you're looking for.
+                    </p>
+                </AccordionItem>
+                <AccordionItem>
+                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        What notification types are supported?
+                    </span>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Currently we support email notifications and Discord webhooks. We're actively working on adding more notification channels like Slack, Telegram, and webhook integrations to give you maximum flexibility in how you receive alerts.
+                    </p>
+                </AccordionItem>
+                <AccordionItem>
+                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        Is my data secure?
+                    </span>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        We take privacy seriously. We only collect minimal data necessary to provide the service (email/Discord info for notifications). All server auction data is publicly available information. Check our Privacy Policy for full details.
+                    </p>
+                </AccordionItem>
+            </Accordion>
         </div>
     </section>
 
