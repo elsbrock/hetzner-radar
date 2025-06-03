@@ -35,7 +35,7 @@ interface ServerTypeInfo {
     error?: string;
    }
    
-   export const load: PageServerLoad = async ({ platform }): Promise<LoadOutput> => {
+   export const load: PageServerLoad = async ({ platform, locals }): Promise<LoadOutput> => {
     console.log('Executing /cloud-status server load function...');
 
     if (!platform?.env?.CLOUD_STATUS) {
@@ -54,6 +54,7 @@ interface ServerTypeInfo {
       
         return {
         	statusData: statusData,
+        	user: locals.user
         };
     } catch (err) {
         console.error(`[${new Date().toISOString()}] Error fetching cloud status from Durable Object:`, err);
@@ -63,6 +64,7 @@ interface ServerTypeInfo {
         return {
         	statusData: null,
         	error: `Failed to load cloud availability status: ${errorMessage}`,
+        	user: locals.user
         };
     }
 };

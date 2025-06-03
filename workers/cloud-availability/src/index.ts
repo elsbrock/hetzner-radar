@@ -4,6 +4,9 @@
  	CLOUD_STATUS_DO: DurableObjectNamespace<CloudAvailability>;
  	HETZNER_API_TOKEN: string;
  	FETCH_INTERVAL_MS?: string;
+ 	ANALYTICS_ENGINE: AnalyticsEngineDataset;
+ 	MAIN_APP_URL?: string;
+ 	INTERNAL_API_KEY?: string;
  }
 
  interface HetznerServerType {
@@ -73,6 +76,27 @@ interface CloudStatusData {
 	locations: LocationInfo[];
 	availability: AvailabilityMatrix;
 	lastUpdated: string | null;
+}
+
+interface AvailabilityChange {
+	serverTypeId: number;
+	serverTypeName: string;
+	locationId: number;
+	locationName: string;
+	eventType: 'available' | 'unavailable';
+	timestamp: number;
+}
+
+interface AnalyticsEngineDataPoint {
+	timestamp: number;
+	blob1: string; // server_type_id
+	blob2: string; // location_id
+	blob3: string; // event_type: 'available' | 'unavailable'
+	double1: number; // availability (1 or 0)
+	double2: number; // server_type_cores
+	double3: number; // server_type_memory
+	index1: string; // server_type_name (e.g., "cx11")
+	index2: string; // location_name (e.g., "fsn1")
 }
 
 const HETZNER_API_BASE = 'https://api.hetzner.cloud/v1';
@@ -243,6 +267,9 @@ export class CloudAvailability extends DurableObject {
 			const processedLocations: LocationInfo[] = Array.from(processedLocationsMap.values());
 			processedLocations.sort((a, b) => a.name.localeCompare(b.name));
 
+			// Get previous availability for change detection
+			const previousAvailability = await this.ctx.storage.get<AvailabilityMatrix>('availability');
+			
 			const updateTimestamp = new Date().toISOString();
 
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Storing processed data...`);
@@ -252,6 +279,21 @@ export class CloudAvailability extends DurableObject {
 				availability: processedAvailability,
 				lastUpdated: updateTimestamp,
 			});
+
+			// Detect and handle changes
+			if (previousAvailability && this.initialized) {
+				const changes = await this.detectChanges(
+					previousAvailability, 
+					processedAvailability, 
+					processedServerTypes, 
+					processedLocations
+				);
+				
+				if (changes.length > 0) {
+					console.log(`[CloudAvailability DO ${this.ctx.id}] Detected ${changes.length} availability changes`);
+					await this.handleAvailabilityChanges(changes);
+				}
+			}
 
 			if (!this.initialized) {
 				this.initialized = true;
@@ -263,6 +305,147 @@ export class CloudAvailability extends DurableObject {
 			console.error(`[CloudAvailability DO ${this.ctx.id}] Error during fetch/update:`, error);
 			throw error;
 		}
+	}
+
+	async detectChanges(
+		oldAvailability: AvailabilityMatrix,
+		newAvailability: AvailabilityMatrix,
+		serverTypes: ServerTypeInfo[],
+		locations: LocationInfo[]
+	): Promise<AvailabilityChange[]> {
+		const changes: AvailabilityChange[] = [];
+		const timestamp = Date.now();
+
+		// Create lookup maps
+		const serverTypeMap = new Map(serverTypes.map(st => [st.id, st]));
+		const locationMap = new Map(locations.map(loc => [loc.id, loc]));
+
+		// Check all location/server type combinations
+		for (const locationId of Object.keys(newAvailability)) {
+			const locId = parseInt(locationId);
+			const oldServerTypes = new Set(oldAvailability[locId] || []);
+			const newServerTypes = new Set(newAvailability[locId] || []);
+
+			// Find newly available server types
+			for (const serverTypeId of newServerTypes) {
+				if (!oldServerTypes.has(serverTypeId)) {
+					const serverType = serverTypeMap.get(serverTypeId);
+					const location = locationMap.get(locId);
+					if (serverType && location) {
+						changes.push({
+							serverTypeId,
+							serverTypeName: serverType.name,
+							locationId: locId,
+							locationName: location.name,
+							eventType: 'available',
+							timestamp
+						});
+					}
+				}
+			}
+
+			// Find newly unavailable server types
+			for (const serverTypeId of oldServerTypes) {
+				if (!newServerTypes.has(serverTypeId)) {
+					const serverType = serverTypeMap.get(serverTypeId);
+					const location = locationMap.get(locId);
+					if (serverType && location) {
+						changes.push({
+							serverTypeId,
+							serverTypeName: serverType.name,
+							locationId: locId,
+							locationName: location.name,
+							eventType: 'unavailable',
+							timestamp
+						});
+					}
+				}
+			}
+		}
+
+		// Also check for locations that existed in old but not in new
+		for (const locationId of Object.keys(oldAvailability)) {
+			const locId = parseInt(locationId);
+			if (!newAvailability[locId]) {
+				const oldServerTypes = oldAvailability[locId] || [];
+				for (const serverTypeId of oldServerTypes) {
+					const serverType = serverTypeMap.get(serverTypeId);
+					const location = locationMap.get(locId);
+					if (serverType && location) {
+						changes.push({
+							serverTypeId,
+							serverTypeName: serverType.name,
+							locationId: locId,
+							locationName: location.name,
+							eventType: 'unavailable',
+							timestamp
+						});
+					}
+				}
+			}
+		}
+
+		return changes;
+	}
+
+	async handleAvailabilityChanges(changes: AvailabilityChange[]): Promise<void> {
+		// Write to Analytics Engine if available
+		if (this.env.ANALYTICS_ENGINE) {
+			try {
+				await this.writeToAnalyticsEngine(changes);
+			} catch (error) {
+				console.error(`[CloudAvailability DO ${this.ctx.id}] Failed to write to Analytics Engine:`, error);
+			}
+		}
+
+		// Notify main app if configured
+		if (this.env.MAIN_APP_URL && this.env.INTERNAL_API_KEY) {
+			try {
+				await this.notifyMainApp(changes);
+			} catch (error) {
+				console.error(`[CloudAvailability DO ${this.ctx.id}] Failed to notify main app:`, error);
+			}
+		}
+	}
+
+	async writeToAnalyticsEngine(changes: AvailabilityChange[]): Promise<void> {
+		const serverTypes = await this.ctx.storage.get<ServerTypeInfo[]>('serverTypes') || [];
+		const serverTypeMap = new Map(serverTypes.map(st => [st.id, st]));
+
+		const dataPoints: AnalyticsEngineDataPoint[] = changes.map(change => {
+			const serverType = serverTypeMap.get(change.serverTypeId);
+			return {
+				timestamp: change.timestamp,
+				blob1: String(change.serverTypeId),
+				blob2: String(change.locationId),
+				blob3: change.eventType,
+				double1: change.eventType === 'available' ? 1 : 0,
+				double2: serverType?.cores || 0,
+				double3: serverType?.memory || 0,
+				index1: change.serverTypeName,
+				index2: change.locationName
+			};
+		});
+
+		await this.env.ANALYTICS_ENGINE.writeDataPoints(dataPoints);
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Wrote ${dataPoints.length} data points to Analytics Engine`);
+	}
+
+	async notifyMainApp(changes: AvailabilityChange[]): Promise<void> {
+		const response = await fetch(`${this.env.MAIN_APP_URL}/(internal)/notify`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${this.env.INTERNAL_API_KEY}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ changes })
+		});
+
+		if (!response.ok) {
+			throw new Error(`Main app notification failed: ${response.status} ${await response.text()}`);
+		}
+
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Notified main app about ${changes.length} changes`);
 	}
 }
 

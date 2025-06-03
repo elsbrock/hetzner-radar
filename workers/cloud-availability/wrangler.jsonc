@@ -25,6 +25,16 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS_ENGINE",
+			"dataset": "cloud_availability"
+		}
+	],
+	"vars": {
+		"FETCH_INTERVAL_MS": "60000",
+		"MAIN_APP_URL": "https://radar.iodev.org"
 	}
 	/**
 	 * Smart Placement

@@ -582,7 +582,8 @@
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
                     Set your target price and get notified via email, Discord, or other
-                    supported channels when a matching server hits the auction. Plan your purchases
+                    supported channels when a matching server hits the auction. Also get alerts
+                    when cloud server types become available in your desired locations. Plan your purchases
                     effectively and never miss out on the perfect deal again –
                     completely free!
                 </p>
@@ -664,7 +665,9 @@
                 >
                     Set your target price for desired configurations and receive
                     free notifications via email, Discord, or your preferred channel
-                    the moment a matching server appears in the auction. Purchase confidently,
+                    the moment a matching server appears in the auction. Also set up cloud
+                    availability alerts to be notified when server types become available
+                    in your preferred locations. Purchase confidently,
                     knowing you've secured a great deal.
                 </p>
             </TimelineItem>
@@ -955,7 +958,7 @@
                         How do notifications work?
                     </span>
                     <p class="text-gray-600 dark:text-gray-400">
-                        Create an account, set up your desired server specifications and target price, and choose how you want to be notified – via email, Discord, or other supported channels. We'll notify you instantly when a matching server appears in the auction. No spam, just the deals you're looking for.
+                        Create an account, set up your desired server specifications and target price, and choose how you want to be notified – via email, Discord, or other supported channels. We'll notify you instantly when a matching server appears in the auction or when cloud server types become available. No spam, just the deals you're looking for.
                     </p>
                 </AccordionItem>
                 <AccordionItem>
@@ -963,7 +966,7 @@
                         What notification types are supported?
                     </span>
                     <p class="text-gray-600 dark:text-gray-400">
-                        Currently we support email notifications and Discord webhooks. We're actively working on adding more notification channels like Slack, Telegram, and webhook integrations to give you maximum flexibility in how you receive alerts.
+                        Currently we support email notifications and Discord webhooks for both price alerts and cloud availability alerts. We're actively working on adding more notification channels like Slack, Telegram, and webhook integrations to give you maximum flexibility in how you receive alerts.
                     </p>
                 </AccordionItem>
                 <AccordionItem>

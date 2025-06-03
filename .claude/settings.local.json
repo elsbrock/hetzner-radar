@@ -4,7 +4,9 @@
       "Bash(git commit:*)",
       "Bash(playwright test)",
       "Bash(npm run check:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:flowbite-svelte.com)"
     ],
     "deny": []
   }

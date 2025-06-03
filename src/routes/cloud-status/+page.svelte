@@ -5,6 +5,8 @@
 	import 'leaflet/dist/leaflet.css';
 	import type L from 'leaflet';
 	import { settingsStore } from '$lib/stores/settings'; // Import settings store
+	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import {
 		Table,
 		TableHead,
@@ -17,15 +19,40 @@
 		Spinner,
 		P,
 		Heading,
+		Alert,
+		A,
+		Button
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
 		CloseCircleOutline,
 		CloseCircleSolid,
-		ExclamationCircleSolid
+		ExclamationCircleSolid,
+		InfoCircleSolid,
+		BellRingSolid
 	} from 'flowbite-svelte-icons';
 
 	export let data: PageData;
+
+	// Cloud alert modal state
+	let showCloudAlertModal = false;
+	let editingCloudAlert = null;
+
+	// Server type and location options based on cloud status data
+	$: serverTypeOptions = data.statusData?.serverTypes?.map(st => ({
+		value: st.id,
+		name: `${st.name.toUpperCase()} - ${st.cores} Core${st.cores > 1 ? 's' : ''} / ${st.memory} GB RAM`
+	})) || [];
+
+	$: locationOptions = data.statusData?.locations?.map(loc => ({
+		value: loc.id,
+		name: `${loc.city}, ${loc.country} (${loc.name})`
+	})) || [];
+
+	function openCreateAlertModal() {
+		editingCloudAlert = null;
+		showCloudAlertModal = true;
+	}
 
 	// --- Tile Layer Configuration ---
 	const lightTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -292,6 +319,7 @@
 		L_Instance = null; // Clear L instance
 		currentTileLayer = null;
 	});
+
 </script>
 
 <div class="p-4 dark:bg-gray-900 dark:text-gray-100">
@@ -395,16 +423,49 @@
 		</div>
 	{/if}
 
-	<section class="mt-8 mb-12">
-		<h2 class="text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-6 text-center">
-			How It Works
-		</h2>
-		<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-3xl mx-auto">
-			<p class="text-gray-700 dark:text-gray-400">
-				This page periodically checks the official Hetzner Cloud status information to determine which server types are currently available in each location.
-				The availability status is aggregated for each location (e.g., Falkenstein, Helsinki) based on the data provided by Hetzner.
-				Your browser then displays this processed status information in the map and table above. The data is typically updated every minute, and the "Last Updated" timestamp indicates the time of the last successful check.
-			</p>
+	<section class="mt-12 mb-8">
+		<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
+			<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+				<div class="text-center">
+					<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+						Stay Ahead of Availability Changes
+					</h3>
+					<p class="text-gray-600 dark:text-gray-400 mb-4 max-w-2xl mx-auto">
+						Get instant notifications when your desired server types become available or unavailable in specific locations. 
+						Set up smart alerts to never miss the perfect server configuration for your needs.
+					</p>
+					<div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+						{#if data.user}
+							<Button on:click={openCreateAlertModal} color="primary" class="px-6 py-2 font-medium">
+								<BellRingSolid class="w-4 h-4 mr-2" />
+								Create Availability Alert
+							</Button>
+							<span class="text-sm text-gray-500 dark:text-gray-400">
+								Create alerts instantly or <a href="/alerts?tab=cloud-alerts" class="underline hover:text-orange-500">manage existing ones</a>
+							</span>
+						{:else}
+							<Button href="/auth/login" color="primary" class="px-6 py-2 font-medium">
+								<InfoCircleSolid class="w-4 h-4 mr-2" />
+								Sign In to Create Alerts
+							</Button>
+							<span class="text-sm text-gray-500 dark:text-gray-400">
+								Free email and Discord notifications
+							</span>
+						{/if}
+					</div>
+				</div>
+			</div>
 		</div>
 	</section>
+
 </div>
+
+<!-- Cloud Alert Modal -->
+<CloudAlertModal 
+	bind:open={showCloudAlertModal}
+	bind:alert={editingCloudAlert}
+	{serverTypeOptions}
+	{locationOptions}
+	on:success={() => invalidateAll()}
+/>
+

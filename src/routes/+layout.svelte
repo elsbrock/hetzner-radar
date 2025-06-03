@@ -111,8 +111,8 @@
 </svelte:head>
 
 <div>
-  <Banner version={3} id="discord-notifications">
-    <strong>New Feature:</strong> Discord Notifications 🔔
+  <Banner version={4} id="cloud-availability-alerts">
+    <strong>New Feature:</strong> <a href="/cloud-status">Cloud Server Availability</a> Alerts ☁️
   </Banner>
   <Nav />
 

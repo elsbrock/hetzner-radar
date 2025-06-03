@@ -7,6 +7,7 @@ import {
     updateAlert,
 } from "$lib/api/backend/alerts";
 import { getUser } from "$lib/api/backend/user";
+import { getCloudAlertsForUser } from "$lib/api/backend/cloud-alerts";
 import { MAX_PRICE, MIN_PRICE } from "$lib/constants";
 import { fail, type Actions, type ServerLoad, type RequestEvent, type ServerLoadEvent } from "@sveltejs/kit";
 
@@ -14,9 +15,21 @@ import { fail, type Actions, type ServerLoad, type RequestEvent, type ServerLoad
 export const load: ServerLoad = async (event: ServerLoadEvent) => {
     const db = event.platform?.env.DB;
 
-    const [alertResults, user] = await Promise.all([
+    // Fetch cloud status data for server types and locations
+    let cloudStatusData = null;
+    try {
+        if (event.platform?.env?.CLOUD_STATUS) {
+            const cloudStatusWorker = event.platform.env.CLOUD_STATUS;
+            cloudStatusData = await cloudStatusWorker.getStatus();
+        }
+    } catch (error) {
+        console.error('Failed to fetch cloud status data:', error);
+    }
+
+    const [alertResults, user, cloudAlerts] = await Promise.all([
         getAlertsForUser(db!, event.locals.user!.id.toString()),
-        getUser(db!, event.locals.user!.id.toString())
+        getUser(db!, event.locals.user!.id.toString()),
+        getCloudAlertsForUser(db!, event.locals.user!.id.toString())
     ]);
 
     return {
@@ -24,6 +37,8 @@ export const load: ServerLoad = async (event: ServerLoadEvent) => {
             active: alertResults.activeResults,
             triggered: alertResults.triggeredResults,
         },
+        cloudAlerts,
+        cloudStatusData,
         user: {
             discord_webhook_url: user?.discord_webhook_url,
             notification_preferences: user?.notification_preferences || { email: true, discord: false }
