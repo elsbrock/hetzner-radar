@@ -718,14 +718,6 @@
                 <ul class="space-y-3 mb-6 text-gray-600 dark:text-gray-400">
                     <li class="flex items-start gap-2">
                         <span class="text-orange-500 mt-1">✓</span>
-                        <span>No vendor lock-in or proprietary features</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-orange-500 mt-1">✓</span>
-                        <span>Self-hostable for complete control</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-orange-500 mt-1">✓</span>
                         <span>Community-reviewed for security and privacy</span>
                     </li>
                     <li class="flex items-start gap-2">
