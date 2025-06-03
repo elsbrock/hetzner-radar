@@ -5,7 +5,7 @@
 -- Create a new table with the desired structure
 CREATE TABLE alert_auction_matches_new (
     alert_history_id INTEGER NOT NULL,
-    auction_id UBIGINT NOT NULL,
+    auction_id INTEGER NOT NULL,
     auction_seen_at TIMESTAMP NOT NULL,
     match_price INTEGER NOT NULL,
     matched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,3 +34,4 @@ ON alert_auction_matches(auction_id);
 -- Note: We only need match_price in this index now since alert_history_id, auction_id, and auction_seen_at
 -- are already uniquely constrained by the primary key
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_alert_auction_match_price
+ON alert_auction_matches(alert_history_id, auction_id, auction_seen_at, match_price);
