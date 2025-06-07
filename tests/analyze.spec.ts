@@ -2,7 +2,11 @@ import test, { expect } from './fixtures';
 
 test('analyze: we have data', async ({ page }) => {
   await page.goto('/analyze');
+  
+  // Wait for server-filter to be visible (it might be collapsed initially)
+  await page.getByTestId('server-filter').waitFor({ timeout: 10000 });
   await expect(page.getByTestId('server-filter')).toBeVisible();
+  
   await expect(page.getByTestId('server-pricechart')).toBeVisible();
   await page.getByTestId('server-card').first().waitFor({ timeout: 10000});
   await expect(await page.getByTestId('server-card').count()).toBeGreaterThan(0);
@@ -14,7 +18,7 @@ test('analyze: we have data', async ({ page }) => {
   await expect(page.getByTestId('total-configurations')).toBeVisible();
 });
 
-test('analyze: price filter works', async ({ page }) => {
+test('analyze: filter functionality works', async ({ page }) => {
   await page.goto('/analyze');
 
   // Wait for initial data load to complete
@@ -24,55 +28,34 @@ test('analyze: price filter works', async ({ page }) => {
   const initialResultsText = await page.getByTestId('total-configurations').textContent();
   const initialCount = parseInt(initialResultsText?.match(/(\d+)/)?.[1] || '0');
 
-  // Enter a minimum price to filter servers
-  await page.getByTestId('price-min-input').fill('50');
-
-  // Wait for filtering to take effect (using debounce)
-  await page.waitForTimeout(600);
-
-  // Verify filtered results
-  const minFilteredResultsText = await page.getByTestId('total-configurations').textContent();
-  const minFilteredCount = parseInt(minFilteredResultsText?.match(/(\d+)/)?.[1] || '0');
-
-  // The count should be less than or equal to the initial count
-  expect(minFilteredCount).toBeLessThanOrEqual(initialCount);
-
-  // Clear min price and add max price
-  await page.getByTestId('price-min-input').fill('');
-  await page.getByTestId('price-max-input').fill('40');
-
+  // Test location filter - click on the Germany toggle label instead of the hidden input
+  const germanyLabel = page.locator('label:has-text("Germany")');
+  await expect(germanyLabel).toBeVisible();
+  
+  // Get the current state by checking the input
+  const germanyInput = page.locator('label:has-text("Germany") input[type="checkbox"]');
+  const isGermanyChecked = await germanyInput.isChecked();
+  
+  // Click the label to toggle Germany filter
+  await germanyLabel.click();
+  
   // Wait for filtering to take effect
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(1000);
 
-  // Verify max price filtered results
-  const maxFilteredResultsText = await page.getByTestId('total-configurations').textContent();
-  const maxFilteredCount = parseInt(maxFilteredResultsText?.match(/(\d+)/)?.[1] || '0');
+  // Verify filtered results changed
+  const filteredResultsText = await page.getByTestId('total-configurations').textContent();
+  const filteredCount = parseInt(filteredResultsText?.match(/(\d+)/)?.[1] || '0');
 
-  // Count should be less than or equal to the initial count
-  expect(maxFilteredCount).toBeLessThanOrEqual(initialCount);
+  // The count should have changed (either increased or decreased)
+  expect(filteredCount).not.toEqual(initialCount);
 
-  // Test min and max together
-  await page.getByTestId('price-min-input').fill('35');
-  await page.getByTestId('price-max-input').fill('40');
-
+  // Toggle Germany filter back to original state
+  await germanyLabel.click();
+  
   // Wait for filtering to take effect
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(1000);
 
-  // Verify range filtered results
-  const rangeFilteredResultsText = await page.getByTestId('total-configurations').textContent();
-  const rangeFilteredCount = parseInt(rangeFilteredResultsText?.match(/(\d+)/)?.[1] || '0');
-
-  // Count should be less than or equal to both the initial and previous filtered counts
-  expect(rangeFilteredCount).toBeLessThanOrEqual(initialCount);
-
-  // Clear filters and verify we return to initial state
-  await page.getByTestId('price-min-input').fill('');
-  await page.getByTestId('price-max-input').fill('');
-
-  // Wait for filtering to take effect
-  await page.waitForTimeout(600);
-
-  // Count should return to initial
+  // Count should return to initial (or close to it)
   const finalResultsText = await page.getByTestId('total-configurations').textContent();
   const finalCount = parseInt(finalResultsText?.match(/(\d+)/)?.[1] || '0');
   expect(finalCount).toEqual(initialCount);

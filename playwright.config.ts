@@ -31,6 +31,9 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    
+    /* Run tests in headed mode locally, headless in CI */
+    headless: !!process.env.CI,
   },
 
   /* Configure projects for major browsers */
@@ -40,10 +43,10 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
-    {
+    ...(process.env.CI ? [{
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-    },
+    }] : []),
 
     // {
     //   name: 'webkit',
@@ -76,8 +79,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run build && npm run preview',
-    port: 4173,
+    command: 'npm run dev',
+    port: 5173,
     reuseExistingServer: !process.env.CI,
   },
 });

@@ -14,7 +14,7 @@
 </script>
 
 <!-- Outer container for relative positioning and fade effect -->
-<div class="relative text-xs text-gray-900 dark:text-white after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden">
+<div data-testid="price-controls" class="relative text-xs text-gray-900 dark:text-white after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:dark:from-gray-800 after:pointer-events-none md:after:hidden">
     <!-- Inner container for scrolling content -->
     <div class="flex flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide">
         <ButtonGroup class="flex-shrink-0">

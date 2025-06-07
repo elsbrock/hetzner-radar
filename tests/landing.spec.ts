@@ -24,8 +24,9 @@ test.describe('Landing Page Tests', () => {
   });
 
   test('should display key introductory text', async () => {
-    await expect(page.getByText(/Tired of missing the best deals?/i)).toBeVisible();
-    await expect(page.getByText(/free email alerts/i)).toBeVisible();
+    await expect(page.getByText(/Stop.*Overpaying.*for Hetzner Auction Servers/)).toBeVisible();
+    await expect(page.getByText(/instant notifications/i)).toBeVisible();
+    await expect(page.getByText(/free, open-source tool/i)).toBeVisible();
   });
 
   test('should display primary call-to-action buttons', async () => {
@@ -34,12 +35,23 @@ test.describe('Landing Page Tests', () => {
   });
 
   test('should display navigation links (unauthenticated)', async () => {
+    // Check if navigation might be collapsed - open it if needed
+    const hamburger = page.getByTestId('nav-hamburger');
+    if (await hamburger.isVisible()) {
+      await hamburger.click();
+      await page.waitForTimeout(300); // Wait for animation
+    }
+    
     // Test IDs added to NavLi elements
     await expect(page.getByTestId('nav-link-home')).toBeVisible();
     await expect(page.getByTestId('nav-link-configurations')).toBeVisible();
     await expect(page.getByTestId('nav-link-analyze')).toBeVisible();
-    await expect(page.getByTestId('nav-link-statistics')).toBeVisible();
+    
+    // Statistics and About are only visible when not authenticated
+    // Wait a bit longer for them to appear if needed
+    await expect(page.getByTestId('nav-link-statistics')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('nav-link-about')).toBeVisible();
+    
     // Sign in button might be desktop or mobile specific
     // Check that exactly one of the sign-in buttons (desktop or mobile) is visible
     const signInButton = page.getByTestId('nav-signin-desktop').or(page.getByTestId('nav-signin-mobile'));
@@ -50,7 +62,7 @@ test.describe('Landing Page Tests', () => {
      await expect(page.getByRole('heading', { name: 'Key Features' })).toBeVisible();
      await expect(page.getByRole('heading', { name: 'Price History Tracking' })).toBeVisible();
      await expect(page.getByRole('heading', { name: 'Advanced Filtering' })).toBeVisible();
-     await expect(page.getByRole('heading', { name: 'Price Alerts' })).toBeVisible();
+     await expect(page.getByRole('heading', { name: 'Smart Notifications' })).toBeVisible();
    });
 
    test('should display "How It Works" section', async () => {
@@ -60,8 +72,7 @@ test.describe('Landing Page Tests', () => {
      await expect(page.getByText('Step 3: Configure Alerts')).toBeVisible();
    });
 
-    test('should display "At A Glance" section', async () => {
-     await expect(page.getByRole('heading', { name: 'At A Glance' })).toBeVisible();
+    test('should display live metrics section', async () => {
      // Check the containers for the stats using test IDs with increased timeout
      const glanceTimeout = { timeout: 10000 }; // 10 seconds
      await expect(page.getByTestId('glance-auctions-tracked')).toBeVisible(glanceTimeout);

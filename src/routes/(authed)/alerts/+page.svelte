@@ -44,14 +44,14 @@
     let { data } = $props();
 
     // Tabs state
-    let activeTab = 'price-alerts';
+    let activeTab = $state('price-alerts');
 
     // Price alerts state
-    let showEdit = false;
-    let selectedAlert: PriceAlert | null = null;
-    let drawerHidden = true;
-    let selectedAlertId: string | null = null;
-    let selectedVatRate = 0;
+    let showEdit = $state(false);
+    let selectedAlert = $state<PriceAlert | null>(null);
+    let drawerHidden = $state(true);
+    let selectedAlertId = $state<string | null>(null);
+    let selectedVatRate = $state(0);
 
     // Cloud alerts state  
     let showCloudAlertModal = $state(false);

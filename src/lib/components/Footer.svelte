@@ -32,7 +32,7 @@
                 <FooterLinkGroup ulClass="space-y-1">
                     <FooterLink href="/configurations" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Configurations</FooterLink>
                     <FooterLink href="/statistics" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Statistics</FooterLink>
-                    <FooterLink href="/cloud-status" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Cloud Availability</FooterLink>
+                    <FooterLink data-testid="footer-link-cloud-status" href="/cloud-status" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Cloud Availability</FooterLink>
                     <FooterLink href="/analyze" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Analyze</FooterLink>
                 </FooterLinkGroup>
             </div>
