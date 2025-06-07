@@ -5,6 +5,8 @@
     faBinoculars,
     faChartSimple,
     faCircleInfo,
+    faCloud,
+    faCog,
     faHouse,
     faKey,
     faRightFromBracket,
@@ -156,6 +158,50 @@
       Star
     </Button>
     <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-3"></div>
+    
+    {#if $session}
+      <!-- Desktop Settings Icon -->
+      <a
+        href="/settings"
+        data-testid="nav-settings-desktop"
+        class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 mr-2"
+        aria-label="Settings"
+      >
+        <FontAwesomeIcon class="w-5 h-5" icon={faCog} />
+      </a>
+      
+      <!-- Desktop Sign Out -->
+      <form
+        action="/auth/logout"
+        method="POST"
+        use:enhance={() => {
+          session.set(null);
+          return goto("/auth/logout");
+        }}
+        class="mr-3"
+      >
+        <Button
+          data-testid="nav-signout-desktop"
+          outline
+          class="p-2 bg-white dark:bg-inherit"
+          type="submit"
+          aria-label="Sign Out"
+        >
+          <FontAwesomeIcon class="w-4 h-4" icon={faRightFromBracket} />
+        </Button>
+      </form>
+    {:else}
+      <!-- Desktop Sign In -->
+      <Button
+        data-testid="nav-signin-desktop"
+        outline
+        class="p-2 bg-white dark:bg-inherit mr-3"
+        href="/auth/login"
+      >
+        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} /> Sign In
+      </Button>
+    {/if}
+    
     <div class="flex items-center">
       <!-- Use DarkMode component directly -->
       <DarkMode />
@@ -188,7 +234,7 @@
       data-testid="nav-link-home"
       class="flex items-center !bg-transparent"
     >
-      <FontAwesomeIcon class="me-2 w-4 h-4" icon={faHouse} />
+      <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faHouse} />
       <span
         class="text-black dark:text-gray-200 {activeUrl === '/'
           ? 'border-b-2 border-primary-500'
@@ -200,7 +246,7 @@
       data-testid="nav-link-configurations"
       class="flex items-center !bg-transparent"
     >
-      <FontAwesomeIcon class="me-2 w-4 h-4" icon={faServer} />
+      <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faServer} />
       <span
         class="text-black dark:text-gray-200 {activeUrl === '/configurations'
           ? 'border-b-2 border-primary-500'
@@ -212,11 +258,23 @@
       data-testid="nav-link-analyze"
       class="flex items-center !bg-transparent"
     >
-      <FontAwesomeIcon class="me-2 w-4 h-4" icon={faBinoculars} />
+      <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faBinoculars} />
       <span
         class="text-black dark:text-gray-200 {activeUrl === '/analyze'
           ? 'border-b-2 border-primary-500'
           : ''}">Analyze</span
+      >
+    </NavLi>
+    <NavLi
+      href="/cloud-status"
+      data-testid="nav-link-cloud-status"
+      class="flex items-center !bg-transparent"
+    >
+      <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faCloud} />
+      <span
+        class="text-black dark:text-gray-200 {activeUrl === '/cloud-status'
+          ? 'border-b-2 border-primary-500'
+          : ''}">Cloud</span
       >
     </NavLi>
     {#if $session}
@@ -248,7 +306,7 @@
         data-testid="nav-link-statistics"
         class="flex items-center !bg-transparent"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faChartSimple} />
+        <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faChartSimple} />
         <span
           class="text-black dark:text-gray-200 {activeUrl === '/statistics'
             ? 'border-b-2 border-primary-500'
@@ -260,7 +318,7 @@
         data-testid="nav-link-about"
         class="flex items-center !bg-transparent"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faCircleInfo} />
+        <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faCircleInfo} />
         <span
           class="text-black dark:text-gray-200 {activeUrl === '/about'
             ? 'border-b-2 border-primary-500'
@@ -270,12 +328,13 @@
     {/if}
 
     {#if $session}
+      <!-- Settings only shown on mobile in navbar -->
       <NavLi
         href="/settings"
         data-testid="nav-link-settings"
-        class="flex items-center !bg-transparent"
+        class="md:hidden flex items-center !bg-transparent"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faUser} />
+        <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faCog} />
         <span
           class="text-black dark:text-gray-300 {activeUrl === '/settings'
             ? 'border-b-2 border-primary-500'
@@ -308,26 +367,6 @@
         <!-- Use DarkMode component directly -->
         <DarkMode />
       </div>
-      <!-- Desktop only Sign Out -->
-      <form
-        action="/auth/logout"
-        method="POST"
-        use:enhance={() => {
-          session.set(null);
-          return goto("/auth/logout");
-        }}
-        class="hidden md:block"
-      >
-        <Button
-          data-testid="nav-signout-desktop"
-          outline
-          class="md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
-          type="submit"
-        >
-          <FontAwesomeIcon class="me-2 w-4 h-4" icon={faRightFromBracket} /> Sign
-          Out
-        </Button>
-      </form>
     {:else}
       <!-- Mobile only container for controls -->
       <div
@@ -345,15 +384,6 @@
         <DarkMode />
       </div>
 
-      <!-- Desktop only Sign In -->
-      <Button
-        data-testid="nav-signin-desktop"
-        outline
-        class="hidden md:block md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
-        href="/auth/login"
-      >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} /> Sign In
-      </Button>
     {/if}
     <!-- Removed separate mobile DarkMode NavLi -->
   </NavUl>

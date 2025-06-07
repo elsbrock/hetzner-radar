@@ -34,10 +34,6 @@
         <FooterLinkGroup
             ulClass="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400"
         >
-            <FooterLink
-                data-testid="footer-link-cloud-status"
-                href="/cloud-status">Cloud Status</FooterLink
-            >
             <FooterLink data-testid="footer-link-privacy" href="/privacy"
                 >Privacy</FooterLink
             >
