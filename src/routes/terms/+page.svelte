@@ -7,6 +7,9 @@
         <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
             Terms of Service
         </h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+            Last updated: June 7, 2025
+        </p>
     </section>
 
     <div class="max-w-4xl mx-auto pb-8 text-gray-700 dark:text-gray-300">
@@ -51,8 +54,9 @@
             <ul class="list-disc ml-5 space-y-2">
                 <li>
                     <strong>Permitted Use:</strong> The Service is designed to track
-                    prices of Hetzner dedicated server auctions, create alerts, and
-                    send notifications to users interested in dedicated servers.
+                    prices of Hetzner dedicated server auctions, monitor cloud server
+                    availability across datacenters, create alerts, and send notifications
+                    to users interested in dedicated servers and cloud instances.
                 </li>
                 <li>
                     <strong>Prohibited Activities:</strong> Users agree not to:
@@ -336,9 +340,10 @@
             <h2 class="text-2xl font-semibold mb-4 dark:text-gray-100">16. Acceptable Use</h2>
             <p>
                 Users agree to use the Service solely for its intended purpose
-                of tracking Hetzner server prices, creating alerts, and
-                receiving notifications. Any use of the Service for unauthorized
-                or malicious purposes is strictly prohibited.
+                of tracking Hetzner server prices, monitoring cloud server
+                availability, creating alerts, and receiving notifications.
+                Any use of the Service for unauthorized or malicious purposes
+                is strictly prohibited.
             </p>
         </section>
 
