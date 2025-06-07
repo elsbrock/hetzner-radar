@@ -700,7 +700,7 @@
 
 <!-- Cloud Alert Modal -->
 <CloudAlertModal 
-    open={showCloudAlertModal}
+    bind:open={showCloudAlertModal}
     alert={editingCloudAlert}
     {serverTypeOptions}
     {locationOptions}

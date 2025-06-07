@@ -59,3 +59,5 @@ python scripts/import.py data static/sb.duckdb  # Import data
 - DuckDB runs entirely in the browser for data queries
 - The `data` branch contains raw auction data (3 months history)
 - Independent project, not officially affiliated with Hetzner
+- The site must be responsive.
+- The changelog page must be updated whenever a new, noteworthy feature is committed.

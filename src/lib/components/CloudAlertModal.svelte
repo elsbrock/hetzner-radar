@@ -8,7 +8,7 @@
     import { createEventDispatcher } from "svelte";
 
     let { 
-        open = false,
+        open = $bindable(false),
         alert = null,
         serverTypeOptions = [],
         locationOptions = []
@@ -21,9 +21,6 @@
 
     const dispatch = createEventDispatcher();
 
-    // Local modal state
-    let modalOpen = $state(false);
-
     // Form state
     let alertName = $state('');
     let selectedServerTypeIds: number[] = $state([]);
@@ -32,19 +29,6 @@
     let emailNotifications = $state(true);
     let discordNotifications = $state(false);
     let isSubmitting = $state(false);
-
-    // Sync parent open prop with local modal state
-    $effect(() => {
-        modalOpen = open;
-    });
-
-    // Watch for modal close and notify parent
-    $effect(() => {
-        if (!modalOpen && open) {
-            // Modal was closed, notify parent
-            dispatch('close');
-        }
-    });
 
     // Validation computed property
     let isFormValid = $derived(
@@ -126,7 +110,7 @@
                     dismissible: true,
                     timeout: 3000
                 });
-                modalOpen = false;
+                open = false;
                 resetForm();
                 await invalidateAll();
                 dispatch('success');
@@ -146,13 +130,13 @@
     }
 
     function handleCancel() {
-        modalOpen = false;
+        open = false;
         resetForm();
     }
 </script>
 
-<Modal bind:open={modalOpen} size="md" autoclose={false} outsideclose={false} class="w-full max-w-lg mx-auto" style="z-index: 9999;">
-    <form on:submit|preventDefault={handleSubmit} class="flex flex-col space-y-3">
+<Modal bind:open size="md" autoclose={false} outsideclose={false} class="w-full max-w-lg mx-auto" style="z-index: 9999;">
+    <form onsubmit={handleSubmit} class="flex flex-col space-y-3">
         <!-- Header -->
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             {alert ? 'Edit Cloud Alert' : 'Create Cloud Alert'}

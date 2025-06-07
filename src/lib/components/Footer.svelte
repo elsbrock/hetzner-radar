@@ -32,7 +32,7 @@
                 <FooterLinkGroup ulClass="space-y-1">
                     <FooterLink href="/configurations" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Configurations</FooterLink>
                     <FooterLink href="/statistics" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Statistics</FooterLink>
-                    <FooterLink href="/cloud" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Cloud Availability</FooterLink>
+                    <FooterLink href="/cloud-status" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Cloud Availability</FooterLink>
                     <FooterLink href="/analyze" liClass="mb-2" aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline">Analyze</FooterLink>
                 </FooterLinkGroup>
             </div>
@@ -54,10 +54,10 @@
             </div>
         </div>
     </div>
-    <div class="my-6 lg:my-8">
+    <div class="my-6 lg:my-8 max-w-7xl mx-auto">
         <div class="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700"></div>
     </div>
-    <div class="sm:flex sm:items-center sm:justify-between relative">
+    <div class="sm:flex sm:items-center sm:justify-between relative max-w-7xl mx-auto">
         <div class="flex items-center sm:flex-1">
             <FooterCopyright
                 data-testid="footer-copyright"

@@ -36,7 +36,7 @@
 
 	// Cloud alert modal state
 	let showCloudAlertModal = false;
-	let editingCloudAlert = null;
+	let editingCloudAlert: any = null;
 
 	// Server type and location options based on cloud status data
 	$: serverTypeOptions = data.statusData?.serverTypes?.map(st => ({
@@ -463,9 +463,10 @@
 <!-- Cloud Alert Modal -->
 <CloudAlertModal 
 	bind:open={showCloudAlertModal}
-	bind:alert={editingCloudAlert}
+	alert={editingCloudAlert}
 	{serverTypeOptions}
 	{locationOptions}
 	on:success={() => invalidateAll()}
+	on:close={() => { showCloudAlertModal = false; }}
 />
 

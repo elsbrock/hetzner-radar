@@ -33,6 +33,7 @@ interface ServerTypeInfo {
    interface LoadOutput {
     statusData: CloudStatusData | null;
     error?: string;
+    user?: any;
    }
    
    export const load: PageServerLoad = async ({ platform, locals }): Promise<LoadOutput> => {
