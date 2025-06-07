@@ -1,6 +1,10 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 
-export default class extends WorkerEntrypoint {
+interface Env {
+	_3R60S: any;
+}
+
+export default class extends WorkerEntrypoint<Env> {
 	async fetch(): Promise<Response> {
 		return new Response();
 	}
