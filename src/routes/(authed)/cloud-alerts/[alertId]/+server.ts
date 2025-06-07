@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params, locals, platform }) => {
     }
 
     try {
-        const alert = await getCloudAlertById(platform.env.DB, locals.user.id, params.alertId);
+        const alert = await getCloudAlertById(platform.env.DB, locals.user.id.toString(), params.alertId);
         
         if (!alert) {
             return json({ error: 'Alert not found' }, { status: 404 });
@@ -41,7 +41,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 
     try {
         // Verify alert exists and belongs to user
-        const existingAlert = await getCloudAlertById(platform.env.DB, locals.user.id, params.alertId);
+        const existingAlert = await getCloudAlertById(platform.env.DB, locals.user.id.toString(), params.alertId);
         if (!existingAlert) {
             return json({ error: 'Alert not found' }, { status: 404 });
         }
@@ -97,7 +97,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
             validUpdates.discordNotifications = Boolean(updates.discordNotifications);
         }
 
-        await updateCloudAlert(platform.env.DB, locals.user.id, params.alertId, validUpdates);
+        await updateCloudAlert(platform.env.DB, locals.user.id.toString(), params.alertId, validUpdates);
 
         return json({ success: true });
     } catch (error) {
@@ -117,12 +117,12 @@ export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 
     try {
         // Verify alert exists and belongs to user
-        const existingAlert = await getCloudAlertById(platform.env.DB, locals.user.id, params.alertId);
+        const existingAlert = await getCloudAlertById(platform.env.DB, locals.user.id.toString(), params.alertId);
         if (!existingAlert) {
             return json({ error: 'Alert not found' }, { status: 404 });
         }
 
-        await deleteCloudAlert(platform.env.DB, locals.user.id, params.alertId);
+        await deleteCloudAlert(platform.env.DB, locals.user.id.toString(), params.alertId);
 
         return json({ success: true });
     } catch (error) {

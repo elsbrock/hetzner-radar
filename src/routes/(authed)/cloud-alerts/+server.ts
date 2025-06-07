@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
     }
 
     try {
-        const alerts = await getCloudAlertsForUser(platform.env.DB, locals.user.id);
+        const alerts = await getCloudAlertsForUser(platform.env.DB, locals.user.id.toString());
         return json(alerts);
     } catch (error) {
         console.error('Error fetching cloud alerts:', error);
@@ -56,7 +56,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
         }
 
         // Check alert limit
-        const canCreateAlert = await isBelowMaxCloudAlerts(platform.env.DB, locals.user.id);
+        const canCreateAlert = await isBelowMaxCloudAlerts(platform.env.DB, locals.user.id.toString());
         if (!canCreateAlert) {
             return json({ 
                 error: `You have reached the maximum of ${MAX_CLOUD_ALERTS} cloud alerts` 
@@ -82,7 +82,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
         // Create the alert
         const alertId = await createCloudAlert(
             platform.env.DB,
-            locals.user.id,
+            locals.user.id.toString(),
             data.name,
             data.serverTypeIds,
             data.locationIds,

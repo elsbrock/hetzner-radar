@@ -1,8 +1,10 @@
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
+import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
 import { getActiveCloudAlertsForMatching, recordCloudAlertTrigger } from '$lib/api/backend/cloud-alerts';
-import { getUserById } from '$lib/api/backend/user';
-import { sendEmail } from '$lib/mail';
+import { getUser } from '$lib/api/backend/user';
+import { sendMail } from '$lib/mail';
 import { sendDiscordNotification } from '$lib/api/backend/discord';
 
 interface AvailabilityChange {
@@ -15,11 +17,9 @@ interface AvailabilityChange {
 }
 
 export const POST: RequestHandler = async ({ request, platform }) => {
-    // Verify internal API key
-    const authHeader = request.headers.get('Authorization');
-    const expectedKey = platform?.env?.INTERNAL_API_KEY;
-    
-    if (!expectedKey || authHeader !== `Bearer ${expectedKey}`) {
+    // Verify API key
+    const authKey = request.headers.get("x-auth-key");
+    if (!dev && (!authKey || authKey !== env.API_KEY)) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -93,7 +93,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
         const discordPromises: Promise<void>[] = [];
 
         for (const [userId, userNotifications] of notificationsByUser) {
-            const user = await getUserById(platform.env.DB, userId);
+            const user = await getUser(platform.env.DB, userId);
             if (!user) continue;
 
             // Prepare notification content
@@ -101,12 +101,16 @@ export const POST: RequestHandler = async ({ request, platform }) => {
             const discordChanges = userNotifications.filter(n => n.discordEnabled);
 
             // Send email notification
-            if (emailChanges.length > 0 && user.email_verified) {
+            if (emailChanges.length > 0) {
                 const emailContent = formatEmailNotification(emailChanges);
                 emailPromises.push(
-                    sendEmail(platform, {
+                    sendMail(platform.env, {
+                        from: {
+                            name: "Server Radar",
+                            email: "noreply@iodev.org"
+                        },
                         to: user.email,
-                        subject: `Cloud Server Availability Alert - ${emailChanges.length} Change${emailChanges.length > 1 ? 's' : ''}`,
+                        subject: `Cloud Alert - ${emailChanges.length} Change${emailChanges.length > 1 ? 's' : ''}`,
                         text: emailContent
                     })
                 );
@@ -116,11 +120,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
             if (discordChanges.length > 0 && user.discord_webhook_url) {
                 const discordContent = formatDiscordNotification(discordChanges);
                 discordPromises.push(
-                    sendDiscordNotification(
-                        user.discord_webhook_url,
-                        'Cloud Availability Alert',
-                        discordContent
-                    )
+                    sendDiscordNotification(user.discord_webhook_url, {
+                        content: discordContent
+                    }).then(() => {})
                 );
             }
         }
@@ -175,7 +177,7 @@ Cheers,
 Server Radar
 --
 
-You are receiving this because you have set up cloud availability alerts.
+You are receiving this because you have set up cloud alerts.
 To manage your alerts, visit: https://radar.iodev.org/alerts`;
 
     return text;
@@ -185,7 +187,7 @@ function formatDiscordNotification(notifications: Array<{
     alertName: string;
     change: AvailabilityChange;
 }>): string {
-    let message = '**Cloud Server Availability Alert**\n\n';
+    let message = '**Cloud Alert**\n\n';
 
     for (const { alertName, change } of notifications) {
         const emoji = change.eventType === 'available' ? '✅' : '❌';

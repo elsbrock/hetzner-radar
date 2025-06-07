@@ -10,8 +10,10 @@ interface Toast {
 
 const toastQueue = writable<Toast[]>([]);
 
-function addToast(toast: Omit<Toast, "id">) {
-    toastQueue.update((queue) => [...queue, { id: Date.now(), ...toast }]);
+function addToast(toast: { message: string; type: ToastType; dismissible?: boolean; timeout?: number }) {
+    const color = toast.type === "success" ? "green" : "red";
+    const icon = toast.type;
+    toastQueue.update((queue) => [...queue, { id: Date.now(), color, icon, message: toast.message }]);
 }
 
 function removeToast(id: number) {

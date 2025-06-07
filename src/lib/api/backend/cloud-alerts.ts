@@ -1,4 +1,4 @@
-export const MAX_CLOUD_ALERTS = 10;
+export const MAX_CLOUD_ALERTS = 3;
 export const MAX_NAME_LENGTH = 100;
 
 export interface CloudAvailabilityAlert {
