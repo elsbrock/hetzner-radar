@@ -5,7 +5,7 @@
     import { Button } from "flowbite-svelte";
 </script>
 
-<main class="p-8 bg-gray-50 dark:bg-gray-900">
+<main class="p-8">
     <section class="mx-auto my-12 max-w-7xl text-center">
         <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
             About Server Radar

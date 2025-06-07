@@ -124,6 +124,41 @@
 
   onMount(() => {
     storedFilter = loadFilter();
+    
+    function updateSidebarHeight() {
+      // Measure header and footer heights
+      const nav = document.querySelector('nav');
+      const footer = document.querySelector('footer');
+      const banner = document.querySelector('#cloud-availability-alerts') || document.querySelector('[id*="banner"]');
+      
+      let totalOffset = 0;
+      if (nav) totalOffset += nav.offsetHeight;
+      if (footer) totalOffset += footer.offsetHeight;
+      if (banner && banner.offsetHeight > 0) totalOffset += banner.offsetHeight; // Only if banner is visible
+      
+      console.log('Sidebar height calculation:', { nav: nav?.offsetHeight, footer: footer?.offsetHeight, banner: banner?.offsetHeight, total: totalOffset });
+      
+      // Set CSS custom property
+      document.documentElement.style.setProperty('--header-footer-height', `${totalOffset}px`);
+    }
+    
+    // Initial calculation
+    updateSidebarHeight();
+    
+    // Recalculate when banner visibility might change
+    const observer = new MutationObserver(updateSidebarHeight);
+    const banner = document.querySelector('[data-testid="banner"]') || document.querySelector('.banner');
+    if (banner) {
+      observer.observe(banner.parentElement || document.body, { 
+        childList: true, 
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    }
+    
+    // Cleanup observer on component destroy
+    return () => observer.disconnect();
   });
 
   // Effect for setting up Intersection Observers and screen size checks (client-side only)
@@ -690,7 +725,7 @@
   }
 </script>
 
-<div class="mx-auto max-w-[1680px]">
+<div class="mx-auto max-w-[1680px] h-full">
   <OutdatedDataAlert lastUpdate={lastUpdate ?? 0} />
   <AlertModal
     bind:open={alertDialogOpen}
@@ -702,7 +737,7 @@
     <DbLoadingProgress />
   {:else}
     <div
-      class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr]
+      class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-[auto,1fr] h-full
         md:border-r-2 md:border-r-gray-100 dark:border-r-gray-700"
     >
       <!-- ID for Intersection Observer -->
@@ -710,52 +745,12 @@
         id="filter-section"
         class="flex flex-col border-l border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-[width] duration-300 ease-in-out
                     {isFilterCollapsed ? 'sm:w-16 md:w-16' : 'sm:w-72 md:w-72'}"
+        style="min-height: calc(100vh - var(--header-footer-height, 200px));"
       >
         <!-- ServerFilter Container - Grows and Scrolls -->
         <div class="flex-grow overflow-y-auto px-3 py-2">
-          <ServerFilter {datacenters} {cpuModels} bind:isFilterCollapsed />
+          <ServerFilter {datacenters} {cpuModels} {lastUpdate} {queryTime} {loading} bind:isFilterCollapsed />
         </div>
-        <!-- Timestamp/Loading Info - Fixed at bottom, animated with slide -->
-        {#if !isFilterCollapsed}
-          <div
-            class="px-3 py-2"
-            transition:slide={{ duration: 300, axis: "y" }}
-          >
-            <!-- Content should always be visible -->
-            <div>
-              <hr class="mb-2 border-gray-200 dark:border-gray-700" />
-              <div class="my-1">
-                {#if lastUpdate}
-                  <p
-                    class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400"
-                  >
-                    <FontAwesomeIcon
-                      icon={faClockRotateLeft}
-                      class="me-1"
-                    />{dayjs.unix(lastUpdate).format("DD.MM.YYYY HH:mm")}
-                  </p>
-                {/if}
-                {#if queryTime}
-                  <p
-                    class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400"
-                  >
-                    {#if loading}
-                      <span
-                        class="inline-block w-3 h-3 ml-1 border-2 border-gray-500 border-t-transparent border-solid rounded-full animate-spin"
-                        aria-hidden="true"
-                      ></span>
-                    {:else}
-                      <FontAwesomeIcon
-                        icon={faStopwatch}
-                        class="me-1"
-                      />completed in {queryTime.toFixed(0)}ms
-                    {/if}
-                  </p>
-                {/if}
-              </div>
-            </div>
-          </div>
-        {/if}
       </aside>
 
       <main class="flex-grow overflow-y-auto bg-white dark:bg-gray-900">

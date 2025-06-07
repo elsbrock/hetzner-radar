@@ -110,7 +110,7 @@
   <meta name="theme-color" content="#FF7F50" />
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex flex-col">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800 flex flex-col">
   <div class="flex-grow">
     <Banner version={4} id="cloud-availability-alerts">
       <strong>New Feature:</strong> <a href="/cloud-status">Cloud Server Availability</a> Alerts ☁️

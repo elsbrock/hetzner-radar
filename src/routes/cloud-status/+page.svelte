@@ -322,7 +322,7 @@
 
 </script>
 
-<div class="p-4 dark:bg-gray-900 dark:text-gray-100">
+<div class="p-4 dark:text-gray-100">
 	<Heading tag="h1" class="text-3xl font-bold mt-4 mb-4 text-center dark:text-gray-100">Cloud Server Availability</Heading>
 	<P class="text-center text-lg text-gray-600 dark:text-gray-400 mb-4">
 		Track the real-time availability of Hetzner Cloud server types across different locations.

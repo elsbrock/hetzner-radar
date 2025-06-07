@@ -25,10 +25,12 @@
     faChevronLeft,
     faChevronRight,
     faChevronUp,
+    faClockRotateLeft,
     faGlobe,
     faHardDrive,
     faMemory,
     faMicrochip,
+    faStopwatch,
     faTags,
   } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
@@ -42,12 +44,16 @@
   } from "flowbite-svelte";
   import { onMount } from "svelte";
   import { RangeSlider } from "svelte-range-slider-pips";
+  import dayjs from "dayjs";
 
   // Make collapsed state bindable for the parent
   let {
     datacenters,
     cpuModels,
     isFilterCollapsed = $bindable(false),
+    lastUpdate,
+    queryTime,
+    loading = false,
   } = $props();
 
   const springValues = {
@@ -728,6 +734,34 @@
       </div>
     </li>
   </ul>
+  
+  <!-- Timestamp/Loading Info - Directly after filter options -->
+  {#if !isFilterCollapsed}
+    <div class="px-0 py-2">
+      <hr class="mb-2 border-gray-200 dark:border-gray-700" />
+      <div class="my-1">
+        {#if lastUpdate}
+          <p class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400">
+            <FontAwesomeIcon icon={faClockRotateLeft} class="me-1" />
+            {dayjs.unix(lastUpdate).format("DD.MM.YYYY HH:mm")}
+          </p>
+        {/if}
+        {#if queryTime}
+          <p class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400">
+            {#if loading}
+              <span
+                class="inline-block w-3 h-3 ml-1 border-2 border-gray-500 border-t-transparent border-solid rounded-full animate-spin"
+                aria-hidden="true"
+              ></span>
+            {:else}
+              <FontAwesomeIcon icon={faStopwatch} class="me-1" />
+              completed in {queryTime.toFixed(0)}ms
+            {/if}
+          </p>
+        {/if}
+      </div>
+    </div>
+  {/if}
 </div>
 
 <!-- Close responsive container -->

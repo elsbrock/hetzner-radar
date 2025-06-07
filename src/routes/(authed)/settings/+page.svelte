@@ -63,7 +63,7 @@
     </div>
 </Modal>
 
-<div class="bg-gray-50 dark:bg-gray-900 py-10 px-3">
+<div class="py-10 px-3">
     <div class="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
         {#if $session}
             <!-- Page Header -->

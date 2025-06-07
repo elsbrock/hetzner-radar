@@ -5,8 +5,8 @@
     import { A } from "flowbite-svelte";
 </script>
 
-<div class="flex items-center justify-center bg-gray-50 py-10 px-3">
-    <div class="p-6 bg-white rounded-lg shadow-md dark:bg-gray w-[450px]">
+<div class="flex items-center justify-center py-10 px-3">
+    <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md w-[450px]">
         {#if $page.status === 500}
             <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
                 Server Error

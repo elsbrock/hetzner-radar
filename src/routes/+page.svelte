@@ -226,7 +226,7 @@
     // --- End Shake Animation Logic ---
 </script>
 
-<main class="p-8 bg-gray-50 dark:bg-gray-900">
+<main class="p-8">
     <!-- New Hero Section -->
     <section
         class="mx-auto my-10 max-w-6xl grid grid-cols-1 md:grid-cols-5 gap-12 items-start"
