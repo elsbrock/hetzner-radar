@@ -11,7 +11,8 @@ export function rateLimit(handler: ActionHandler, action: string = "default") {
         const fingerprint = await createRequestFingerprint(event);
 
         const rateLimitKey = `rate_limit:${action}:${fingerprint}`;
-        const notRateLimited = await event.platform?.env.RATE_LIMIT.limit(rateLimitKey);
+        const { success } = await event.platform?.env.RATE_LIMIT.limit({ key: rateLimitKey });
+        const notRateLimited = success;
 
         if (notRateLimited) {
             return handler(event);

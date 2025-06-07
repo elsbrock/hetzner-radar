@@ -23,14 +23,23 @@
   ],
   "services": [
     {
-      "binding": "RATE_LIMIT",
-      "service": "rate-limiter"
-    },
-    {
       "binding": "CLOUD_STATUS",
       "service": "cloud-availability"
     }
   ],
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "RATE_LIMIT",
+        "type": "ratelimit",
+        "namespace_id": "1001",
+        "simple": {
+          "limit": 3,
+          "period": 60
+        }
+      }
+    ]
+  },
   "env": {
     "production": {
       "compatibility_date": "2024-09-23",
