@@ -355,7 +355,7 @@
 			<div class="overflow-x-auto">
 				<div class="inline-block min-w-full align-middle">
 					<div class="overflow-hidden rounded-b-lg border-b border-l border-r dark:border-gray-700">
-						<Table hoverable={true} class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+						<Table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
 							<TableHead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
 								<TableHeadCell class="sticky left-0 z-10 bg-gray-50 dark:bg-gray-700 px-4 pb-3 pt-4 align-middle">Server Type</TableHeadCell>
 								{#each data.statusData.locations as location}
@@ -384,14 +384,14 @@
 															<Badge color="yellow" class="inline-flex items-center px-1.5 py-0.5 text-xs" id="deprecated-{serverType.id}">
 																<ExclamationCircleSolid class="w-3 h-3 mr-1" /> Deprecated
 															</Badge>
-															<Tooltip triggeredBy="#deprecated-{serverType.id}">This server type is deprecated.</Tooltip>
+															<Tooltip triggeredBy="#deprecated-{serverType.id}" class="z-50">This server type is deprecated.</Tooltip>
 														{/if}
 													</div>
 													<span class="text-xs text-gray-500 dark:text-gray-400 mt-1">
 														{serverType.cores} Cores / {serverType.memory} GB RAM / {serverType.disk} GB Disk
 													</span>
 												</div>
-												<Tooltip triggeredBy="#{serverType.name}-tooltip">{serverType.description}</Tooltip>
+												<Tooltip triggeredBy="#{serverType.name}-tooltip" class="z-50">{serverType.description}</Tooltip>
 												<div id="{serverType.name}-tooltip" class="inline-block"></div>
 											</TableBodyCell>
 											{#each data.statusData.locations as location}
@@ -399,10 +399,10 @@
 												<TableBodyCell class="text-center px-4 py-4">
 													{#if available}
 														<CheckCircleSolid size="xl" color="green" class="w-6 h-6 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
-														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}">Available in {location.city}</Tooltip>
+														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}" class="z-50">Available in {location.city}</Tooltip>
 													{:else}
 														<CloseCircleSolid size="xl" color="red" class="w-6 h-6 inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
-														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}">Not available in {location.city}</Tooltip>
+														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}" class="z-50">Not available in {location.city}</Tooltip>
 													{/if}
 												</TableBodyCell>
 											{/each}
