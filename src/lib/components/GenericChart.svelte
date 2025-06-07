@@ -31,6 +31,31 @@
   // --- State ---
   let canvasElement: HTMLCanvasElement | null = $state(null);
   let chartInstance: Chart<ChartType> | null = $state(null);
+  let isDarkMode = $state(typeof window !== 'undefined' && document.documentElement.classList.contains('dark'));
+
+  // --- Theme Detection Effect ---
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Initial theme detection
+    isDarkMode = document.documentElement.classList.contains('dark');
+    
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const newIsDarkMode = document.documentElement.classList.contains('dark');
+          if (newIsDarkMode !== isDarkMode) {
+            isDarkMode = newIsDarkMode;
+          }
+        }
+      }
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
+  });
 
   // --- Chart Configuration Effect ---
   $effect(() => {
@@ -45,8 +70,7 @@
       return;
     }
 
-    // --- Theme Handling (from settingsStore) ---
-    const isDarkMode = $settingsStore.darkMode === true;
+    // Use the reactive isDarkMode variable - accessing it here makes effect reactive to theme changes
     const tickColor = isDarkMode ? "#F3F4F6" : "#374151"; // gray-100 dark, gray-700 light
     const gridColor = isDarkMode
       ? "rgba(75, 85, 99, 0.2)" // gray-500 dark, reduced opacity
@@ -214,9 +238,11 @@
         };
         chartInstance = new Chart(ctx, config);
       } else {
+        // Update chart data and options
         chartInstance.data = chartData;
         chartInstance.options = finalOptions; // Update options potentially changed by theme or user input
-        chartInstance.update();
+        // Force update to apply new theme colors
+        chartInstance.update('none'); // 'none' mode skips animations for faster theme switching
       }
     }
   });

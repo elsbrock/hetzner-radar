@@ -28,6 +28,7 @@
   let noResults = $state(false);
   let canvasElement: HTMLCanvasElement | null = $state(null);
   let chartInstance: Chart | null = $state(null);
+  let isDarkMode = $state(typeof window !== 'undefined' && document.documentElement.classList.contains('dark'));
 
   // Helper function to get a valid VAT key, defaulting to 'NET'
   function getValidVatKey(code: string | undefined): VatOptionKey {
@@ -68,6 +69,30 @@
     return includeSuffix ? `${basePrice} ${vatSuffix}` : basePrice;
   }
 
+  // --- Theme Detection Effect ---
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Initial theme detection
+    isDarkMode = document.documentElement.classList.contains('dark');
+    
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const newIsDarkMode = document.documentElement.classList.contains('dark');
+          if (newIsDarkMode !== isDarkMode) {
+            isDarkMode = newIsDarkMode;
+          }
+        }
+      }
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
+  });
+
   // Chart.js Configuration and Data Update Effect
   $effect(() => {
     // Ensure canvas is mounted and we have data/settings
@@ -81,9 +106,7 @@
       return;
     }
 
-    // Check for dark mode from the settings store
-    // Accessing $settingsStore.darkMode here makes the effect reactive to its changes
-    const isDarkMode = $settingsStore.darkMode === true;
+    // Use the reactive isDarkMode variable - accessing it here makes effect reactive to theme changes
     const tickColor = isDarkMode ? "#F3F4F6" : "#374151"; // gray-100 dark, gray-700 light
     const gridColor = isDarkMode
       ? "rgba(31, 41, 55, 0.2)" // Reduced opacity for dark mode
@@ -319,7 +342,7 @@
       // Update by re-assigning the data and rebuilt options
       chartInstance.data = chartData;
       chartInstance.options = chartOptions as any; // Re-assign the whole options object
-      chartInstance.update();
+      chartInstance.update('none'); // 'none' mode skips animations for faster theme switching
     }
   });
 
