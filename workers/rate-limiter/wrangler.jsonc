@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rate-limiter",
+  "main": "src/index.ts",
+  "minify": true,
+  "compatibility_date": "2024-11-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "_3R60S",
+        "type": "ratelimit",
+        "namespace_id": "1001",
+        "simple": {
+          "limit": 3,
+          "period": 60
+        }
+      }
+    ]
+  }
+}
