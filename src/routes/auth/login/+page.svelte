@@ -57,7 +57,7 @@
         }
     }
 
-    // Handles keydown events for navigation (Backspace, Arrows) and paste
+    // Handles keydown events for navigation (Backspace, Arrows)
     async function handleCodeKeyDown(index: number, event: KeyboardEvent) {
         const input = event.target as HTMLInputElement;
 
@@ -88,48 +88,45 @@
                 await tick();
                 codeInputs[index + 1].focus();
             }
-        } else if ((event.ctrlKey || event.metaKey) && event.key === "v") {
-            event.preventDefault();
-            try {
-                const text = await navigator.clipboard.readText();
-                const digits = text.replace(/\D/g, ""); // Remove non-digits
-                if (digits.length > 0) {
-                    const len = Math.min(digits.length, codeInputs.length - index);
-                    let pastedCode = "";
-                    // Fill inputs directly
-                    for (let i = 0; i < len; i++) {
-                        const currentInputIndex = index + i;
-                        if (currentInputIndex < codeInputs.length) {
-                            codeInputs[currentInputIndex].value = digits[i];
-                            pastedCode += digits[i]; // Build the pasted part
-                        }
-                    }
-
-                    // Update the main 'code' variable based on the paste
-                    // Replace the portion of the code string affected by the paste
-                    code = code.slice(0, index) + pastedCode + code.slice(index + len);
-                    // Ensure code doesn't exceed max length (e.g., if pasting over existing digits)
-                    if (code.length > codeInputs.length) {
-                        code = code.slice(0, codeInputs.length);
-                    }
-
-                    // Focus the next input after the pasted content, or the last input
-                    const focusIndex = Math.min(index + len, codeInputs.length - 1);
-                    await tick();
-                    codeInputs[focusIndex].focus();
-
-                    // Explicitly check for completion and submit if needed after paste
-                    if (code.length === codeInputs.length) {
-                        console.log("Code complete after paste, submitting", code);
-                        await tick(); // Ensure DOM/focus updates settle
-                        authForm.requestSubmit();
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to read clipboard contents: ", err);
-            }
         }
         // Non-digit keys are ignored here, handled by the 'input' event filtering
+    }
+
+    // Handle paste events on any of the code inputs
+    async function handleCodePaste(event: ClipboardEvent) {
+        event.preventDefault();
+        try {
+            const text = event.clipboardData?.getData('text') || '';
+            const digits = text.replace(/\D/g, ''); // Remove non-digits
+            
+            if (digits.length > 0) {
+                // Clear all inputs first
+                clearCode();
+                
+                // Fill inputs with pasted digits (up to 6)
+                const maxDigits = Math.min(digits.length, codeInputs.length);
+                for (let i = 0; i < maxDigits; i++) {
+                    codeInputs[i].value = digits[i];
+                }
+                
+                // Update the code state
+                code = digits.slice(0, codeInputs.length);
+                
+                // Focus the next empty input or the last filled input
+                const focusIndex = Math.min(maxDigits, codeInputs.length - 1);
+                await tick();
+                codeInputs[focusIndex].focus();
+                
+                // Auto-submit if we have a complete code
+                if (code.length === codeInputs.length) {
+                    console.log("Code complete after paste, submitting", code);
+                    await tick();
+                    authForm.requestSubmit();
+                }
+            }
+        } catch (err) {
+            console.error("Failed to handle paste: ", err);
+        }
     }
 
     function clearCode() {
@@ -300,6 +297,7 @@
                            maxlength="1"
                            on:input={(e) => handleCodeInput(index, e)}
                            on:keydown={(e) => handleCodeKeyDown(index, e)}
+                           on:paste={handleCodePaste}
                            required
                        />
                    {/each}
