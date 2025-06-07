@@ -1,0 +1,63 @@
+<script lang="ts">
+    import { page } from "$app/stores";
+    import { Timeline, TimelineItem } from 'flowbite-svelte';
+</script>
+
+<svelte:head>
+    <title>Changelog - Server Radar</title>
+    <meta name="description" content="Latest features and improvements to Server Radar" />
+</svelte:head>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Changelog
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+            Latest features and improvements to Server Radar
+        </p>
+    </div>
+
+    <Timeline>
+        <TimelineItem title="Cloud Availability Alerts" date="Released on June 3rd, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Get notified when your preferred cloud server configurations become available. Set up alerts for specific server types, locations, and pricing thresholds.</p>
+        </TimelineItem>
+        <TimelineItem title="Discord Integration" date="Released on June 1st, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Comprehensive Discord notification system with dual-channel support. Get alerts directly in your Discord server for auction and cloud availability updates.</p>
+        </TimelineItem>
+        <TimelineItem title="Data Export & Statistics" date="Released on May 6th, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Export auction data and statistics for external analysis. Added sold auction price tracking and enhanced statistics layout with quick stats overview.</p>
+        </TimelineItem>
+        <TimelineItem title="Enhanced Navigation & UI" date="Released on May 4th, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Major navigation overhaul with fancy navbar design, loading indicators, and improved desktop layout. Added server icon in footer for visual appeal.</p>
+        </TimelineItem>
+        <TimelineItem title="Auction Alert Management" date="Released on May 2nd, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Advanced auction view system allowing users to track and manage their auction alerts with detailed matching history.</p>
+        </TimelineItem>
+        <TimelineItem title="Result Grouping & Card Stack" date="Released on April 27th, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Intelligent result grouping functionality and interactive card stack display for better data visualization on the landing page.</p>
+        </TimelineItem>
+        <TimelineItem title="Collapsible Filter Panel" date="Released on April 27th, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Responsive collapsible filter panel with different display modes for desktop and mobile. Improved user experience with better transitions and icons.</p>
+        </TimelineItem>
+        <TimelineItem title="Cloud Server Availability Monitoring" date="Released on April 22nd, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Real-time monitoring of Hetzner's cloud server availability across all locations. Live status page with color-coded indicators and accessibility features for color-blind users.</p>
+        </TimelineItem>
+        <TimelineItem title="Chart System Upgrade" date="Released on November 2024">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Switched from D3 to ApexCharts for better performance and added stacked charts for enhanced data visualization.</p>
+        </TimelineItem>
+        <TimelineItem title="Filter Persistence & Toast System" date="Released on October 2024">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Added filter persistence across sessions and comprehensive toast notification system. Major page rework with improved layouts.</p>
+        </TimelineItem>
+        <TimelineItem title="Advanced Filtering" date="Released on August 2024">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Dual range sliders, RPS filtering, recently seen servers filter, and shareable filter URLs for better user experience.</p>
+        </TimelineItem>
+    </Timeline>
+
+    <div class="mt-12 text-center">
+        <p class="text-gray-600 dark:text-gray-400 text-sm">
+            Want to suggest a feature or report a bug? 
+            <a href="/contact" class="text-blue-600 dark:text-blue-400 hover:underline">Get in touch</a>
+        </p>
+    </div>
+</div>

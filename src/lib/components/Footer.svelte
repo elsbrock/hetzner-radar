@@ -43,6 +43,9 @@
             <FooterLink data-testid="footer-link-contact" href="/contact"
                 >Contact</FooterLink
             >
+            <FooterLink data-testid="footer-link-changelog" href="/changelog"
+                >Changelog</FooterLink
+            >
         </FooterLinkGroup>
     </div>
 </Footer>
