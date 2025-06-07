@@ -240,7 +240,7 @@
     />
 {/if}
 
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+<div class="p-6">
     <div class="max-w-5xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
