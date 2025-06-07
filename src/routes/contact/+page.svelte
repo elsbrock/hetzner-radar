@@ -114,7 +114,7 @@
                 <Button
                     href="https://www.buymeacoffee.com/elsbrock"
                     color="yellow"
-                    class="w-full"
+                    class="w-full dark:bg-amber-600 dark:hover:bg-amber-700 dark:text-white dark:border-amber-600"
                 >
                     <FontAwesomeIcon icon={faCoffee} class="mr-2" />
                     Buy Me a Coffee
