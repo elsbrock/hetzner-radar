@@ -245,7 +245,7 @@
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Alert Management</h1>
-            <p class="text-lg text-gray-600 dark:text-gray-400">
+            <p class="text-base text-gray-600 dark:text-gray-400">
                 Monitor server prices and cloud availability with smart notifications
             </p>
         </div>
@@ -309,7 +309,7 @@
                                     />
                                     Active Alerts ({active.length}/{MAX_ALERTS})
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <p class="text-base text-gray-600 dark:text-gray-400 mb-4">
                                     All alerts that you have set up will be displayed here. Server Radar will continuously monitor the prices and notify you once the trigger price has been reached. You can edit or delete them at any time. New alerts can be created from existing search results (head over to <a href="/analyze" class="text-orange-500 hover:text-orange-600 underline">analyze</a>).
                                 </p>
                             </div>
@@ -404,7 +404,7 @@
                                     />
                                     Recently Triggered ({triggered.length})
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <p class="text-base text-gray-600 dark:text-gray-400 mb-4">
                                     Once an alert has triggered you will be notified and it will show up here. An alert that triggered will automatically be disabled and no more notifications will be sent. You can recreate them any time. We show the last 10 triggered alerts.
                                 </p>
                             </div>
@@ -529,7 +529,7 @@
                                     <BullhornSolid class="text-blue-500 w-5 h-5 mr-2 inline" />
                                     Active Alerts ({data.cloudAlerts.activeAlerts.length}/{MAX_CLOUD_ALERTS})
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <p class="text-base text-gray-600 dark:text-gray-400 mb-4">
                                     Monitor cloud server availability changes in real-time. Server Radar will notify you when your selected server types become available or unavailable in your chosen locations. You can set up alerts for specific combinations and choose your preferred notification methods.
                                 </p>
                             </div>
@@ -643,7 +643,7 @@
                                         <CheckCircleSolid class="text-green-500 w-5 h-5 mr-2 inline" />
                                         Recent Triggers ({data.cloudAlerts.triggeredAlerts.length})
                                     </h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                    <p class="text-base text-gray-600 dark:text-gray-400 mb-4">
                                         Cloud availability changes that have triggered your alerts are shown here. Unlike price alerts, cloud alerts remain active and will continue to notify you of future availability changes. We show the most recent triggers.
                                     </p>
                                 </div>

@@ -392,7 +392,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               RAM Price Over Time
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Track the price trends for RAM over time. Use this to gauge when
               it's most cost-effective to invest in memory-intensive servers.
             </p>
@@ -416,7 +416,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Disk Price Over Time
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Explore how the price of one GB HDD storage has fluctuated over
               time. This data can help you determine the best time to purchase
               storage-heavy configurations.
@@ -438,7 +438,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               SSD Price Over Time
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               See how one GB of SSD storage have changed over time, allowing you
               to plan your purchases for configurations that rely on fast
               storage solutions.
@@ -463,7 +463,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Average Sold Auction Price (Daily)
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Tracks the average daily price of server auctions that have been
               sold (latest price entry, excluding fixed-price offers). This
               helps understand actual market transaction values.
@@ -494,7 +494,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Volume by Country
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Analyze the volume of servers deployed in different regions to
               identify trends and make informed decisions about where to expand
               your infrastructure.
@@ -546,7 +546,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Volume by Datacenter - Finland
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Compare server volume across different datacenters in Finland to
               identify availability patterns and make informed decisions about
               where to deploy your infrastructure.
@@ -611,7 +611,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Volume by Datacenter - Germany
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Compare server volume across different datacenters in Germany to
               identify availability patterns and make informed decisions about
               where to deploy your infrastructure.
@@ -678,7 +678,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Volume Intel vs. AMD
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Compare the volume of servers with Intel and AMD processors to
               understand market trends and availability patterns for different
               CPU architectures.
@@ -738,7 +738,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Volume by Intel CPU Models
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Compare the volume of servers with different Intel CPU models to
               identify which models are most commonly available in the auction
               marketplace.
@@ -807,7 +807,7 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Volume by AMD CPU Models
             </h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
               Compare the volume of servers with different AMD CPU models to
               identify which models are most commonly available in the auction
               marketplace.

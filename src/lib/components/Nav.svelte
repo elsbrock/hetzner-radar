@@ -236,7 +236,7 @@
     >
       <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faHouse} />
       <span
-        class="text-black dark:text-gray-200 {activeUrl === '/'
+        class="text-base text-black dark:text-gray-200 {activeUrl === '/'
           ? 'border-b-2 border-primary-500'
           : ''}">Home</span
       >
@@ -248,7 +248,7 @@
     >
       <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faServer} />
       <span
-        class="text-black dark:text-gray-200 {activeUrl === '/configurations'
+        class="text-base text-black dark:text-gray-200 {activeUrl === '/configurations'
           ? 'border-b-2 border-primary-500'
           : ''}">Configurations</span
       >
@@ -260,7 +260,7 @@
     >
       <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faBinoculars} />
       <span
-        class="text-black dark:text-gray-200 {activeUrl === '/analyze'
+        class="text-base text-black dark:text-gray-200 {activeUrl === '/analyze'
           ? 'border-b-2 border-primary-500'
           : ''}">Analyze</span
       >
@@ -272,7 +272,7 @@
     >
       <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faCloud} />
       <span
-        class="text-black dark:text-gray-200 {activeUrl === '/cloud-status'
+        class="text-base text-black dark:text-gray-200 {activeUrl === '/cloud-status'
           ? 'border-b-2 border-primary-500'
           : ''}">Cloud</span
       >
@@ -295,7 +295,7 @@
           <FontAwesomeIcon class="text-orange-500 me-2 w-4 h-4" icon={faBell} />
         {/if}
         <span
-          class="text-black dark:text-gray-200 {activeUrl === '/alerts'
+          class="text-base text-black dark:text-gray-200 {activeUrl === '/alerts'
             ? 'border-b-2 border-primary-500'
             : ''}">Alerts</span
         >
@@ -308,7 +308,7 @@
       >
         <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faChartSimple} />
         <span
-          class="text-black dark:text-gray-200 {activeUrl === '/statistics'
+          class="text-base text-black dark:text-gray-200 {activeUrl === '/statistics'
             ? 'border-b-2 border-primary-500'
             : ''}">Statistics</span
         >
@@ -320,7 +320,7 @@
       >
         <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faCircleInfo} />
         <span
-          class="text-black dark:text-gray-200 {activeUrl === '/about'
+          class="text-base text-black dark:text-gray-200 {activeUrl === '/about'
             ? 'border-b-2 border-primary-500'
             : ''}">About</span
         >
@@ -336,7 +336,7 @@
       >
         <FontAwesomeIcon class="me-2 w-4 h-4 text-gray-700 dark:text-gray-300" icon={faCog} />
         <span
-          class="text-black dark:text-gray-300 {activeUrl === '/settings'
+          class="text-base text-black dark:text-gray-300 {activeUrl === '/settings'
             ? 'border-b-2 border-primary-500'
             : ''}">Settings</span
         >

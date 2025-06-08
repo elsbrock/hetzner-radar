@@ -19,13 +19,13 @@
 
         <!-- Introduction Section -->
         <div class="mb-12 text-center">
-            <p class="text-lg text-gray-600 dark:text-gray-400 mb-5">
+            <p class="text-base text-gray-600 dark:text-gray-400 mb-5">
                 Thank you for your interest in Server Radar! We're passionate
                 individuals dedicated to providing valuable tools for the
                 community. Whether you have questions, feedback, or just want to
                 say hello, we'd love to hear from you.
             </p>
-            <p class="text-lg text-gray-600 dark:text-gray-400">
+            <p class="text-base text-gray-600 dark:text-gray-400">
                 Your support and feedback help me improve and continue
                 developing this project. Feel free to reach out through any of
                 the methods below.
@@ -47,7 +47,7 @@
                     <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                         Email Us
                     </h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Have questions or need support? Reach out to us via
                         email, and I'll get back to you as soon as possible.
                     </p>
@@ -75,7 +75,7 @@
                     <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                         Support Us
                     </h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         If you appreciate what we do and would like to support
                         the project, consider becoming a sponsor on GitHub. Your
                         support helps us maintain and improve Server Radar.
@@ -105,7 +105,7 @@
                     <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                         Buy Me a Coffee
                     </h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Enjoy using Server Radar? Consider buying me a coffee to fuel
                         future development and show your appreciation for this project.
                     </p>

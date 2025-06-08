@@ -243,7 +243,7 @@
                         style="animation-delay: {i * 0.05}s;">{letter}</span
                     >{/each}&nbsp;for Hetzner Auction Servers
             </h1>
-            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+            <p class="text-base text-gray-600 dark:text-gray-400 mb-8">
                 <strong>Server Radar</strong> is a free, open-source tool built by the community, for the community.
                 Track Hetzner auction prices, get historical insights, use advanced filtering,
                 and receive <span class="underline decoration-orange-500 decoration-2">instant notifications</span>
@@ -543,7 +543,7 @@
                 >
                     Price History Tracking
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
                     Monitor price trends for specific server configurations.
                     Understand market fluctuations and make strategic purchasing
                     decisions based on historical data to secure the best value.
@@ -561,7 +561,7 @@
                 >
                     Advanced Filtering
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
                     Filter servers by precise specs, including CPU, RAM, and
                     exact disk configurations. Find exactly what you need
                     quickly and customize your search to match specific
@@ -580,7 +580,7 @@
                 >
                     Smart Notifications
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
                     Set your target price and get notified via email, Discord, or other
                     supported channels when a matching server hits the auction. Also get alerts
                     when cloud server types become available in your desired locations. Plan your purchases
@@ -621,7 +621,7 @@
                     </span>
                 </svelte:fragment>
                 <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400"
+                    class="text-sm font-normal text-gray-500 dark:text-gray-400"
                 >
                     Use advanced filters to specify the exact server
                     specifications you need – CPU, RAM, storage, location, and
@@ -713,7 +713,7 @@
                 <h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
                     Built in the Open
                 </h2>
-                <p class="mb-6 text-gray-600 dark:text-gray-400">
+                <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
                     <strong>Server Radar</strong> is 100% open source and community-driven.
                     Every line of code is transparent, and every feature is built with community input.
                     We believe in building tools that serve users, not shareholders.
@@ -753,7 +753,7 @@
                 <h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
                     Community Powered
                 </h2>
-                <p class="mb-6 text-gray-600 dark:text-gray-400">
+                <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
                     Server Radar exists thanks to contributors who donate their time and expertise.
                     Join us in making server hunting accessible to everyone.
                 </p>
@@ -803,7 +803,7 @@
 
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             <Card class="shadow-sm flex flex-col justify-between border-l-8">
-                <p class="text-gray-600 dark:text-gray-400 mb-3 italic">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 italic">
                     "As a startup founder, Server Radar helps me stretch our infrastructure
                     budget. The open-source nature means I can trust it and even contribute
                     features we need!"
@@ -829,7 +829,7 @@
             </Card>
 
             <Card class="shadow-sm flex flex-col justify-between border-l-8">
-                <p class="text-gray-600 dark:text-gray-400 mb-3 italic">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 italic">
                     "The transparency of open source combined with the powerful filtering
                     makes this my go-to tool. Saved hundreds of euros and joined an
                     amazing community!"
@@ -855,7 +855,7 @@
             </Card>
 
             <Card class="shadow-sm flex flex-col justify-between border-l-8">
-                <p class="text-gray-600 dark:text-gray-400 mb-3 italic">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 italic">
                     "I love that it's community-driven. Filed a feature request on GitHub
                     and it was implemented within days. This is how software should be built
                     – by users, for users."
@@ -933,7 +933,7 @@
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         Is Server Radar really free?
                     </span>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Yes! Server Radar is completely free and open source. We believe in providing value to the community without barriers. You can use all features including notifications at no cost.
                     </p>
                 </AccordionItem>
@@ -941,7 +941,7 @@
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         How often is the auction data updated?
                     </span>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         We check the Hetzner auction multiple times throughout the day to ensure you have access to the latest server availability and pricing. The "Auctions in Last Batch" counter shows you how many servers we found in our most recent scan.
                     </p>
                 </AccordionItem>
@@ -949,7 +949,7 @@
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         Can I contribute to the project?
                     </span>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Absolutely! Server Radar is open source and we welcome contributions. Whether it's code improvements, bug reports, feature suggestions, or documentation updates, check out our GitHub repository to get started.
                     </p>
                 </AccordionItem>
@@ -957,7 +957,7 @@
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         How do notifications work?
                     </span>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Create an account, set up your desired server specifications and target price, and choose how you want to be notified – via email, Discord, or other supported channels. We'll notify you instantly when a matching server appears in the auction or when cloud server types become available. No spam, just the deals you're looking for.
                     </p>
                 </AccordionItem>
@@ -965,7 +965,7 @@
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         What notification types are supported?
                     </span>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Currently we support email notifications and Discord webhooks for both price alerts and cloud availability alerts. We're actively working on adding more notification channels like Slack, Telegram, and webhook integrations to give you maximum flexibility in how you receive alerts.
                     </p>
                 </AccordionItem>
@@ -973,7 +973,7 @@
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         Is my data secure?
                     </span>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         We take privacy seriously. We only collect minimal data necessary to provide the service (email/Discord info for notifications). All server auction data is publicly available information. Check our Privacy Policy for full details.
                     </p>
                 </AccordionItem>

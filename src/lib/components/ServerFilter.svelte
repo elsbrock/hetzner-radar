@@ -359,7 +359,7 @@
         <div>
           <ButtonGroup class="flex">
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("ECC button clicked: true");
                 // Create a new object to ensure reactivity
@@ -369,7 +369,7 @@
               checked={filter.extrasECC === true}>yes</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("ECC button clicked: false");
                 // Create a new object to ensure reactivity
@@ -379,7 +379,7 @@
               checked={filter.extrasECC === false}>no</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("ECC button clicked: null");
                 // Create a new object to ensure reactivity
@@ -590,7 +590,7 @@
         <div>
           <ButtonGroup class="flex">
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("INIC button clicked: true");
                 filter = { ...filter, extrasINIC: true };
@@ -598,7 +598,7 @@
               checked={filter.extrasINIC === true}>yes</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("INIC button clicked: false");
                 filter = { ...filter, extrasINIC: false };
@@ -606,7 +606,7 @@
               checked={filter.extrasINIC === false}>no</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("INIC button clicked: null");
                 filter = { ...filter, extrasINIC: null };
@@ -624,7 +624,7 @@
         <div>
           <ButtonGroup class="flex">
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("HWR button clicked: true");
                 filter = { ...filter, extrasHWR: true };
@@ -632,7 +632,7 @@
               checked={filter.extrasHWR === true}>yes</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("HWR button clicked: false");
                 filter = { ...filter, extrasHWR: false };
@@ -640,7 +640,7 @@
               checked={filter.extrasHWR === false}>no</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("HWR button clicked: null");
                 filter = { ...filter, extrasHWR: null };
@@ -658,7 +658,7 @@
         <div>
           <ButtonGroup class="flex">
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("GPU button clicked: true");
                 filter = { ...filter, extrasGPU: true };
@@ -666,7 +666,7 @@
               checked={filter.extrasGPU === true}>yes</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("GPU button clicked: false");
                 filter = { ...filter, extrasGPU: false };
@@ -674,7 +674,7 @@
               checked={filter.extrasGPU === false}>no</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("GPU button clicked: null");
                 filter = { ...filter, extrasGPU: null };
@@ -692,7 +692,7 @@
         <div>
           <ButtonGroup class="flex">
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("RPS button clicked: true");
                 filter = { ...filter, extrasRPS: true };
@@ -700,7 +700,7 @@
               checked={filter.extrasRPS === true}>yes</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("RPS button clicked: false");
                 filter = { ...filter, extrasRPS: false };
@@ -708,7 +708,7 @@
               checked={filter.extrasRPS === false}>no</Button
             >
             <Button
-              size="xs"
+              size="sm"
               onclick={() => {
                 console.log("RPS button clicked: null");
                 filter = { ...filter, extrasRPS: null };
@@ -741,13 +741,13 @@
       <hr class="mb-2 border-gray-200 dark:border-gray-700" />
       <div class="my-1">
         {#if lastUpdate}
-          <p class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400">
+          <p class="mt-2 text-center text-sm text-gray-400 dark:text-gray-400">
             <FontAwesomeIcon icon={faClockRotateLeft} class="me-1" />
             {dayjs.unix(lastUpdate).format("DD.MM.YYYY HH:mm")}
           </p>
         {/if}
         {#if queryTime}
-          <p class="mt-2 text-center text-xs text-gray-400 dark:text-gray-400">
+          <p class="mt-2 text-center text-sm text-gray-400 dark:text-gray-400">
             {#if loading}
               <span
                 class="inline-block w-3 h-3 ml-1 border-2 border-gray-500 border-t-transparent border-solid rounded-full animate-spin"

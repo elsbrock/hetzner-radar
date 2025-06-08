@@ -2,6 +2,33 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-h1, h2, h3, h4, h5, h6 {
-  font-size: 0.9rem;
+/* Global font size adjustment */
+html {
+  font-size: 0.9rem; /* Reduce base font size by 10% */
 }
+
+/* 
+Font Hierarchy Standards:
+
+Marketing Pages (Landing, About, Contact, Configurations):
+- Page Titles: text-3xl (reduced from text-4xl)
+- Section Headings: text-2xl (reduced from text-3xl)
+- Subsection Headings: text-xl (reduced from text-2xl)
+- Body Paragraphs: text-base (reduced from text-lg)
+- Feature Descriptions: text-sm (reduced from text-base)
+- Meta Text: text-xs
+
+Application Pages (Analyze, Statistics, Alerts):
+- Page Titles: text-2xl
+- Section Headings: text-xl
+- Data Cards Title: text-lg
+- Data Cards Content: text-base (increased from text-sm)
+- Data Cards Meta: text-sm (increased from text-xs)
+- Controls/Filters: text-sm (increased from text-xs)
+
+Components:
+- Modal Titles: text-xl
+- Form Labels: text-sm
+- Help Text: text-xs
+- Buttons: text-sm
+*/
