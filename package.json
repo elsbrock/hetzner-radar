@@ -31,7 +31,7 @@
         "@types/leaflet": "1.9.18",
         "@types/node": "22.15.30",
         "@types/svelte-range-slider-pips": "2.0.4",
-        "@types/validator": "^13.15.1",
+        "@types/validator": "13.15.1",
         "autoprefixer": "10.4.21",
         "dayjs": "1.11.13",
         "deepmerge": "4.3.1",
