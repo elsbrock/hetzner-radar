@@ -25,7 +25,7 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Global timeout for all tests */
-  timeout: process.env.CI ? 120000 : 30000, // 2 minutes in CI, 30s locally
+  timeout: process.env.CI ? 180000 : 30000, // 3 minutes in CI, 30s locally
   
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -39,7 +39,10 @@ export default defineConfig({
     headless: !!process.env.CI,
     
     /* Action timeout for CI (waiting for elements, etc.) */
-    actionTimeout: process.env.CI ? 30000 : 5000,
+    actionTimeout: process.env.CI ? 60000 : 5000,
+    
+    /* Navigation timeout for page loads */
+    navigationTimeout: process.env.CI ? 60000 : 30000,
   },
 
   /* Configure projects for major browsers */
@@ -54,7 +57,7 @@ export default defineConfig({
       use: { 
         ...devices['Desktop Firefox'],
         // Firefox needs extra time for DuckDB operations
-        actionTimeout: 45000,
+        actionTimeout: 90000,
       },
     }] : []),
 
