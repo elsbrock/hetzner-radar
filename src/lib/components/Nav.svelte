@@ -117,7 +117,7 @@
   });
 </script>
 
-<Navbar class="h-15 w-full relative">
+<Navbar class="px-2 sm:px-4 py-2.5 w-full">
   <NavBrand href="/">
     <div style="width: 32px; height: 32px">
       <Radar />
@@ -134,35 +134,7 @@
     </div>
   </NavBrand>
 
-  <div class="hidden lg:flex items-center md:order-2">
-    <Button
-      size="md"
-      color="alternative"
-      href="https://github.com/elsbrock/hetzner-radar"
-      class="
-            border-gray-400 dark:border-gray-500
-            bg-gray-50 dark:bg-gray-700
-            p-2
-            px-4
-            ring-4
-            ring-orange-100 dark:ring-orange-900/50
-            hover:ring-orange-200 dark:hover:ring-orange-800/50
-            hover:border-orange-400 dark:hover:border-orange-500
-            text-gray-800 dark:text-gray-200
-            hover:text-gray-800 dark:hover:text-gray-100
-        "
-    >
-      <FontAwesomeIcon class="w-5 h-5 me-2" icon={faGithub} />
-      Star
-    </Button>
-    <div class="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-3"></div>
-    <div class="flex items-center">
-      <!-- Use DarkMode component directly -->
-      <DarkMode />
-    </div>
-  </div>
-
-  <div class="flex md:order-2 lg:hidden">
+  <div class="flex md:hidden ml-auto">
     <Button href="/analyze" aria-label="Analyze" size="xs">
       <FontAwesomeIcon class="w-5 h-5" icon={faBinoculars} /><span
         class="hidden md:inline ml-2"
@@ -178,94 +150,74 @@
   </div>
 
   <NavUl
-    hidden={!isNavOpen}
-    slideParams={{ duration: 250, delay: 0 }}
-    class="order-1"
+    class="{!isNavOpen ? 'hidden md:flex' : 'flex'} flex-col md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium"
     {activeUrl}
   >
     <NavLi
       href="/"
       data-testid="nav-link-home"
-      class="flex items-center bg-transparent!"
+      active={activeUrl === '/'}
+      class="{activeUrl === '/' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
     >
-      <FontAwesomeIcon class="me-2 w-4 h-4" icon={faHouse} />
-      <span
-        class="text-black dark:text-gray-200 {activeUrl === '/'
-          ? 'border-b-2 border-primary-500'
-          : ''}">Home</span
-      >
+      <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/' ? 'nav-icon-active' : ''}" icon={faHouse} />
+      <span class="{activeUrl === '/' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">Home</span>
     </NavLi>
     <NavLi
       href="/configurations"
       data-testid="nav-link-configurations"
-      class="flex items-center bg-transparent!"
+      active={activeUrl === '/configurations'}
+      class="{activeUrl === '/configurations' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
     >
-      <FontAwesomeIcon class="me-2 w-4 h-4" icon={faServer} />
-      <span
-        class="text-black dark:text-gray-200 {activeUrl === '/configurations'
-          ? 'border-b-2 border-primary-500'
-          : ''}">Configurations</span
-      >
+      <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/configurations' ? 'nav-icon-active' : ''}" icon={faServer} />
+      <span class="{activeUrl === '/configurations' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">Configurations</span>
     </NavLi>
     <NavLi
       href="/analyze"
       data-testid="nav-link-analyze"
-      class="flex items-center bg-transparent!"
+      active={activeUrl === '/analyze'}
+      class="{activeUrl === '/analyze' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
     >
-      <FontAwesomeIcon class="me-2 w-4 h-4" icon={faBinoculars} />
-      <span
-        class="text-black dark:text-gray-200 {activeUrl === '/analyze'
-          ? 'border-b-2 border-primary-500'
-          : ''}">Analyze</span
-      >
+      <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/analyze' ? 'nav-icon-active' : ''}" icon={faBinoculars} />
+      <span class="{activeUrl === '/analyze' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">Analyze</span>
     </NavLi>
     {#if $session}
       <NavLi
         href="/alerts"
         data-testid="nav-link-alerts"
-        class="flex items-center bg-transparent!"
+        active={activeUrl === '/alerts'}
+        class="{activeUrl === '/alerts' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
         onmouseenter={() => (isHoveringAlerts = true)}
         onmouseleave={() => (isHoveringAlerts = false)}
       >
         {#if isHoveringAlerts}
           <FontAwesomeIcon
-            class="text-orange-500 me-2 w-4 h-4"
+            class="me-2 w-4 h-4 {activeUrl === '/alerts' ? 'nav-icon-active' : 'text-orange-500'}"
             icon={faBell}
             shake
           />
         {:else}
-          <FontAwesomeIcon class="text-orange-500 me-2 w-4 h-4" icon={faBell} />
+          <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/alerts' ? 'nav-icon-active' : 'text-orange-500'}" icon={faBell} />
         {/if}
-        <span
-          class="text-black dark:text-gray-200 {activeUrl === '/alerts'
-            ? 'border-b-2 border-primary-500'
-            : ''}">Alerts</span
-        >
+        <span class="{activeUrl === '/alerts' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">Alerts</span>
       </NavLi>
     {:else}
       <NavLi
         href="/statistics"
         data-testid="nav-link-statistics"
-        class="flex items-center bg-transparent!"
+        active={activeUrl === '/statistics'}
+        class="{activeUrl === '/statistics' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faChartSimple} />
-        <span
-          class="text-black dark:text-gray-200 {activeUrl === '/statistics'
-            ? 'border-b-2 border-primary-500'
-            : ''}">Statistics</span
-        >
+        <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/statistics' ? 'nav-icon-active' : ''}" icon={faChartSimple} />
+        <span class="{activeUrl === '/statistics' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">Statistics</span>
       </NavLi>
       <NavLi
         href="/about"
         data-testid="nav-link-about"
-        class="flex items-center bg-transparent!"
+        active={activeUrl === '/about'}
+        class="{activeUrl === '/about' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faCircleInfo} />
-        <span
-          class="text-black dark:text-gray-200 {activeUrl === '/about'
-            ? 'border-b-2 border-primary-500'
-            : ''}">About</span
-        >
+        <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/about' ? 'nav-icon-active' : ''}" icon={faCircleInfo} />
+        <span class="{activeUrl === '/about' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">About</span>
       </NavLi>
     {/if}
 
@@ -273,19 +225,17 @@
       <NavLi
         href="/settings"
         data-testid="nav-link-settings"
-        class="flex items-center bg-transparent!"
+        active={activeUrl === '/settings'}
+        class="{activeUrl === '/settings' ? 'text-primary-700 dark:text-primary-500' : 'text-gray-700 dark:text-gray-400'}"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faUser} />
-        <span
-          class="text-black dark:text-gray-300 {activeUrl === '/settings'
-            ? 'border-b-2 border-primary-500'
-            : ''}">Settings</span
-        >
+        <FontAwesomeIcon class="me-2 w-4 h-4 {activeUrl === '/settings' ? 'nav-icon-active' : ''}" icon={faUser} />
+        <span class="{activeUrl === '/settings' ? 'border-b-2 nav-underline-active pb-0.5' : ''}">Settings</span>
       </NavLi>
-      <!-- Mobile only container for controls -->
-      <div
-        class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700"
-      >
+    {/if}
+    
+    <!-- Mobile only container for controls -->
+    <div class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700">
+      {#if $session}
         <form
           action="/auth/logout"
           method="POST"
@@ -298,17 +248,30 @@
           <Button
             data-testid="nav-signout-mobile"
             outline
-            class="w-full bg-white dark:bg-inherit"
+            class="w-full"
             type="submit"
           >
-            <FontAwesomeIcon class="me-2 w-4 h-4" icon={faRightFromBracket} /> Sign
-            Out
+            <FontAwesomeIcon class="me-2 w-4 h-4" icon={faRightFromBracket} />
+            Sign Out
           </Button>
         </form>
-        <!-- Use DarkMode component directly -->
-        <DarkMode />
-      </div>
-      <!-- Desktop only Sign Out -->
+      {:else}
+        <Button
+          data-testid="nav-signin-mobile"
+          outline
+          class="grow mr-2"
+          href="/auth/login"
+        >
+          <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} />
+          Sign In
+        </Button>
+      {/if}
+      <DarkMode />
+    </div>
+  </NavUl>
+
+  <div class="hidden md:flex items-center space-x-3 md:order-2">
+    {#if $session}
       <form
         action="/auth/logout"
         method="POST"
@@ -316,50 +279,41 @@
           session.set(null);
           return goto("/auth/logout");
         }}
-        class="hidden md:block"
       >
         <Button
           data-testid="nav-signout-desktop"
-          outline
-          class="md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
+          size="sm"
+          color="light"
           type="submit"
         >
-          <FontAwesomeIcon class="me-2 w-4 h-4" icon={faRightFromBracket} /> Sign
-          Out
+          <FontAwesomeIcon class="w-4 h-4 me-2" icon={faRightFromBracket} />
+          Sign Out
         </Button>
       </form>
     {:else}
-      <!-- Mobile only container for controls -->
-      <div
-        class="md:hidden flex items-center justify-between p-2 mt-2 border-t dark:border-gray-700"
-      >
-        <Button
-          data-testid="nav-signin-mobile"
-          outline
-          class="grow mr-2 bg-white dark:bg-inherit"
-          href="/auth/login"
-        >
-          <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} /> Sign In
-        </Button>
-        <!-- Use DarkMode component directly -->
-        <DarkMode />
-      </div>
-
-      <!-- Desktop only Sign In -->
       <Button
         data-testid="nav-signin-desktop"
-        outline
-        class="hidden md:block md:w-auto md:-m-2 md:p-2 bg-white dark:bg-inherit"
+        size="sm"
+        color="light"
         href="/auth/login"
       >
-        <FontAwesomeIcon class="me-2 w-4 h-4" icon={faKey} /> Sign In
+        <FontAwesomeIcon class="w-4 h-4 me-2" icon={faKey} />
+        Sign In
       </Button>
     {/if}
-    <!-- Removed separate mobile DarkMode NavLi -->
-  </NavUl>
+    <Button
+      size="sm"
+      color="light"
+      href="https://github.com/elsbrock/hetzner-radar"
+    >
+      <FontAwesomeIcon class="w-4 h-4 me-2" icon={faGithub} />
+      Star
+    </Button>
+    <DarkMode />
+  </div>
 
   <div
-    class="{isVisible ? 'fade-out-gradient' : 'fade-in-gradient'} absolute inset-x-0 bottom-0 -translate-y-[0px] h-[50px] overflow-hidden"
+    class="{isVisible ? 'fade-out-gradient' : 'fade-in-gradient'} absolute inset-x-0 bottom-0 translate-y-[0px] h-[50px] overflow-hidden"
     style="background: radial-gradient(ellipse 80% 50px at 50% 100%, rgba(249, 115, 22, 0.15), transparent 60%); pointer-events: none;"
   ></div>
 </Navbar>
@@ -368,15 +322,16 @@
 <div class="relative w-full h-[2px] overflow-hidden">
   <!-- Static bar, visible when animated bar is not -->
   <div
-    class="absolute inset-0 h-[2px] bg-linear-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
+    class="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
       ? 'opacity-0'
       : 'opacity-100'}"
   ></div>
   <!-- Animated bar -->
   <div
-    class="absolute inset-0 h-[2px] w-[300%] -left-full bg-linear-to-r from-transparent via-orange-500 to-transparent bg-size-[33.33%_100%] bg-repeat-x transition-opacity duration-300 {isVisible
+    class="absolute inset-0 h-[2px] w-[300%] -left-full bg-gradient-to-r from-transparent via-orange-500 to-transparent bg-repeat-x transition-opacity duration-300 {isVisible
       ? 'opacity-100'
       : 'opacity-0'} {isAnimating ? 'animate-loading-bar' : ''}"
+    style="background-size: 33.33% 100%;"
   ></div>
 </div>
 
@@ -402,5 +357,19 @@
   .fade-in-gradient {
     opacity: 1;
     transition: opacity 300ms ease; /* Faster fade-in */
+  }
+  
+  /* Force icon colors */
+  :global(.nav-icon-active) {
+    color: #FE795D !important;
+  }
+  
+  :global(.dark .nav-icon-active) {
+    color: #FE795D !important;
+  }
+  
+  /* Force underline color */
+  :global(.nav-underline-active) {
+    border-bottom-color: #FE795D !important;
   }
 </style>
