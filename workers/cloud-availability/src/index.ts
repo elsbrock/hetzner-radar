@@ -87,17 +87,6 @@ interface AvailabilityChange {
 	timestamp: number;
 }
 
-interface AnalyticsEngineDataPoint {
-	timestamp: number;
-	blob1: string; // server_type_id
-	blob2: string; // location_id
-	blob3: string; // event_type: 'available' | 'unavailable'
-	double1: number; // availability (1 or 0)
-	double2: number; // server_type_cores
-	double3: number; // server_type_memory
-	index1: string; // server_type_name (e.g., "cx11")
-	index2: string; // location_name (e.g., "fsn1")
-}
 
 const HETZNER_API_BASE = 'https://api.hetzner.cloud/v1';
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000;
@@ -412,23 +401,28 @@ export class CloudAvailability extends DurableObject {
 		const serverTypes = await this.ctx.storage.get<ServerTypeInfo[]>('serverTypes') || [];
 		const serverTypeMap = new Map(serverTypes.map(st => [st.id, st]));
 
-		const dataPoints: AnalyticsEngineDataPoint[] = changes.map(change => {
+		for (const change of changes) {
 			const serverType = serverTypeMap.get(change.serverTypeId);
-			return {
-				timestamp: change.timestamp,
-				blob1: String(change.serverTypeId),
-				blob2: String(change.locationId),
-				blob3: change.eventType,
-				double1: change.eventType === 'available' ? 1 : 0,
-				double2: serverType?.cores || 0,
-				double3: serverType?.memory || 0,
-				index1: change.serverTypeName,
-				index2: change.locationName
-			};
-		});
+			
+			// Write each data point individually
+			this.env.ANALYTICS_ENGINE.writeDataPoint({
+				blobs: [
+					String(change.serverTypeId),
+					String(change.locationId),
+					change.eventType,
+					change.serverTypeName,
+					change.locationName
+				],
+				doubles: [
+					change.eventType === 'available' ? 1 : 0,
+					serverType?.cores || 0,
+					serverType?.memory || 0
+				],
+				indexes: [change.serverTypeName] // Using server type name as index
+			});
+		}
 
-		await this.env.ANALYTICS_ENGINE.writeDataPoints(dataPoints);
-		console.log(`[CloudAvailability DO ${this.ctx.id}] Wrote ${dataPoints.length} data points to Analytics Engine`);
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Wrote ${changes.length} data points to Analytics Engine`);
 	}
 
 	async notifyMainApp(changes: AvailabilityChange[]): Promise<void> {
