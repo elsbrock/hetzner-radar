@@ -1,7 +1,7 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export function load(event) {
-	if (!event.locals.session) {
-		redirect(303, `/auth/login`);
-	}
+  if (!event.locals.session) {
+    redirect(303, `/auth/login`);
+  }
 }

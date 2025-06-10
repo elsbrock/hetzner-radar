@@ -3,7 +3,7 @@ interface SessionCookieOptions {
   path?: string;
   httpOnly?: boolean;
   secure?: boolean;
-  sameSite?: 'lax' | 'strict' | 'none';
+  sameSite?: "lax" | "strict" | "none";
 }
 
 interface SessionCookie {
@@ -16,28 +16,28 @@ interface SessionCookie {
 export function createSessionCookie(
   cookieName: string,
   token: string,
-  options: SessionCookieOptions = {}
+  options: SessionCookieOptions = {},
 ): SessionCookie {
   return {
-      name: cookieName,
-      value: token,
-      attributes: {
-          httpOnly: options.httpOnly ?? true,
-          secure: options.secure ?? true,
-          sameSite: options.sameSite ?? 'lax',
-          path: options.path ?? '/',
-          expires: options.expires
-      },
+    name: cookieName,
+    value: token,
+    attributes: {
+      httpOnly: options.httpOnly ?? true,
+      secure: options.secure ?? true,
+      sameSite: options.sameSite ?? "lax",
+      path: options.path ?? "/",
+      expires: options.expires,
+    },
   };
 }
 
 export function createBlankSessionCookie(cookieName: string): SessionCookie {
   return {
-      name: cookieName,
-      value: '',
-      attributes: {
-          path: '/',
-          expires: new Date(0)
-      },
+    name: cookieName,
+    value: "",
+    attributes: {
+      path: "/",
+      expires: new Date(0),
+    },
   };
 }

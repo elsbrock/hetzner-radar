@@ -1,4 +1,4 @@
-import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
+import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
 import { sendMail } from "$lib/mail";
 import { getUser } from "./user";
 import { sendDiscordNotification, createAlertDiscordEmbed } from "./discord";
@@ -39,17 +39,42 @@ export interface RawServerData {
 
 // Database column names for server data
 export const SERVER_COLUMNS = [
-  'id', 'information', 'datacenter', 'location', 'cpu_vendor', 'cpu', 'cpu_count', 'is_highio',
-  'ram', 'ram_size', 'is_ecc', 'hdd_arr', 'nvme_count', 'nvme_drives', 'nvme_size',
-  'sata_count', 'sata_drives', 'sata_size', 'hdd_count', 'hdd_drives', 'hdd_size',
-  'with_inic', 'with_hwr', 'with_gpu', 'with_rps', 'traffic', 'bandwidth', 'price',
-  'fixed_price', 'seen'
+  "id",
+  "information",
+  "datacenter",
+  "location",
+  "cpu_vendor",
+  "cpu",
+  "cpu_count",
+  "is_highio",
+  "ram",
+  "ram_size",
+  "is_ecc",
+  "hdd_arr",
+  "nvme_count",
+  "nvme_drives",
+  "nvme_size",
+  "sata_count",
+  "sata_drives",
+  "sata_size",
+  "hdd_count",
+  "hdd_drives",
+  "hdd_size",
+  "with_inic",
+  "with_hwr",
+  "with_gpu",
+  "with_rps",
+  "traffic",
+  "bandwidth",
+  "price",
+  "fixed_price",
+  "seen",
 ];
 
 // SQL query to insert data into the auctions table
 export const AUCTIONS_INSERT_SQL = `
-  INSERT OR IGNORE INTO auctions (${SERVER_COLUMNS.join(', ')})
-  VALUES (${SERVER_COLUMNS.map(() => '?').join(', ')})
+  INSERT OR IGNORE INTO auctions (${SERVER_COLUMNS.join(", ")})
+  VALUES (${SERVER_COLUMNS.map(() => "?").join(", ")})
 `;
 
 // SQL query to find matching alerts for the current server data
@@ -103,7 +128,7 @@ export const MATCH_ALERTS_SQL = `
       pa.user_id = user.id
   WHERE
       -- Price Conditions
-      pa.price >= (c.price + (CASE WHEN pa.includes_ipv4_cost = 1 THEN ${HETZNER_IPV4_COST_CENTS/100} ELSE 0 END)) * (1 + pa.vat_rate / 100.0)
+      pa.price >= (c.price + (CASE WHEN pa.includes_ipv4_cost = 1 THEN ${HETZNER_IPV4_COST_CENTS / 100} ELSE 0 END)) * (1 + pa.vat_rate / 100.0)
 
       -- Location Conditions: ORed appropriately
       AND (
@@ -252,10 +277,13 @@ export const ALERT_AUCTION_MATCHES_INSERT_SQL = `
 /**
  * Prepares server data for database insertion
  */
-export async function prepareServerData(db: DB, configs: RawServerData[]): Promise<PreparedStatement[]> {
+export async function prepareServerData(
+  db: DB,
+  configs: RawServerData[],
+): Promise<PreparedStatement[]> {
   const auctionStmt = db.prepare(AUCTIONS_INSERT_SQL);
   const auctionBatch: PreparedStatement[] = [];
-  
+
   for (const config of configs) {
     const boundData = [
       config.id,
@@ -287,12 +315,12 @@ export async function prepareServerData(db: DB, configs: RawServerData[]): Promi
       config.bandwidth,
       config.price,
       config.fixed_price,
-      config.seen
+      config.seen,
     ];
-    
+
     auctionBatch.push(auctionStmt.bind(...boundData));
   }
-  
+
   return auctionBatch;
 }
 
@@ -308,12 +336,15 @@ export async function findMatchingAlerts(db: DB): Promise<any[]> {
 /**
  * Groups matched alerts by alert ID
  */
-export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
-  alertInfo: any;
-  matchedAuctions: { auction_id: number; price: number; seen: string }[];
-}> {
+export function groupAlertsByAlertId(matchedAlerts: any[]): Map<
+  number,
+  {
+    alertInfo: any;
+    matchedAuctions: { auction_id: number; price: number; seen: string }[];
+  }
+> {
   const alertMap = new Map();
-  
+
   for (const match of matchedAlerts) {
     if (!alertMap.has(match.alert_id)) {
       alertMap.set(match.alert_id, {
@@ -329,27 +360,31 @@ export function groupAlertsByAlertId(matchedAlerts: any[]): Map<number, {
           discord_webhook_url: match.discord_webhook_url,
           email_notifications: match.email_notifications,
           discord_notifications: match.discord_notifications,
-          created_at: match.created_at
+          created_at: match.created_at,
         },
-        matchedAuctions: []
+        matchedAuctions: [],
       });
     }
-    
+
     // Add this auction to the alert's matched auctions
     alertMap.get(match.alert_id).matchedAuctions.push({
       auction_id: match.auction_id,
       price: match.auction_price,
-      seen: match.seen
+      seen: match.seen,
     });
   }
-  
+
   return alertMap;
 }
 
 /**
  * Sends notification email for a matched alert
  */
-export async function sendEmailNotification(platform: any, alertInfo: any, triggerPrice: number): Promise<void> {
+export async function sendEmailNotification(
+  platform: any,
+  alertInfo: any,
+  triggerPrice: number,
+): Promise<void> {
   await sendMail(platform?.env, {
     from: {
       name: "Server Radar",
@@ -363,7 +398,7 @@ good news! The target price for one of your alerts has been reached.
 
          Filter: ${alertInfo.name}
    Target Price: ${alertInfo.price.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT)
-  Trigger Price: ${triggerPrice.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT${alertInfo.includes_ipv4_cost ? ' and IPv4 cost' : ''})
+  Trigger Price: ${triggerPrice.toFixed(2)} EUR (incl. ${alertInfo.vat_rate}% VAT${alertInfo.includes_ipv4_cost ? " and IPv4 cost" : ""})
 
 View the matched auctions directly:
 
@@ -385,20 +420,27 @@ https://radar.iodev.org/
 /**
  * Sends notifications via all configured channels for a matched alert
  */
-export async function sendAlertNotifications(platform: any, alertInfo: any, triggerPrice: number): Promise<void> {
+export async function sendAlertNotifications(
+  platform: any,
+  alertInfo: any,
+  triggerPrice: number,
+): Promise<void> {
   // Log the alertInfo for debugging
   console.log(`Processing notifications for alert ${alertInfo.id}:`, {
     discord_notifications: alertInfo.discord_notifications,
     email_notifications: alertInfo.email_notifications,
-    discord_webhook_url: alertInfo.discord_webhook_url ? 'present' : 'missing',
-    email: alertInfo.email ? 'present' : 'missing'
+    discord_webhook_url: alertInfo.discord_webhook_url ? "present" : "missing",
+    email: alertInfo.email ? "present" : "missing",
   });
 
   // Use per-alert notification preferences with fallbacks for migration case
-  const discordEnabled = (alertInfo.discord_notifications ?? false) && alertInfo.discord_webhook_url;
+  const discordEnabled =
+    (alertInfo.discord_notifications ?? false) && alertInfo.discord_webhook_url;
   const emailEnabled = alertInfo.email_notifications ?? true; // Default to true if null/undefined
 
-  console.log(`Notification settings: Discord=${discordEnabled}, Email=${emailEnabled}`);
+  console.log(
+    `Notification settings: Discord=${discordEnabled}, Email=${emailEnabled}`,
+  );
 
   let discordSent = false;
 
@@ -411,24 +453,36 @@ export async function sendAlertNotifications(platform: any, alertInfo: any, trig
         alertInfo.price,
         triggerPrice,
         alertInfo.vat_rate,
-        auctionUrl
+        auctionUrl,
       );
-      
-      const success = await sendDiscordNotification(alertInfo.discord_webhook_url, {
-        embeds: [embed]
-      });
-      
+
+      const success = await sendDiscordNotification(
+        alertInfo.discord_webhook_url,
+        {
+          embeds: [embed],
+        },
+      );
+
       if (success) {
         discordSent = true;
-        console.log(`Discord notification sent successfully for alert ${alertInfo.id}`);
+        console.log(
+          `Discord notification sent successfully for alert ${alertInfo.id}`,
+        );
       } else {
-        console.error(`Failed to send Discord notification for alert ${alertInfo.id}: Webhook request failed`);
+        console.error(
+          `Failed to send Discord notification for alert ${alertInfo.id}: Webhook request failed`,
+        );
       }
     } catch (error) {
-      console.error(`Failed to send Discord notification for alert ${alertInfo.id}:`, error);
+      console.error(
+        `Failed to send Discord notification for alert ${alertInfo.id}:`,
+        error,
+      );
     }
   } else {
-    console.log(`Discord notification skipped for alert ${alertInfo.id}: ${!alertInfo.discord_notifications ? 'disabled' : 'no webhook URL'}`);
+    console.log(
+      `Discord notification skipped for alert ${alertInfo.id}: ${!alertInfo.discord_notifications ? "disabled" : "no webhook URL"}`,
+    );
   }
 
   // Send email notification if enabled and Discord wasn't sent or if Discord failed
@@ -437,11 +491,16 @@ export async function sendAlertNotifications(platform: any, alertInfo: any, trig
       await sendEmailNotification(platform, alertInfo, triggerPrice);
       console.log(`Email notification sent for alert ${alertInfo.id}`);
     } catch (error) {
-      console.error(`Failed to send email notification for alert ${alertInfo.id}:`, error);
+      console.error(
+        `Failed to send email notification for alert ${alertInfo.id}:`,
+        error,
+      );
       // If both Discord and email fail, we've done our best
     }
   } else if (!emailEnabled && !discordSent) {
-    console.warn(`No notifications sent for alert ${alertInfo.id}: All methods disabled or failed`);
+    console.warn(
+      `No notifications sent for alert ${alertInfo.id}: All methods disabled or failed`,
+    );
   }
 }
 
@@ -456,61 +515,70 @@ export async function processAlert(
   db: DB,
   platform: any,
   alertInfo: any,
-  matchedAuctions: { auction_id: number; price: number; seen: string }[]
+  matchedAuctions: { auction_id: number; price: number; seen: string }[],
 ): Promise<void> {
   try {
     // Find the lowest price among matched auctions
-    const lowestAuctionPrice = Math.min(...matchedAuctions.map(auction => auction.price));
-    
+    const lowestAuctionPrice = Math.min(
+      ...matchedAuctions.map((auction) => auction.price),
+    );
+
     // Calculate trigger price including VAT and IPv4 cost if applicable
-    const ipv4Cost = alertInfo.includes_ipv4_cost ? HETZNER_IPV4_COST_CENTS / 100 : 0;
-    const triggerPrice = (lowestAuctionPrice + ipv4Cost) * (1 + alertInfo.vat_rate / 100.0);
-    
+    const ipv4Cost = alertInfo.includes_ipv4_cost
+      ? HETZNER_IPV4_COST_CENTS / 100
+      : 0;
+    const triggerPrice =
+      (lowestAuctionPrice + ipv4Cost) * (1 + alertInfo.vat_rate / 100.0);
+
     // Send notifications via all configured channels
     await sendAlertNotifications(platform, alertInfo, triggerPrice);
-    
+
     // Start a transaction for database operations
     const statements: PreparedStatement[] = [];
-    
+
     // Insert alert history record
     const historyStmt = db.prepare(ALERT_HISTORY_INSERT_SQL);
-    statements.push(historyStmt.bind(
-      alertInfo.id,
-      alertInfo.name,
-      alertInfo.filter,
-      alertInfo.price,
-      alertInfo.vat_rate,
-      triggerPrice,
-      alertInfo.user_id,
-      alertInfo.created_at,
-      alertInfo.email_notifications ?? true, // Default to true if null/undefined
-      alertInfo.discord_notifications ?? false // Default to false if null/undefined
-    ));
-    
+    statements.push(
+      historyStmt.bind(
+        alertInfo.id,
+        alertInfo.name,
+        alertInfo.filter,
+        alertInfo.price,
+        alertInfo.vat_rate,
+        triggerPrice,
+        alertInfo.user_id,
+        alertInfo.created_at,
+        alertInfo.email_notifications ?? true, // Default to true if null/undefined
+        alertInfo.discord_notifications ?? false, // Default to false if null/undefined
+      ),
+    );
+
     // Delete the processed alert
     const deleteStmt = db.prepare(ALERT_DELETE_SQL);
     statements.push(deleteStmt.bind(alertInfo.id));
-    
+
     // Execute all statements in a batch to get the alert history ID
     const results = await db.batch(statements);
-    
+
     // Get the ID of the newly inserted alert history record (same as the original alert ID)
     // This ID is used in the email notification URL and for storing matched auctions
     const alertHistoryId = alertInfo.id;
-    
+
     // Store matched auctions in a separate batch
     const auctionMatchStatements: PreparedStatement[] = [];
     const matchesStmt = db.prepare(ALERT_AUCTION_MATCHES_INSERT_SQL);
-    
+
     for (const auction of matchedAuctions) {
-      auctionMatchStatements.push(matchesStmt.bind(
-        alertHistoryId,
-        auction.auction_id,
-        auction.seen,
-        auction.price
-      ));
+      auctionMatchStatements.push(
+        matchesStmt.bind(
+          alertHistoryId,
+          auction.auction_id,
+          auction.seen,
+          auction.price,
+        ),
+      );
     }
-    
+
     // Execute the auction match statements
     if (auctionMatchStatements.length > 0) {
       await db.batch(auctionMatchStatements);

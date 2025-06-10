@@ -1,42 +1,42 @@
 name: Update Database and Push
 
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-    build_and_deploy_db:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout data
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-              with:
-                  ref: data
-            - name: Checkout repo
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+  build_and_deploy_db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout data
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          ref: data
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-            - name: Set up Python 3.11
-              uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-              with:
-                  python-version: 3.11
+      - name: Set up Python 3.11
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: 3.11
 
-            - name: Install Poetry
-              run: pip install poetry
+      - name: Install Poetry
+        run: pip install poetry
 
-            - name: Install dependencies
-              run: poetry install
+      - name: Install dependencies
+        run: poetry install
 
-            - name: Run import script
-              run: |
-                  git worktree add data data
-                  poetry run python scripts/import.py data static/sb.duckdb.wasm
+      - name: Run import script
+        run: |
+          git worktree add data data
+          poetry run python scripts/import.py data static/sb.duckdb.wasm
 
-            - name: Deploy DB to R2
-              uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
-              with:
-                  command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
-                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Deploy DB to R2
+        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        with:
+          command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-            - name: Push new data to worker
-              run: poetry run python scripts/push.py static/sb.duckdb.wasm
-              env:
-                  API_KEY: ${{ secrets.API_KEY }}
+      - name: Push new data to worker
+        run: poetry run python scripts/push.py static/sb.duckdb.wasm
+        env:
+          API_KEY: ${{ secrets.API_KEY }}

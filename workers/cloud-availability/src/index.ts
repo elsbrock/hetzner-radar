@@ -1,27 +1,27 @@
-import { WorkerEntrypoint, DurableObject } from "cloudflare:workers";
+import { WorkerEntrypoint, DurableObject } from 'cloudflare:workers';
 
 /**
  * Cloud Availability Worker
- * 
+ *
  * Required secrets (set via wrangler secret put):
  * - HETZNER_API_TOKEN: Token for accessing Hetzner Cloud API
  * - API_KEY: Authentication key for notifying the main app
- * 
+ *
  * Environment variables (set in wrangler.jsonc):
  * - MAIN_APP_URL: URL of the main application (e.g., https://radar.iodev.org)
  * - FETCH_INTERVAL_MS: How often to check Hetzner API (default: 60000ms)
  */
 
 interface Env {
- 	CLOUD_STATUS_DO: DurableObjectNamespace<CloudAvailability>;
- 	HETZNER_API_TOKEN: string;
- 	FETCH_INTERVAL_MS?: string;
- 	ANALYTICS_ENGINE: AnalyticsEngineDataset;
- 	MAIN_APP_URL?: string;
- 	API_KEY?: string;
- }
+	CLOUD_STATUS_DO: DurableObjectNamespace<CloudAvailability>;
+	HETZNER_API_TOKEN: string;
+	FETCH_INTERVAL_MS?: string;
+	ANALYTICS_ENGINE: AnalyticsEngineDataset;
+	MAIN_APP_URL?: string;
+	API_KEY?: string;
+}
 
- interface HetznerServerType {
+interface HetznerServerType {
 	id: number;
 	name: string;
 	description: string;
@@ -101,7 +101,6 @@ interface AvailabilityChange {
 	timestamp: number;
 }
 
-
 const HETZNER_API_BASE = 'https://api.hetzner.cloud/v1';
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000;
 
@@ -112,14 +111,13 @@ export class CloudAvailability extends DurableObject {
 	initializing: boolean = false;
 	initialized: boolean = false;
 
-
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 
 		this.ctx = ctx;
 		this.env = env;
 		this.fetchIntervalMs = env.FETCH_INTERVAL_MS ? parseInt(env.FETCH_INTERVAL_MS) : DEFAULT_FETCH_INTERVAL_MS;
-		
+
 		// Log environment variable presence
 		console.log(`[CloudAvailability DO ${this.ctx.id}] Environment variables check:`);
 		console.log(`  - HETZNER_API_TOKEN: ${env.HETZNER_API_TOKEN ? 'Present' : 'MISSING'}`);
@@ -131,7 +129,9 @@ export class CloudAvailability extends DurableObject {
 
 	async ensureInitialized(): Promise<void> {
 		if (this.initialized || this.initializing) {
-			console.log(`[CloudAvailability DO ${this.ctx.id}] Already initialized=${this.initialized} or initializing=${this.initializing}, skipping...`);
+			console.log(
+				`[CloudAvailability DO ${this.ctx.id}] Already initialized=${this.initialized} or initializing=${this.initializing}, skipping...`,
+			);
 			return;
 		}
 		this.initializing = true;
@@ -139,7 +139,7 @@ export class CloudAvailability extends DurableObject {
 		try {
 			const currentAlarm = await this.ctx.storage.getAlarm();
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Current alarm: ${currentAlarm ? new Date(currentAlarm).toISOString() : 'none'}`);
-			
+
 			if (currentAlarm === null) {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] No alarm set, setting initial alarm.`);
 				await this.ctx.storage.setAlarm(Date.now() + 5000);
@@ -147,10 +147,10 @@ export class CloudAvailability extends DurableObject {
 
 			const lastUpdated: string | undefined = await this.ctx.storage.get('lastUpdated');
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Last updated: ${lastUpdated || 'never'}`);
-			
+
 			if (!lastUpdated) {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] No initial data found, fetching immediately.`);
-				this.fetchAndUpdateStatus().catch(err => console.error(`[CloudAvailability DO ${this.ctx.id}] Initial fetch failed:`, err));
+				this.fetchAndUpdateStatus().catch((err) => console.error(`[CloudAvailability DO ${this.ctx.id}] Initial fetch failed:`, err));
 			} else {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] Initial data exists, marking as initialized.`);
 				this.initialized = true;
@@ -161,7 +161,6 @@ export class CloudAvailability extends DurableObject {
 			this.initializing = false;
 		}
 	}
-
 
 	async alarm(): Promise<void> {
 		console.log(`[CloudAvailability DO ${this.ctx.id}] Alarm triggered, fetching Hetzner status...`);
@@ -218,7 +217,7 @@ export class CloudAvailability extends DurableObject {
 
 	async fetchAndUpdateStatus(): Promise<void> {
 		console.log(`[CloudAvailability DO ${this.ctx.id}] fetchAndUpdateStatus called at ${new Date().toISOString()}`);
-		
+
 		const apiToken = this.env.HETZNER_API_TOKEN;
 		if (!apiToken) {
 			console.error(`[CloudAvailability DO ${this.ctx.id}] HETZNER_API_TOKEN secret is not configured.`);
@@ -247,7 +246,7 @@ export class CloudAvailability extends DurableObject {
 			const datacentersData = (await datacentersResponse.json()) as { datacenters: HetznerDatacenter[] };
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Fetched ${datacentersData.datacenters.length} datacenters.`);
 
-			const processedServerTypes: ServerTypeInfo[] = serverTypesData.server_types.map(st => ({
+			const processedServerTypes: ServerTypeInfo[] = serverTypesData.server_types.map((st) => ({
 				id: st.id,
 				name: st.name,
 				description: st.description,
@@ -284,13 +283,13 @@ export class CloudAvailability extends DurableObject {
 				if (!processedSupported[locId]) {
 					processedSupported[locId] = [];
 				}
-				
+
 				const currentAvailable = new Set(processedAvailability[locId]);
-				dc.server_types.available.forEach(serverId => currentAvailable.add(serverId));
+				dc.server_types.available.forEach((serverId) => currentAvailable.add(serverId));
 				processedAvailability[locId] = Array.from(currentAvailable).sort((a, b) => a - b);
-				
+
 				const currentSupported = new Set(processedSupported[locId]);
-				dc.server_types.supported.forEach(serverId => currentSupported.add(serverId));
+				dc.server_types.supported.forEach((serverId) => currentSupported.add(serverId));
 				processedSupported[locId] = Array.from(currentSupported).sort((a, b) => a - b);
 			}
 
@@ -308,7 +307,7 @@ export class CloudAvailability extends DurableObject {
 
 			// Get previous availability for change detection
 			const previousAvailability = await this.ctx.storage.get<AvailabilityMatrix>('availability');
-			
+
 			const updateTimestamp = new Date().toISOString();
 
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Storing processed data...`);
@@ -321,17 +320,14 @@ export class CloudAvailability extends DurableObject {
 			});
 
 			// Detect and handle changes
-			console.log(`[CloudAvailability DO ${this.ctx.id}] Change detection: initialized=${this.initialized}, previousAvailability=${previousAvailability ? 'exists' : 'null'}`);
-			
+			console.log(
+				`[CloudAvailability DO ${this.ctx.id}] Change detection: initialized=${this.initialized}, previousAvailability=${previousAvailability ? 'exists' : 'null'}`,
+			);
+
 			if (previousAvailability && this.initialized) {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] Running change detection...`);
-				const changes = await this.detectChanges(
-					previousAvailability, 
-					processedAvailability, 
-					processedServerTypes, 
-					processedLocations
-				);
-				
+				const changes = await this.detectChanges(previousAvailability, processedAvailability, processedServerTypes, processedLocations);
+
 				if (changes.length > 0) {
 					console.log(`[CloudAvailability DO ${this.ctx.id}] Detected ${changes.length} availability changes:`);
 					changes.forEach((change, idx) => {
@@ -355,7 +351,6 @@ export class CloudAvailability extends DurableObject {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] Initialized successfully.`);
 			}
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Data stored successfully at ${updateTimestamp}.`);
-
 		} catch (error) {
 			console.error(`[CloudAvailability DO ${this.ctx.id}] Error during fetch/update:`, error);
 			throw error;
@@ -366,7 +361,7 @@ export class CloudAvailability extends DurableObject {
 		oldAvailability: AvailabilityMatrix,
 		newAvailability: AvailabilityMatrix,
 		serverTypes: ServerTypeInfo[],
-		locations: LocationInfo[]
+		locations: LocationInfo[],
 	): Promise<AvailabilityChange[]> {
 		const changes: AvailabilityChange[] = [];
 		const timestamp = Date.now();
@@ -376,8 +371,8 @@ export class CloudAvailability extends DurableObject {
 		console.log(`  - New availability locations: ${Object.keys(newAvailability).length}`);
 
 		// Create lookup maps
-		const serverTypeMap = new Map(serverTypes.map(st => [st.id, st]));
-		const locationMap = new Map(locations.map(loc => [loc.id, loc]));
+		const serverTypeMap = new Map(serverTypes.map((st) => [st.id, st]));
+		const locationMap = new Map(locations.map((loc) => [loc.id, loc]));
 
 		// Check all location/server type combinations
 		for (const locationId of Object.keys(newAvailability)) {
@@ -398,7 +393,7 @@ export class CloudAvailability extends DurableObject {
 							locationId: locId,
 							locationName: location.name,
 							eventType: 'available',
-							timestamp
+							timestamp,
 						});
 					}
 				}
@@ -417,7 +412,7 @@ export class CloudAvailability extends DurableObject {
 							locationId: locId,
 							locationName: location.name,
 							eventType: 'unavailable',
-							timestamp
+							timestamp,
 						});
 					}
 				}
@@ -439,7 +434,7 @@ export class CloudAvailability extends DurableObject {
 							locationId: locId,
 							locationName: location.name,
 							eventType: 'unavailable',
-							timestamp
+							timestamp,
 						});
 					}
 				}
@@ -452,7 +447,7 @@ export class CloudAvailability extends DurableObject {
 
 	async handleAvailabilityChanges(changes: AvailabilityChange[]): Promise<void> {
 		console.log(`[CloudAvailability DO ${this.ctx.id}] Handling ${changes.length} availability changes...`);
-		
+
 		// Write to Analytics Engine if available
 		if (this.env.ANALYTICS_ENGINE) {
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Writing to Analytics Engine...`);
@@ -482,27 +477,17 @@ export class CloudAvailability extends DurableObject {
 	}
 
 	async writeToAnalyticsEngine(changes: AvailabilityChange[]): Promise<void> {
-		const serverTypes = await this.ctx.storage.get<ServerTypeInfo[]>('serverTypes') || [];
-		const serverTypeMap = new Map(serverTypes.map(st => [st.id, st]));
+		const serverTypes = (await this.ctx.storage.get<ServerTypeInfo[]>('serverTypes')) || [];
+		const serverTypeMap = new Map(serverTypes.map((st) => [st.id, st]));
 
 		for (const change of changes) {
 			const serverType = serverTypeMap.get(change.serverTypeId);
-			
+
 			// Write each data point individually
 			this.env.ANALYTICS_ENGINE.writeDataPoint({
-				blobs: [
-					String(change.serverTypeId),
-					String(change.locationId),
-					change.eventType,
-					change.serverTypeName,
-					change.locationName
-				],
-				doubles: [
-					change.eventType === 'available' ? 1 : 0,
-					serverType?.cores || 0,
-					serverType?.memory || 0
-				],
-				indexes: [change.serverTypeName] // Using server type name as index
+				blobs: [String(change.serverTypeId), String(change.locationId), change.eventType, change.serverTypeName, change.locationName],
+				doubles: [change.eventType === 'available' ? 1 : 0, serverType?.cores || 0, serverType?.memory || 0],
+				indexes: [change.serverTypeName], // Using server type name as index
 			});
 		}
 
@@ -512,31 +497,31 @@ export class CloudAvailability extends DurableObject {
 	async notifyMainApp(changes: AvailabilityChange[]): Promise<void> {
 		const url = `${this.env.MAIN_APP_URL}/(internal)/notify`;
 		const requestBody = { changes };
-		
+
 		console.log(`[CloudAvailability DO ${this.ctx.id}] Sending notification request:`);
 		console.log(`  - URL: ${url}`);
 		console.log(`  - Method: POST`);
 		console.log(`  - Changes count: ${changes.length}`);
 		console.log(`  - Request body: ${JSON.stringify(requestBody, null, 2)}`);
-		
+
 		const startTime = Date.now();
-		
+
 		try {
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${this.env.API_KEY}`,
+					Authorization: `Bearer ${this.env.API_KEY}`,
 					'Content-Type': 'application/json',
-					'x-auth-key': this.env.API_KEY
+					'x-auth-key': this.env.API_KEY,
 				},
-				body: JSON.stringify(requestBody)
+				body: JSON.stringify(requestBody),
 			});
-			
+
 			const duration = Date.now() - startTime;
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Notification response received in ${duration}ms:`);
 			console.log(`  - Status: ${response.status} ${response.statusText}`);
 			console.log(`  - Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
-			
+
 			const responseText = await response.text();
 			console.log(`  - Response body: ${responseText}`);
 
@@ -559,24 +544,24 @@ export class CloudAvailability extends DurableObject {
 export default class CloudAvailabilityWorker extends WorkerEntrypoint<Env> {
 	async fetch(request: Request): Promise<Response> {
 		try {
-			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName("singleton-cloud-availability-v1");
+			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
 
 			return await stub.fetch(request);
 		} catch (e: any) {
-			console.error("Error in Worker default fetch:", e);
+			console.error('Error in Worker default fetch:', e);
 			return new Response(`Error processing request: ${e.message}`, { status: 500 });
 		}
 	}
 
 	async getStatus(): Promise<CloudStatusData> {
 		try {
-			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName("singleton-cloud-availability-v1");
+			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
 
 			return await (stub as any).getStatus();
 		} catch (e: any) {
-			console.error("Error in Worker getStatus RPC:", e);
+			console.error('Error in Worker getStatus RPC:', e);
 			throw new Error(`Error calling getStatus on DO: ${e.message}`);
 		}
 	}

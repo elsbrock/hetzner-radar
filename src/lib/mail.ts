@@ -1,6 +1,6 @@
 // mailService.ts
 
-import { dev } from '$app/environment';
+import { dev } from "$app/environment";
 
 interface MailOptions {
   from: {
@@ -12,7 +12,10 @@ interface MailOptions {
   text: string;
 }
 
-export async function sendMail(env: any, mailOptions: MailOptions): Promise<void> {
+export async function sendMail(
+  env: any,
+  mailOptions: MailOptions,
+): Promise<void> {
   if (dev) {
     console.log(JSON.stringify(mailOptions, undefined, 2));
   }
@@ -23,26 +26,31 @@ export async function sendMail(env: any, mailOptions: MailOptions): Promise<void
       : from.email;
 
   const body = new URLSearchParams();
-  body.append('from', fromField);
-  body.append('to', to);
-  body.append('subject', subject);
-  body.append('text', text);
+  body.append("from", fromField);
+  body.append("to", to);
+  body.append("subject", subject);
+  body.append("text", text);
 
   // Construct Basic Auth header: username is API key, password is empty string
-  const credentials = typeof btoa === 'function'
-    ? btoa(env.FORWARDEMAIL_API_KEY + ':')
-    : Buffer.from(env.FORWARDEMAIL_API_KEY + ':').toString('base64');
+  const credentials =
+    typeof btoa === "function"
+      ? btoa(env.FORWARDEMAIL_API_KEY + ":")
+      : Buffer.from(env.FORWARDEMAIL_API_KEY + ":").toString("base64");
 
-  const response = await fetch('https://api.forwardemail.net/v1/emails', {
-    method: 'POST',
+  const response = await fetch("https://api.forwardemail.net/v1/emails", {
+    method: "POST",
     headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
     },
     body,
   });
 
   if (!response.ok) {
-    console.error('Failed to send email:', response.status, await response.text());
+    console.error(
+      "Failed to send email:",
+      response.status,
+      await response.text(),
+    );
   }
 }

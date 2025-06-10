@@ -1,5 +1,5 @@
 // tests/fixtures.ts
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Page } from "@playwright/test";
 
 type ErrorTracking = {
   consoleErrors: string[];
@@ -12,8 +12,8 @@ const test = base.extend<ErrorTracking>({
     const errors: string[] = [];
 
     // Listen to console events
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
         errors.push(msg.text());
       }
     });
@@ -24,7 +24,7 @@ const test = base.extend<ErrorTracking>({
     const notFoundUrls: string[] = [];
 
     // Listen to response events
-    page.on('response', response => {
+    page.on("response", (response) => {
       if (response.status() === 404) {
         notFoundUrls.push(response.url());
       }
@@ -38,12 +38,14 @@ const test = base.extend<ErrorTracking>({
 test.afterEach(async ({ consoleErrors, http404s }, testInfo) => {
   if (consoleErrors.length > 0 || http404s.length > 0) {
     const errorMessages = [
-      ...consoleErrors.map(err => `Console error: ${err}`),
-      ...http404s.map(url => `404 Not Found: ${url}`),
-    ].join('\n');
+      ...consoleErrors.map((err) => `Console error: ${err}`),
+      ...http404s.map((url) => `404 Not Found: ${url}`),
+    ].join("\n");
 
     // Fail the test with detailed error messages
-    throw new Error(`Test "${testInfo.title}" encountered issues:\n${errorMessages}`);
+    throw new Error(
+      `Test "${testInfo.title}" encountered issues:\n${errorMessages}`,
+    );
   }
 });
 

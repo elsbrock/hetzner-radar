@@ -7,12 +7,14 @@
 When adding a comment to Svelte markup, eg.
 
 <Component ...>
+
   <p>bla</p>
 </Component>
 
-ALWAYS use <!-- comment --> style comments, never {* comment *} or React-like comments, eg.
+ALWAYS use <!-- comment --> style comments, never {_ comment _} or React-like comments, eg.
 
 <Component ...>
+
   <!-- comment -->
   <p>bla</p>
 </Component>
@@ -20,14 +22,17 @@ ALWAYS use <!-- comment --> style comments, never {* comment *} or React-like co
 For elements wrapped over multiple lines, do not comment at all or above that element, eg.
 
 <ComplexComponent
-  foo="bar"
+foo="bar"
+
 >
 
 like
 
 <!-- comment -->
+
 <ComplexComponent
-  foo="bar"
+foo="bar"
+
 >
 
 **Applies to:** Svelte files (`.svelte`)

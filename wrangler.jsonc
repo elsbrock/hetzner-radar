@@ -4,28 +4,28 @@
   "compatibility_date": "2024-11-01",
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
+    "head_sampling_rate": 1,
   },
   "assets": {
     "binding": "ASSETS",
-    "directory": ".svelte-kit/cloudflare"
+    "directory": ".svelte-kit/cloudflare",
   },
   "placement": {
-    "mode": "off"
+    "mode": "off",
   },
   "d1_databases": [
     {
       "database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
       "preview_database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
       "binding": "DB",
-      "database_name": "DB"
-    }
+      "database_name": "DB",
+    },
   ],
   "services": [
     {
       "binding": "CLOUD_STATUS",
-      "service": "cloud-availability"
-    }
+      "service": "cloud-availability",
+    },
   ],
   "unsafe": {
     "bindings": [
@@ -35,45 +35,45 @@
         "namespace_id": "1001",
         "simple": {
           "limit": 3,
-          "period": 60
-        }
-      }
-    ]
+          "period": 60,
+        },
+      },
+    ],
   },
   "env": {
     "production": {
       "compatibility_date": "2024-09-23",
       "compatibility_flags": ["nodejs_compat"],
       "placement": {
-        "mode": "smart"
+        "mode": "smart",
       },
       "vars": {
-        "NODE_VERSION": "22"
+        "NODE_VERSION": "22",
       },
       "d1_databases": [
         {
           "database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
           "binding": "DB",
-          "database_name": "DB"
-        }
-      ]
+          "database_name": "DB",
+        },
+      ],
     },
     "preview": {
       "compatibility_date": "2024-09-23",
       "compatibility_flags": ["nodejs_compat"],
       "placement": {
-        "mode": "smart"
+        "mode": "smart",
       },
       "vars": {
-        "NODE_VERSION": "22"
+        "NODE_VERSION": "22",
       },
       "d1_databases": [
         {
           "database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
           "binding": "DB",
-          "database_name": "DB"
-        }
-      ]
-    }
-  }
+          "database_name": "DB",
+        },
+      ],
+    },
+  },
 }

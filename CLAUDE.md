@@ -1,9 +1,11 @@
 # Hetzner Server Radar Project Context
 
 ## Project Overview
+
 Hetzner Server Radar is a web application that tracks prices of Hetzner's Dedicated Server Auction over time. It helps customers identify the best configurations and prices by providing advanced filtering, pricing history, and target price alerts.
 
 ## Technology Stack
+
 - **Frontend**: SvelteKit 5 with TypeScript
 - **Styling**: Tailwind CSS with Flowbite components
 - **Database**: DuckDB (client-side) and Cloudflare D1 (backend)
@@ -12,6 +14,7 @@ Hetzner Server Radar is a web application that tracks prices of Hetzner's Dedica
 - **Testing**: Playwright for E2E tests, Vitest for unit tests
 
 ## Key Commands
+
 ```bash
 # Development
 npm run dev          # Start development server
@@ -28,6 +31,7 @@ python scripts/import.py data static/sb.duckdb  # Import data
 ```
 
 ## Project Structure
+
 - `/src/routes/` - SvelteKit pages and API routes
 - `/src/lib/` - Shared components and utilities
   - `/api/backend/` - Server-side API logic
@@ -40,11 +44,13 @@ python scripts/import.py data static/sb.duckdb  # Import data
 - `/static/` - Static assets including DuckDB database
 
 ## Database Architecture
+
 - **Client-side**: DuckDB WASM for querying auction data
 - **Server-side**: Cloudflare D1 for user data, sessions, and alerts
 - Data is fetched hourly from Hetzner and stored in the `data` branch
 
 ## Key Conventions
+
 1. **TypeScript**: Strict mode enabled, use type annotations
 2. **Svelte 5**: Uses runes syntax (`$state`, `$props`, `$derived`)
 3. **Imports**: Use `$lib/` alias for internal imports
@@ -55,6 +61,7 @@ python scripts/import.py data static/sb.duckdb  # Import data
 8. **Authentication**: Session-based auth with email verification
 
 ## Important Notes
+
 - The project uses Cloudflare's infrastructure extensively
 - DuckDB runs entirely in the browser for data queries
 - The `data` branch contains raw auction data (3 months history)

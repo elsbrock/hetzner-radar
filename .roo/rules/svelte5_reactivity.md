@@ -7,10 +7,10 @@ Prefer `$derived` for creating computed values based on other state variables an
 
 **Example:**
 
-*   **Instead of:** `$: doubled = count * 2;`
-*   **Use:** `let doubled = $derived(count * 2);`
+- **Instead of:** `$: doubled = count * 2;`
+- **Use:** `let doubled = $derived(count * 2);`
 
-*   **Instead of:** `$: console.log('Count changed:', count);`
-*   **Use:** `$effect(() => { console.log('Count changed:', count); });`
+- **Instead of:** `$: console.log('Count changed:', count);`
+- **Use:** `$effect(() => { console.log('Count changed:', count); });`
 
 **Applies to:** Svelte files (`.svelte`)

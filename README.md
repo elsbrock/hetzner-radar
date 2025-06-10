@@ -18,10 +18,10 @@ https://github.com/user-attachments/assets/cb49e923-0315-49aa-a3c2-2dbef2ee0596
 
 ## Features
 
-* Track server prices and volumes over time.
-* Find all configurations that match your filter criteria.
-* View the lowest price seen for a specific configuration.
-* *New*: Get notified when your target price is met.
+- Track server prices and volumes over time.
+- Find all configurations that match your filter criteria.
+- View the lowest price seen for a specific configuration.
+- _New_: Get notified when your target price is met.
 
 ## Architecture
 
@@ -84,6 +84,7 @@ To run the website, simply use the `dev` target. To build a static version, use
 npm install
 npm run dev
 ```
+
 ## Contributions
 
 Contributions are welcome and encouraged! Whether it's fixing a bug, adding a

@@ -1,36 +1,22 @@
 {
-  "extends": [
-    "config:best-practices",
-    ":separateMultipleMajorReleases"
-  ],
+  "extends": ["config:best-practices", ":separateMultipleMajorReleases"],
   "packageRules": [
     {
       "groupName": "all-minor-patch",
       "groupSlug": "all-minor-patch",
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "auto",
       "automergeComment": "Merging this PR automatically because all checks are green.",
-      "matchPackageNames": [
-        "*"
-      ]
+      "matchPackageNames": ["*"]
     },
     {
       "groupName": "major",
       "groupSlug": "major",
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "assignees": [
-        "elsbrock"
-      ],
-      "matchPackageNames": [
-        "*"
-      ]
+      "matchUpdateTypes": ["major"],
+      "assignees": ["elsbrock"],
+      "matchPackageNames": ["*"]
     }
   ],
   "prCreation": "not-pending",
