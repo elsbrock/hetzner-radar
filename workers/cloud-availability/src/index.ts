@@ -109,7 +109,6 @@ export class CloudAvailability extends DurableObject {
 	env: Env;
 	fetchIntervalMs: number;
 	initializing: boolean = false;
-	initialized: boolean = false;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
@@ -128,9 +127,9 @@ export class CloudAvailability extends DurableObject {
 	}
 
 	async ensureInitialized(): Promise<void> {
-		if (this.initialized || this.initializing) {
+		if (this.initializing) {
 			console.log(
-				`[CloudAvailability DO ${this.ctx.id}] Already initialized=${this.initialized} or initializing=${this.initializing}, skipping...`,
+				`[CloudAvailability DO ${this.ctx.id}] Already initializing=${this.initializing}, skipping...`,
 			);
 			return;
 		}
@@ -152,8 +151,7 @@ export class CloudAvailability extends DurableObject {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] No initial data found, fetching immediately.`);
 				this.fetchAndUpdateStatus().catch((err) => console.error(`[CloudAvailability DO ${this.ctx.id}] Initial fetch failed:`, err));
 			} else {
-				console.log(`[CloudAvailability DO ${this.ctx.id}] Initial data exists, marking as initialized.`);
-				this.initialized = true;
+				console.log(`[CloudAvailability DO ${this.ctx.id}] Initial data exists.`);
 			}
 		} catch (err) {
 			console.error(`[CloudAvailability DO ${this.ctx.id}] Initialization check failed:`, err);
@@ -321,10 +319,10 @@ export class CloudAvailability extends DurableObject {
 
 			// Detect and handle changes
 			console.log(
-				`[CloudAvailability DO ${this.ctx.id}] Change detection: initialized=${this.initialized}, previousAvailability=${previousAvailability ? 'exists' : 'null'}`,
+				`[CloudAvailability DO ${this.ctx.id}] Change detection: previousAvailability=${previousAvailability ? 'exists' : 'null'}`,
 			);
 
-			if (previousAvailability && this.initialized) {
+			if (previousAvailability) {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] Running change detection...`);
 				const changes = await this.detectChanges(previousAvailability, processedAvailability, processedServerTypes, processedLocations);
 
@@ -338,18 +336,9 @@ export class CloudAvailability extends DurableObject {
 					console.log(`[CloudAvailability DO ${this.ctx.id}] No availability changes detected`);
 				}
 			} else {
-				if (!previousAvailability) {
-					console.log(`[CloudAvailability DO ${this.ctx.id}] Skipping change detection: no previous availability data`);
-				}
-				if (!this.initialized) {
-					console.log(`[CloudAvailability DO ${this.ctx.id}] Skipping change detection: not yet initialized`);
-				}
+				console.log(`[CloudAvailability DO ${this.ctx.id}] Skipping change detection: no previous availability data`);
 			}
 
-			if (!this.initialized) {
-				this.initialized = true;
-				console.log(`[CloudAvailability DO ${this.ctx.id}] Initialized successfully.`);
-			}
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Data stored successfully at ${updateTimestamp}.`);
 		} catch (error) {
 			console.error(`[CloudAvailability DO ${this.ctx.id}] Error during fetch/update:`, error);
