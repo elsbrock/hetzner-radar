@@ -1,12 +1,24 @@
- import { WorkerEntrypoint, DurableObject } from "cloudflare:workers";
+import { WorkerEntrypoint, DurableObject } from "cloudflare:workers";
 
- interface Env {
+/**
+ * Cloud Availability Worker
+ * 
+ * Required secrets (set via wrangler secret put):
+ * - HETZNER_API_TOKEN: Token for accessing Hetzner Cloud API
+ * - API_KEY: Authentication key for notifying the main app
+ * 
+ * Environment variables (set in wrangler.jsonc):
+ * - MAIN_APP_URL: URL of the main application (e.g., https://radar.iodev.org)
+ * - FETCH_INTERVAL_MS: How often to check Hetzner API (default: 60000ms)
+ */
+
+interface Env {
  	CLOUD_STATUS_DO: DurableObjectNamespace<CloudAvailability>;
  	HETZNER_API_TOKEN: string;
  	FETCH_INTERVAL_MS?: string;
  	ANALYTICS_ENGINE: AnalyticsEngineDataset;
  	MAIN_APP_URL?: string;
- 	INTERNAL_API_KEY?: string;
+ 	API_KEY?: string;
  }
 
  interface HetznerServerType {
@@ -105,26 +117,40 @@ export class CloudAvailability extends DurableObject {
 		this.ctx = ctx;
 		this.env = env;
 		this.fetchIntervalMs = env.FETCH_INTERVAL_MS ? parseInt(env.FETCH_INTERVAL_MS) : DEFAULT_FETCH_INTERVAL_MS;
+		
+		// Log environment variable presence
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Environment variables check:`);
+		console.log(`  - HETZNER_API_TOKEN: ${env.HETZNER_API_TOKEN ? 'Present' : 'MISSING'}`);
+		console.log(`  - MAIN_APP_URL: ${env.MAIN_APP_URL ? `Present (${env.MAIN_APP_URL})` : 'MISSING'}`);
+		console.log(`  - API_KEY: ${env.API_KEY ? 'Present' : 'MISSING'}`);
+		console.log(`  - ANALYTICS_ENGINE: ${env.ANALYTICS_ENGINE ? 'Present' : 'MISSING'}`);
+		console.log(`  - FETCH_INTERVAL_MS: ${this.fetchIntervalMs}ms`);
 	}
 
 	async ensureInitialized(): Promise<void> {
 		if (this.initialized || this.initializing) {
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Already initialized=${this.initialized} or initializing=${this.initializing}, skipping...`);
 			return;
 		}
 		this.initializing = true;
 
 		try {
 			const currentAlarm = await this.ctx.storage.getAlarm();
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Current alarm: ${currentAlarm ? new Date(currentAlarm).toISOString() : 'none'}`);
+			
 			if (currentAlarm === null) {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] No alarm set, setting initial alarm.`);
 				await this.ctx.storage.setAlarm(Date.now() + 5000);
 			}
 
 			const lastUpdated: string | undefined = await this.ctx.storage.get('lastUpdated');
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Last updated: ${lastUpdated || 'never'}`);
+			
 			if (!lastUpdated) {
 				console.log(`[CloudAvailability DO ${this.ctx.id}] No initial data found, fetching immediately.`);
 				this.fetchAndUpdateStatus().catch(err => console.error(`[CloudAvailability DO ${this.ctx.id}] Initial fetch failed:`, err));
 			} else {
+				console.log(`[CloudAvailability DO ${this.ctx.id}] Initial data exists, marking as initialized.`);
 				this.initialized = true;
 			}
 		} catch (err) {
@@ -187,6 +213,8 @@ export class CloudAvailability extends DurableObject {
 	}
 
 	async fetchAndUpdateStatus(): Promise<void> {
+		console.log(`[CloudAvailability DO ${this.ctx.id}] fetchAndUpdateStatus called at ${new Date().toISOString()}`);
+		
 		const apiToken = this.env.HETZNER_API_TOKEN;
 		if (!apiToken) {
 			console.error(`[CloudAvailability DO ${this.ctx.id}] HETZNER_API_TOKEN secret is not configured.`);
@@ -256,6 +284,15 @@ export class CloudAvailability extends DurableObject {
 			const processedLocations: LocationInfo[] = Array.from(processedLocationsMap.values());
 			processedLocations.sort((a, b) => a.name.localeCompare(b.name));
 
+			// Log availability summary
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Availability summary:`);
+			let totalAvailable = 0;
+			for (const [locId, serverTypes] of Object.entries(processedAvailability)) {
+				totalAvailable += serverTypes.length;
+				console.log(`  - Location ${locId}: ${serverTypes.length} server types available`);
+			}
+			console.log(`  - Total: ${totalAvailable} server type/location combinations`);
+
 			// Get previous availability for change detection
 			const previousAvailability = await this.ctx.storage.get<AvailabilityMatrix>('availability');
 			
@@ -270,7 +307,10 @@ export class CloudAvailability extends DurableObject {
 			});
 
 			// Detect and handle changes
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Change detection: initialized=${this.initialized}, previousAvailability=${previousAvailability ? 'exists' : 'null'}`);
+			
 			if (previousAvailability && this.initialized) {
+				console.log(`[CloudAvailability DO ${this.ctx.id}] Running change detection...`);
 				const changes = await this.detectChanges(
 					previousAvailability, 
 					processedAvailability, 
@@ -279,8 +319,20 @@ export class CloudAvailability extends DurableObject {
 				);
 				
 				if (changes.length > 0) {
-					console.log(`[CloudAvailability DO ${this.ctx.id}] Detected ${changes.length} availability changes`);
+					console.log(`[CloudAvailability DO ${this.ctx.id}] Detected ${changes.length} availability changes:`);
+					changes.forEach((change, idx) => {
+						console.log(`  ${idx + 1}. ${change.eventType}: ${change.serverTypeName} in ${change.locationName}`);
+					});
 					await this.handleAvailabilityChanges(changes);
+				} else {
+					console.log(`[CloudAvailability DO ${this.ctx.id}] No availability changes detected`);
+				}
+			} else {
+				if (!previousAvailability) {
+					console.log(`[CloudAvailability DO ${this.ctx.id}] Skipping change detection: no previous availability data`);
+				}
+				if (!this.initialized) {
+					console.log(`[CloudAvailability DO ${this.ctx.id}] Skipping change detection: not yet initialized`);
 				}
 			}
 
@@ -305,6 +357,10 @@ export class CloudAvailability extends DurableObject {
 		const changes: AvailabilityChange[] = [];
 		const timestamp = Date.now();
 
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Starting change detection...`);
+		console.log(`  - Old availability locations: ${Object.keys(oldAvailability).length}`);
+		console.log(`  - New availability locations: ${Object.keys(newAvailability).length}`);
+
 		// Create lookup maps
 		const serverTypeMap = new Map(serverTypes.map(st => [st.id, st]));
 		const locationMap = new Map(locations.map(loc => [loc.id, loc]));
@@ -321,6 +377,7 @@ export class CloudAvailability extends DurableObject {
 					const serverType = serverTypeMap.get(serverTypeId);
 					const location = locationMap.get(locId);
 					if (serverType && location) {
+						console.log(`[CloudAvailability DO ${this.ctx.id}] New availability detected: ${serverType.name} in ${location.name}`);
 						changes.push({
 							serverTypeId,
 							serverTypeName: serverType.name,
@@ -339,6 +396,7 @@ export class CloudAvailability extends DurableObject {
 					const serverType = serverTypeMap.get(serverTypeId);
 					const location = locationMap.get(locId);
 					if (serverType && location) {
+						console.log(`[CloudAvailability DO ${this.ctx.id}] Lost availability detected: ${serverType.name} in ${location.name}`);
 						changes.push({
 							serverTypeId,
 							serverTypeName: serverType.name,
@@ -374,26 +432,38 @@ export class CloudAvailability extends DurableObject {
 			}
 		}
 
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Change detection complete. Total changes found: ${changes.length}`);
 		return changes;
 	}
 
 	async handleAvailabilityChanges(changes: AvailabilityChange[]): Promise<void> {
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Handling ${changes.length} availability changes...`);
+		
 		// Write to Analytics Engine if available
 		if (this.env.ANALYTICS_ENGINE) {
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Writing to Analytics Engine...`);
 			try {
 				await this.writeToAnalyticsEngine(changes);
 			} catch (error) {
 				console.error(`[CloudAvailability DO ${this.ctx.id}] Failed to write to Analytics Engine:`, error);
 			}
+		} else {
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Analytics Engine not configured, skipping...`);
 		}
 
 		// Notify main app if configured
-		if (this.env.MAIN_APP_URL && this.env.INTERNAL_API_KEY) {
+		if (this.env.MAIN_APP_URL && this.env.API_KEY) {
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Notifying main app at ${this.env.MAIN_APP_URL}...`);
 			try {
 				await this.notifyMainApp(changes);
 			} catch (error) {
 				console.error(`[CloudAvailability DO ${this.ctx.id}] Failed to notify main app:`, error);
 			}
+		} else {
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Main app notification not configured:`);
+			console.log(`  - MAIN_APP_URL: ${this.env.MAIN_APP_URL || 'MISSING'}`);
+			console.log(`  - API_KEY: ${this.env.API_KEY ? 'Present' : 'MISSING'}`);
+			console.log(`  - Note: API_KEY should be set as a secret via 'wrangler secret put API_KEY'`);
 		}
 	}
 
@@ -426,20 +496,49 @@ export class CloudAvailability extends DurableObject {
 	}
 
 	async notifyMainApp(changes: AvailabilityChange[]): Promise<void> {
-		const response = await fetch(`${this.env.MAIN_APP_URL}/(internal)/notify`, {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${this.env.INTERNAL_API_KEY}`,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ changes })
-		});
+		const url = `${this.env.MAIN_APP_URL}/(internal)/notify`;
+		const requestBody = { changes };
+		
+		console.log(`[CloudAvailability DO ${this.ctx.id}] Sending notification request:`);
+		console.log(`  - URL: ${url}`);
+		console.log(`  - Method: POST`);
+		console.log(`  - Changes count: ${changes.length}`);
+		console.log(`  - Request body: ${JSON.stringify(requestBody, null, 2)}`);
+		
+		const startTime = Date.now();
+		
+		try {
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${this.env.API_KEY}`,
+					'Content-Type': 'application/json',
+					'x-auth-key': this.env.API_KEY
+				},
+				body: JSON.stringify(requestBody)
+			});
+			
+			const duration = Date.now() - startTime;
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Notification response received in ${duration}ms:`);
+			console.log(`  - Status: ${response.status} ${response.statusText}`);
+			console.log(`  - Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+			
+			const responseText = await response.text();
+			console.log(`  - Response body: ${responseText}`);
 
-		if (!response.ok) {
-			throw new Error(`Main app notification failed: ${response.status} ${await response.text()}`);
+			if (!response.ok) {
+				throw new Error(`Main app notification failed: ${response.status} ${responseText}`);
+			}
+
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Successfully notified main app about ${changes.length} changes`);
+		} catch (error) {
+			console.error(`[CloudAvailability DO ${this.ctx.id}] Notification request failed:`, error);
+			if (error instanceof Error) {
+				console.error(`  - Error message: ${error.message}`);
+				console.error(`  - Error stack: ${error.stack}`);
+			}
+			throw error;
 		}
-
-		console.log(`[CloudAvailability DO ${this.ctx.id}] Notified main app about ${changes.length} changes`);
 	}
 }
 
