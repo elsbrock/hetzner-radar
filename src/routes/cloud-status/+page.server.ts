@@ -22,11 +22,13 @@ interface ServerTypeInfo {
    }
    
    type AvailabilityMatrix = Record<number, number[]>;
+   type SupportMatrix = Record<number, number[]>;
    
    export interface CloudStatusData {
     serverTypes: ServerTypeInfo[];
     locations: LocationInfo[];
     availability: AvailabilityMatrix;
+    supported: SupportMatrix;
     lastUpdated: string | null;
    }
    

@@ -29,7 +29,8 @@
 		CloseCircleSolid,
 		ExclamationCircleSolid,
 		InfoCircleSolid,
-		BellRingSolid
+		BellRingSolid,
+		QuestionCircleSolid
 	} from 'flowbite-svelte-icons';
 
 	export let data: PageData;
@@ -147,35 +148,56 @@
 		return locationAvailability ? locationAvailability.includes(serverTypeId) : false;
 	}
 
+	function isSupported(locationId: number, serverTypeId: number): boolean {
+		if (!data.statusData?.supported) return false;
+		const locationSupported = data.statusData.supported[locationId];
+		return locationSupported ? locationSupported.includes(serverTypeId) : false;
+	}
+
+	function getServerStatus(locationId: number, serverTypeId: number): 'available' | 'supported' | 'unsupported' {
+		const available = isAvailable(locationId, serverTypeId);
+		const supported = isSupported(locationId, serverTypeId);
+		
+		if (available) return 'available';
+		if (supported) return 'supported';
+		return 'unsupported';
+	}
+
 
 	type LocationStatus = 'all' | 'some' | 'none';
 
 	function getLocationAvailabilityStatus(locationId: number): LocationStatus {
-		if (!data.statusData?.availability || !data.statusData?.serverTypes || data.statusData.serverTypes.length === 0) return 'none';
+		if (!data.statusData?.availability || !data.statusData?.supported || !data.statusData?.serverTypes || data.statusData.serverTypes.length === 0) return 'none';
 
 		const locationAvailability = data.statusData.availability[locationId];
+		const locationSupported = data.statusData.supported[locationId];
 
 		// Consider only non-deprecated server types for status calculation
 		const activeServerTypes = data.statusData.serverTypes.filter(st => !st.deprecated);
-		const totalActiveCount = activeServerTypes.length;
+		
+		// From active server types, only consider those that are supported in this location
+		const supportedActiveTypes = activeServerTypes.filter(st => 
+			locationSupported && locationSupported.includes(st.id)
+		);
+		const totalSupportedActiveCount = supportedActiveTypes.length;
 
-		if (totalActiveCount === 0) return 'none'; // No active types to check against
+		if (totalSupportedActiveCount === 0) return 'none'; // No active supported types to check against
 
 		if (!locationAvailability || locationAvailability.length === 0) {
-			return 'none'; // No types available for this location (even deprecated ones)
+			return 'none'; // No types available for this location
 		}
 
-		// Count how many *active* server types are available in this location
-		const availableActiveCount = locationAvailability.filter(id =>
-			activeServerTypes.some(st => st.id === id)
+		// Count how many *supported active* server types are available in this location
+		const availableSupportedActiveCount = locationAvailability.filter(id =>
+			supportedActiveTypes.some(st => st.id === id)
 		).length;
 
-		if (availableActiveCount === totalActiveCount) {
-			return 'all'; // All active types available
-		} else if (availableActiveCount > 0) {
-			return 'some'; // Some active types available
+		if (availableSupportedActiveCount === totalSupportedActiveCount) {
+			return 'all'; // All supported active types available
+		} else if (availableSupportedActiveCount > 0) {
+			return 'some'; // Some supported active types available
 		} else {
-			return 'none'; // No active types available
+			return 'none'; // No supported active types available
 		}
 	}
 
@@ -258,16 +280,16 @@
 								switch (status) {
 									case 'all':
 										icon = iconAllAvailable;
-										popupText += '<br>Status: All server types available';
+										popupText += '<br>Status: All supported server types available';
 										break;
 									case 'some':
 										icon = iconSomeAvailable;
-										popupText += '<br>Status: Not all server types available';
+										popupText += '<br>Status: Some supported server types available';
 										break;
 									case 'none':
 									default:
 										icon = iconNoneAvailable;
-										popupText += '<br>Status: No server types available';
+										popupText += '<br>Status: No supported server types available';
 										break;
 								}
 
@@ -395,14 +417,17 @@
 												<div id="{serverType.name}-tooltip" class="inline-block"></div>
 											</TableBodyCell>
 											{#each data.statusData.locations as location}
-												{@const available = isAvailable(location.id, serverType.id)}
+												{@const status = getServerStatus(location.id, serverType.id)}
 												<TableBodyCell class="text-center px-4 py-4">
-													{#if available}
+													{#if status === 'available'}
 														<CheckCircleSolid size="xl" color="green" class="w-6 h-6 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
 														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}" class="z-50">Available in {location.city}</Tooltip>
-													{:else}
+													{:else if status === 'supported'}
 														<CloseCircleSolid size="xl" color="red" class="w-6 h-6 inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
-														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}" class="z-50">Not available in {location.city}</Tooltip>
+														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}" class="z-50">Supported but currently unavailable in {location.city}</Tooltip>
+													{:else}
+														<QuestionCircleSolid size="xl" color="gray" class="w-6 h-6 inline-block align-middle" id="unsupported-{location.id}-{serverType.id}" />
+														<Tooltip triggeredBy="#unsupported-{location.id}-{serverType.id}" class="z-50">Not supported in {location.city}</Tooltip>
 													{/if}
 												</TableBodyCell>
 											{/each}

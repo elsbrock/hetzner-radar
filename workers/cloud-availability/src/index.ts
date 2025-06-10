@@ -82,11 +82,13 @@ interface ServerTypeInfo {
 }
 
 type AvailabilityMatrix = Record<number, number[]>;
+type SupportMatrix = Record<number, number[]>;
 
 interface CloudStatusData {
 	serverTypes: ServerTypeInfo[];
 	locations: LocationInfo[];
 	availability: AvailabilityMatrix;
+	supported: SupportMatrix;
 	lastUpdated: string | null;
 }
 
@@ -197,10 +199,11 @@ export class CloudAvailability extends DurableObject {
 	async getStatus(): Promise<CloudStatusData> {
 		await this.ensureInitialized();
 
-		const [serverTypes, locations, availability, lastUpdated] = await Promise.all([
+		const [serverTypes, locations, availability, supported, lastUpdated] = await Promise.all([
 			this.ctx.storage.get<ServerTypeInfo[]>('serverTypes'),
 			this.ctx.storage.get<LocationInfo[]>('locations'),
 			this.ctx.storage.get<AvailabilityMatrix>('availability'),
+			this.ctx.storage.get<SupportMatrix>('supported'),
 			this.ctx.storage.get<string>('lastUpdated'),
 		]);
 
@@ -208,6 +211,7 @@ export class CloudAvailability extends DurableObject {
 			serverTypes: serverTypes || [],
 			locations: locations || [],
 			availability: availability || {},
+			supported: supported || {},
 			lastUpdated: lastUpdated || null,
 		};
 	}
@@ -258,6 +262,7 @@ export class CloudAvailability extends DurableObject {
 
 			const processedLocationsMap = new Map<number, LocationInfo>();
 			const processedAvailability: AvailabilityMatrix = {};
+			const processedSupported: SupportMatrix = {};
 
 			for (const dc of datacentersData.datacenters) {
 				const locId = dc.location.id;
@@ -276,9 +281,17 @@ export class CloudAvailability extends DurableObject {
 				if (!processedAvailability[locId]) {
 					processedAvailability[locId] = [];
 				}
+				if (!processedSupported[locId]) {
+					processedSupported[locId] = [];
+				}
+				
 				const currentAvailable = new Set(processedAvailability[locId]);
 				dc.server_types.available.forEach(serverId => currentAvailable.add(serverId));
 				processedAvailability[locId] = Array.from(currentAvailable).sort((a, b) => a - b);
+				
+				const currentSupported = new Set(processedSupported[locId]);
+				dc.server_types.supported.forEach(serverId => currentSupported.add(serverId));
+				processedSupported[locId] = Array.from(currentSupported).sort((a, b) => a - b);
 			}
 
 			const processedLocations: LocationInfo[] = Array.from(processedLocationsMap.values());
@@ -303,6 +316,7 @@ export class CloudAvailability extends DurableObject {
 				serverTypes: processedServerTypes,
 				locations: processedLocations,
 				availability: processedAvailability,
+				supported: processedSupported,
 				lastUpdated: updateTimestamp,
 			});
 
