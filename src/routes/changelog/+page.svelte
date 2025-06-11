@@ -19,6 +19,20 @@
     </div>
 
     <Timeline>
+        <TimelineItem title="Enhanced Cloud Status Visualization" date="Released on November 6th, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+                Completely redesigned cloud status page with improved data visualization and user experience:
+            </p>
+            <ul class="list-disc list-inside text-gray-500 dark:text-gray-400 space-y-1 ml-4">
+                <li>Summary statistics cards showing overall availability, best/worst locations, and scarcest server types</li>
+                <li>Interactive filters for availability status, architecture, CPU type, and server name search</li>
+                <li>Collapsible server type groups with expandable/collapsible sections</li>
+                <li>Color-coded background cells for better availability status recognition</li>
+                <li>Additional "Available In" column showing availability counts per server type</li>
+                <li>Location availability percentage summary row</li>
+                <li>Mobile-optimized responsive design with simplified location headers</li>
+            </ul>
+        </TimelineItem>
         <TimelineItem title="Cloud Availability Alerts" date="Released on June 3rd, 2025">
             <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Get notified when your preferred cloud server configurations become available. Set up alerts for specific server types, locations, and pricing thresholds.</p>
         </TimelineItem>

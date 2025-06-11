@@ -7,6 +7,8 @@
 	import { settingsStore } from '$lib/stores/settings'; // Import settings store
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
 	import { invalidateAll } from '$app/navigation';
+	import QuickStat from '$lib/components/QuickStat.svelte';
+	import { fade, slide } from 'svelte/transition';
 	import {
 		Table,
 		TableHead,
@@ -21,7 +23,10 @@
 		Heading,
 		Alert,
 		A,
-		Button
+		Button,
+		Input,
+		Select,
+		Toggle
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
@@ -30,25 +35,37 @@
 		ExclamationCircleSolid,
 		InfoCircleSolid,
 		BellRingSolid,
-		QuestionCircleSolid
+		QuestionCircleSolid,
+		ChevronDownOutline,
+		ChevronRightOutline,
+		FilterSolid
 	} from 'flowbite-svelte-icons';
 
-	export let data: PageData;
+	const { data }: { data: PageData } = $props();
 
 	// Cloud alert modal state
-	let showCloudAlertModal = false;
-	let editingCloudAlert: any = null;
+	let showCloudAlertModal = $state(false);
+	let editingCloudAlert = $state<any>(null);
+
+	// Filter states
+	let showAvailableOnly = $state(false);
+	let architectureFilter = $state('all');
+	let cpuTypeFilter = $state('all');
+	let searchQuery = $state('');
+
+	// Collapsed groups state
+	let collapsedGroups = $state(new Set<string>());
 
 	// Server type and location options based on cloud status data
-	$: serverTypeOptions = data.statusData?.serverTypes?.map(st => ({
+	const serverTypeOptions = $derived(data.statusData?.serverTypes?.map(st => ({
 		value: st.id,
 		name: `${st.name.toUpperCase()} - ${st.cores} Core${st.cores > 1 ? 's' : ''} / ${st.memory} GB RAM`
-	})) || [];
+	})) || []);
 
-	$: locationOptions = data.statusData?.locations?.map(loc => ({
+	const locationOptions = $derived(data.statusData?.locations?.map(loc => ({
 		value: loc.id,
 		name: `${loc.city}, ${loc.country} (${loc.name})`
-	})) || [];
+	})) || []);
 
 	function openCreateAlertModal() {
 		editingCloudAlert = null;
@@ -75,7 +92,7 @@
 		deprecated: boolean;
 	}
 
-	$: groupedServerTypes = (() => {
+	const groupedServerTypes = $derived((() => {
 		const groups = new Map<string, Map<string, ServerTypeInfo[]>>();
 		if (!data.statusData?.serverTypes) {
 			return groups;
@@ -129,7 +146,155 @@
 		});
 
 		return sortedGroups;
-	})();
+	})());
+
+	// Calculate summary statistics
+	const summaryStats = $derived((() => {
+		if (!data.statusData) return null;
+
+		let totalSupported = 0;
+		let totalAvailable = 0;
+		const locationStats = new Map();
+		const serverTypeAvailability = new Map();
+
+		// Calculate stats for non-deprecated server types only
+		const activeServerTypes = data.statusData.serverTypes.filter(st => !st.deprecated);
+		const totalActiveTypes = activeServerTypes.length;
+
+		data.statusData.locations.forEach(location => {
+			const supportedTypes = data.statusData!.supported[location.id] || [];
+			const availableTypes = data.statusData!.availability[location.id] || [];
+			
+			// Only count active (non-deprecated) types
+			const activeSupportedCount = supportedTypes.filter(id => 
+				activeServerTypes.some(st => st.id === id)
+			).length;
+			const activeAvailableCount = availableTypes.filter(id => 
+				activeServerTypes.some(st => st.id === id)
+			).length;
+
+			totalSupported += activeSupportedCount;
+			totalAvailable += activeAvailableCount;
+
+			locationStats.set(location.id, {
+				location,
+				supported: activeSupportedCount,
+				available: activeAvailableCount,
+				percentage: activeSupportedCount > 0 ? Math.round((activeAvailableCount / activeSupportedCount) * 100) : 0
+			});
+		});
+
+		// Track availability count per server type
+		activeServerTypes.forEach(serverType => {
+			let availableInLocations = 0;
+			data.statusData!.locations.forEach(location => {
+				if (isAvailable(location.id, serverType.id)) {
+					availableInLocations++;
+				}
+			});
+			serverTypeAvailability.set(serverType.id, {
+				serverType,
+				locations: availableInLocations
+			});
+		});
+
+		// Find best and worst locations
+		const sortedLocations = Array.from(locationStats.values())
+			.sort((a, b) => b.percentage - a.percentage);
+
+		// Find most scarce server type
+		const sortedServerTypes = Array.from(serverTypeAvailability.values())
+			.filter(st => st.locations > 0)
+			.sort((a, b) => a.locations - b.locations);
+
+		return {
+			overallPercentage: totalSupported > 0 ? Math.round((totalAvailable / totalSupported) * 100) : 0,
+			bestLocation: sortedLocations[0],
+			worstLocation: sortedLocations[sortedLocations.length - 1],
+			mostScarce: sortedServerTypes[0],
+			activeTypes: totalActiveTypes,
+			totalTypes: data.statusData.serverTypes.length,
+			locationStats,
+			serverTypeAvailability
+		};
+	})());
+
+	// Filter server types based on current filters
+	const filteredGroupedServerTypes = $derived((() => {
+		if (!groupedServerTypes) return new Map();
+
+		const filtered = new Map();
+
+		groupedServerTypes.forEach((cpuGroups, architecture) => {
+			// Apply architecture filter
+			if (architectureFilter !== 'all' && architecture !== architectureFilter) {
+				return;
+			}
+
+			const filteredCpuGroups = new Map();
+
+			cpuGroups.forEach((serverTypes, cpuType) => {
+				// Apply CPU type filter
+				if (cpuTypeFilter !== 'all' && cpuType !== cpuTypeFilter) {
+					return;
+				}
+
+				// Apply search and availability filters
+				const filteredServerTypes = serverTypes.filter(serverType => {
+					// Search filter
+					if (searchQuery && !serverType.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+						return false;
+					}
+
+					// Availability filter
+					if (showAvailableOnly) {
+						let hasAvailability = false;
+						data.statusData?.locations.forEach(location => {
+							if (isAvailable(location.id, serverType.id)) {
+								hasAvailability = true;
+							}
+						});
+						if (!hasAvailability) return false;
+					}
+
+					return true;
+				});
+
+				if (filteredServerTypes.length > 0) {
+					filteredCpuGroups.set(cpuType, filteredServerTypes);
+				}
+			});
+
+			if (filteredCpuGroups.size > 0) {
+				filtered.set(architecture, filteredCpuGroups);
+			}
+		});
+
+		return filtered;
+	})());
+
+	function toggleGroup(key: string) {
+		if (collapsedGroups.has(key)) {
+			collapsedGroups.delete(key);
+		} else {
+			collapsedGroups.add(key);
+		}
+		collapsedGroups = new Set(collapsedGroups);
+	}
+
+	function expandAll() {
+		collapsedGroups.clear();
+		collapsedGroups = new Set();
+	}
+
+	function collapseAll() {
+		filteredGroupedServerTypes.forEach((cpuGroups, architecture) => {
+			cpuGroups.forEach((_: any, cpuType: string) => {
+				collapsedGroups.add(`${architecture}-${cpuType}`);
+			});
+		});
+		collapsedGroups = new Set(collapsedGroups);
+	}
 
 	function formatTimestamp(timestamp: string | null | undefined): string {
 		if (!timestamp) return 'Loading...';
@@ -373,6 +538,44 @@
 				{/if}
 			</div>
 
+			<!-- Filters Section -->
+			<div class="bg-gray-50 dark:bg-gray-700 p-4 border-x border-b dark:border-gray-700">
+				<div class="flex flex-wrap gap-4 items-center">
+					<div class="flex items-center gap-2">
+						<FilterSolid class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
+					</div>
+					
+					<Toggle bind:checked={showAvailableOnly} class="text-sm">
+						Show Available Only
+					</Toggle>
+
+					<Select bind:value={architectureFilter} class="text-sm py-2" size="sm">
+						<option value="all">All Architectures</option>
+						<option value="x86">x86</option>
+						<option value="arm">ARM</option>
+					</Select>
+
+					<Select bind:value={cpuTypeFilter} class="text-sm py-2" size="sm">
+						<option value="all">All CPU Types</option>
+						<option value="shared">Shared</option>
+						<option value="dedicated">Dedicated</option>
+					</Select>
+
+					<Input 
+						bind:value={searchQuery} 
+						placeholder="Search server types..." 
+						class="text-sm py-2" 
+						size="sm"
+					/>
+
+					<div class="ml-auto flex gap-2">
+						<Button size="xs" color="light" on:click={expandAll}>Expand All</Button>
+						<Button size="xs" color="light" on:click={collapseAll}>Collapse All</Button>
+					</div>
+				</div>
+			</div>
+
 			<!-- Table Container -->
 			<div class="overflow-x-auto">
 				<div class="inline-block min-w-full align-middle">
@@ -382,22 +585,38 @@
 								<TableHeadCell class="sticky left-0 z-10 bg-gray-50 dark:bg-gray-700 px-4 pb-3 pt-4 align-middle">Server Type</TableHeadCell>
 								{#each data.statusData.locations as location}
 								<TableHeadCell class="text-center whitespace-nowrap px-4 pb-3 pt-4 align-middle">
-									{location.city}, {location.country}<br />
+									<span class="block md:hidden">{location.city}</span>
+									<span class="hidden md:block">{location.city}, {location.country}</span>
 									<span class="text-xs font-normal text-gray-500 dark:text-gray-400">({location.name})</span>
 								</TableHeadCell>
 							{/each}
+								<TableHeadCell class="text-center whitespace-nowrap px-4 pb-3 pt-4 align-middle bg-gray-100 dark:bg-gray-600">
+									Available In
+								</TableHeadCell>
 						</TableHead>
 						<TableBody class="divide-y dark:divide-gray-700">
-							{#each groupedServerTypes as [architecture, cpuGroups]}
+							{#each filteredGroupedServerTypes as [architecture, cpuGroups]}
 								{#each cpuGroups as [cpuType, serverTypes]}
-									<TableBodyRow class="bg-gray-200 dark:bg-gray-700 border-t border-b dark:border-gray-600">
-										<TableBodyCell colspan={data.statusData.locations.length + 1} class="px-4 py-3 font-bold text-sm uppercase text-gray-600 dark:text-gray-400 tracking-wider">
-											{architecture.toUpperCase()} / {cpuType.charAt(0).toUpperCase() + cpuType.slice(1)} CPU
+									{@const groupKey = `${architecture}-${cpuType}`}
+									{@const isCollapsed = collapsedGroups.has(groupKey)}
+									<TableBodyRow class="bg-gray-200 dark:bg-gray-700 border-t border-b dark:border-gray-600 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" on:click={() => toggleGroup(groupKey)}>
+										<TableBodyCell colspan={data.statusData.locations.length + 2} class="px-4 py-3 font-bold text-sm uppercase text-gray-600 dark:text-gray-400 tracking-wider">
+											<div class="flex items-center gap-2">
+												{#if isCollapsed}
+													<ChevronRightOutline class="w-4 h-4" />
+												{:else}
+													<ChevronDownOutline class="w-4 h-4" />
+												{/if}
+												{architecture.toUpperCase()} / {cpuType.charAt(0).toUpperCase() + cpuType.slice(1)} CPU
+												<Badge color="dark" class="ml-2">{serverTypes.length}</Badge>
+											</div>
 										</TableBodyCell>
 									</TableBodyRow>
 
-									{#each serverTypes as serverType}
-										<TableBodyRow class="bg-white dark:bg-gray-800 text-sm">
+									{#if !isCollapsed}
+										{#each serverTypes as serverType}
+											{@const availableCount = summaryStats?.serverTypeAvailability.get(serverType.id)?.locations || 0}
+											<TableBodyRow class="bg-white dark:bg-gray-800 text-sm">
 											<TableBodyCell class="font-medium text-gray-900 dark:text-white whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-gray-800 px-4 py-4 flex items-center">
 												<div class="flex flex-col">
 													<div class="flex items-center space-x-2">
@@ -418,7 +637,7 @@
 											</TableBodyCell>
 											{#each data.statusData.locations as location}
 												{@const status = getServerStatus(location.id, serverType.id)}
-												<TableBodyCell class="text-center px-4 py-4">
+												<TableBodyCell class="text-center px-4 py-4 {status === 'available' ? 'bg-green-50 dark:bg-green-900/20' : status === 'supported' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}">
 													{#if status === 'available'}
 														<CheckCircleSolid size="xl" color="green" class="w-6 h-6 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
 														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}" class="z-50">Available in {location.city}</Tooltip>
@@ -431,11 +650,33 @@
 													{/if}
 												</TableBodyCell>
 											{/each}
+											<TableBodyCell class="text-center px-4 py-4 bg-gray-100 dark:bg-gray-600 font-medium">
+												{availableCount} / {data.statusData.locations.length}
+											</TableBodyCell>
 										</TableBodyRow>
 									{/each}
-								{/each}
+								{/if}
 							{/each}
-						</TableBody>
+						{/each}
+					
+					<!-- Location totals row -->
+					{#if summaryStats}
+						<TableBodyRow class="bg-gray-100 dark:bg-gray-600 border-t-2 border-gray-300 dark:border-gray-500">
+							<TableBodyCell class="sticky left-0 z-10 bg-gray-100 dark:bg-gray-600 px-4 py-3 font-bold text-sm uppercase">
+								Availability %
+							</TableBodyCell>
+							{#each data.statusData.locations as location}
+								{@const stats = summaryStats.locationStats.get(location.id)}
+								<TableBodyCell class="text-center px-4 py-3 font-bold">
+									{stats?.percentage || 0}%
+								</TableBodyCell>
+							{/each}
+							<TableBodyCell class="text-center px-4 py-3 bg-gray-200 dark:bg-gray-700 font-bold">
+								-
+							</TableBodyCell>
+						</TableBodyRow>
+					{/if}
+				</TableBody>
 						</Table>
 					</div>
 				</div>
