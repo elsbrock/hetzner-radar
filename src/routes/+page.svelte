@@ -280,7 +280,7 @@
     </section>
 
     <!-- Live Metrics -->
-    <section class="mx-auto mb-16 max-w-7xl">
+    <section class="mx-auto mb-16 mt-24 max-w-7xl">
         <div
             class="mx-auto max-w-7xl flex flex-col sm:flex-row flex-wrap gap-y-8 gap-x-4 items-center justify-around"
         >
