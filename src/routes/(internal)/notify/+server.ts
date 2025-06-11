@@ -116,7 +116,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
           sendMail(platform.env, {
             from: {
               name: "Server Radar",
-              email: "noreply@iodev.org",
+              email: "no-reply@radar.iodev.org",
             },
             to: user.email,
             subject: `Cloud Alert - ${emailChanges.length} Change${emailChanges.length > 1 ? "s" : ""}`,
