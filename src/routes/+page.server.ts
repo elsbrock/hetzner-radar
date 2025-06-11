@@ -21,7 +21,11 @@ export const load: PageServerLoad = async ({ platform }) => {
         .catch(() => 0),
 
       db
-        .prepare("SELECT COUNT(*) as count FROM price_alert")
+        .prepare(`
+          SELECT 
+            (SELECT COUNT(*) FROM price_alert) + 
+            (SELECT COUNT(*) FROM cloud_availability_alert) as count
+        `)
         .first<CountQueryResult>()
         .then((result) =>
           Number((result as unknown as CountQueryResult)?.count ?? 0n),
@@ -29,7 +33,11 @@ export const load: PageServerLoad = async ({ platform }) => {
         .catch(() => 0),
 
       db
-        .prepare("SELECT COUNT(*) as count FROM price_alert_history")
+        .prepare(`
+          SELECT 
+            (SELECT COUNT(*) FROM price_alert_history) + 
+            (SELECT COUNT(*) FROM cloud_alert_history) as count
+        `)
         .first<CountQueryResult>()
         .then((result) =>
           Number((result as unknown as CountQueryResult)?.count ?? 0n),
