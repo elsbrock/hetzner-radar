@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { withDbConnections } from "$lib/api/frontend/dbapi";
     // Removed ServerConfiguration import as it's now only used in SampleCardStack
     import SampleCardStack from "$lib/components/SampleCardStack.svelte"; // Import the new component
     import { faDiscord, faGithub } from "@fortawesome/free-brands-svg-icons";
@@ -23,7 +22,6 @@
     import { onMount } from "svelte";
     import { cubicOut } from "svelte/easing";
     import { tweened } from "svelte/motion";
-    import { db } from "../stores/db";
 
     let { data } = $props();
 
@@ -31,9 +29,11 @@
     const letters = wordToAnimate.split("");
     let startAnimation = $state(false); // State to control animation start
 
-    let loadingUsers = true;
-    let loadingAlerts = true;
-    let loadingHistory = true;
+    let loadingUsers = $state(true);
+    let loadingAlerts = $state(true);
+    let loadingHistory = $state(true);
+    let loadingAuctions = $state(true);
+    let loadingLatestBatch = $state(true);
 
     // Create tweened stores for all counters
     const auctionCounter = tweened(0, {
@@ -59,72 +59,26 @@
         easing: cubicOut,
     });
 
-    // Auction count using $effect
+    // Handle auction stats from backend
     $effect(() => {
-        const unsubscribe = db.subscribe(async (dbInstance) => {
-            if (!dbInstance) return;
-
-            try {
-                await withDbConnections(dbInstance, async (conn) => {
-                    // Query renamed from server to auction table
-                    const result = await conn.query(
-                        `SELECT COUNT(id) as count
-            FROM server`,
-                    );
-                    const count = Number(result.toArray()[0].count);
-                    if (!isNaN(count)) {
-                        auctionCounter.set(count); // Renamed from serverCounter
-                    }
-                });
-            } catch (error) {
-                console.error("Error fetching auction count:", error); // Updated error message
-                auctionCounter.set(0); // Renamed from serverCounter
-            }
-
-            // Unsubscribe is handled within the effect cleanup now for robustness
-            // unsubscribe(); // Removed from here
-        });
-
-        // Cleanup function for the effect
-        return () => {
-            // No explicit unsubscribe needed here as db.subscribe might handle it,
-            // but good practice if manual cleanup were required.
-        };
+        if (data.auctionStats !== undefined) {
+            auctionCounter.set(-1);
+            setTimeout(() => {
+                auctionCounter.set(data.auctionStats);
+            }, 0);
+            loadingAuctions = false;
+        }
     });
 
-    // Latest batch count using $effect
+    // Handle latest batch stats from backend
     $effect(() => {
-        const unsubscribe = db.subscribe(async (dbInstance) => {
-            if (!dbInstance) return;
-
-            try {
-                await withDbConnections(dbInstance, async (conn) => {
-                    // Query to get the count of distinct auction IDs in the most recent batch
-                    const result = await conn.query(`
-            WITH LatestBatch AS (
-              SELECT MAX(seen) as max_last_seen FROM server
-            )
-            SELECT COUNT(DISTINCT id) as count
-            FROM server
-            WHERE seen = (SELECT max_last_seen FROM LatestBatch)
-          `);
-                    const count = Number(result.toArray()[0].count);
-                    if (!isNaN(count)) {
-                        latestBatchCounter.set(count);
-                    } else {
-                        latestBatchCounter.set(0); // Set to 0 if count is NaN
-                    }
-                });
-            } catch (error) {
-                console.error("Error fetching latest batch count:", error);
-                latestBatchCounter.set(0);
-            }
-        });
-
-        // Cleanup function for the effect
-        return () => {
-            // Cleanup logic if needed
-        };
+        if (data.latestBatchStats !== undefined) {
+            latestBatchCounter.set(-1);
+            setTimeout(() => {
+                latestBatchCounter.set(data.latestBatchStats);
+            }, 0);
+            loadingLatestBatch = false;
+        }
     });
 
     // Handle server-side stats with $effect
@@ -163,6 +117,14 @@
         if (data.userStats !== undefined) loadingUsers = false;
         if (data.alertStats !== undefined) loadingAlerts = false;
         if (data.historyStats !== undefined) loadingHistory = false;
+        if (data.auctionStats !== undefined) {
+            auctionCounter.set(data.auctionStats);
+            loadingAuctions = false;
+        }
+        if (data.latestBatchStats !== undefined) {
+            latestBatchCounter.set(data.latestBatchStats);
+            loadingLatestBatch = false;
+        }
 
         // Trigger scary animation shortly after mount
         setTimeout(() => {
@@ -289,7 +251,7 @@
                 data-testid="glance-auctions-tracked"
                 class="flex flex-col items-center text-center px-4"
             >
-                {#if $auctionCounter === 0}
+                {#if loadingAuctions}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
                     >
@@ -332,7 +294,7 @@
                 data-testid="glance-last-batch"
                 class="flex flex-col items-center text-center px-4"
             >
-                {#if $latestBatchCounter === 0}
+                {#if loadingLatestBatch}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
                     >
@@ -373,7 +335,7 @@
                 data-testid="glance-active-users"
                 class="flex flex-col items-center text-center px-4"
             >
-                {#if $userCounter < 0}
+                {#if loadingUsers}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
                     >
@@ -414,7 +376,7 @@
                 data-testid="glance-active-alerts"
                 class="flex flex-col items-center text-center px-4"
             >
-                {#if $alertCounter < 0}
+                {#if loadingAlerts}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
                     >
@@ -455,7 +417,7 @@
                 data-testid="glance-notifications-sent"
                 class="flex flex-col items-center text-center px-4"
             >
-                {#if $historyCounter < 0}
+                {#if loadingHistory}
                     <div
                         class="flex items-center justify-center gap-3 mb-2 h-10"
                     >
