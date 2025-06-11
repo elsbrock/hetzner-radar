@@ -484,7 +484,7 @@ export class CloudAvailability extends DurableObject {
 	}
 
 	async notifyMainApp(changes: AvailabilityChange[]): Promise<void> {
-		const url = `${this.env.MAIN_APP_URL}/(internal)/notify`;
+		const url = `${this.env.MAIN_APP_URL}/notify`;
 		const requestBody = { changes };
 
 		console.log(`[CloudAvailability DO ${this.ctx.id}] Sending notification request:`);
