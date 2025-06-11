@@ -45,6 +45,12 @@
 
     // Tabs state
     let activeTab = $state('price-alerts');
+    
+    // Initialize and sync with URL
+    $effect(() => {
+        const tabParam = $page.url.searchParams.get('tab');
+        activeTab = tabParam === 'cloud-alerts' ? 'cloud-alerts' : 'price-alerts';
+    });
 
     // Price alerts state
     let showEdit = $state(false);
@@ -69,11 +75,7 @@
 
     // Check URL parameters and hash on mount
     onMount(async () => {
-        // Check for tab parameter to set active tab
-        const tabParam = $page.url.searchParams.get('tab');
-        if (tabParam === 'cloud-alerts') {
-            activeTab = 'cloud-alerts';
-        }
+        // Tab is now automatically handled by derived value
 
         const viewParam = $page.url.searchParams.get('view');
         if (viewParam && drawerHidden) {
@@ -120,13 +122,7 @@
         }
     });
 
-    // Watch for URL parameter changes to switch tabs
-    $effect(() => {
-        const tabParam = $page.url.searchParams.get('tab');
-        if (tabParam === 'cloud-alerts') {
-            activeTab = 'cloud-alerts';
-        }
-    });
+    // Tab switching is now handled automatically by the derived activeTab value
 
     // Delete confirmation functions
     function openDeleteConfirmation(type: 'price' | 'cloud', alertId: string, alertName: string) {
@@ -252,7 +248,7 @@
 
         <!-- Tabs -->
         <Tabs bind:activeTabValue={activeTab} contentClass="mt-6">
-            <TabItem open value="price-alerts">
+            <TabItem value="price-alerts" open={activeTab === 'price-alerts'}>
                 <div slot="title" class="flex items-center gap-2">
                     <BellRingSolid class="w-4 h-4" />
                     Price Alerts
@@ -497,7 +493,7 @@
                 </div>
             </TabItem>
 
-            <TabItem value="cloud-alerts">
+            <TabItem value="cloud-alerts" open={activeTab === 'cloud-alerts'}>
                 <div slot="title" class="flex items-center gap-2">
                     <BullhornSolid class="w-4 h-4" />
                     Cloud Alerts
