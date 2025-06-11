@@ -621,7 +621,7 @@
                     </span>
                 </svelte:fragment>
                 <p
-                    class="text-sm font-normal text-gray-500 dark:text-gray-400"
+                    class="text-base font-normal text-gray-500 dark:text-gray-400"
                 >
                     Use advanced filters to specify the exact server
                     specifications you need – CPU, RAM, storage, location, and
