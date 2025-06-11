@@ -9,6 +9,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import QuickStat from '$lib/components/QuickStat.svelte';
 	import { fade, slide } from 'svelte/transition';
+	import { formatRelativeTime, getAvailabilityRecency } from '$lib/util';
 	import {
 		Table,
 		TableHead,
@@ -49,12 +50,17 @@
 
 	// Filter states
 	let showAvailableOnly = $state(false);
+	let showRecentlyAvailable = $state(false);
 	let architectureFilter = $state('all');
 	let cpuTypeFilter = $state('all');
 	let searchQuery = $state('');
 
 	// Collapsed groups state
 	let collapsedGroups = $state(new Set<string>());
+
+	// Reactive time updates
+	let currentTime = $state(new Date());
+	let timeUpdateInterval: ReturnType<typeof setInterval> | null = null;
 
 	// Server type and location options based on cloud status data
 	const serverTypeOptions = $derived(data.statusData?.serverTypes?.map(st => ({
@@ -257,6 +263,19 @@
 						if (!hasAvailability) return false;
 					}
 
+					// Recently available filter
+					if (showRecentlyAvailable) {
+						let hasRecentAvailability = false;
+						data.statusData?.locations.forEach(location => {
+							const lastSeen = getLastSeenAvailable(location.id, serverType.id);
+							const recency = getAvailabilityRecency(lastSeen);
+							if (recency === 'recent') {
+								hasRecentAvailability = true;
+							}
+						});
+						if (!hasRecentAvailability) return false;
+					}
+
 					return true;
 				});
 
@@ -304,6 +323,30 @@
 		} catch (e) {
 			console.error('Error formatting timestamp:', e);
 			return 'Invalid Date';
+		}
+	}
+
+	function getLastSeenAvailable(locationId: number, serverTypeId: number): string | null {
+		if (!data.statusData?.lastSeenAvailable) return null;
+		const key = `${locationId}-${serverTypeId}`;
+		return data.statusData.lastSeenAvailable[key] || null;
+	}
+
+	function formatLastSeen(locationId: number, serverTypeId: number): string {
+		const lastSeen = getLastSeenAvailable(locationId, serverTypeId);
+		if (!lastSeen) return 'Never';
+		return formatRelativeTime(lastSeen);
+	}
+
+	function getLastSeenColor(locationId: number, serverTypeId: number): string {
+		const lastSeen = getLastSeenAvailable(locationId, serverTypeId);
+		const recency = getAvailabilityRecency(lastSeen);
+		
+		switch (recency) {
+			case 'recent': return 'text-green-600 dark:text-green-400';
+			case 'old': return 'text-yellow-600 dark:text-yellow-400';
+			case 'very-old': return 'text-red-600 dark:text-red-400';
+			default: return 'text-gray-500 dark:text-gray-400';
 		}
 	}
 
@@ -400,6 +443,37 @@
 
 
 	onMount(async () => {
+		// Start time update interval for relative timestamps
+		if (browser) {
+			timeUpdateInterval = setInterval(() => {
+				currentTime = new Date();
+			}, 60000); // Update every minute
+		}
+
+		// Generate sample last seen data for demonstration
+		if (data.statusData && !data.statusData.lastSeenAvailable) {
+			const lastSeenData: Record<string, string> = {};
+			const now = new Date();
+			
+			data.statusData.serverTypes.forEach(serverType => {
+				data.statusData!.locations.forEach(location => {
+					const key = `${location.id}-${serverType.id}`;
+					// Generate random last seen times for non-available servers
+					if (!isAvailable(location.id, serverType.id) && isSupported(location.id, serverType.id)) {
+						// Random time in the past 30 days
+						const randomHoursAgo = Math.random() * 24 * 30;
+						const lastSeen = new Date(now.getTime() - randomHoursAgo * 60 * 60 * 1000);
+						lastSeenData[key] = lastSeen.toISOString();
+					} else if (isAvailable(location.id, serverType.id)) {
+						// Currently available servers were "last seen" now
+						lastSeenData[key] = now.toISOString();
+					}
+				});
+			});
+			
+			data.statusData.lastSeenAvailable = lastSeenData;
+		}
+
 		if (browser) {
 			L_Instance = await import('leaflet'); // Store L instance
 
@@ -522,7 +596,9 @@
 		</Badge>
 	{:else if data.statusData}
 		<div class="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
-			Last Updated: {formatTimestamp(data.statusData.lastUpdated)}
+			<span class="cursor-help" title="{formatTimestamp(data.statusData.lastUpdated)}">
+				Last Updated: {formatRelativeTime(data.statusData.lastUpdated)}
+			</span>
 		</div>
 
 		<!-- Wrapper for Map and Table -->
@@ -548,6 +624,10 @@
 					
 					<Toggle bind:checked={showAvailableOnly} class="text-sm">
 						Show Available Only
+					</Toggle>
+
+					<Toggle bind:checked={showRecentlyAvailable} class="text-sm">
+						Show Recently Available
 					</Toggle>
 
 					<Select bind:value={architectureFilter} class="text-sm py-2" size="sm">
@@ -637,17 +717,26 @@
 											</TableBodyCell>
 											{#each data.statusData.locations as location}
 												{@const status = getServerStatus(location.id, serverType.id)}
-												<TableBodyCell class="text-center px-4 py-4 {status === 'available' ? 'bg-green-50 dark:bg-green-900/20' : status === 'supported' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}">
-													{#if status === 'available'}
-														<CheckCircleSolid size="xl" color="green" class="w-6 h-6 inline-block align-middle" id="avail-{location.id}-{serverType.id}" />
-														<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}" class="z-50">Available in {location.city}</Tooltip>
-													{:else if status === 'supported'}
-														<CloseCircleSolid size="xl" color="red" class="w-6 h-6 inline-block align-middle" id="notavail-{location.id}-{serverType.id}" />
-														<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}" class="z-50">Supported but currently unavailable in {location.city}</Tooltip>
-													{:else}
-														<QuestionCircleSolid size="xl" color="gray" class="w-6 h-6 inline-block align-middle" id="unsupported-{location.id}-{serverType.id}" />
-														<Tooltip triggeredBy="#unsupported-{location.id}-{serverType.id}" class="z-50">Not supported in {location.city}</Tooltip>
-													{/if}
+												{@const lastSeenText = formatLastSeen(location.id, serverType.id)}
+												{@const lastSeenColor = getLastSeenColor(location.id, serverType.id)}
+												<TableBodyCell class="text-center px-2 py-4 {status === 'available' ? 'bg-green-50 dark:bg-green-900/20' : status === 'supported' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}">
+													<div class="flex flex-col items-center gap-1">
+														<div>
+															{#if status === 'available'}
+																<CheckCircleSolid size="lg" color="green" class="w-5 h-5 inline-block" id="avail-{location.id}-{serverType.id}" />
+																<Tooltip triggeredBy="#avail-{location.id}-{serverType.id}" class="z-50">Available in {location.city}</Tooltip>
+															{:else if status === 'supported'}
+																<CloseCircleSolid size="lg" color="red" class="w-5 h-5 inline-block" id="notavail-{location.id}-{serverType.id}" />
+																<Tooltip triggeredBy="#notavail-{location.id}-{serverType.id}" class="z-50">Supported but currently unavailable in {location.city}</Tooltip>
+															{:else}
+																<QuestionCircleSolid size="lg" color="gray" class="w-5 h-5 inline-block" id="unsupported-{location.id}-{serverType.id}" />
+																<Tooltip triggeredBy="#unsupported-{location.id}-{serverType.id}" class="z-50">Not supported in {location.city}</Tooltip>
+															{/if}
+														</div>
+														<div class="text-xs {lastSeenColor}" title="{getLastSeenAvailable(location.id, serverType.id) ? formatTimestamp(getLastSeenAvailable(location.id, serverType.id)) : 'Never seen available'}">
+															{lastSeenText}
+														</div>
+													</div>
 												</TableBodyCell>
 											{/each}
 											<TableBodyCell class="text-center px-4 py-4 bg-gray-100 dark:bg-gray-600 font-medium">

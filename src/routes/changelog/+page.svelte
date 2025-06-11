@@ -19,6 +19,20 @@
     </div>
 
     <Timeline>
+        <TimelineItem title="Relative Time & Last Seen Availability" date="Released on November 6th, 2025">
+            <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+                Enhanced cloud status page with dynamic time tracking and historical availability insights:
+            </p>
+            <ul class="list-disc list-inside text-gray-500 dark:text-gray-400 space-y-1 ml-4">
+                <li>Relative time display for last updated timestamps (e.g., "2 minutes ago", "1 hour ago")</li>
+                <li>Auto-updating time display with minute-by-minute refresh</li>
+                <li>Last seen availability tracking showing when servers were last available in each location</li>
+                <li>Color-coded last seen indicators (green for recent, yellow for old, red for very old)</li>
+                <li>"Show Recently Available" filter to find servers that were available in the last 24 hours</li>
+                <li>Enhanced table cells showing both status icons and last seen times</li>
+                <li>Hover tooltips displaying exact timestamps for precise information</li>
+            </ul>
+        </TimelineItem>
         <TimelineItem title="Enhanced Cloud Status Visualization" date="Released on November 6th, 2025">
             <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
                 Completely redesigned cloud status page with improved data visualization and user experience:

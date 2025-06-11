@@ -23,6 +23,7 @@ interface ServerTypeInfo {
 
 type AvailabilityMatrix = Record<number, number[]>;
 type SupportMatrix = Record<number, number[]>;
+type LastSeenMatrix = Record<string, string>; // key: "locationId-serverTypeId", value: ISO timestamp
 
 export interface CloudStatusData {
   serverTypes: ServerTypeInfo[];
@@ -30,6 +31,7 @@ export interface CloudStatusData {
   availability: AvailabilityMatrix;
   supported: SupportMatrix;
   lastUpdated: string | null;
+  lastSeenAvailable?: LastSeenMatrix;
 }
 
 interface LoadOutput {
