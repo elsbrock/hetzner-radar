@@ -83,6 +83,7 @@ interface ServerTypeInfo {
 
 type AvailabilityMatrix = Record<number, number[]>;
 type SupportMatrix = Record<number, number[]>;
+type LastSeenMatrix = Record<string, string>; // key: "locationId-serverTypeId", value: ISO timestamp
 
 interface CloudStatusData {
 	serverTypes: ServerTypeInfo[];
@@ -90,6 +91,7 @@ interface CloudStatusData {
 	availability: AvailabilityMatrix;
 	supported: SupportMatrix;
 	lastUpdated: string | null;
+	lastSeenAvailable?: LastSeenMatrix;
 }
 
 interface AvailabilityChange {
@@ -196,12 +198,13 @@ export class CloudAvailability extends DurableObject {
 	async getStatus(): Promise<CloudStatusData> {
 		await this.ensureInitialized();
 
-		const [serverTypes, locations, availability, supported, lastUpdated] = await Promise.all([
+		const [serverTypes, locations, availability, supported, lastUpdated, lastSeenAvailable] = await Promise.all([
 			this.ctx.storage.get<ServerTypeInfo[]>('serverTypes'),
 			this.ctx.storage.get<LocationInfo[]>('locations'),
 			this.ctx.storage.get<AvailabilityMatrix>('availability'),
 			this.ctx.storage.get<SupportMatrix>('supported'),
 			this.ctx.storage.get<string>('lastUpdated'),
+			this.ctx.storage.get<LastSeenMatrix>('lastSeenAvailable'),
 		]);
 
 		return {
@@ -210,6 +213,7 @@ export class CloudAvailability extends DurableObject {
 			availability: availability || {},
 			supported: supported || {},
 			lastUpdated: lastUpdated || null,
+			lastSeenAvailable: lastSeenAvailable || {},
 		};
 	}
 
@@ -305,8 +309,25 @@ export class CloudAvailability extends DurableObject {
 
 			// Get previous availability for change detection
 			const previousAvailability = await this.ctx.storage.get<AvailabilityMatrix>('availability');
-
+			
+			// Update last seen availability timestamps
+			const existingLastSeen = await this.ctx.storage.get<LastSeenMatrix>('lastSeenAvailable') || {};
+			const updatedLastSeen = { ...existingLastSeen };
 			const updateTimestamp = new Date().toISOString();
+			
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Updating last seen availability timestamps...`);
+			let lastSeenUpdates = 0;
+			
+			// For each currently available server type, update its last seen timestamp
+			for (const [locationId, availableServerTypes] of Object.entries(processedAvailability)) {
+				for (const serverTypeId of availableServerTypes) {
+					const key = `${locationId}-${serverTypeId}`;
+					updatedLastSeen[key] = updateTimestamp;
+					lastSeenUpdates++;
+				}
+			}
+			
+			console.log(`[CloudAvailability DO ${this.ctx.id}] Updated ${lastSeenUpdates} last seen timestamps`);
 
 			console.log(`[CloudAvailability DO ${this.ctx.id}] Storing processed data...`);
 			await this.ctx.storage.put({
@@ -315,6 +336,7 @@ export class CloudAvailability extends DurableObject {
 				availability: processedAvailability,
 				supported: processedSupported,
 				lastUpdated: updateTimestamp,
+				lastSeenAvailable: updatedLastSeen,
 			});
 
 			// Detect and handle changes
@@ -499,9 +521,9 @@ export class CloudAvailability extends DurableObject {
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
-					Authorization: `Bearer ${this.env.API_KEY}`,
+					Authorization: `Bearer ${this.env.API_KEY!}`,
 					'Content-Type': 'application/json',
-					'x-auth-key': this.env.API_KEY,
+					'x-auth-key': this.env.API_KEY!,
 				},
 				body: JSON.stringify(requestBody),
 			});

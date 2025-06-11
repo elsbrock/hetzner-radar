@@ -58,9 +58,6 @@
 	// Collapsed groups state
 	let collapsedGroups = $state(new Set<string>());
 
-	// Reactive time updates
-	let currentTime = $state(new Date());
-	let timeUpdateInterval: ReturnType<typeof setInterval> | null = null;
 
 	// Server type and location options based on cloud status data
 	const serverTypeOptions = $derived(data.statusData?.serverTypes?.map(st => ({
@@ -443,36 +440,6 @@
 
 
 	onMount(async () => {
-		// Start time update interval for relative timestamps
-		if (browser) {
-			timeUpdateInterval = setInterval(() => {
-				currentTime = new Date();
-			}, 60000); // Update every minute
-		}
-
-		// Generate sample last seen data for demonstration
-		if (data.statusData && !data.statusData.lastSeenAvailable) {
-			const lastSeenData: Record<string, string> = {};
-			const now = new Date();
-			
-			data.statusData.serverTypes.forEach(serverType => {
-				data.statusData!.locations.forEach(location => {
-					const key = `${location.id}-${serverType.id}`;
-					// Generate random last seen times for non-available servers
-					if (!isAvailable(location.id, serverType.id) && isSupported(location.id, serverType.id)) {
-						// Random time in the past 30 days
-						const randomHoursAgo = Math.random() * 24 * 30;
-						const lastSeen = new Date(now.getTime() - randomHoursAgo * 60 * 60 * 1000);
-						lastSeenData[key] = lastSeen.toISOString();
-					} else if (isAvailable(location.id, serverType.id)) {
-						// Currently available servers were "last seen" now
-						lastSeenData[key] = now.toISOString();
-					}
-				});
-			});
-			
-			data.statusData.lastSeenAvailable = lastSeenData;
-		}
 
 		if (browser) {
 			L_Instance = await import('leaflet'); // Store L instance
