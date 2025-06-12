@@ -521,73 +521,200 @@
         <h2
             class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
         >
-            Key Features
+            Powerful Features for Smart Server Hunting
         </h2>
         <p
-            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
+            class="mb-12 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
         >
-            Everything you need to navigate the Hetzner Server Auction effectively.
-            Built by the community, refined through real-world use, and completely free forever:
+            Everything you need to find the perfect server at the right price.
+            Built by the community, refined through real-world use, and completely free forever.
         </p>
-        <div
-            class="grid grid-cols-1 justify-items-center gap-x-4 gap-y-10 md:grid-cols-2 lg:grid-cols-3"
-        >
-            <Card class="flex flex-col items-center text-center shadow-md">
-                <FontAwesomeIcon
-                    class="mb-4 w-8 h-8 text-orange-500"
-                    icon={faChartLine}
-                    size="3x"
-                />
-                <h3
-                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
-                >
-                    Price History Tracking
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400">
-                    Monitor price trends for specific server configurations.
-                    Understand market fluctuations and make strategic purchasing
-                    decisions based on historical data to secure the best value.
-                </p>
-            </Card>
+        
+        <!-- Two-column feature grid with alternating layout -->
+        <div class="space-y-16">
+            <!-- Feature 1: Price Tracking -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="order-2 lg:order-1">
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow-md">
+                        <FontAwesomeIcon
+                            class="mb-4 w-10 h-10 text-orange-500"
+                            icon={faChartLine}
+                        />
+                        <h3 class="mb-3 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                            Historical Price Intelligence
+                        </h3>
+                        <p class="mb-4 text-gray-600 dark:text-gray-400">
+                            Track price trends over time for any server configuration. Our comprehensive
+                            3-month history helps you understand market patterns and identify the best
+                            times to buy.
+                        </p>
+                        <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                            <li class="flex items-center gap-2">
+                                <span class="text-orange-500">✓</span>
+                                Interactive price charts with zoom and pan
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-orange-500">✓</span>
+                                Compare multiple configurations side-by-side
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-orange-500">✓</span>
+                                Export data for your own analysis
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">i7-6700 • 32GB • 2x2TB</span>
+                                <span class="text-lg font-bold text-orange-600">€29</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Same config</span>
+                                <span class="text-lg font-bold text-green-600">€24</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Historical low</span>
+                                <span class="text-lg font-bold text-blue-600">€21</span>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+                                📈 Price trend visualization
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <Card class="flex flex-col items-center text-center shadow-md">
-                <FontAwesomeIcon
-                    class="mb-4 w-8 h-8 text-orange-500"
-                    icon={faFilter}
-                    size="3x"
-                />
-                <h3
-                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
-                >
-                    Advanced Filtering
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400">
-                    Filter servers by precise specs, including CPU, RAM, and
-                    exact disk configurations. Find exactly what you need
-                    quickly and customize your search to match specific
-                    requirements.
-                </p>
-            </Card>
+            <!-- Feature 2: Advanced Filtering -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div class="space-y-4">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">CPU: i7+</span>
+                                <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">RAM: 32GB+</span>
+                                <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">Location: FSN</span>
+                            </div>
+                            <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Price Range: €20 - €40</div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 60%; margin-left: 20%"></div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                🔍 Advanced filtering in action
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow-md">
+                        <FontAwesomeIcon
+                            class="mb-4 w-10 h-10 text-purple-500"
+                            icon={faFilter}
+                        />
+                        <h3 class="mb-3 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                            Precision Filtering Engine
+                        </h3>
+                        <p class="mb-4 text-gray-600 dark:text-gray-400">
+                            Find exactly what you need with our advanced filtering system. Filter by CPU,
+                            RAM, storage, location, and even specific disk configurations.
+                        </p>
+                        <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                            <li class="flex items-center gap-2">
+                                <span class="text-purple-500">✓</span>
+                                Dual-range sliders for precise control
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-purple-500">✓</span>
+                                Save and share filter configurations
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-purple-500">✓</span>
+                                Real-time results as you adjust filters
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
-            <Card class="flex flex-col items-center text-center shadow-md">
-                <FontAwesomeIcon
-                    class="mb-4 w-8 h-8 text-orange-500"
-                    icon={faEye}
-                    size="3x"
-                />
-                <h3
-                    class="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100"
-                >
-                    Smart Notifications
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400">
-                    Set your target price and get notified via email, Discord, or other
-                    supported channels when a matching server hits the auction. Also get alerts
-                    when cloud server types become available in your desired locations. Plan your purchases
-                    effectively and never miss out on the perfect deal again –
-                    completely free!
-                </p>
-            </Card>
+            <!-- Feature 3: Smart Alerts (including Cloud) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="order-2 lg:order-1">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow-md">
+                        <FontAwesomeIcon
+                            class="mb-4 w-10 h-10 text-blue-500"
+                            icon={faBell}
+                        />
+                        <h3 class="mb-3 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                            Intelligent Alert System
+                        </h3>
+                        <p class="mb-4 text-gray-600 dark:text-gray-400">
+                            Never miss the perfect deal with our dual alert system for both auction
+                            servers and cloud availability.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="bg-white dark:bg-gray-800 rounded p-3">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-1">Auction Price Alerts</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Set target prices and get notified when matching servers appear</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded p-3">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-1">Cloud Availability Alerts</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Know instantly when CAX/CCX servers become available in your region</p>
+                            </div>
+                        </div>
+                        <Button href="/alerts" size="sm" class="mt-4" color="primary">
+                            Configure Alerts <ArrowRightOutline class="ms-2 w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded border-l-4 border-orange-500">
+                                <FontAwesomeIcon icon={faGavel} class="w-4 h-4 text-orange-500" />
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Auction Alert</div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">i7-6700 • 32GB • €25 target</div>
+                                </div>
+                                <span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded">Active</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-500">
+                                <FontAwesomeIcon icon={faClock} class="w-4 h-4 text-blue-500" />
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Cloud Alert</div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">CAX41 in Falkenstein</div>
+                                </div>
+                                <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">Waiting</span>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+                                🔔 Smart notification system
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional features grid -->
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <FontAwesomeIcon icon={faForwardStep} class="w-8 h-8 text-green-500 mb-3" />
+                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Real-time Updates</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Data refreshed multiple times daily for the most current information</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <FontAwesomeIcon icon={faGithub} class="w-8 h-8 text-gray-700 dark:text-gray-300 mb-3" />
+                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Open Source</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Transparent, community-driven development you can trust and contribute to</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <FontAwesomeIcon icon={faUsers} class="w-8 h-8 text-orange-500 mb-3" />
+                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Active Community</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Join 100+ users sharing tips and strategies in our Discord</p>
+            </div>
         </div>
     </section>
 
@@ -596,192 +723,301 @@
         <h2
             class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100"
         >
-            How It Works
+            Your Path to Server Success
         </h2>
         <p
-            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
+            class="mb-12 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
         >
-            Finding the right Hetzner auction server at the best price is simple
-            with <strong>Server Radar</strong>. Follow these steps to make
-            smarter purchasing decisions:
+            Finding the perfect Hetzner server at the best price has never been easier.
+            Follow our proven 3-step process to become a smart server hunter.
         </p>
-        <Timeline
-            order="vertical"
-            class="mx-auto max-w-3xl bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
-        >
-            <TimelineItem title="Step 1: Filter & Find">
-                <svelte:fragment slot="icon">
-                    <span
-                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
-                    >
-                        <FontAwesomeIcon
-                            icon={faForwardStep}
-                            class=" text-orange-600 dark:text-orange-300"
-                        />
-                    </span>
-                </svelte:fragment>
-                <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400"
-                >
-                    Use advanced filters to specify the exact server
-                    specifications you need – CPU, RAM, storage, location, and
-                    more. Instantly see all matching configurations observed in
-                    the auction history.
-                </p>
-            </TimelineItem>
-            <TimelineItem title="Step 2: Analyze Price Trends">
-                <svelte:fragment slot="icon">
-                    <span
-                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
-                    >
-                        <FontAwesomeIcon
-                            icon={faChartLine}
-                            class=" text-orange-600 dark:text-orange-300"
-                        />
-                    </span>
-                </svelte:fragment>
-                <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400"
-                >
-                    Review detailed price histories and availability trends for
-                    your chosen configurations. Understand market movements and
-                    make data-driven decisions based on comprehensive historical
-                    insights.
-                </p>
-            </TimelineItem>
-            <TimelineItem title="Step 3: Configure Alerts">
-                <svelte:fragment slot="icon">
-                    <span
-                        class="flex absolute -left-3 justify-center items-center w-8 h-8 bg-orange-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-orange-900"
-                    >
-                        <FontAwesomeIcon
-                            icon={faBell}
-                            class=" text-orange-600 dark:text-orange-300"
-                        />
-                    </span>
-                </svelte:fragment>
-                <p
-                    class="text-base font-normal text-gray-500 dark:text-gray-400 -mb-10"
-                >
-                    Set your target price for desired configurations and receive
-                    free notifications via email, Discord, or your preferred channel
-                    the moment a matching server appears in the auction. Also set up cloud
-                    availability alerts to be notified when server types become available
-                    in your preferred locations. Purchase confidently,
-                    knowing you've secured a great deal.
-                </p>
-            </TimelineItem>
-        </Timeline>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="relative">
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow-md h-full">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                            1
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">
+                            Filter & Discover
+                        </h3>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Use our precision filtering engine to find exactly what you need. 
+                        Specify CPU, RAM, storage, and location requirements.
+                    </p>
+                    <div class="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-600">
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs">i7+</span>
+                            <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs">32GB+</span>
+                            <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs">SSD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative">
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow-md h-full">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                            2
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">
+                            Analyze Trends
+                        </h3>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Study historical price data and market patterns to identify 
+                        the best buying opportunities.
+                    </p>
+                    <div class="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-600">
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-600 dark:text-gray-400">Current</span>
+                                <span class="font-semibold text-purple-600">€29</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-600 dark:text-gray-400">30d avg</span>
+                                <span class="font-semibold text-gray-600 dark:text-gray-400">€31</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-600 dark:text-gray-400">Low</span>
+                                <span class="font-semibold text-green-600">€24</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow-md h-full">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                            3
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">
+                            Set Smart Alerts
+                        </h3>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Configure auction price alerts and cloud availability notifications. 
+                        We'll notify you instantly when your conditions are met.
+                    </p>
+                    <div class="space-y-2">
+                        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-gray-200 dark:border-gray-600 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faGavel} class="w-3 h-3 text-orange-500" />
+                            <span class="text-xs text-gray-600 dark:text-gray-400">Auction ≤ €25</span>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-gray-200 dark:border-gray-600 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faClock} class="w-3 h-3 text-blue-500" />
+                            <span class="text-xs text-gray-600 dark:text-gray-400">CAX41 available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to action -->
+        <div class="text-center mt-12">
+            <Button href="/analyze" size="lg" color="primary">
+                Start Your Server Hunt
+                <ArrowRightOutline class="ms-2 w-5 h-5" />
+            </Button>
+        </div>
     </section>
 
 
 
     <!-- Community Section -->
     <section id="community" class="mx-auto my-20 max-w-7xl">
-        <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-sm p-8 text-center">
-            <h2 class="mb-4 text-4xl font-semibold text-gray-800 dark:text-gray-100">
-                Join Our Community
-            </h2>
-            <p class="mb-8 mx-auto md:w-2/3 text-gray-600 dark:text-gray-400">
-                Connect with other Server Radar users, share tips, get help, and stay updated on the latest features. Our Discord community is the perfect place to discuss server configurations and auction strategies.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+                <h2 class="mb-6 text-4xl font-semibold text-gray-800 dark:text-gray-100">
+                    Join Our Thriving Community
+                </h2>
+                <p class="mb-6 text-lg text-gray-600 dark:text-gray-400">
+                    Connect with fellow server hunters, share strategies, and stay ahead of the curve. 
+                    Our community is where the best deals are discovered and shared.
+                </p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon icon={faUsers} class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <span class="text-gray-700 dark:text-gray-300">100+ active members sharing tips</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon icon={faBell} class="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <span class="text-gray-700 dark:text-gray-300">Real-time deal alerts and notifications</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon icon={faQuestionCircle} class="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <span class="text-gray-700 dark:text-gray-300">Expert help with server configurations</span>
+                    </div>
+                </div>
                 <Button
                     href="https://discord.gg/dcuGfURbdc"
-                    class="px-6 py-3 text-lg flex items-center shadow-sm"
+                    size="lg"
+                    class="shadow-sm"
                     color="primary"
                 >
                     <FontAwesomeIcon icon={faDiscord} class="mr-2" />
-                    Join our Discord
+                    Join Discord Community
+                    <ArrowRightOutline class="ms-2 w-5 h-5" />
                 </Button>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    <FontAwesomeIcon icon={faUsers} class="mr-1" />
-                    Join 100+ community members
-                </p>
+            </div>
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-8 shadow-md">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+                    🎯 Community Highlights
+                </h3>
+                <div class="space-y-4">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-start gap-3">
+                            <img src="/images/user1.webp" alt="User" class="w-8 h-8 rounded-full" loading="lazy" />
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    "Just saved €200 on a perfect server thanks to the community's price alerts! 🎉"
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">— Alex, 2 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-start gap-3">
+                            <img src="/images/user2.webp" alt="User" class="w-8 h-8 rounded-full" loading="lazy" />
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    "CAX41 available in Falkenstein! Setting up alerts for everyone interested."
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">— Maria, 1 day ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            💬 Join the conversation and discover your next great deal
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Open Source & Contributors Section -->
-    <section
-        id="open-source"
-        class="mx-auto my-20 max-w-7xl"
-    >
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 justify-items-center">
+    <section id="open-source" class="mx-auto my-20 max-w-7xl">
+        <h2 class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100">
+            Built by the Community, For the Community
+        </h2>
+        <p class="mb-12 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400">
+            Transparency, collaboration, and user-first development are at the heart of everything we do.
+        </p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Open Source Commitment -->
-            <Card class="shadow-sm border-t-4 border-orange-500">
-                <h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                    Built in the Open
-                </h2>
+            <div class="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-8 shadow-md border-l-4 border-green-500">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                        <FontAwesomeIcon icon={faGithub} class="w-6 h-6 text-white" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                        100% Open Source
+                    </h3>
+                </div>
                 <p class="mb-6 text-gray-600 dark:text-gray-400">
-                    <strong>Server Radar</strong> is 100% open source and community-driven.
-                    Every line of code is transparent, and every feature is built with community input.
-                    We believe in building tools that serve users, not shareholders.
+                    Every line of code is transparent and community-reviewed. We believe in building tools
+                    that serve users, not shareholders. Inspect, modify, and contribute freely.
                 </p>
-                <ul class="space-y-3 mb-6 text-gray-600 dark:text-gray-400">
-                    <li class="flex items-start gap-2">
-                        <span class="text-orange-500 mt-1">✓</span>
-                        <span>Community-reviewed for security and privacy</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-orange-500 mt-1">✓</span>
-                        <span>Built with modern, maintainable tech stack</span>
-                    </li>
-                </ul>
-                <div class="flex gap-4">
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <span class="text-green-600 dark:text-green-400 text-sm">✓</span>
+                        </div>
+                        <span class="text-gray-700 dark:text-gray-300">MIT License - truly free forever</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <span class="text-green-600 dark:text-green-400 text-sm">✓</span>
+                        </div>
+                        <span class="text-gray-700 dark:text-gray-300">Modern tech stack (SvelteKit, TypeScript)</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <span class="text-green-600 dark:text-green-400 text-sm">✓</span>
+                        </div>
+                        <span class="text-gray-700 dark:text-gray-300">Community-reviewed for security & privacy</span>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
                     <Button
-                        size="sm"
                         href="https://github.com/elsbrock/hetzner-radar"
-                        class="flex items-center"
+                        class="flex items-center justify-center"
+                        color="primary"
                     >
                         <FontAwesomeIcon icon={faGithub} class="mr-2" />
                         View Source Code
                     </Button>
                     <Button
-                        size="sm"
-                        color="alternative"
                         href="https://github.com/elsbrock/hetzner-radar/blob/main/CONTRIBUTING.md"
-                        class="flex items-center"
+                        class="flex items-center justify-center"
+                        color="alternative"
                     >
-                        Contribute
+                        <FontAwesomeIcon icon={faForwardStep} class="mr-2" />
+                        Start Contributing
                     </Button>
                 </div>
-            </Card>
+            </div>
 
-            <!-- Contributors & Support -->
-            <Card class="shadow-sm border-t-4 border-orange-500">
-                <h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                    Community Powered
-                </h2>
-                <p class="mb-6 text-gray-600 dark:text-gray-400">
-                    Server Radar exists thanks to contributors who donate their time and expertise.
-                    Join us in making server hunting accessible to everyone.
-                </p>
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">How to contribute:</h3>
-                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
-                        <li class="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faBug} class="w-4 h-4 text-orange-500" />
-                            <span>Report bugs and suggest features</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faGithub} class="w-4 h-4 text-orange-500" />
-                            <span>Submit pull requests</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faUsers} class="w-4 h-4 text-orange-500" />
-                            <span>Help others in our Discord community</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <span class="text-orange-500">☕</span>
-                            <span>Support the project with a coffee</span>
-                        </li>
-                    </ul>
+            <!-- Community Contribution -->
+            <div class="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-8 shadow-md border-l-4 border-orange-500">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mr-4">
+                        <FontAwesomeIcon icon={faUsers} class="w-6 h-6 text-white" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                        Join the Team
+                    </h3>
                 </div>
-                <p class="text-sm text-gray-500 dark:text-gray-400 italic">
-                    Special thanks to all our contributors who make this project possible!
+                <p class="mb-6 text-gray-600 dark:text-gray-400">
+                    Server Radar exists thanks to passionate contributors who donate their time and expertise.
+                    Every contribution, big or small, makes a difference.
                 </p>
-            </Card>
+                <div class="space-y-4 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center gap-3 mb-2">
+                            <FontAwesomeIcon icon={faBug} class="w-4 h-4 text-red-500" />
+                            <span class="font-semibold text-gray-800 dark:text-gray-200">Report & Fix Issues</span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Help us improve by reporting bugs or submitting fixes</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center gap-3 mb-2">
+                            <FontAwesomeIcon icon={faQuestionCircle} class="w-4 h-4 text-blue-500" />
+                            <span class="font-semibold text-gray-800 dark:text-gray-200">Help Community</span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Answer questions and share knowledge in Discord</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-orange-500">☕</span>
+                            <span class="font-semibold text-gray-800 dark:text-gray-200">Support Development</span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Buy us a coffee to fuel late-night coding sessions</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+                        💝 Special thanks to all contributors making this project possible!
+                    </p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -923,28 +1159,39 @@
             Frequently Asked Questions
         </h2>
         <p
-            class="mb-10 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
+            class="mb-12 mx-auto md:w-2/3 text-center text-gray-600 dark:text-gray-400"
         >
-            Got questions? We've got answers. Here are the most common questions about <strong>Server Radar</strong>.
+            Get quick answers to common questions about Server Radar's features, pricing, and functionality.
         </p>
         <div class="mx-auto max-w-4xl">
-            <Accordion class="shadow-sm">
-                <AccordionItem>
-                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
-                        Is Server Radar really free?
-                    </span>
-                    <p class="text-gray-600 dark:text-gray-400">
-                        Yes! Server Radar is completely free and open source. We believe in providing value to the community without barriers. You can use all features including notifications at no cost.
-                    </p>
-                </AccordionItem>
-                <AccordionItem>
-                    <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
-                        How often is the auction data updated?
-                    </span>
-                    <p class="text-gray-600 dark:text-gray-400">
-                        We check the Hetzner auction multiple times throughout the day to ensure you have access to the latest server availability and pricing. The "Auctions in Last Batch" counter shows you how many servers we found in our most recent scan.
-                    </p>
-                </AccordionItem>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <Accordion class="border-none">
+                    <AccordionItem class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                        <span slot="header" class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                            <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                <span class="text-green-600 dark:text-green-400 text-sm">💰</span>
+                            </div>
+                            Is Server Radar really free?
+                        </span>
+                        <div class="pl-11">
+                            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                                Yes! Server Radar is completely free and open source. We believe in providing value to the community without barriers. You can use all features including notifications at no cost.
+                            </p>
+                        </div>
+                    </AccordionItem>
+                    <AccordionItem class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                        <span slot="header" class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                <FontAwesomeIcon icon={faClock} class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            How often is the auction data updated?
+                        </span>
+                        <div class="pl-11">
+                            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                                We check the Hetzner auction multiple times throughout the day to ensure you have access to the latest server availability and pricing. The "Auctions in Last Batch" counter shows you how many servers we found in our most recent scan.
+                            </p>
+                        </div>
+                    </AccordionItem>
                 <AccordionItem>
                     <span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
                         Can I contribute to the project?
@@ -958,7 +1205,10 @@
                         How do notifications work?
                     </span>
                     <p class="text-gray-600 dark:text-gray-400">
-                        Create an account, set up your desired server specifications and target price, and choose how you want to be notified – via email, Discord, or other supported channels. We'll notify you instantly when a matching server appears in the auction or when cloud server types become available. No spam, just the deals you're looking for.
+                        We offer two types of alerts: <strong>Auction Price Alerts</strong> notify you when servers hit your target price, 
+                        and <strong>Cloud Availability Alerts</strong> inform you when specific cloud server types become available in your 
+                        desired locations. Simply create an account, configure your alerts, and choose your notification channels (email, 
+                        Discord, etc.). We'll notify you instantly when your conditions are met. No spam, just the alerts you need!
                     </p>
                 </AccordionItem>
                 <AccordionItem>
@@ -977,7 +1227,8 @@
                         We take privacy seriously. We only collect minimal data necessary to provide the service (email/Discord info for notifications). All server auction data is publicly available information. Check our Privacy Policy for full details.
                     </p>
                 </AccordionItem>
-            </Accordion>
+                </Accordion>
+            </div>
         </div>
     </section>
 
