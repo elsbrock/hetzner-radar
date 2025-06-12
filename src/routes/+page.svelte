@@ -13,11 +13,14 @@
         faFilter,
         faForwardStep,
         faGavel, // Added
+        faHardDrive,
+        faMemory,
+        faSdCard,
         faQuestionCircle,
         faUsers,
     } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-    import { Accordion, AccordionItem, Button, Card, Timeline, TimelineItem } from "flowbite-svelte";
+    import { Accordion, AccordionItem, Badge, Button, Card, Indicator, Timeline, TimelineItem } from "flowbite-svelte";
     import { ArrowRightOutline } from "flowbite-svelte-icons";
     // Added icon import
     import { onMount } from "svelte";
@@ -565,24 +568,48 @@
                     </div>
                 </div>
                 <div class="order-1 lg:order-2">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border border-gray-200 dark:border-gray-700">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">i7-6700 • 32GB • 2x2TB</span>
-                                <span class="text-lg font-bold text-orange-600">€29</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Same config</span>
-                                <span class="text-lg font-bold text-green-600">€24</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Historical low</span>
-                                <span class="text-lg font-bold text-blue-600">€21</span>
-                            </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-                                📈 Price trend visualization
+                    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <!-- Chart Container -->
+                        <div class="h-32 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 p-4">
+                            <!-- Simulated Chart Elements -->
+                            <div class="relative h-full w-full">
+                                <!-- Price line simulation -->
+                                <svg class="absolute inset-0 w-full h-full">
+                                    <polyline
+                                        fill="none"
+                                        stroke="#FB923C"
+                                        stroke-width="3"
+                                        points="10,80 40,60 80,70 120,45 160,50 200,30 240,25 280,35"
+                                        class="opacity-90"
+                                    />
+                                    <!-- Volume bars simulation -->
+                                    <rect x="15" y="85" width="8" height="15" fill="rgba(156, 163, 175, 0.3)" />
+                                    <rect x="35" y="90" width="8" height="10" fill="rgba(156, 163, 175, 0.3)" />
+                                    <rect x="75" y="88" width="8" height="12" fill="rgba(156, 163, 175, 0.3)" />
+                                    <rect x="115" y="92" width="8" height="8" fill="rgba(156, 163, 175, 0.3)" />
+                                    <rect x="155" y="87" width="8" height="13" fill="rgba(156, 163, 175, 0.3)" />
+                                    <rect x="195" y="91" width="8" height="9" fill="rgba(156, 163, 175, 0.3)" />
+                                </svg>
+                                <!-- Axis labels -->
+                                <div class="absolute bottom-1 left-2 text-xs text-gray-500 dark:text-gray-400">Nov</div>
+                                <div class="absolute bottom-1 right-2 text-xs text-gray-500 dark:text-gray-400">Dec</div>
+                                <div class="absolute top-1 left-2 text-xs text-gray-500 dark:text-gray-400">€35</div>
+                                <div class="absolute bottom-8 left-2 text-xs text-gray-500 dark:text-gray-400">€20</div>
                             </div>
                         </div>
+                        <!-- Price Display -->
+                        <div class="p-4 bg-white dark:bg-gray-800">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-2xl font-bold text-gray-900 dark:text-white">€29.50</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">(net)</span>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">monthly</span>
+                            </div>
+                            <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                <span style="color: hsl(90, 100%, 40%)">12%</span> higher than best
+                            </div>
+                        </div>
+                        <!-- Fade out effect -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent dark:from-gray-900/80 pointer-events-none"></div>
                     </div>
                 </div>
             </div>
@@ -590,23 +617,58 @@
             <!-- Feature 2: Advanced Filtering -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                        <div class="space-y-4">
-                            <div class="flex flex-wrap gap-2">
-                                <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">CPU: i7+</span>
-                                <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">RAM: 32GB+</span>
-                                <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">Location: FSN</span>
-                            </div>
-                            <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
-                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Price Range: €20 - €40</div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 60%; margin-left: 20%"></div>
+                    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <!-- Filter Interface Mockup -->
+                        <div class="p-4 space-y-4">
+                            <!-- Search and basic filters -->
+                            <div class="flex gap-2">
+                                <div class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded border text-sm text-gray-500 dark:text-gray-400">
+                                    🔍 Search servers...
+                                </div>
+                                <div class="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-sm border">
+                                    ⚙️ Filters (3)
                                 </div>
                             </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                🔍 Advanced filtering in action
+                            
+                            <!-- Active filter badges -->
+                            <div class="flex flex-wrap gap-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    CPU: Intel i7+
+                                    <button class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                                </span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    RAM: 32GB+
+                                    <button class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                                </span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                    Location: FSN
+                                    <button class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                                </span>
+                            </div>
+                            
+                            <!-- Price range slider -->
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                                    <span>Price Range</span>
+                                    <span>€25 - €45</span>
+                                </div>
+                                <div class="relative">
+                                    <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                        <div class="absolute h-2 bg-purple-500 rounded-full" style="left: 25%; width: 50%"></div>
+                                        <div class="absolute w-4 h-4 bg-purple-600 rounded-full border-2 border-white shadow" style="left: 23%; top: -4px"></div>
+                                        <div class="absolute w-4 h-4 bg-purple-600 rounded-full border-2 border-white shadow" style="left: 73%; top: -4px"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Results count -->
+                            <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">147 servers found</span>
+                                <button class="text-sm text-purple-600 dark:text-purple-400 hover:underline">Clear all</button>
                             </div>
                         </div>
+                        <!-- Fade out effect -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent dark:from-gray-900/80 pointer-events-none"></div>
                     </div>
                 </div>
                 <div>
@@ -671,49 +733,148 @@
                     </div>
                 </div>
                 <div class="order-1 lg:order-2">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded border-l-4 border-orange-500">
-                                <FontAwesomeIcon icon={faGavel} class="w-4 h-4 text-orange-500" />
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Auction Alert</div>
-                                    <div class="text-xs text-gray-600 dark:text-gray-400">i7-6700 • 32GB • €25 target</div>
-                                </div>
-                                <span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded">Active</span>
+                    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <!-- Alerts Dashboard Mockup -->
+                        <div class="p-4 space-y-3">
+                            <!-- Header -->
+                            <div class="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-600">
+                                <h3 class="font-semibold text-gray-900 dark:text-white">My Alerts</h3>
+                                <button class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800">
+                                    + New Alert
+                                </button>
                             </div>
-                            <div class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-500">
-                                <FontAwesomeIcon icon={faClock} class="w-4 h-4 text-blue-500" />
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Cloud Alert</div>
-                                    <div class="text-xs text-gray-600 dark:text-gray-400">CAX41 in Falkenstein</div>
+                            
+                            <!-- Auction Alert Card -->
+                            <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500">
+                                <FontAwesomeIcon icon={faGavel} class="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Auction Price Alert</div>
+                                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400 truncate">Intel i7-6700 • 32GB RAM • Target: €25</div>
                                 </div>
-                                <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">Waiting</span>
+                                <span class="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded font-medium">
+                                    Active
+                                </span>
                             </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-                                🔔 Smart notification system
+                            
+                            <!-- Cloud Alert Card -->
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                                <FontAwesomeIcon icon={faClock} class="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Cloud Availability Alert</div>
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400 truncate">CAX41 in Falkenstein (ARM64)</div>
+                                </div>
+                                <span class="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded font-medium">
+                                    Waiting
+                                </span>
+                            </div>
+                            
+                            <!-- Recent notification -->
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <FontAwesomeIcon icon={faBell} class="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Recent Alert</div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400 truncate">CCX33 match found • 2 hours ago</div>
+                                </div>
+                                <span class="text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">
+                                    Sent
+                                </span>
+                            </div>
+                            
+                            <!-- Stats row -->
+                            <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 pt-2">
+                                <span>3 alerts configured</span>
+                                <span>12 notifications sent</span>
                             </div>
                         </div>
+                        <!-- Fade out effect -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent dark:from-gray-900/80 pointer-events-none"></div>
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- Additional features grid -->
-        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <FontAwesomeIcon icon={faForwardStep} class="w-8 h-8 text-green-500 mb-3" />
-                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Real-time Updates</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Data refreshed multiple times daily for the most current information</p>
+        <!-- Additional features with live server example -->
+        <div class="mt-16 space-y-8">
+            <!-- Live Server Card Demo -->
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-8 shadow-md">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-6 text-center text-lg">See Real Server Data in Action</h4>
+                
+                <!-- Server Card Mockup -->
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700 max-w-sm mx-auto border-l-4 border-l-green-700">
+                    <!-- Header -->
+                    <div class="mb-3">
+                        <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Intel Core i7-6700</h5>
+                        <div class="flex items-center text-xs text-gray-400 dark:text-gray-500">
+                            <Indicator color="green" class="animate-pulse mr-2" size="xs" />
+                            <span>seen 23 minutes ago</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Hardware specs grid -->
+                    <div class="grid grid-cols-[20px,40px,70px] gap-x-3 gap-y-2 mb-3 text-sm text-gray-700 dark:text-gray-400">
+                        <FontAwesomeIcon icon={faMemory} class="w-4 h-4 text-gray-500 mt-0.5" />
+                        <span>RAM</span>
+                        <span>32 GB</span>
+                        
+                        <FontAwesomeIcon icon={faSdCard} class="w-4 h-4 text-gray-500 mt-0.5" />
+                        <span>NVMe</span>
+                        <span>2x 1TB</span>
+                        
+                        <FontAwesomeIcon icon={faHardDrive} class="w-4 h-4 text-gray-500 mt-0.5" />
+                        <span>SATA</span>
+                        <span>2x 2TB</span>
+                    </div>
+                    
+                    <!-- Badges -->
+                    <div class="flex flex-wrap gap-1.5 mb-4">
+                        <Badge border class="text-xs">ECC</Badge>
+                        <Badge border class="text-xs">iNIC</Badge>
+                        <Badge border class="text-xs">RPS</Badge>
+                    </div>
+                    
+                    <!-- Price footer -->
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xl font-bold text-gray-900 dark:text-white">€29.50</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">(net)</span>
+                            <div class="text-xs text-gray-400 dark:text-gray-500">monthly</div>
+                            <div class="text-xs text-green-600">best price</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fade overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent dark:from-gray-900/60 pointer-events-none rounded-lg"></div>
+                </div>
+                
+                <p class="text-sm text-gray-600 dark:text-gray-400 text-center mt-6">
+                    Every server card shows real-time data with live pricing, availability status, and hardware specifications
+                </p>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <FontAwesomeIcon icon={faGithub} class="w-8 h-8 text-gray-700 dark:text-gray-300 mb-3" />
-                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Open Source</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Transparent, community-driven development you can trust and contribute to</p>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <FontAwesomeIcon icon={faUsers} class="w-8 h-8 text-orange-500 mb-3" />
-                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Active Community</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Join 100+ users sharing tips and strategies in our Discord</p>
+            
+            <!-- Other Features Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <FontAwesomeIcon icon={faForwardStep} class="w-8 h-8 text-green-500 mb-3" />
+                    <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Real-time Updates</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Data refreshed multiple times daily for the most current information</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <FontAwesomeIcon icon={faGithub} class="w-8 h-8 text-gray-700 dark:text-gray-300 mb-3" />
+                    <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Open Source</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Transparent, community-driven development you can trust and contribute to</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <FontAwesomeIcon icon={faUsers} class="w-8 h-8 text-orange-500 mb-3" />
+                    <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Active Community</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Join 100+ users sharing tips and strategies in our Discord</p>
+                </div>
             </div>
         </div>
     </section>
@@ -749,10 +910,16 @@
                         Specify CPU, RAM, storage, and location requirements.
                     </p>
                     <div class="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-600">
-                        <div class="flex flex-wrap gap-1">
-                            <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs">i7+</span>
-                            <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs">32GB+</span>
-                            <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs">SSD</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border border-orange-200 dark:border-orange-700">
+                                CPU: i7+
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border border-orange-200 dark:border-orange-700">
+                                RAM: 32GB+
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border border-orange-200 dark:border-orange-700">
+                                NVMe: SSD
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -774,18 +941,33 @@
                         the best buying opportunities.
                     </p>
                     <div class="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-600">
+                        <!-- Mini chart simulation -->
+                        <div class="h-12 mb-2 relative">
+                            <svg class="w-full h-full">
+                                <polyline
+                                    fill="none"
+                                    stroke="#8B5CF6"
+                                    stroke-width="2"
+                                    points="5,25 20,20 35,28 50,15 65,18 80,12"
+                                    class="opacity-80"
+                                />
+                                <circle cx="80" cy="12" r="2" fill="#8B5CF6" />
+                            </svg>
+                            <div class="absolute top-0 right-0 text-xs text-purple-600 font-semibold">€29</div>
+                            <div class="absolute bottom-0 left-0 text-xs text-green-600">€24</div>
+                        </div>
                         <div class="space-y-1">
                             <div class="flex justify-between text-xs">
                                 <span class="text-gray-600 dark:text-gray-400">Current</span>
-                                <span class="font-semibold text-purple-600">€29</span>
+                                <span class="font-semibold text-purple-600">€29.50</span>
                             </div>
                             <div class="flex justify-between text-xs">
                                 <span class="text-gray-600 dark:text-gray-400">30d avg</span>
-                                <span class="font-semibold text-gray-600 dark:text-gray-400">€31</span>
+                                <span class="font-semibold text-gray-600 dark:text-gray-400">€31.20</span>
                             </div>
                             <div class="flex justify-between text-xs">
-                                <span class="text-gray-600 dark:text-gray-400">Low</span>
-                                <span class="font-semibold text-green-600">€24</span>
+                                <span class="text-gray-600 dark:text-gray-400">Best deal</span>
+                                <span class="font-semibold text-green-600">€24.00</span>
                             </div>
                         </div>
                     </div>
@@ -808,13 +990,21 @@
                         We'll notify you instantly when your conditions are met.
                     </p>
                     <div class="space-y-2">
-                        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-gray-200 dark:border-gray-600 flex items-center gap-2">
-                            <FontAwesomeIcon icon={faGavel} class="w-3 h-3 text-orange-500" />
-                            <span class="text-xs text-gray-600 dark:text-gray-400">Auction ≤ €25</span>
+                        <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-2 border-l-3 border-orange-500 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faGavel} class="w-3 h-3 text-orange-500 flex-shrink-0" />
+                            <div class="flex-1">
+                                <div class="text-xs font-medium text-gray-800 dark:text-gray-200">Auction Alert</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400">Target: ≤ €25</div>
+                            </div>
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-gray-200 dark:border-gray-600 flex items-center gap-2">
-                            <FontAwesomeIcon icon={faClock} class="w-3 h-3 text-blue-500" />
-                            <span class="text-xs text-gray-600 dark:text-gray-400">CAX41 available</span>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2 border-l-3 border-blue-500 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faClock} class="w-3 h-3 text-blue-500 flex-shrink-0" />
+                            <div class="flex-1">
+                                <div class="text-xs font-medium text-gray-800 dark:text-gray-200">Cloud Alert</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400">CAX41 in FSN</div>
+                            </div>
+                            <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
                         </div>
                     </div>
                 </div>
