@@ -744,11 +744,11 @@
       <aside
         id="filter-section"
         class="flex flex-col border-l border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-[width] duration-300 ease-in-out
-                    {isFilterCollapsed ? 'sm:w-16 md:w-16' : 'sm:w-72 md:w-72'}"
+                    {isFilterCollapsed ? 'sm:w-16 md:w-16' : 'sm:w-80 md:w-80'}"
         style="min-height: calc(100vh - var(--header-footer-height, 200px));"
       >
         <!-- ServerFilter Container - Grows and Scrolls -->
-        <div class="flex-grow overflow-y-auto px-3 py-2">
+        <div class="flex-grow overflow-y-auto px-6 py-4">
           <ServerFilter {datacenters} {cpuModels} {lastUpdate} {queryTime} {loading} bind:isFilterCollapsed />
         </div>
       </aside>

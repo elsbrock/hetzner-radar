@@ -43,7 +43,7 @@
 							<Badge color="dark" rounded class="text-xs">{group.servers.length}</Badge>
 						</h2>
 						<div
-							class="grid grid-cols-[repeat(auto-fill,minmax(300px,auto))] justify-items-start w-full gap-4"
+							class="grid grid-cols-[repeat(auto-fill,minmax(240px,auto))] justify-items-start w-full gap-4"
 						>
 							<!-- Apply slice per group for now -->
 							<!-- Use a composite key as config.id might not be unique after aggregation -->
