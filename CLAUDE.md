@@ -67,4 +67,4 @@ python scripts/import.py data static/sb.duckdb  # Import data
 - The `data` branch contains raw auction data (3 months history)
 - Independent project, not officially affiliated with Hetzner
 - The site must be responsive.
-- The changelog page must be updated whenever a new, noteworthy feature is committed.
+- The changelog page must only be updated whenever a new, noteworthy feature is committed (no layout changes, no minor features, fixes etc.)
