@@ -11,19 +11,23 @@
 
   // Define the type for valid VAT option keys
   type VatOptionKey = keyof typeof vatOptions;
+  interface Props {
+    data?: ServerPriceStat[] | null;
+    loading?: boolean;
+    timeUnitPrice?: string;
+    toolbarShow?: boolean; // Kept for interface compatibility but unused
+    legendShow?: boolean;
+    tooltipShow?: boolean; // New prop to control tooltip
+  }
+
   let {
     data = null, // Remove $state, props are reactive
     loading = true, // Remove $state
     timeUnitPrice = "perHour", // Remove $state
     // toolbarShow is ApexCharts specific, ignored here
     legendShow = true, // Remove $state
-  }: {
-    data?: ServerPriceStat[] | null;
-    loading?: boolean;
-    timeUnitPrice?: string;
-    toolbarShow?: boolean; // Kept for interface compatibility but unused
-    legendShow?: boolean;
-  } = $props();
+    tooltipShow = true, // New prop to control tooltip
+  }: Props = $props();
 
   let noResults = $state(false);
   let canvasElement: HTMLCanvasElement | null = $state(null);
@@ -290,7 +294,7 @@
           },
         },
         tooltip: {
-          enabled: true,
+          enabled: tooltipShow,
           titleColor: tooltipTitleColor, // Set title color
           bodyColor: tooltipBodyColor, // Set body color
           callbacks: {
