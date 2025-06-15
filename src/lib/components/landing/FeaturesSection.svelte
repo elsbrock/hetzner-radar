@@ -268,12 +268,12 @@
                 </div>
             </div>
             <div class="order-1 lg:order-2">
-                <div class="relative space-y-4 mx-8">
+                <div class="relative space-y-4 mx-2 lg:mx-8">
                     <!-- Alert cards without headers, just the components -->
                     
                     <!-- Auction Alert -->
                     <div class="relative">
-                        <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500 shadow-sm w-[500px]">
+                        <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500 shadow-sm w-full max-w-md lg:max-w-lg">
                             <FontAwesomeIcon icon={faGavel} class="w-4 h-4 text-orange-500 flex-shrink-0" />
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
@@ -289,8 +289,8 @@
                     </div>
                     
                     <!-- Cloud Alert (slightly offset) -->
-                    <div class="relative ml-4">
-                        <div class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500 shadow-sm w-[500px]">
+                    <div class="relative ml-2 lg:ml-4">
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500 shadow-sm w-full max-w-md lg:max-w-lg">
                             <FontAwesomeIcon icon={faClock} class="w-4 h-4 text-blue-500 flex-shrink-0" />
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
@@ -306,8 +306,8 @@
                     </div>
                     
                     <!-- Recent notification (more offset) -->
-                    <div class="relative ml-8">
-                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm w-[500px]">
+                    <div class="relative ml-4 lg:ml-8">
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm w-full max-w-md lg:max-w-lg">
                             <FontAwesomeIcon icon={faBell} class="w-4 h-4 text-gray-400 flex-shrink-0" />
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-medium text-gray-800 dark:text-gray-200">Recent Alert</div>
