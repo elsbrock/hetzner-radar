@@ -25,12 +25,15 @@ https://github.com/user-attachments/assets/cb49e923-0315-49aa-a3c2-2dbef2ee0596
 
 ## Architecture
 
-This is a client- and backend architecture, with the website statically
-built using SvelteKit. DuckDB is used in the background for querying the
-database on the client.
+Server Radar started as a purely static, client-side application where users could
+browse and filter server data entirely in their browser using DuckDB WASM. When we
+introduced the alerts feature, we needed persistent storage and notification
+capabilities, which led to the current hybrid architecture.
 
-In addition, we use Cloudflare Workers to for session management, storing
-alerts and sending email notifications.
+Today, the project uses both client- and backend components, with the website
+statically built using SvelteKit. DuckDB is still used for querying the database
+on the client, while Cloudflare Workers handle session management, storing alerts
+and sending email notifications (using D1 for backend storage).
 
 We fetch the latest auction data from Hetzner once per hour, rebuild the
 database, update the website and push new configurations to the backend.
@@ -38,7 +41,10 @@ The raw data is stored in the `data` branch, where we currently maintain
 three months of history. We may consider purging older data if the branch
 becomes too large.
 
-The project is deployed on Cloudflare Pages.
+The project is deployed on Cloudflare Pages. Looking ahead, we plan to transition
+to a backend-only architecture, eliminating client-side DuckDB and migrating the
+data ingestion process from Python scripts to Cloudflare Workers for a fully
+integrated solution.
 
 ## Development
 
@@ -81,7 +87,9 @@ The cloud availability service tracks Hetzner Cloud server availability. To run 
 1. First, create a `.dev.vars` file in the `workers/cloud-availability` directory:
 
 ```sh
+# create a token via the Hetzner Cloud console
 HETZNER_API_TOKEN=your_hetzner_api_token_here
+# this is an internal API key used when notifying the backend
 API_KEY=your_api_key_here
 ```
 
@@ -92,7 +100,7 @@ cd workers/cloud-availability
 npm install
 ```
 
-3. Start the cloud availability worker:
+3. Start the Cloud Availability worker:
 
 ```sh
 npx wrangler dev
@@ -109,37 +117,19 @@ The worker will start on port 8787 by default. Keep this terminal window open.
 npm install
 ```
 
-2. Build the application:
+2. Start the application
 
 ```sh
-npm run build
+npm run dev
 ```
 
-3. Start the application with Wrangler:
+The application will be available at http://localhost:5123. If the Cloud Availability worker is running, the backend can automatically interact with it.
 
-```sh
-npx wrangler dev .svelte-kit/cloudflare/_worker.js
-```
+### Troubleshooting
 
-The application will be available at http://localhost:8787. The cloud status feature will be available at http://localhost:8787/cloud-status.
-
-### Development Tips
-
-1. **Working on Frontend Only**: If you only need to work on the frontend and don't need the cloud status feature, you can use:
-   ```sh
-   npm run dev
-   ```
-   This will start the development server at http://localhost:5173.
-
-2. **Database Updates**: The database is updated hourly in production. For development, you can manually trigger an update:
-   ```sh
-   python scripts/import.py data static/sb.duckdb
-   ```
-
-3. **Troubleshooting**:
-   - If you see session-related errors, these are expected in development mode and won't affect core functionality.
-   - If the cloud status feature shows errors, ensure both the cloud availability worker and main application are running.
-   - Check the browser console and terminal output for detailed error messages.
+- If you see session-related errors, these are expected in development mode and won't affect core functionality.
+- If the cloud status feature shows errors, ensure both Cloud Availability worker is running and was started before the backend.
+- Check the browser console and terminal output for detailed error messages.
 
 ## Contributions
 
@@ -154,6 +144,15 @@ don't hesitate to start a discussion in the issues section.
 
 I'm happy to review and merge any meaningful contributions that improve the
 project. Thank you for helping to make Server Radar better for everyone!
+
+## Behind the Scenes
+
+The initial version of Server Radar was entirely hand-crafted, serving as a learning
+project for SvelteKit and DuckDB. As the project evolved, we began incorporating
+AI tools to accelerate development - first using Roo, and now primarily Claude Code.
+Some features and website content (like testimonials) were added just for fun and are
+entirely fictional - don't take everything too seriously! This blend of manual
+craftsmanship, AI assistance, and creative liberties has made the project what it is today.
 
 ## Disclaimer
 
