@@ -42,30 +42,29 @@ The project is deployed on Cloudflare Pages.
 
 ## Development
 
-To set up your development environment, you'll need Python 3 for data ingestion
-and Node.js to run or build the website.
+To set up your development environment, you'll need:
+- Python 3 for data ingestion
+- Node.js 18+ for running the website
+- Wrangler CLI for running Cloudflare Workers locally
 
-You can also use the provided Nix Flake to set up your environment (though it is
-somewhat neglected at the moment).
-
-### Preparing the Database
+### 1. Preparing the Database
 
 This step is optional if you just want to work on the frontend. You can simply
 download the latest snapshot from the website:
 
-```
+```sh
 wget https://static.radar.iodev.org/sb.duckdb -O static/sb.duckdb
 ```
 
-If you just want to inspect or play with the dataset, you can do so by running.
+If you just want to inspect or play with the dataset, you can do so by running:
 
-```
+```sh
 duckdb -cmd "attach 'https://static.radar.iodev.org/sb.duckdb' (read_only); use sb;"
 ```
 
 Inspect the schema using the `.schema` pragma.
 
-We use Python 3 to create a DuckDB database and ingest the auction data.
+For a full development setup with data ingestion:
 
 ```sh
 poetry shell
@@ -75,15 +74,72 @@ git worktree add data data
 python scripts/import.py data static/sb.duckdb
 ```
 
-### Running the Website
+### 2. Setting Up the Cloud Availability Service
 
-To run the website, simply use the `dev` target. To build a static version, use
-`build`.
+The cloud availability service tracks Hetzner Cloud server availability. To run it locally:
+
+1. First, create a `.dev.vars` file in the `workers/cloud-availability` directory:
 
 ```sh
-npm install
-npm run dev
+HETZNER_API_TOKEN=your_hetzner_api_token_here
+API_KEY=your_api_key_here
 ```
+
+2. Install dependencies for the cloud availability worker:
+
+```sh
+cd workers/cloud-availability
+npm install
+```
+
+3. Start the cloud availability worker:
+
+```sh
+npx wrangler dev
+```
+
+The worker will start on port 8787 by default. Keep this terminal window open.
+
+### 3. Running the Main Application
+
+1. Install dependencies:
+
+```sh
+# In the project root
+npm install
+```
+
+2. Build the application:
+
+```sh
+npm run build
+```
+
+3. Start the application with Wrangler:
+
+```sh
+npx wrangler dev .svelte-kit/cloudflare/_worker.js
+```
+
+The application will be available at http://localhost:8787. The cloud status feature will be available at http://localhost:8787/cloud-status.
+
+### Development Tips
+
+1. **Working on Frontend Only**: If you only need to work on the frontend and don't need the cloud status feature, you can use:
+   ```sh
+   npm run dev
+   ```
+   This will start the development server at http://localhost:5173.
+
+2. **Database Updates**: The database is updated hourly in production. For development, you can manually trigger an update:
+   ```sh
+   python scripts/import.py data static/sb.duckdb
+   ```
+
+3. **Troubleshooting**:
+   - If you see session-related errors, these are expected in development mode and won't affect core functionality.
+   - If the cloud status feature shows errors, ensure both the cloud availability worker and main application are running.
+   - Check the browser console and terminal output for detailed error messages.
 
 ## Contributions
 

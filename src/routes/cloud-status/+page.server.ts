@@ -1,3 +1,4 @@
+import { dev } from "$app/environment";
 import type { PageServerLoad } from "./$types";
 
 interface LocationInfo {
@@ -46,18 +47,32 @@ export const load: PageServerLoad = async ({
 }): Promise<LoadOutput> => {
   console.log("Executing /cloud-status server load function...");
 
-  if (!platform?.env?.CLOUD_STATUS) {
-    console.error(
-      "FATAL: CLOUD_STATUS binding not found in platform.env. Check wrangler.toml and deployment.",
-    );
-    return {
-      statusData: null,
-      error:
-        "Cloud status service binding is not configured correctly on the server.",
-    };
-  }
-
   try {
+    // In development mode, use wrangler dev service binding
+    if (dev) {
+      console.log("Development mode: Using wrangler dev service binding");
+      if (!platform?.env?.CLOUD_STATUS) {
+        throw new Error("CLOUD_STATUS binding not found in development mode. Please run 'npx wrangler dev' instead of 'npm run dev'.");
+      }
+      const statusData = await platform.env.CLOUD_STATUS.getStatus();
+      return {
+        statusData,
+        user: locals.user,
+      };
+    }
+
+    // In production mode, use the service binding
+    if (!platform?.env?.CLOUD_STATUS) {
+      console.error(
+        "FATAL: CLOUD_STATUS binding not found in platform.env. Check wrangler.toml and deployment.",
+      );
+      return {
+        statusData: null,
+        error:
+          "Cloud status service binding is not configured correctly on the server.",
+      };
+    }
+
     console.log(
       `[${new Date().toISOString()}] Calling getStatus() on CLOUD_STATUS service binding...`,
     );
