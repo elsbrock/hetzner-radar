@@ -25,9 +25,8 @@
   "services": [
     {
       "binding": "CLOUD_STATUS",
-      "service": "cloud-availability",
-      "local_port": 56637
-    },
+      "service": "cloud-availability"
+    }
   ],
   "unsafe": {
     "bindings": [
