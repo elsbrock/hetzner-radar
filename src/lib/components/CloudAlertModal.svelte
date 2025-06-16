@@ -1,7 +1,9 @@
 <script lang="ts">
     import { 
-        Modal, Label, Input, MultiSelect, Radio, Toggle, Button, Spinner 
+        Modal, Label, Input, MultiSelect, Radio, Toggle, Button, Spinner, Dropdown, Checkbox, Search
     } from "flowbite-svelte";
+    import { ChevronDownOutline } from "flowbite-svelte-icons";
+
     import { InfoCircleSolid } from "flowbite-svelte-icons";
     import { addToast } from "$lib/stores/toast";
     import { invalidateAll } from "$app/navigation";
@@ -29,6 +31,29 @@
     let emailNotifications = $state(true);
     let discordNotifications = $state(false);
     let isSubmitting = $state(false);
+    let serverTypeSearchTerm = $state("");
+
+    let serverTypeSelections = $derived(
+        serverTypeOptions.map(type => ({
+            value: type.value,
+            name: type.name,
+            checked: selectedServerTypeIds.includes(type.value)
+        }))
+    );
+
+    let filteredServerTypes = $derived(
+        serverTypeSelections.filter(
+            type => type.name.toLowerCase().includes(serverTypeSearchTerm.toLowerCase())
+        )
+    );
+
+    function updateSelectedServerTypes(typeValue: number, checked: boolean) {
+        if (checked) {
+            selectedServerTypeIds = [...selectedServerTypeIds, typeValue];
+        } else {
+            selectedServerTypeIds = selectedServerTypeIds.filter(id => id !== typeValue);
+        }
+    }
 
     // Validation computed property
     let isFormValid = $derived(
@@ -159,13 +184,27 @@
 
         <Label class="flex flex-col space-y-1">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Server Types</span>
-            <MultiSelect 
-                items={serverTypeOptions}
-                bind:value={selectedServerTypeIds}
-                placeholder="Select server types to monitor"
-                required
-                class="text-sm"
-            />
+            <div class="relative">
+                <Button color="light" class="w-full flex justify-between items-center">
+                    {selectedServerTypeIds.length} server type{selectedServerTypeIds.length !== 1 ? 's' : ''} selected
+                    <ChevronDownOutline class="ms-2 h-4 w-4" />
+                </Button>
+                <Dropdown class="w-full">
+                    <div class="p-3">
+                        <Search size="sm" bind:value={serverTypeSearchTerm} placeholder="Search server types..." />
+                    </div>
+                        {#each filteredServerTypes as type (type.value)}
+                            <li class="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <Checkbox 
+                                    checked={type.checked}
+                                    on:change={(e) => updateSelectedServerTypes(type.value, e.target.checked)}
+                                >
+                                    {type.name}
+                                </Checkbox>
+                            </li>
+                        {/each}
+                </Dropdown>
+            </div>
         </Label>
 
         <Label class="flex flex-col space-y-1">
