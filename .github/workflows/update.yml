@@ -23,12 +23,12 @@ jobs:
         run: pip install poetry
 
       - name: Install dependencies
-        run: poetry install
+        run: cd scripts && poetry install
 
       - name: Run import script
         run: |
           git worktree add data data
-          poetry run python scripts/import.py data static/sb.duckdb.wasm
+          cd scripts && poetry run python import.py ../data ../static/sb.duckdb.wasm
 
       - name: Deploy DB to R2
         uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
@@ -37,6 +37,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Push new data to worker
-        run: poetry run python scripts/push.py static/sb.duckdb.wasm
+        run: cd scripts && poetry run python push.py ../static/sb.duckdb.wasm
         env:
           API_KEY: ${{ secrets.API_KEY }}

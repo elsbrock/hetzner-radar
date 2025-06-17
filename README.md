@@ -73,11 +73,12 @@ Inspect the schema using the `.schema` pragma.
 For a full development setup with data ingestion:
 
 ```sh
+cd scripts
 poetry shell
 # Add the `data` branch under /data
-git worktree add data data
+git worktree add ../data data
 # Build the DuckDB database
-python scripts/import.py data static/sb.duckdb
+python import.py ../data ../static/sb.duckdb
 ```
 
 ### 2. Setting Up the Cloud Availability Service
