@@ -298,15 +298,25 @@ export async function prepareServerData(
     return prepareServerDataLegacy(db, configs);
   }
   
-  // Get current prices to check for changes
-  const currentStmt = db.prepare(`
-    SELECT id, price
-    FROM current_auctions
-    WHERE id IN (${configs.map(() => '?').join(',')})
-  `);
+  // Get current prices to check for changes (chunk to avoid SQL variable limit)
+  const currentPrices = new Map();
+  const chunkSize = 100; // SQLite has a default limit of 999 variables, use 100 for safety
   
-  const currentStates = await currentStmt.bind(...configs.map(c => c.id)).all();
-  const currentPrices = new Map(currentStates.results.map(row => [row.id, row.price]));
+  for (let i = 0; i < configs.length; i += chunkSize) {
+    const chunk = configs.slice(i, i + chunkSize);
+    if (chunk.length === 0) continue;
+    
+    const currentStmt = db.prepare(`
+      SELECT id, price
+      FROM current_auctions
+      WHERE id IN (${chunk.map(() => '?').join(',')})
+    `);
+    
+    const currentStates = await currentStmt.bind(...chunk.map(c => c.id)).all();
+    for (const row of currentStates.results) {
+      currentPrices.set(row.id, row.price);
+    }
+  }
   
   // Update latest batch time
   const updateBatchStmt = db.prepare(`
