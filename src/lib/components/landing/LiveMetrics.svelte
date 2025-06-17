@@ -1,17 +1,12 @@
 <script lang="ts">
-    import { withDbConnections } from "$lib/api/frontend/dbapi";
     import { faBell, faClock, faEnvelope, faGavel, faUsers } from "@fortawesome/free-solid-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-    import { onMount } from "svelte";
     import { cubicOut } from "svelte/easing";
     import { tweened } from "svelte/motion";
-    import { db } from "../../../stores/db";
 
     let { data } = $props();
 
-    let loadingUsers = true;
-    let loadingAlerts = true;
-    let loadingHistory = true;
+    let loading = $state(true);
 
     // Create tweened stores for all counters
     const auctionCounter = tweened(0, {
@@ -81,97 +76,16 @@
         };
     });
 
-    // Auction count using $effect
+    // Handle data changes in Svelte 5 runes mode
     $effect(() => {
-        const unsubscribe = db.subscribe(async (dbInstance) => {
-            if (!dbInstance) return;
-
-            try {
-                await withDbConnections(dbInstance, async (conn) => {
-                    const result = await conn.query(
-                        `SELECT COUNT(id) as count
-            FROM server`,
-                    );
-                    const count = Number(result.toArray()[0].count);
-                    if (!isNaN(count)) {
-                        auctionCounter.set(count);
-                    }
-                });
-            } catch (error) {
-                console.error("Error fetching auction count:", error);
-                auctionCounter.set(0);
-            }
-        });
-
-        return () => {};
-    });
-
-    // Latest batch count using $effect
-    $effect(() => {
-        const unsubscribe = db.subscribe(async (dbInstance) => {
-            if (!dbInstance) return;
-
-            try {
-                await withDbConnections(dbInstance, async (conn) => {
-                    const result = await conn.query(`
-            WITH LatestBatch AS (
-              SELECT MAX(seen) as max_last_seen FROM server
-            )
-            SELECT COUNT(DISTINCT id) as count
-            FROM server
-            WHERE seen = (SELECT max_last_seen FROM LatestBatch)
-          `);
-                    const count = Number(result.toArray()[0].count);
-                    if (!isNaN(count)) {
-                        latestBatchCounter.set(count);
-                    } else {
-                        latestBatchCounter.set(0);
-                    }
-                });
-            } catch (error) {
-                console.error("Error fetching latest batch count:", error);
-                latestBatchCounter.set(0);
-            }
-        });
-
-        return () => {};
-    });
-
-    // Handle server-side stats with $effect
-    $effect(() => {
-        if (data.userStats !== undefined) {
-            userCounter.set(-1);
-            setTimeout(() => {
-                userCounter.set(data.userStats);
-            }, 0);
-            loadingUsers = false;
+        if (data) {
+            auctionCounter.set(data.auctionStats ?? 0);
+            userCounter.set(data.userStats ?? 0);
+            alertCounter.set(data.alertStats ?? 0);
+            historyCounter.set(data.historyStats ?? 0);
+            latestBatchCounter.set(data.latestBatchStats ?? 0);
+            loading = false;
         }
-    });
-
-    $effect(() => {
-        if (data.alertStats !== undefined) {
-            alertCounter.set(-1);
-            setTimeout(() => {
-                alertCounter.set(data.alertStats);
-            }, 0);
-            loadingAlerts = false;
-        }
-    });
-
-    $effect(() => {
-        if (data.historyStats !== undefined) {
-            historyCounter.set(-1);
-            setTimeout(() => {
-                historyCounter.set(data.historyStats);
-            }, 0);
-            loadingHistory = false;
-        }
-    });
-
-    onMount(() => {
-        if (data.userStats !== undefined) loadingUsers = false;
-        if (data.alertStats !== undefined) loadingAlerts = false;
-        if (data.historyStats !== undefined) loadingHistory = false;
     });
 </script>
 
@@ -184,7 +98,7 @@
             data-testid="glance-auctions-tracked"
             class="flex flex-col items-center text-center px-4"
         >
-            {#if $auctionCounter === 0}
+            {#if loading}
                 <div
                     class="flex items-center justify-center gap-3 mb-2 h-10"
                 >
@@ -225,7 +139,7 @@
             data-testid="glance-last-batch"
             class="flex flex-col items-center text-center px-4"
         >
-            {#if $latestBatchCounter === 0}
+            {#if loading}
                 <div
                     class="flex items-center justify-center gap-3 mb-2 h-10"
                 >
@@ -266,7 +180,7 @@
             data-testid="glance-active-users"
             class="flex flex-col items-center text-center px-4"
         >
-            {#if $userCounter < 0}
+            {#if loading}
                 <div
                     class="flex items-center justify-center gap-3 mb-2 h-10"
                 >
@@ -307,7 +221,7 @@
             data-testid="glance-active-alerts"
             class="flex flex-col items-center text-center px-4"
         >
-            {#if $alertCounter < 0}
+            {#if loading}
                 <div
                     class="flex items-center justify-center gap-3 mb-2 h-10"
                 >
@@ -348,7 +262,7 @@
             data-testid="glance-notifications-sent"
             class="flex flex-col items-center text-center px-4"
         >
-            {#if $historyCounter < 0}
+            {#if loading}
                 <div
                     class="flex items-center justify-center gap-3 mb-2 h-10"
                 >
