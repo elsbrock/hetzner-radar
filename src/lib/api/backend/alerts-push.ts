@@ -275,12 +275,166 @@ export const ALERT_AUCTION_MATCHES_INSERT_SQL = `
 `;
 
 /**
- * Prepares server data for database insertion
+ * Prepares server data for database insertion with dual table architecture
+ * - Only inserts into auctions table if price has changed (deduplication)
+ * - Always updates current_auctions table with latest state
  */
 export async function prepareServerData(
   db: DB,
   configs: RawServerData[],
 ): Promise<PreparedStatement[]> {
+  const batch: PreparedStatement[] = [];
+  
+  // First, check if tables exist (for backward compatibility)
+  const tablesExist = await db.prepare(`
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND name IN ('current_auctions', 'latest_batch')
+  `).all();
+  
+  const useDualTables = tablesExist.results.length === 2;
+  
+  if (!useDualTables) {
+    // Fallback to original behavior if new tables don't exist
+    return prepareServerDataLegacy(db, configs);
+  }
+  
+  // Get current prices to check for changes
+  const currentStmt = db.prepare(`
+    SELECT id, price
+    FROM current_auctions
+    WHERE id IN (${configs.map(() => '?').join(',')})
+  `);
+  
+  const currentStates = await currentStmt.bind(...configs.map(c => c.id)).all();
+  const currentPrices = new Map(currentStates.results.map(row => [row.id, row.price]));
+  
+  // Update latest batch time
+  const updateBatchStmt = db.prepare(`
+    UPDATE latest_batch SET batch_time = ?, updated_at = datetime('now') WHERE id = 1
+  `);
+  const batchTime = new Date().toISOString();
+  batch.push(updateBatchStmt.bind(batchTime));
+  
+  // Prepare statements
+  const auctionStmt = db.prepare(AUCTIONS_INSERT_SQL);
+  const upsertCurrentStmt = db.prepare(`
+    INSERT OR REPLACE INTO current_auctions 
+    (id, information, datacenter, location, cpu_vendor, cpu, cpu_count, is_highio,
+     ram, ram_size, is_ecc, hdd_arr, nvme_count, nvme_drives, nvme_size,
+     sata_count, sata_drives, sata_size, hdd_count, hdd_drives, hdd_size,
+     with_inic, with_hwr, with_gpu, with_rps, traffic, bandwidth, price,
+     fixed_price, seen, last_changed, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            COALESCE((SELECT created_at FROM current_auctions WHERE id = ?), datetime('now')))
+  `);
+
+  let newAuctions = 0;
+  let priceChanges = 0;
+
+  for (const config of configs) {
+    const currentPrice = currentPrices.get(config.id);
+    
+    // Check if this is a new auction or if price has changed
+    const isNew = currentPrice === undefined;
+    const priceChanged = currentPrice !== undefined && currentPrice !== config.price;
+    
+    if (isNew) newAuctions++;
+    if (priceChanged) priceChanges++;
+    
+    // Only insert into auctions table if new or price changed
+    if (isNew || priceChanged) {
+      const boundData = [
+        config.id,
+        config.information,
+        config.datacenter,
+        config.location,
+        config.cpu_vendor,
+        config.cpu,
+        config.cpu_count,
+        config.is_highio,
+        config.ram,
+        config.ram_size,
+        config.is_ecc,
+        config.hdd_arr,
+        config.nvme_count,
+        config.nvme_drives,
+        config.nvme_size,
+        config.sata_count,
+        config.sata_drives,
+        config.sata_size,
+        config.hdd_count,
+        config.hdd_drives,
+        config.hdd_size,
+        config.with_inic,
+        config.with_hwr,
+        config.with_gpu,
+        config.with_rps,
+        config.traffic,
+        config.bandwidth,
+        config.price,
+        config.fixed_price,
+        config.seen,
+      ];
+      
+      batch.push(auctionStmt.bind(...boundData));
+    }
+    
+    // Always update current_auctions table
+    let lastChanged = config.seen;
+    if (!isNew && !priceChanged) {
+      // Keep existing last_changed timestamp if no price change
+      const existing = await db.prepare(`SELECT last_changed FROM current_auctions WHERE id = ?`).bind(config.id).first();
+      lastChanged = (existing as any)?.last_changed || config.seen;
+    }
+    
+    batch.push(upsertCurrentStmt.bind(
+      config.id,
+      config.information,
+      config.datacenter,
+      config.location,
+      config.cpu_vendor,
+      config.cpu,
+      config.cpu_count,
+      config.is_highio,
+      config.ram,
+      config.ram_size,
+      config.is_ecc,
+      config.hdd_arr,
+      config.nvme_count,
+      config.nvme_drives,
+      config.nvme_size,
+      config.sata_count,
+      config.sata_drives,
+      config.sata_size,
+      config.hdd_count,
+      config.hdd_drives,
+      config.hdd_size,
+      config.with_inic,
+      config.with_hwr,
+      config.with_gpu,
+      config.with_rps,
+      config.traffic,
+      config.bandwidth,
+      config.price,
+      config.fixed_price,
+      config.seen,
+      lastChanged,
+      config.id // for the WHERE clause in created_at subquery
+    ));
+  }
+
+  console.log(`Deduplication: ${configs.length} auctions, ${newAuctions} new, ${priceChanges} price changes`);
+  
+  return batch;
+}
+
+/**
+ * Legacy function for backward compatibility
+ */
+function prepareServerDataLegacy(
+  db: DB,
+  configs: RawServerData[],
+): PreparedStatement[] {
   const auctionStmt = db.prepare(AUCTIONS_INSERT_SQL);
   const auctionBatch: PreparedStatement[] = [];
 
@@ -328,7 +482,16 @@ export async function prepareServerData(
  * Finds alerts that match the current server data
  */
 export async function findMatchingAlerts(db: DB): Promise<any[]> {
-  const matchStmt = db.prepare(MATCH_ALERTS_SQL);
+  // Check if current_auctions table exists
+  const tableExists = await db.prepare(`
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND name='current_auctions'
+  `).first();
+  
+  // Use appropriate query based on table existence
+  const query = tableExists ? MATCH_ALERTS_SQL.replace('auctions c', 'current_auctions c').replace('c.seen = (SELECT MAX(seen) FROM auctions)', '1=1') : MATCH_ALERTS_SQL;
+  
+  const matchStmt = db.prepare(query);
   const result = await matchStmt.all();
   return result.results;
 }
