@@ -82,15 +82,17 @@ export const POST: RequestHandler = async (event) => {
     // Group matched alerts by alert ID
     const alertMap = groupAlertsByAlertId(matchedAlerts);
 
-    // Process each alert
-    for (const [_, data] of alertMap.entries()) {
-      await processAlert(
+    // Process all alerts in parallel to avoid timeout
+    const alertProcessingPromises = Array.from(alertMap.entries()).map(
+      ([_, data]) => processAlert(
         db,
         event.platform,
         data.alertInfo,
         data.matchedAuctions,
-      );
-    }
+      )
+    );
+    
+    await Promise.all(alertProcessingPromises);
 
     // Return response
     return new Response(
