@@ -153,6 +153,16 @@ export class CloudAvailabilityDO extends DurableObject {
 		return new Response('Available endpoints:\n- GET /status\n- POST /trigger\n- GET /debug', { status: 404 });
 	}
 
+	async getStatus() {
+		try {
+			await this.ensureInitialized();
+			return await this.cloudStatusService.getStatus();
+		} catch (error) {
+			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Error in getStatus RPC:`, error);
+			throw error;
+		}
+	}
+
 	private async fetchCloudStatus(): Promise<void> {
 		try {
 			const changes = await this.cloudStatusService.fetchAndUpdateStatus();
