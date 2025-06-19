@@ -47,12 +47,17 @@ export const load: PageServerLoad = async ({ platform }) => {
         .catch(() => 0),
 
       // Get auction stats from worker DO
-      radarWorker?.getAuctionStats()
-        .then((stats) => stats)
-        .catch((error) => {
+      (async () => {
+        if (!radarWorker) {
+          return { currentAuctions: 0, latestBatch: null, lastUpdated: null, lastImport: null };
+        }
+        try {
+          return await radarWorker.getAuctionStats();
+        } catch (error) {
           console.error('Failed to get auction stats from worker:', error);
           return { currentAuctions: 0, latestBatch: null, lastUpdated: null, lastImport: null };
-        }) || Promise.resolve({ currentAuctions: 0, latestBatch: null, lastUpdated: null, lastImport: null }),
+        }
+      })(),
     ]);
 
     // Ensure we return actual numbers, not null or undefined
