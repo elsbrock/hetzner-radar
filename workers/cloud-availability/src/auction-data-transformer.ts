@@ -89,7 +89,7 @@ export class AuctionDataTransformer {
 			cpu: server.cpu,
 			cpu_count: server.cpu_count,
 			is_highio: server.is_highio,
-			ram: server.ram,
+			ram: JSON.stringify(server.ram),
 			ram_size: server.ram_size,
 			is_ecc: server.is_ecc,
 			hdd_arr: JSON.stringify(server.hdd_arr),

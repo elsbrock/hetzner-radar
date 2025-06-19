@@ -16,7 +16,7 @@ export interface HetznerAuctionServer {
 	is_highio: boolean;
 	traffic: string;
 	bandwidth: number;
-	ram: string;
+	ram: string[];
 	ram_size: number;
 	price: number;
 	hdd_arr: string[];
