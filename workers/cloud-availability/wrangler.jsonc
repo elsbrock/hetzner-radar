@@ -9,15 +9,19 @@
 	"compatibility_date": "2025-04-22",
 	"migrations": [
 		{
-			"new_sqlite_classes": ["CloudAvailability"],
+			"new_classes": ["CloudAvailabilityDO", "AuctionImportDO"],
 			"tag": "v1",
 		},
 	],
 	"durable_objects": {
 		"bindings": [
 			{
-				"class_name": "CloudAvailability",
+				"class_name": "CloudAvailabilityDO",
 				"name": "CLOUD_STATUS_DO",
+			},
+			{
+				"class_name": "AuctionImportDO",
+				"name": "AUCTION_IMPORT_DO",
 			},
 		],
 	},
@@ -33,7 +37,17 @@
 	"vars": {
 		"FETCH_INTERVAL_MS": "60000",
 		"MAIN_APP_URL": "https://radar.iodev.org",
+		"AUCTION_IMPORT_INTERVAL_MS": "300000", // 5 minutes
+		"HETZNER_AUCTION_API_URL": "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json",
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "DB",
+			"database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
+			"preview_database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f"
+		}
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
