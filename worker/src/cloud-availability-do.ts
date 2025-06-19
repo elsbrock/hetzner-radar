@@ -89,68 +89,7 @@ export class CloudAvailabilityDO extends DurableObject {
 	}
 
 	async fetch(request: Request): Promise<Response> {
-		await this.ensureInitialized();
-
-		const url = new URL(request.url);
-		
-		if (url.pathname === '/status' && request.method === 'GET') {
-			try {
-				const status = await this.cloudStatusService.getStatus();
-				return new Response(JSON.stringify(status), {
-					headers: { 'Content-Type': 'application/json' },
-				});
-			} catch (error) {
-				console.error(`[CloudAvailabilityDO ${this.ctx.id}] Error serving /status:`, error);
-				return new Response('Error fetching status', { status: 500 });
-			}
-		}
-
-		if (url.pathname === '/trigger' && request.method === 'POST') {
-			try {
-				console.log(`[CloudAvailabilityDO ${this.ctx.id}] Manual cloud status update triggered`);
-				const startTime = Date.now();
-				await this.fetchCloudStatus();
-				const duration = Date.now() - startTime;
-				
-				return new Response(JSON.stringify({ 
-					success: true, 
-					message: 'Cloud status update completed successfully',
-					duration: `${duration}ms`
-				}), {
-					headers: { 'Content-Type': 'application/json' },
-				});
-			} catch (error) {
-				console.error(`[CloudAvailabilityDO ${this.ctx.id}] Manual cloud status update failed:`, error);
-				return new Response(JSON.stringify({ 
-					success: false, 
-					error: error instanceof Error ? error.message : String(error)
-				}), { 
-					status: 500,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-		}
-
-		if (url.pathname === '/debug' && request.method === 'GET') {
-			try {
-				const lastUpdated = await this.ctx.storage.get<string>('lastUpdated');
-				const currentAlarm = await this.ctx.storage.getAlarm();
-				
-				return new Response(JSON.stringify({
-					type: 'cloud-availability',
-					lastUpdated: lastUpdated || 'never',
-					nextAlarm: currentAlarm ? new Date(currentAlarm).toISOString() : 'none',
-					interval: `${this.fetchIntervalMs}ms`,
-					doId: this.ctx.id.toString()
-				}), {
-					headers: { 'Content-Type': 'application/json' },
-				});
-			} catch (error) {
-				return new Response('Error fetching debug info', { status: 500 });
-			}
-		}
-
-		return new Response('Available endpoints:\n- GET /status\n- POST /trigger\n- GET /debug', { status: 404 });
+		return new Response('This DO is accessed via RPC only', { status: 404 });
 	}
 
 	async getStatus() {
