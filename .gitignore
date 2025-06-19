@@ -11,3 +11,4 @@ build
 .env*
 .dev.vars
 .vscode
+.direnv/
