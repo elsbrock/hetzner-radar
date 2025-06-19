@@ -107,6 +107,17 @@ Combined:
 		}
 	}
 
+	async getAuctionStats() {
+		try {
+			const durableObjectId = this.env.AUCTION_IMPORT_DO.idFromName('singleton-auction-import-v1');
+			const stub = this.env.AUCTION_IMPORT_DO.get(durableObjectId);
+			return await (stub as any).getAuctionStats();
+		} catch (e: any) {
+			console.error('Error in Worker getAuctionStats RPC:', e);
+			throw new Error(`Error calling getAuctionStats on DO: ${e.message}`);
+		}
+	}
+
 	private async handleCombinedDebug(): Promise<Response> {
 		try {
 			// Get debug info from both DOs

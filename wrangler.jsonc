@@ -24,7 +24,7 @@
   ],
   "services": [
     {
-      "binding": "CLOUD_STATUS",
+      "binding": "RADAR_WORKER",
       "service": "cloud-availability"
     }
   ],

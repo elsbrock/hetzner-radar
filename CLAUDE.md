@@ -38,7 +38,7 @@ python scripts/import.py data static/sb.duckdb  # Import data
   - `/api/frontend/` - Client-side API logic
   - `/components/` - Svelte components
   - `/stores/` - Svelte stores
-- `/workers/` - Cloudflare Workers (monorepo structure)
+- `/worker/` - Cloudflare Workers (monorepo structure)
 - `/migrations/` - D1 database migrations
 - `/scripts/` - Python data processing scripts
 - `/static/` - Static assets including DuckDB database

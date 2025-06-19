@@ -168,6 +168,32 @@ export class AuctionImportDO extends DurableObject {
 		return new Response('Available endpoints:\n- POST /import\n- GET /debug\n- GET /stats', { status: 404 });
 	}
 
+	async getAuctionStats() {
+		try {
+			await this.ensureInitialized();
+			
+			if (!this.env.DB) {
+				throw new Error('D1 database is not configured.');
+			}
+
+			const [currentAuctionsCount, latestBatch, lastImport] = await Promise.all([
+				this.env.DB.prepare('SELECT COUNT(*) as count FROM current_auctions').first(),
+				this.env.DB.prepare('SELECT * FROM latest_batch WHERE id = 1').first(),
+				this.ctx.storage.get<string>('lastAuctionImport'),
+			]);
+
+			return {
+				currentAuctions: currentAuctionsCount?.count || 0,
+				latestBatch: latestBatch?.batch_time || null,
+				lastUpdated: latestBatch?.updated_at || null,
+				lastImport: lastImport || null,
+			};
+		} catch (error) {
+			console.error(`[AuctionImportDO ${this.ctx.id}] Error in getAuctionStats RPC:`, error);
+			throw error;
+		}
+	}
+
 	private async fetchAuctions(): Promise<void> {
 		try {
 			const result = await this.auctionService.fetchAndImportAuctions();
@@ -175,7 +201,7 @@ export class AuctionImportDO extends DurableObject {
 			await this.notificationService.writeImportAnalytics(true, result, result.duration);
 		} catch (error: any) {
 			console.error(`[AuctionImportDO ${this.ctx.id}] Failed to import auctions:`, error);
-			await this.notificationService.writeImportAnalytics(false, undefined, error?.duration, error?.error?.message || error?.message);
+			await this.notificationService.writeImportAnalytics(false, undefined, error?.error?.message || error?.message);
 			throw error;
 		}
 	}
