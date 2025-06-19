@@ -285,21 +285,8 @@ export async function prepareServerData(
 ): Promise<PreparedStatement[]> {
   const batch: PreparedStatement[] = [];
   
-  // First, check if tables exist (for backward compatibility)
-  const tablesExist = await db.prepare(`
-    SELECT name FROM sqlite_master 
-    WHERE type='table' AND name IN ('current_auctions', 'latest_batch')
-  `).all();
-  
-  const useDualTables = tablesExist.results.length === 2;
-  
-  if (!useDualTables) {
-    // Fallback to original behavior if new tables don't exist
-    return prepareServerDataLegacy(db, configs);
-  }
-  
-  // Get current prices to check for changes (chunk to avoid SQL variable limit)
-  const currentPrices = new Map();
+  // Get current prices and last_changed timestamps in a single query
+  const currentStates = new Map<number, { price: number; last_changed: string }>();
   const chunkSize = 100; // SQLite has a default limit of 999 variables, use 100 for safety
   
   for (let i = 0; i < configs.length; i += chunkSize) {
@@ -307,14 +294,17 @@ export async function prepareServerData(
     if (chunk.length === 0) continue;
     
     const currentStmt = db.prepare(`
-      SELECT id, price
+      SELECT id, price, last_changed
       FROM current_auctions
       WHERE id IN (${chunk.map(() => '?').join(',')})
     `);
     
-    const currentStates = await currentStmt.bind(...chunk.map(c => c.id)).all();
-    for (const row of currentStates.results) {
-      currentPrices.set(row.id, row.price);
+    const results = await currentStmt.bind(...chunk.map(c => c.id)).all();
+    for (const row of results.results) {
+      currentStates.set(row.id, {
+        price: row.price,
+        last_changed: row.last_changed
+      });
     }
   }
   
@@ -342,11 +332,11 @@ export async function prepareServerData(
   let priceChanges = 0;
 
   for (const config of configs) {
-    const currentPrice = currentPrices.get(config.id);
+    const currentState = currentStates.get(config.id);
     
     // Check if this is a new auction or if price has changed
-    const isNew = currentPrice === undefined;
-    const priceChanged = currentPrice !== undefined && currentPrice !== config.price;
+    const isNew = currentState === undefined;
+    const priceChanged = currentState !== undefined && currentState.price !== config.price;
     
     if (isNew) newAuctions++;
     if (priceChanged) priceChanges++;
@@ -389,13 +379,10 @@ export async function prepareServerData(
       batch.push(auctionStmt.bind(...boundData));
     }
     
-    // Always update current_auctions table
-    let lastChanged = config.seen;
-    if (!isNew && !priceChanged) {
-      // Keep existing last_changed timestamp if no price change
-      const existing = await db.prepare(`SELECT last_changed FROM current_auctions WHERE id = ?`).bind(config.id).first();
-      lastChanged = (existing as any)?.last_changed || config.seen;
-    }
+    // Determine last_changed timestamp
+    const lastChanged = (isNew || priceChanged) 
+      ? config.seen 
+      : (currentState?.last_changed || config.seen);
     
     batch.push(upsertCurrentStmt.bind(
       config.id,
@@ -438,68 +425,13 @@ export async function prepareServerData(
   return batch;
 }
 
-/**
- * Legacy function for backward compatibility
- */
-function prepareServerDataLegacy(
-  db: DB,
-  configs: RawServerData[],
-): PreparedStatement[] {
-  const auctionStmt = db.prepare(AUCTIONS_INSERT_SQL);
-  const auctionBatch: PreparedStatement[] = [];
-
-  for (const config of configs) {
-    const boundData = [
-      config.id,
-      config.information,
-      config.datacenter,
-      config.location,
-      config.cpu_vendor,
-      config.cpu,
-      config.cpu_count,
-      config.is_highio,
-      config.ram,
-      config.ram_size ?? 0,
-      config.is_ecc,
-      config.hdd_arr,
-      config.nvme_count ?? 0,
-      config.nvme_drives,
-      config.nvme_size ?? 0,
-      config.sata_count ?? 0,
-      config.sata_drives,
-      config.sata_size ?? 0,
-      config.hdd_count ?? 0,
-      config.hdd_drives,
-      config.hdd_size ?? 0,
-      config.with_inic,
-      config.with_hwr,
-      config.with_gpu,
-      config.with_rps,
-      config.traffic,
-      config.bandwidth ?? 0,
-      config.price,
-      config.fixed_price,
-      config.seen,
-    ];
-
-    auctionBatch.push(auctionStmt.bind(...boundData));
-  }
-
-  return auctionBatch;
-}
 
 /**
  * Finds alerts that match the current server data
  */
 export async function findMatchingAlerts(db: DB): Promise<any[]> {
-  // Check if current_auctions table exists
-  const tableExists = await db.prepare(`
-    SELECT name FROM sqlite_master 
-    WHERE type='table' AND name='current_auctions'
-  `).first();
-  
-  // Use appropriate query based on table existence
-  const query = tableExists ? MATCH_ALERTS_SQL.replace('auctions c', 'current_auctions c').replace('c.seen = (SELECT MAX(seen) FROM auctions)', '1=1') : MATCH_ALERTS_SQL;
+  // Use current_auctions table directly (no backwards compatibility needed)
+  const query = MATCH_ALERTS_SQL.replace('auctions c', 'current_auctions c').replace('c.seen = (SELECT MAX(seen) FROM auctions)', '1=1');
   
   const matchStmt = db.prepare(query);
   const result = await matchStmt.all();
