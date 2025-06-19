@@ -46,6 +46,21 @@ to a backend-only architecture, eliminating client-side DuckDB and migrating the
 data ingestion process from Python scripts to Cloudflare Workers for a fully
 integrated solution.
 
+### Auction Data Storage Strategy
+
+As part of our transition to a backend-only architecture, we're implementing a dual-table storage strategy for auction data in the backend (Cloudflare D1):
+
+- **`auctions` table**: Stores historical auction data with intelligent deduplication - only creates new entries when server prices or specifications change. This preserves a complete pricing history while eliminating redundant data.
+
+- **`current_auctions` table**: Maintains the current state of all active auctions (one row per auction). This table is continuously updated with the latest auction data, regardless of whether prices have changed.
+
+This backend storage approach significantly reduces D1 database reads by:
+- **Alert matching**: Queries run against the smaller `current_auctions` table (~100K records) instead of the full historical dataset (~1M+ records)
+- **Deduplication**: Eliminates storage of unchanged auction data, reducing both storage costs and query complexity
+- **Optimized indexing**: The `current_auctions` table has specialized indices for efficient alert matching
+
+Auction data is imported every 5 minutes from Hetzner's API via Cloudflare Workers, with only price changes and new listings being stored in the historical `auctions` table, while all current states are refreshed in `current_auctions`. This backend storage complements the existing client-side DuckDB approach during the architectural transition.
+
 ## Development
 
 To set up your development environment, you'll need:
