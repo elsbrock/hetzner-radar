@@ -10,8 +10,17 @@
 	"workers_dev": false,
 	"migrations": [
 		{
-			"deleted_classes": ["CloudAvailability"],
-			"new_classes": ["CloudAvailabilityDO", "AuctionImportDO"],
+			"new_classes": ["CloudAvailability"],
+			"tag": "v1",
+		},
+		{
+			"renamed_classes": [
+				{
+					"from": "CloudAvailability",
+					"to": "CloudAvailabilityDO"
+				}
+			],
+			"new_classes": ["AuctionImportDO"],
 			"tag": "v2",
 		},
 	],
