@@ -109,6 +109,8 @@ npx wrangler dev
 
 The worker will start on port 8787 by default. Keep this terminal window open.
 
+For local development, the worker exposes HTTP debug routes at http://localhost:8787. Visit any invalid endpoint to see available routes and usage examples.
+
 ### 3. Running the Main Application
 
 1. Install dependencies:
