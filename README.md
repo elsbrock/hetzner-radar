@@ -85,7 +85,7 @@ python import.py ../data ../static/sb.duckdb
 
 The cloud availability service tracks Hetzner Cloud server availability. To run it locally:
 
-1. First, create a `.dev.vars` file in the `workers/cloud-availability` directory:
+1. First, create a `.dev.vars` file in the `worker` directory:
 
 ```sh
 # create a token via the Hetzner Cloud console
@@ -97,7 +97,7 @@ API_KEY=your_api_key_here
 2. Install dependencies for the cloud availability worker:
 
 ```sh
-cd workers/cloud-availability
+cd worker
 npm install
 ```
 

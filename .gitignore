@@ -10,3 +10,4 @@ build
 /playwright/.cache/
 .env*
 .dev.vars
+.vscode

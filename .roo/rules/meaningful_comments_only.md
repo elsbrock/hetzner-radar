@@ -28,7 +28,7 @@ When adding or modifying code, follow these commenting guidelines:
 - `// HACK: Workaround for upstream API bug XYZ-123. Remove when fixed.` (Good - 'why' and context)
 - `// Using a Set here for O(1) lookups during reconciliation` (Good - 'why' for performance)
 - `// TODO: Refactor this to use the new service class` (Good - actionable marker)
-- `// workers/cloud-availability/src/index.ts` (Bad - redundant path)
+- `// worker/src/index.ts` (Bad - redundant path)
 - `// Sort for consistency` (Marginal - okay if reason isn't obvious)
 
 **Applies to:** All code files (e.g., `.ts`, `.js`, `.svelte`).
