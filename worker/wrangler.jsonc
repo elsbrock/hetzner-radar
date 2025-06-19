@@ -7,6 +7,7 @@
 	"name": "cloud-availability",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-04-22",
+	"workers_dev": false,
 	"migrations": [
 		{
 			"new_classes": ["CloudAvailabilityDO", "AuctionImportDO"],
