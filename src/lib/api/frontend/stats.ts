@@ -536,7 +536,7 @@ export async function getPopularityStats(
         date_trunc('day', seen) AS day,
         COUNT(DISTINCT id) AS daily_count
       FROM
-        auctions
+        server
   `;
 
 	// Apply filter if provided
@@ -558,7 +558,7 @@ export async function getPopularityStats(
     stats AS (
       SELECT
 		-- Only count auctions with price updates in the last 70 minutes
-		(SELECT COUNT(DISTINCT id) FROM auctions 
+		(SELECT COUNT(DISTINCT id) FROM server 
 		WHERE seen >= NOW() - INTERVAL '70 minutes'
 		-- Apply the same filter conditions here if provided
 		) AS current_count,
