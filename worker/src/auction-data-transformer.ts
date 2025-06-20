@@ -75,7 +75,7 @@ export class AuctionDataTransformer {
 		const cpuVendor = this.extractCpuVendor(server.cpu);
 
 		// Calculate seen timestamp from Hetzner's timestamp data
-		const seenTimestamp = this.calculateSeenTimestamp(server.next_reduce__timestamp, server.next_reduce);
+		const seenTimestamp = this.calculateSeenTimestamp(server.next_reduce_timestamp, server.next_reduce);
 
 		// Process drive arrays
 		const driveData = this.processDriveData(server.serverDiskData);
