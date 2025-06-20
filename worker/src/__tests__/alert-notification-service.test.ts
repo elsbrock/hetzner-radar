@@ -3,13 +3,16 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AlertNotificationService, type NotificationServiceConfig } from '../notifications/alert-notification-service';
+import {
+	AlertNotificationService,
+	type NotificationServiceConfig as _NotificationServiceConfig,
+} from '../notifications/alert-notification-service';
 import type { NotificationChannel, AlertNotification, NotificationResult } from '../notifications/notification-channel';
 import {
 	mockAlertInfo,
 	mockAlertInfoEmailOnly,
 	mockAlertInfoDiscordOnly,
-	mockAlertInfoNoNotifications,
+	_mockAlertInfoNoNotifications,
 	mockAlertNotification,
 } from './fixtures/alert-data';
 
@@ -210,7 +213,7 @@ describe('AlertNotificationService', () => {
 
 		it('should log appropriate messages during processing', async () => {
 			const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
-			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+			const _consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
 
 			(mockDiscordChannel.isEnabled as any).mockReturnValue(false);
@@ -254,14 +257,14 @@ describe('AlertNotificationService', () => {
 		});
 
 		it('should log error messages correctly', async () => {
-			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+			const _consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
 			(mockDiscordChannel.isEnabled as any).mockReturnValue(true);
 			(mockDiscordChannel.send as any).mockResolvedValue(mockFailureResult);
 
 			await service.sendNotification(mockAlertNotification);
 
-			expect(consoleErrorSpy).toHaveBeenCalledWith(
+			expect(_consoleErrorSpy).toHaveBeenCalledWith(
 				`[AlertNotificationService] Discord notification failed for alert ${mockAlertInfo.id}: ${mockFailureResult.error}`,
 			);
 		});

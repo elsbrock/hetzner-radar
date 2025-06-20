@@ -286,7 +286,7 @@
 				<div class="flex justify-center gap-x-3 py-2 md:text-lg">
 					<input type="hidden" name="email" bind:value={email} />
 					<input type="hidden" name="code" bind:value={code} />
-					{#each Array(6) as _, index}
+					{#each Array(6) as _, index (index)}
 						<input
 							use:registerInput={index}
 							class="block size-[40px] rounded-md border-gray-200 text-center text-lg caret-transparent shadow-inner focus:border-0

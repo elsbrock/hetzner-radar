@@ -39,7 +39,7 @@ export async function sendDiscordNotification(
 			try {
 				const errorBody = await response.text();
 				console.error('Discord error response:', errorBody);
-			} catch (e) {
+			} catch {
 				console.error('Could not read error response body');
 			}
 		}

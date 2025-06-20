@@ -100,7 +100,7 @@ describe('HetznerAuctionClient', () => {
 
 		it('should retry on network errors with exponential backoff', async () => {
 			// Mock setTimeout to avoid actual delays in tests
-			vi.spyOn(global, 'setTimeout').mockImplementation((callback: any) => {
+			vi.spyOn(global, 'setTimeout').mockImplementation((callback: unknown) => {
 				callback();
 				return 1 as any;
 			});
@@ -120,7 +120,7 @@ describe('HetznerAuctionClient', () => {
 		});
 
 		it('should fail after max retries', async () => {
-			vi.spyOn(global, 'setTimeout').mockImplementation((callback: any) => {
+			vi.spyOn(global, 'setTimeout').mockImplementation((callback: unknown) => {
 				callback();
 				return 1 as any;
 			});

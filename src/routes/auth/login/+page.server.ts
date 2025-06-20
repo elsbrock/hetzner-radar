@@ -92,7 +92,7 @@ https://radar.iodev.org/`
 		try {
 			const db = event.platform?.env.DB;
 			const formData = await event.request.formData();
-			let code = formData.get('code') as string;
+			const code = formData.get('code') as string;
 			let email = formData.get('email') as string;
 
 			if (!email) {

@@ -99,7 +99,7 @@
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
 				{#if loading}
 					<!-- Loading placeholders -->
-					{#each Array(4) as _, i}
+					{#each Array(4) as _, i (i)}
 						<div
 							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
 						>
@@ -134,7 +134,7 @@
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
 				{#if loading}
 					<!-- Loading placeholders -->
-					{#each Array(4) as _, i}
+					{#each Array(4) as _, i (i)}
 						<div
 							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
 						>
@@ -169,7 +169,7 @@
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
 				{#if loading}
 					<!-- Loading placeholders -->
-					{#each Array(4) as _, i}
+					{#each Array(4) as _, i (i)}
 						<div
 							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
 						>
@@ -204,7 +204,7 @@
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
 				{#if loading}
 					<!-- Loading placeholders -->
-					{#each Array(4) as _, i}
+					{#each Array(4) as _, i (i)}
 						<div
 							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
 						>
@@ -236,7 +236,7 @@
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
 				{#if loading}
 					<!-- Loading placeholders -->
-					{#each Array(4) as _, i}
+					{#each Array(4) as _, i (i)}
 						<div
 							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
 						>

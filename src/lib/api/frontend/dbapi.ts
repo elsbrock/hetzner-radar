@@ -60,7 +60,7 @@ async function fetchWithProgress(
 type ProgressFn = (loaded: number, total: number) => void;
 
 async function initDB(db: AsyncDuckDB, progress?: ProgressFn) {
-	const { hostname, port, protocol } = window.location;
+	const { hostname: _hostname, port: _port, protocol: _protocol } = window.location;
 	// const url = `${protocol}//${hostname}:${port}/sb.duckdb.wasm`;
 	const url = `https://static.radar.iodev.org/sb.duckdb?cb=${Math.random()}*100}`;
 	const res = await fetchWithProgress(url, progress);
@@ -122,13 +122,13 @@ async function getData<T>(conn: AsyncDuckDBConnection, query: SQLStatement): Pro
 
 		stmt = await conn.prepare(query.sql);
 		const arrowResult = await stmt.query(...query.values);
-		results = arrowResult.toArray().map((row: any) => row.toJSON());
+		results = arrowResult.toArray().map((row: unknown) => row.toJSON());
 
 		const endTime = performance.now();
 		const timing = (endTime - startTime) / 1000;
 
 		console.debug(`${results.length} results in ${timing.toFixed(4)}s`);
-	} catch (e) {
+	} catch {
 		console.error('error executing query', getRawQuery(query), e);
 	} finally {
 		stmt?.close();

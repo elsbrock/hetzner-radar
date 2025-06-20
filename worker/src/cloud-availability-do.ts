@@ -111,7 +111,7 @@ export class CloudAvailabilityDO extends DurableObject {
 		}
 	}
 
-	async fetch(request: Request): Promise<Response> {
+	async fetch(_request: Request): Promise<Response> {
 		return new Response('This DO is accessed via RPC only', { status: 404 });
 	}
 

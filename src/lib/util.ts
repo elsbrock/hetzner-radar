@@ -1,6 +1,6 @@
-export function debounce(fn: any, delay: number) {
+export function debounce(fn: unknown, delay: number) {
 	let timeoutID: number;
-	return function (...args: any) {
+	return function (...args: unknown) {
 		clearTimeout(timeoutID);
 		timeoutID = setTimeout(() => fn(...args), timeoutID ? delay : 0) as any;
 	};
@@ -29,7 +29,7 @@ export function formatRelativeTime(timestamp: string | null | undefined): string
 		} else {
 			return date.toLocaleDateString();
 		}
-	} catch (e) {
+	} catch {
 		console.error('Error formatting relative time:', e);
 		return 'Invalid Date';
 	}
@@ -48,7 +48,7 @@ export function getAvailabilityRecency(
 		if (diffHours < 24) return 'recent';
 		if (diffHours < 168) return 'old'; // 7 days
 		return 'very-old';
-	} catch (e) {
+	} catch {
 		return 'never';
 	}
 }

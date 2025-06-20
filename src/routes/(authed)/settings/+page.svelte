@@ -3,7 +3,7 @@
 	import { addToast } from '$lib/stores/toast';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import { Button, Modal, Label, Input, Checkbox, Card, Spinner } from 'flowbite-svelte';
+	import { Button, Modal, Label, Input, Checkbox, Spinner } from 'flowbite-svelte';
 	import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 	import {
 		faEnvelope,

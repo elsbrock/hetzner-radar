@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page as _page } from '$app/stores';
 	import { Timeline, TimelineItem } from 'flowbite-svelte';
 </script>
 

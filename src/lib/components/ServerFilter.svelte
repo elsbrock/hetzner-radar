@@ -52,7 +52,7 @@
 	};
 
 	let filter = $state({ ...defaultFilter });
-	let hasStoredFilter = false;
+	let _hasStoredFilter = false;
 
 	// Log initial state for debugging
 	console.log('ServerFilter: Initial filter state created with defaultFilter', () => filter);

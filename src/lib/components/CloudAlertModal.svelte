@@ -26,7 +26,7 @@
 		locationOptions = []
 	}: {
 		open: boolean;
-		alert: any | null;
+		alert: unknown | null;
 		serverTypeOptions: Array<{ value: number; name: string }>;
 		locationOptions: Array<{ value: number; name: string }>;
 	} = $props();

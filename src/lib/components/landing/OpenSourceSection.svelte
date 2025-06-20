@@ -1,11 +1,6 @@
 <script lang="ts">
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
-	import {
-		faBug,
-		faForwardStep,
-		faQuestionCircle,
-		faUsers
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faBug, faForwardStep, faUsers } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';
 </script>

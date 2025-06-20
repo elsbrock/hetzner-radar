@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CloudStatusService, type AvailabilityChange } from '../cloud-status-service';
+import { CloudStatusService, type AvailabilityChange as _AvailabilityChange } from '../cloud-status-service';
 import { createMockDurableObjectStorage, type MockDurableObjectStorage } from './fixtures/database-mocks';
 import {
 	mockServerTypes,
@@ -346,8 +346,8 @@ describe('CloudStatusService', () => {
 			const storedData = putSpy.mock.calls[0][0] as any;
 			const serverTypes = storedData.serverTypes;
 
-			const deprecatedType = serverTypes.find((st: any) => st.id === 3);
-			const nonDeprecatedType = serverTypes.find((st: any) => st.id === 1);
+			const deprecatedType = serverTypes.find((st: unknown) => st.id === 3);
+			const nonDeprecatedType = serverTypes.find((st: unknown) => st.id === 1);
 
 			expect(deprecatedType.isDeprecated).toBe(true);
 			expect(nonDeprecatedType.isDeprecated).toBe(false);
@@ -406,7 +406,7 @@ describe('CloudStatusService', () => {
 			const availability = storedData.availability;
 
 			// Each location should have sorted unique server type IDs
-			Object.values(availability).forEach((serverTypeIds: any) => {
+			Object.values(availability).forEach((serverTypeIds: unknown) => {
 				expect(Array.isArray(serverTypeIds)).toBe(true);
 				expect(serverTypeIds).toEqual([...new Set(serverTypeIds)].sort((a, b) => a - b));
 			});

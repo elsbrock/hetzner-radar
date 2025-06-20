@@ -41,7 +41,7 @@
 	}
 
 	// Props using Svelte 5 runes
-	interface $$Props {
+	interface _$Props {
 		alertId?: string | null;
 		hidden?: boolean;
 		vatRate?: number;

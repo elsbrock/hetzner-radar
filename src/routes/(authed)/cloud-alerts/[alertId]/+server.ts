@@ -77,7 +77,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 			if (!Array.isArray(updates.serverTypeIds) || updates.serverTypeIds.length === 0) {
 				return json({ error: 'At least one server type must be selected' }, { status: 400 });
 			}
-			if (!updates.serverTypeIds.every((id: any) => typeof id === 'number')) {
+			if (!updates.serverTypeIds.every((id: unknown) => typeof id === 'number')) {
 				return json({ error: 'Invalid server type IDs' }, { status: 400 });
 			}
 			validUpdates.serverTypeIds = updates.serverTypeIds;
@@ -87,7 +87,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 			if (!Array.isArray(updates.locationIds) || updates.locationIds.length === 0) {
 				return json({ error: 'At least one location must be selected' }, { status: 400 });
 			}
-			if (!updates.locationIds.every((id: any) => typeof id === 'number')) {
+			if (!updates.locationIds.every((id: unknown) => typeof id === 'number')) {
 				return json({ error: 'Invalid location IDs' }, { status: 400 });
 			}
 			validUpdates.locationIds = updates.locationIds;

@@ -78,5 +78,5 @@ export interface NotificationChannel {
  */
 export interface ChannelConfig {
 	enabled: boolean;
-	[key: string]: any;
+	[key: string]: unknown;
 }

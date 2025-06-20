@@ -6,7 +6,7 @@
 	import { session } from '$lib/stores/session';
 	import { addToast } from '$lib/stores/toast';
 	import { settingsStore } from '$lib/stores/settings';
-	import { A, Alert, Button, Input, Label, Modal, Spinner, Checkbox, Card } from 'flowbite-svelte';
+	import { A, Alert, Button, Input, Label, Modal, Spinner, Checkbox } from 'flowbite-svelte';
 	import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 	import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -210,7 +210,7 @@
 						>)
 					</p>
 					<div class="space-y-2">
-						{#each availableNotificationMethods as method}
+						{#each availableNotificationMethods as method (method.key)}
 							<Label
 								class="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 dark:border-gray-600"
 							>

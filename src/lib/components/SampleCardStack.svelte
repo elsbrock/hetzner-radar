@@ -138,7 +138,7 @@
 	onmouseleave={handleMouseLeave}
 >
 	<!-- Container for the stack -->
-	{#each sampleConfigs as config, index}
+	{#each sampleConfigs as config, index (config.cpu + '-' + config.ram_size + '-' + config.hdd_size)}
 		{@const distance = (index - activeCardIndex + sampleConfigs.length) % sampleConfigs.length}
 		{@const isVisible = distance <= MAX_VISIBLE_DISTANCE}
 

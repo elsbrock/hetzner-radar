@@ -77,11 +77,11 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		}
 
 		// Validate server type IDs and location IDs are numbers
-		if (!data.serverTypeIds.every((id: any) => typeof id === 'number')) {
+		if (!data.serverTypeIds.every((id: unknown) => typeof id === 'number')) {
 			return json({ error: 'Invalid server type IDs' }, { status: 400 });
 		}
 
-		if (!data.locationIds.every((id: any) => typeof id === 'number')) {
+		if (!data.locationIds.every((id: unknown) => typeof id === 'number')) {
 			return json({ error: 'Invalid location IDs' }, { status: 400 });
 		}
 

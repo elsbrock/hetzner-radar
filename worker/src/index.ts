@@ -90,7 +90,7 @@ Combined:
 					},
 				);
 			}
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error('Error in Worker fetch:', e);
 			return new Response(`Error processing request: ${e.message}`, { status: 500 });
 		}
@@ -101,7 +101,7 @@ Combined:
 			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
 			return await (stub as any).getStatus();
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error('Error in Worker getStatus RPC:', e);
 			throw new Error(`Error calling getStatus on DO: ${e.message}`);
 		}
@@ -112,7 +112,7 @@ Combined:
 			const durableObjectId = this.env.AUCTION_IMPORT_DO.idFromName('singleton-auction-import-v1');
 			const stub = this.env.AUCTION_IMPORT_DO.get(durableObjectId);
 			return await (stub as any).getAuctionStats();
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error('Error in Worker getAuctionStats RPC:', e);
 			throw new Error(`Error calling getAuctionStats on DO: ${e.message}`);
 		}

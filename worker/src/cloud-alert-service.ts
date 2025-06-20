@@ -183,7 +183,7 @@ export class CloudAlertService {
 	/**
 	 * Parse raw cloud alert from database
 	 */
-	private parseCloudAlert(raw: any): CloudAlert {
+	private parseCloudAlert(raw: unknown): CloudAlert {
 		return {
 			id: raw.id,
 			user_id: raw.user_id,

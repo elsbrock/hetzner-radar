@@ -2,7 +2,6 @@
 
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
-import type { DurableObjectNamespace } from '@cloudflare/workers-types';
 declare global {
 	namespace App {
 		/**
@@ -37,15 +36,16 @@ declare global {
 		 */
 		interface Platform {
 			env: {
-				RATE_LIMIT: any;
+				RATE_LIMIT: unknown;
 				DB: DB;
-				CLOUD_STATUS: any;
+				CLOUD_STATUS: unknown;
 			};
 		}
 
 		/**
 		 * PageData can be used to type data loaded in +page.server.ts or +layout.server.ts.
 		 */
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 		interface PageData {
 			// Define your page-specific data here
 		}
@@ -53,6 +53,7 @@ declare global {
 		/**
 		 * PageState can be used to type data stored in the browser's history state.
 		 */
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 		interface PageState {
 			// Define your page-specific state here
 		}
@@ -82,7 +83,7 @@ declare global {
 		 * @param statements - An array of PreparedStatement instances.
 		 * @returns A promise that resolves to an array of QueryResult objects, one for each statement.
 		 */
-		batch(statements: PreparedStatement[]): Promise<Array<QueryResult<any>>>;
+		batch(statements: PreparedStatement[]): Promise<Array<QueryResult<unknown>>>;
 	}
 
 	/**
@@ -94,19 +95,19 @@ declare global {
 		 * @param params - The parameters to bind.
 		 * @returns The PreparedStatement instance for chaining.
 		 */
-		bind(...params: any[]): PreparedStatement;
+		bind(...params: unknown[]): PreparedStatement;
 
 		/**
 		 * Executes the query and retrieves all matching records.
 		 * @returns A promise that resolves to a QueryResult containing an array of results.
 		 */
-		all<T = any>(): Promise<QueryResult<T>>;
+		all<T = unknown>(): Promise<QueryResult<T>>;
 
 		/**
 		 * Executes the query and retrieves the first matching record.
 		 * @returns A promise that resolves to a QueryResult containing an array with at most one result.
 		 */
-		first<T = any>(): Promise<QueryResult<T>>;
+		first<T = unknown>(): Promise<QueryResult<T>>;
 
 		/**
 		 * Executes the query without expecting any return data.

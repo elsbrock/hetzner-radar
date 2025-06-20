@@ -28,7 +28,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { db } from '../../stores/db';
 
-	let loading = $state(true);
+	let _loading = $state(true);
 
 	let dailyPriceIndexStats = $state<TemporalStat[]>([]);
 	let ramWithECCPriceStats = $state<TemporalStat[]>([]);
@@ -36,7 +36,7 @@
 	let hddPriceStats = $state<TemporalStat[]>([]);
 	let nvmePriceStats = $state<TemporalStat[]>([]);
 	let sataPriceStats = $state<TemporalStat[]>([]);
-	let gpuPriceStats = $state<TemporalStat[]>([]);
+	let _gpuPriceStats = $state<TemporalStat[]>([]);
 	let cpuVendorAMDStats = $state<TemporalStat[]>([]);
 	let cpuVendorIntelStats = $state<TemporalStat[]>([]);
 	let volumeFinlandStats = $state<TemporalStat[]>([]);
@@ -224,7 +224,7 @@
 	}
 
 	$effect(() => {
-		if (!!$db) {
+		if ($db) {
 			fetchData($db);
 		}
 	});

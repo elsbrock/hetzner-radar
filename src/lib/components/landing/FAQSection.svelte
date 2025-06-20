@@ -47,7 +47,7 @@
 			class="rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
 		>
 			<Accordion class="divide-y divide-gray-200 dark:divide-gray-700">
-				{#each faqItems as item}
+				{#each faqItems as item (item.question)}
 					<AccordionItem class="border-b border-gray-200 last:border-b-0 dark:border-gray-700">
 						<span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
 							{item.question}

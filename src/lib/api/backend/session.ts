@@ -34,7 +34,7 @@ export interface User {
 }
 
 export async function createSession(
-	db: any,
+	db: unknown,
 	token: string,
 	userId: string,
 	email: string
@@ -65,7 +65,7 @@ export async function createSession(
 }
 
 export async function validateSessionToken(
-	db: any,
+	db: unknown,
 	token: string
 ): Promise<SessionValidationResult> {
 	// Probabilistic cleanup: Run on ~1% of requests
@@ -147,6 +147,6 @@ export async function validateSessionToken(
 	return { session, user };
 }
 
-export async function invalidateSession(db: any, sessionId: string): Promise<void> {
+export async function invalidateSession(db: unknown, sessionId: string): Promise<void> {
 	await db.prepare('DELETE FROM session WHERE id = ?').bind(sessionId).run();
 }

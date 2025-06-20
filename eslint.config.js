@@ -28,6 +28,33 @@ export default [
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/']
+		files: ['**/__tests__/**/*', '**/*.test.*', '**/*.spec.*'],
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/no-unused-vars': 'off'
+		}
+	},
+	{
+		rules: {
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					args: 'none',
+					varsIgnorePattern: '^_',
+					argsIgnorePattern: '^_'
+				}
+			],
+			'@typescript-eslint/no-explicit-any': 'warn',
+			'no-undef': 'warn',
+			'svelte/infinite-reactive-loop': 'warn',
+			'svelte/prefer-writable-derived': 'warn',
+			'svelte/no-at-html-tags': 'warn',
+			'no-unsafe-optional-chaining': 'warn',
+			'no-case-declarations': 'warn',
+			'svelte/valid-prop-names-in-kit-pages': 'warn'
+		}
+	},
+	{
+		ignores: ['build/', '.svelte-kit/', 'dist/', '.wrangler/', 'worker/coverage/', 'fix-*.cjs']
 	}
 ];

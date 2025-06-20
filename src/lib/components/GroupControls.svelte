@@ -15,7 +15,7 @@
 	];
 
 	// Define the props interface
-	interface $$Props {
+	interface _$Props {
 		groupByField?: GroupByField;
 	}
 

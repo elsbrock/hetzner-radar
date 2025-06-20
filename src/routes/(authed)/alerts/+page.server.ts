@@ -134,7 +134,7 @@ export const actions: Actions = {
 				emailNotifications,
 				discordNotifications
 			);
-		} catch (e) {
+		} catch {
 			console.error(e);
 			return fail(500, { success: false, error: 'Failed to create alert' });
 		}
@@ -174,7 +174,7 @@ export const actions: Actions = {
 				emailNotifications,
 				discordNotifications
 			);
-		} catch (e) {
+		} catch {
 			console.error(e);
 			return fail(500, { success: false, error: 'Failed to update alert' });
 		}
@@ -192,7 +192,7 @@ export const actions: Actions = {
 
 		try {
 			await deleteAlert(db!, alertId, event.locals.user!.id.toString());
-		} catch (e) {
+		} catch {
 			console.error(e);
 			return fail(500, { success: false, error: 'Failed to delete alert' });
 		}

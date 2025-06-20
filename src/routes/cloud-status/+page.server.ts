@@ -38,7 +38,7 @@ export interface CloudStatusData {
 interface LoadOutput {
 	statusData: CloudStatusData | null;
 	error?: string;
-	user?: any;
+	user?: unknown;
 }
 
 export const load: PageServerLoad = async ({ platform, locals }): Promise<LoadOutput> => {

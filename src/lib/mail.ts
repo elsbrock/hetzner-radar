@@ -12,11 +12,11 @@ interface MailOptions {
 	text: string;
 }
 
-export async function sendMail(env: any, mailOptions: MailOptions): Promise<void> {
+export async function sendMail(env: unknown, mailOptions: MailOptions): Promise<void> {
 	if (dev) {
 		console.log(JSON.stringify(mailOptions, undefined, 2));
 	}
-	const { from, to, subject, text } = mailOptions;
+	const { from, to, _subject, text } = mailOptions;
 	const fromField = from.name && from.name.trim() ? `"${from.name}" <${from.email}>` : from.email;
 
 	const body = new URLSearchParams();

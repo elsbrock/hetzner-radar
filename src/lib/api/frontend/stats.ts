@@ -17,8 +17,8 @@ export async function getDatacenters(
 	conn: AsyncDuckDBConnection,
 	filter: ServerFilter
 ): Promise<NameValuePair[]> {
-	let datacenter_filter_query = generateFilterQuery(filter, true, false);
-	let datacenters_query =
+	const datacenter_filter_query = generateFilterQuery(filter, true, false);
+	const datacenters_query =
 		SQL`select distinct datacenter as name, datacenter as value from server where`
 			.append(datacenter_filter_query)
 			.append(SQL` order by datacenter`);
@@ -29,8 +29,8 @@ export async function getCPUModels(
 	conn: AsyncDuckDBConnection,
 	filter: ServerFilter
 ): Promise<NameValuePair[]> {
-	let cpumodel_filter_query = generateFilterQuery(filter, false, true);
-	let cpumodel_query = SQL`select distinct cpu as name, cpu as value from server where`
+	const cpumodel_filter_query = generateFilterQuery(filter, false, true);
+	const cpumodel_query = SQL`select distinct cpu as name, cpu as value from server where`
 		.append(cpumodel_filter_query)
 		.append(SQL` order by cpu`);
 	return getData<NameValuePair>(conn, cpumodel_query);
@@ -530,7 +530,7 @@ export async function getPopularityStats(
 	filter?: ServerFilter
 ): Promise<number> {
 	// Start with base query
-	let query = SQL`
+	const query = SQL`
     WITH daily_counts AS (
       SELECT
         date_trunc('day', seen) AS day,

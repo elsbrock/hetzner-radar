@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount as _onMount } from 'svelte';
 
 	let { lineCount = 12 } = $props<{ lineCount?: number }>();
 	let isAnimating = $state(false);
@@ -21,7 +21,7 @@
 >
 	<div class="radar__dot" class:radar__dot--animate={isAnimating}></div>
 	<div class="radar__dot" class:radar__dot--animate={isAnimating}></div>
-	{#each Array(lineCount) as _, i}
+	{#each Array(lineCount) as _, i (i)}
 		<div
 			class="radar__line"
 			style="transform: rotate({(360 / lineCount) * i}deg) translateX(-50%);"

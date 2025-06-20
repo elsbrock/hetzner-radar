@@ -1,5 +1,5 @@
 // tests/fixtures.ts
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type _Page } from '@playwright/test';
 
 type ErrorTracking = {
 	consoleErrors: string[];

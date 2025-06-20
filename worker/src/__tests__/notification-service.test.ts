@@ -9,7 +9,7 @@ import { mockServerTypes } from './fixtures/cloud-data';
 import type { AvailabilityChange } from '../cloud-status-service';
 
 interface MockAnalyticsEngineDataset {
-	writeDataPoint: (data: any) => void;
+	writeDataPoint: (data: unknown) => void;
 }
 
 describe('NotificationService', () => {

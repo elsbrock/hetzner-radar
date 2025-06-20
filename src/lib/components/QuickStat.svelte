@@ -2,7 +2,7 @@
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
-	interface $$Props {
+	interface _$Props {
 		icon?: IconDefinition;
 		title?: string;
 		value?: string | number | null;

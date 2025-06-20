@@ -14,7 +14,7 @@ export async function GET(event: RequestEvent) {
 	const userId = event.locals.user.id;
 
 	try {
-		const userData: any = await db
+		const userData: unknown = await db
 			.prepare('SELECT id, email, created_at FROM user WHERE id = ?')
 			.bind(userId)
 			.first();
@@ -79,7 +79,7 @@ export async function GET(event: RequestEvent) {
 				'Content-Disposition': 'attachment; filename="sr_export.json"'
 			}
 		});
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error('Failed to export GDPR data for user:', userId, e);
 		const errorMessage = e instanceof Error && e.message ? e.message : 'An unknown error occurred.';
 		// Using SvelteKit's json helper for error response

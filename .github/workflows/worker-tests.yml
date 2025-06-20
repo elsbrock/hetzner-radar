@@ -2,12 +2,12 @@ name: Worker Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'worker/**'
       - '.github/workflows/worker-tests.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'worker/**'
       - '.github/workflows/worker-tests.yml'

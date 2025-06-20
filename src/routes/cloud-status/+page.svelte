@@ -4,11 +4,10 @@
 	import { browser } from '$app/environment';
 	import 'leaflet/dist/leaflet.css';
 	import type L from 'leaflet';
-	import { settingsStore } from '$lib/stores/settings'; // Import settings store
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
 	import { invalidateAll } from '$app/navigation';
-	import QuickStat from '$lib/components/QuickStat.svelte';
-	import { fade, slide } from 'svelte/transition';
+	// import QuickStat from '$lib/components/QuickStat.svelte';
+	import { fade as _fade, slide as _slide } from 'svelte/transition';
 	import { formatRelativeTime, getAvailabilityRecency } from '$lib/util';
 	import {
 		Table,
@@ -22,8 +21,6 @@
 		Spinner,
 		P,
 		Heading,
-		Alert,
-		A,
 		Button,
 		Input,
 		Select,
@@ -31,7 +28,6 @@
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
-		CloseCircleOutline,
 		CloseCircleSolid,
 		ExclamationCircleSolid,
 		InfoCircleSolid,
@@ -324,7 +320,7 @@
 
 	function collapseAll() {
 		filteredGroupedServerTypes.forEach((cpuGroups, architecture) => {
-			cpuGroups.forEach((_: any, cpuType: string) => {
+			cpuGroups.forEach((_: unknown, cpuType: string) => {
 				collapsedGroups.add(`${architecture}-${cpuType}`);
 			});
 		});
@@ -666,7 +662,7 @@
 									class="sticky left-0 z-10 bg-gray-50 px-4 pt-4 pb-3 align-middle dark:bg-gray-700"
 									>Server Type</TableHeadCell
 								>
-								{#each data.statusData.locations as location}
+								{#each data.statusData.locations as location (location.id)}
 									<TableHeadCell class="px-4 pt-4 pb-3 text-center align-middle whitespace-nowrap">
 										<span class="block md:hidden">{location.city}</span>
 										<span class="hidden md:block">{location.city}, {location.country}</span>
@@ -682,8 +678,8 @@
 								</TableHeadCell>
 							</TableHead>
 							<TableBody class="divide-y dark:divide-gray-700">
-								{#each filteredGroupedServerTypes as [architecture, cpuGroups]}
-									{#each cpuGroups as [cpuType, serverTypes]}
+								{#each filteredGroupedServerTypes as [architecture, cpuGroups] (architecture)}
+									{#each cpuGroups as [cpuType, serverTypes] (`${architecture}-${cpuType}`)}
 										{@const groupKey = `${architecture}-${cpuType}`}
 										{@const isCollapsed = collapsedGroups.has(groupKey)}
 										<TableBodyRow
@@ -708,7 +704,7 @@
 										</TableBodyRow>
 
 										{#if !isCollapsed}
-											{#each serverTypes as serverType}
+											{#each serverTypes as serverType (serverType.id)}
 												{@const availableCount =
 													summaryStats?.serverTypeAvailability.get(serverType.id)?.locations || 0}
 												<TableBodyRow class="bg-white text-sm dark:bg-gray-800">
@@ -743,7 +739,7 @@
 														>
 														<div id="{serverType.name}-tooltip" class="inline-block"></div>
 													</TableBodyCell>
-													{#each data.statusData.locations as location}
+													{#each data.statusData.locations as location (location.id)}
 														{@const status = getServerStatus(location.id, serverType.id)}
 														{@const lastSeenText = formatLastSeen(location.id, serverType.id)}
 														{@const lastSeenColor = getLastSeenColor(location.id, serverType.id)}
@@ -826,7 +822,7 @@
 										>
 											Availability %
 										</TableBodyCell>
-										{#each data.statusData.locations as location}
+										{#each data.statusData.locations as location (location.id)}
 											{@const stats = summaryStats.locationStats.get(location.id)}
 											<TableBodyCell class="px-4 py-3 text-center font-bold">
 												{stats?.percentage || 0}%

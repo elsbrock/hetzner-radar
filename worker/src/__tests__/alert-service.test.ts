@@ -19,7 +19,7 @@ vi.mock('../notifications/alert-notification-service');
 describe('AlertService', () => {
 	let service: AlertService;
 	let mockNotificationService: AlertNotificationService;
-	let mockDb: any;
+	let mockDb: unknown;
 	const testDoId = 'test-do-id';
 
 	beforeEach(() => {

@@ -4,7 +4,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuctionDatabaseService } from '../auction-db-service';
-import { createMockD1Database, mockCurrentAuctionStates, type MockD1Database } from './fixtures/database-mocks';
+import {
+	createMockD1Database,
+	mockCurrentAuctionStates as _mockCurrentAuctionStates,
+	type MockD1Database,
+} from './fixtures/database-mocks';
 import { mockRawServerData } from './fixtures/auction-data';
 
 describe('AuctionDatabaseService', () => {

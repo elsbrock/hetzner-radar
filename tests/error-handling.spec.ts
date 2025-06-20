@@ -30,7 +30,7 @@ test.describe('Error Handling', () => {
 		// Check if page shows loading state, error, or actual data
 		const loadingIndicator = page.getByText(/loading/i);
 		const errorMessage = page.getByText(/error|failed|cannot load/i);
-		const serverCards = page.getByTestId('server-card');
+		const _serverCards = page.getByTestId('server-card');
 
 		const hasLoading = await loadingIndicator.isVisible();
 		const hasError = await errorMessage.isVisible();
@@ -58,7 +58,7 @@ test.describe('Error Handling', () => {
 		await page.waitForTimeout(1000);
 
 		// Check for loading indicators early in the process
-		const loadingElements = page
+		const _loadingElements = page
 			.locator('text=/loading|spinner|downloading/i')
 			.or(page.locator('[class*="spinner"]'))
 			.or(page.locator('[class*="loading"]'));
@@ -69,7 +69,7 @@ test.describe('Error Handling', () => {
 		// Eventually, page should have loaded basic structure
 		const serverFilter = page.getByTestId('server-filter');
 		const totalConfigurations = page.getByTestId('total-configurations');
-		const serverCards = page.getByTestId('server-card');
+		const _serverCards = page.getByTestId('server-card');
 		const errorMessage = page.getByText(/error|failed|timeout/i);
 
 		const hasFilter = await serverFilter.isVisible();
@@ -94,7 +94,7 @@ test.describe('Error Handling', () => {
 		});
 
 		// Should either show data or error, but not crash
-		const serverCards = page.getByTestId('server-card');
+		const _serverCards = page.getByTestId('server-card');
 		const totalConfigurations = page.getByTestId('total-configurations');
 
 		// At minimum, the page structure should be intact
@@ -149,7 +149,7 @@ test.describe('Error Handling', () => {
 		await expect(page.getByTestId('total-configurations')).toBeVisible();
 
 		// Should be able to interact normally after rapid clicks
-		const serverCards = page.getByTestId('server-card');
+		const _serverCards = page.getByTestId('server-card');
 		if ((await serverCards.count()) > 0) {
 			await serverCards.first().click();
 

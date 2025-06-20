@@ -129,7 +129,7 @@ export class DiscordChannel implements NotificationChannel {
 				try {
 					const errorBody = await response.text();
 					console.error('[DiscordChannel] Error response:', errorBody);
-				} catch (e) {
+				} catch {
 					console.error('[DiscordChannel] Could not read error response body');
 				}
 			}

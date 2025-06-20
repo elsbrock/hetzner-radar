@@ -30,12 +30,12 @@
 	// Runes ($state, $derived, etc.) are compiler features and don't need explicit imports.
 
 	// Props using Svelte 5 runes
-	interface $$Props {
+	interface _$Props {
 		config?: ServerConfiguration | null;
 		hidden?: boolean;
 	}
 	// Define props using $props. Default values are assigned directly.
-	// Type inference usually works, so <$$Props> is often optional.
+	// Type inference usually works, so <_$Props> is often optional.
 	let { config = null, hidden = $bindable(true) } = $props();
 
 	let transitionParamsRight = {

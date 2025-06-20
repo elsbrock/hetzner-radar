@@ -56,7 +56,7 @@ export class NotificationService {
 		console.log(`[NotificationService ${this.doId}] Wrote ${changes.length} data points to Analytics Engine`);
 	}
 
-	async writeImportAnalytics(success: boolean, stats?: any, duration?: number, error?: string): Promise<void> {
+	async writeImportAnalytics(success: boolean, stats?: unknown, duration?: number, error?: string): Promise<void> {
 		if (!this.analyticsEngine) return;
 
 		try {

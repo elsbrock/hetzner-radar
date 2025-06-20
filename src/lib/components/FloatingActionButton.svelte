@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from 'flowbite-svelte';
-	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import type { _IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome'; // Use named import
 	import { fly } from 'svelte/transition';
 	import { onDestroy } from 'svelte';

@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance as _enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
+	import { browser as _browser } from '$app/environment';
 	import AlertModal from '$lib/components/AlertModal.svelte';
 	import AlertAuctionsDrawer from '$lib/components/AlertAuctionsDrawer.svelte';
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
 	import { encodeFilter } from '$lib/filter';
 	import { addToast } from '$lib/stores/toast';
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { MAX_ALERTS } from '$lib/api/backend/alerts.js';
 	import { MAX_CLOUD_ALERTS } from '$lib/api/backend/cloud-alerts.js';
 	import { page } from '$app/stores';
@@ -25,30 +25,21 @@
 	import {
 		Tabs,
 		TabItem,
-		Card,
 		Badge,
 		Button,
 		Spinner,
 		Alert,
 		Modal,
-		Label,
-		Input,
-		MultiSelect,
-		Radio,
-		Toggle,
 		ButtonGroup
 	} from 'flowbite-svelte';
 	import {
 		BellRingSolid,
 		BullhornSolid,
-		PlusOutline,
 		PenSolid,
 		TrashBinSolid,
 		CheckCircleSolid,
 		CloseCircleSolid,
 		ExclamationCircleSolid,
-		SearchOutline,
-		EyeSolid,
 		InfoCircleSolid
 	} from 'flowbite-svelte-icons';
 	import {
@@ -219,7 +210,7 @@
 		showCloudAlertModal = true;
 	}
 
-	function openEditCloudAlertModal(alert: any) {
+	function openEditCloudAlertModal(alert: unknown) {
 		editingCloudAlert = alert;
 		showCloudAlertModal = true;
 	}
@@ -341,7 +332,7 @@
 								</div>
 							{:else}
 								<div class="space-y-3">
-									{#each active as alert}
+									{#each active as alert (alert.id)}
 										<div
 											class="flex flex-col rounded-lg border-l-4 border-l-gray-300 bg-white p-3 shadow-sm md:flex-row md:items-start dark:border-l-gray-700 dark:bg-gray-800"
 										>
@@ -443,7 +434,7 @@
 								</div>
 							{:else}
 								<div class="space-y-3">
-									{#each triggered as alert}
+									{#each triggered as alert (alert.id)}
 										<div
 											class="flex flex-col rounded-lg border-l-4 border-l-green-500 bg-white p-3 shadow-sm md:flex-row md:items-start dark:bg-gray-800"
 										>
@@ -590,7 +581,7 @@
 								</div>
 							{:else}
 								<div class="space-y-3">
-									{#each data.cloudAlerts.activeAlerts as alert}
+									{#each data.cloudAlerts.activeAlerts as alert (alert.id)}
 										<div
 											class="flex flex-col rounded-lg border-l-4 border-l-blue-500 bg-white p-3 shadow-sm md:flex-row md:items-start dark:bg-gray-800"
 										>
@@ -624,7 +615,7 @@
 													>Server Types</span
 												>
 												<div class="flex flex-wrap gap-1">
-													{#each alert.server_type_ids.slice(0, 2) as typeId}
+													{#each alert.server_type_ids.slice(0, 2) as typeId (typeId)}
 														{@const serverType = serverTypeOptions.find(
 															(st) => st.value === typeId
 														)}
@@ -646,7 +637,7 @@
 													>Locations</span
 												>
 												<div class="flex flex-wrap gap-1">
-													{#each alert.location_ids.slice(0, 2) as locId}
+													{#each alert.location_ids.slice(0, 2) as locId (locId)}
 														{@const location = locationOptions.find((loc) => loc.value === locId)}
 														{#if location}
 															<Badge color="purple" class="text-xs">
@@ -717,7 +708,7 @@
 								</div>
 
 								<div class="space-y-3">
-									{#each data.cloudAlerts.triggeredAlerts.slice(0, 10) as trigger}
+									{#each data.cloudAlerts.triggeredAlerts.slice(0, 10) as trigger (trigger.id || `${trigger.server_type_name}-${trigger.location_name}-${trigger.triggered_at}`)}
 										<div
 											class="flex flex-col rounded-lg border-l-4 bg-white p-3 shadow-sm md:flex-row md:items-start dark:bg-gray-800 {trigger.event_type ===
 											'available'

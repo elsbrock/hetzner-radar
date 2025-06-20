@@ -17,16 +17,16 @@
 		timeUnitPrice = 'perMonth',
 		config,
 		loading = false,
-		displayStoragePrice, // Included but not yet used in rendering logic
-		displayRamPrice, // Included but not yet used in rendering logic
+		displayStoragePrice: _displayStoragePrice, // Included but not yet used in rendering logic
+		displayRamPrice: _displayRamPrice, // Included but not yet used in rendering logic
 		clickable = true, // Default to clickable
 		buttons
 	}: {
 		timeUnitPrice?: 'perHour' | 'perMonth';
 		config: ServerConfiguration;
 		loading?: boolean;
-		displayStoragePrice?: any;
-		displayRamPrice?: any;
+		displayStoragePrice?: unknown;
+		displayRamPrice?: unknown;
 		clickable?: boolean;
 		buttons?: import('svelte').Snippet;
 	} = $props();

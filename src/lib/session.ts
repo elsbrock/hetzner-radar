@@ -1,13 +1,13 @@
 import { dev } from '$app/environment';
-import type { ActionFailure } from '@sveltejs/kit';
+import type { _ActionFailure } from '@sveltejs/kit';
 
-type ActionHandler = (event: any) => Promise<any>;
+type ActionHandler = (event: unknown) => Promise<any>;
 
 export function rateLimit(handler: ActionHandler, action: string = 'default') {
 	if (dev) {
 		return handler;
 	}
-	return async (event: any) => {
+	return async (event: unknown) => {
 		const fingerprint = await createRequestFingerprint(event);
 
 		const rateLimitKey = `rate_limit:${action}:${fingerprint}`;
@@ -27,7 +27,7 @@ export function rateLimit(handler: ActionHandler, action: string = 'default') {
 	};
 }
 
-async function createRequestFingerprint(event: any): Promise<string> {
+async function createRequestFingerprint(event: unknown): Promise<string> {
 	const headers = event.request.headers;
 	const userAgent = headers.get('user-agent') || '';
 	const acceptLanguage = headers.get('accept-language') || '';

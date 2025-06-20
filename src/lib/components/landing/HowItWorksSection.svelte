@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { faBell, faClock, faGavel } from '@fortawesome/free-solid-svg-icons';
+	import { faClock, faGavel } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';

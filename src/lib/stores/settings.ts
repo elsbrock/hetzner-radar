@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 export type Settings = {
 	vatSelection?: { countryCode: string };
 	// Allow other keys for flexibility
-	[key: string]: any;
+	[key: string]: unknown;
 };
 
 /**
@@ -38,7 +38,7 @@ function createSettingsStore() {
 		// Set entire settings object
 		set,
 		// Update specific setting by key
-		updateSetting: (key: string, value: any) =>
+		updateSetting: (key: string, value: unknown) =>
 			update((settings) => {
 				const newSettings = { ...settings, [key]: value };
 				if (typeof window !== 'undefined') {

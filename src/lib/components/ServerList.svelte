@@ -10,7 +10,7 @@
 	// Define the grouping type (matching +page.svelte)
 	type GroupByField = 'none' | 'cpu_vendor' | 'cpu_model' | 'good_price' | 'low_price';
 
-	interface $$Props {
+	interface _$Props {
 		groupedList: GroupedServerList;
 		groupByField: GroupByField; // Add the new prop
 		timeUnitPrice?: 'perHour' | 'perMonth';

@@ -1,6 +1,5 @@
 import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 import { sendMail } from '$lib/mail';
-import { getUser } from './user';
 import { sendDiscordNotification, createAlertDiscordEmbed } from './discord';
 
 // Define the structure for the incoming raw server data
@@ -255,7 +254,7 @@ export async function findMatchingAlerts(db: DB): Promise<any[]> {
 export function groupAlertsByAlertId(matchedAlerts: any[]): Map<
 	number,
 	{
-		alertInfo: any;
+		alertInfo: unknown;
 		matchedAuctions: { auction_id: number; price: number; seen: string }[];
 	}
 > {
@@ -297,8 +296,8 @@ export function groupAlertsByAlertId(matchedAlerts: any[]): Map<
  * Sends notification email for a matched alert
  */
 export async function sendEmailNotification(
-	platform: any,
-	alertInfo: any,
+	platform: unknown,
+	alertInfo: unknown,
 	triggerPrice: number
 ): Promise<void> {
 	await sendMail(platform?.env, {
@@ -337,8 +336,8 @@ https://radar.iodev.org/
  * Sends notifications via all configured channels for a matched alert
  */
 export async function sendAlertNotifications(
-	platform: any,
-	alertInfo: any,
+	platform: unknown,
+	alertInfo: unknown,
 	triggerPrice: number
 ): Promise<void> {
 	// Log the alertInfo for debugging
@@ -414,8 +413,8 @@ export async function sendAlertNotifications(
  */
 export async function processAlert(
 	db: DB,
-	platform: any,
-	alertInfo: any,
+	platform: unknown,
+	alertInfo: unknown,
 	matchedAuctions: { auction_id: number; price: number; seen: string }[]
 ): Promise<void> {
 	try {
@@ -454,7 +453,7 @@ export async function processAlert(
 		statements.push(deleteStmt.bind(alertInfo.id));
 
 		// Execute all statements in a batch to get the alert history ID
-		const results = await db.batch(statements);
+		const _results = await db.batch(statements);
 
 		// Get the ID of the newly inserted alert history record (same as the original alert ID)
 		// This ID is used in the email notification URL and for storing matched auctions

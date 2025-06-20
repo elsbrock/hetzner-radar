@@ -100,7 +100,7 @@ export class CloudDiscordChannel implements CloudNotificationChannel {
 				try {
 					const errorBody = await response.text();
 					console.error('[CloudDiscordChannel] Error response:', errorBody);
-				} catch (e) {
+				} catch {
 					console.error('[CloudDiscordChannel] Could not read error response body');
 				}
 			}

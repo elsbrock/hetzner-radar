@@ -7,7 +7,7 @@
 
 	// --- Props ---
 
-	interface $$Props {
+	interface _$Props {
 		config: ServerConfiguration;
 		displayPrice: number; // Final price including VAT (needed for unit price calculation)
 		showPricePerUnit?: boolean;

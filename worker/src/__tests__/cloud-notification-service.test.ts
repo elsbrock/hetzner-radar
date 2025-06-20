@@ -3,21 +3,21 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CloudNotificationService, type CloudNotificationServiceConfig } from '../cloud-notifications/cloud-notification-service';
+import { CloudNotificationService, type _CloudNotificationServiceConfig } from '../cloud-notifications/cloud-notification-service';
 import type {
 	CloudNotificationChannel,
 	CloudNotification,
 	CloudNotificationResult,
 	AvailabilityChange,
 	CloudAlert,
-	CloudAlertUser,
+	_CloudAlertUser,
 } from '../cloud-notifications/cloud-notification-channel';
 import {
 	mockAvailabilityChanges,
 	mockSingleAvailabilityChange,
 	mockCloudAlerts,
 	mockCloudAlertUsers,
-	mockCloudAlertMatches,
+	_mockCloudAlertMatches,
 	mockCloudNotification,
 	mockCloudNotificationResults,
 	mockFailedCloudNotificationResults,

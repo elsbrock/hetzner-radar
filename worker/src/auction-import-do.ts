@@ -114,7 +114,7 @@ export class AuctionImportDO extends DurableObject {
 		}
 	}
 
-	async fetch(request: Request): Promise<Response> {
+	async fetch(_request: Request): Promise<Response> {
 		return new Response('This DO is accessed via RPC only', { status: 404 });
 	}
 
@@ -146,7 +146,7 @@ export class AuctionImportDO extends DurableObject {
 
 	private async fetchAuctions(): Promise<void> {
 		const startTime = Date.now();
-		let auctionImportResult: any = null;
+		let auctionImportResult: unknown = null;
 		let alertProcessingResult: any[] = [];
 
 		try {
@@ -181,7 +181,7 @@ export class AuctionImportDO extends DurableObject {
 				},
 				duration,
 			);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			const duration = Date.now() - startTime;
 			console.error(`[AuctionImportDO ${this.ctx.id}] Failed during auction import/alert processing:`, error);
 

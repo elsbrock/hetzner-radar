@@ -3,7 +3,7 @@ import { createBlankSessionCookie, createSessionCookie } from '$lib/cookie';
 import type { Handle } from '@sveltejs/kit';
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export async function handleError({ error, event, status, message }) {
+export async function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();
 
 	console.error('unhandled error', event, error, errorId);

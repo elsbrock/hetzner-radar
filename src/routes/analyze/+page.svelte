@@ -45,7 +45,6 @@
 		faArrowDown, // FAB icon
 		faArrowUp,
 		faBell,
-		faClockRotateLeft,
 		faEuroSign,
 		faFilter,
 		faFire,
@@ -58,7 +57,7 @@
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
 	import Spinner from 'flowbite-svelte/Spinner.svelte';
 	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
+	import { slide as _slide } from 'svelte/transition';
 	// Import slide transition
 	import { browser } from '$app/environment';
 	import { db, dbInitProgress } from '../../stores/db';
@@ -318,7 +317,7 @@
 	});
 
 	// --- Helper functions for grouping ---
-	function calculateMedian(prices: number[]): number | null {
+	function _calculateMedian(prices: number[]): number | null {
 		if (prices.length === 0) return null;
 		const sortedPrices = [...prices].sort((a, b) => a - b);
 		const mid = Math.floor(sortedPrices.length / 2);
@@ -327,7 +326,7 @@
 			: (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
 	}
 
-	function calculatePercentile(prices: number[], percentile: number): number | null {
+	function _calculatePercentile(prices: number[], percentile: number): number | null {
 		if (prices.length === 0) return null;
 		const sortedPrices = [...prices].sort((a, b) => a - b);
 		const index = (percentile / 100) * (sortedPrices.length - 1); // N-1 adjustment
@@ -536,12 +535,12 @@
 	});
 
 	// Derived state for total offers (can remain derived)
-	let totalOffers = $derived(
+	let _totalOffers = $derived(
 		Array.isArray(serverPrices) ? serverPrices.reduce((acc, val) => acc + val.count, 0) : 0
 	);
 
 	// Derived state for available auctions (from last data point)
-	let availableAuctions = $derived(
+	let _availableAuctions = $derived(
 		Array.isArray(serverPrices) && serverPrices.length > 0
 			? (serverPrices[serverPrices.length - 1]?.count ?? 0)
 			: 0
@@ -554,9 +553,9 @@
 
 	// Non-derived variables for QuickStats
 	let totalResultsValue = $state(0);
-	let lowestPriceValue = $state<number | null>(null);
-	let averagePriceValue = $state<number | null>(null);
-	let priceRangeValue = $state<number | null>(null);
+	let _lowestPriceValue = $state<number | null>(null);
+	let _averagePriceValue = $state<number | null>(null);
+	let _priceRangeValue = $state<number | null>(null);
 	let availableAuctionsValue = $state(0);
 	let popularityValue = $state<number | null>(1); // Default to 1 (neutral)
 	let lowestPriceFormatted = $state('N/A');
@@ -577,12 +576,12 @@
 	}
 
 	// Derived state for QuickStats
-	let lowestPrice = $derived(() => {
+	let _lowestPrice = $derived(() => {
 		const prices = getFilteredPrices();
 		return prices.length > 0 ? Math.min(...prices) : null;
 	});
 
-	let highestPrice = $derived(() => {
+	let _highestPrice = $derived(() => {
 		const prices = getFilteredPrices();
 		return prices.length > 0 ? Math.max(...prices) : null;
 	});

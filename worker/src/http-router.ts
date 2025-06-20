@@ -97,7 +97,7 @@ export class HttpRouter {
 					headers: { 'Content-Type': 'application/json' },
 				},
 			);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error(`[HttpRouter ${this.doId}] Manual auction import failed:`, error);
 			return new Response(
 				JSON.stringify({

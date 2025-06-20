@@ -12,7 +12,7 @@
 
 	let reloading = false;
 	let showElement = false;
-	let timer: any;
+	let timer: unknown;
 
 	$: if (lastUpdate) {
 		const now = dayjs();

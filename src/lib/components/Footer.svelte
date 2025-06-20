@@ -1,7 +1,6 @@
 <script lang="ts">
 	import {
 		Footer,
-		FooterBrand,
 		FooterCopyright,
 		FooterIcon,
 		FooterLink,

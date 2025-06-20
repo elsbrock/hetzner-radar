@@ -100,7 +100,7 @@ export class HetznerAuctionClient {
 	/**
 	 * Validates that a server object has all required fields
 	 */
-	static validateServer(server: any): server is HetznerAuctionServer {
+	static validateServer(server: unknown): server is HetznerAuctionServer {
 		return (
 			typeof server.id === 'number' &&
 			typeof server.cpu === 'string' &&

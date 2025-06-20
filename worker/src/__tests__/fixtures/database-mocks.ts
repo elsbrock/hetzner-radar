@@ -33,7 +33,7 @@ export interface MockD1Database {
 
 export interface MockDurableObjectStorage {
 	get: <T>(key: string) => Promise<T | undefined>;
-	put: (key: string | Record<string, any>, value?: any) => Promise<void>;
+	put: (key: string | Record<string, any>, value?: unknown) => Promise<void>;
 	delete: (key: string) => Promise<boolean>;
 	setAlarm: (timestamp: Date | number) => Promise<void>;
 }
@@ -111,7 +111,7 @@ export function createMockDurableObjectStorage(initialData: Record<string, any> 
 		get: async <T>(key: string): Promise<T | undefined> => {
 			return storage.get(key) as T | undefined;
 		},
-		put: async (key: string | Record<string, any>, value?: any): Promise<void> => {
+		put: async (key: string | Record<string, any>, value?: unknown): Promise<void> => {
 			if (typeof key === 'string') {
 				storage.set(key, value);
 			} else {

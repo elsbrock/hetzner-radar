@@ -30,7 +30,7 @@ export interface UserCloudAlerts {
 	triggeredAlerts: CloudAlertHistory[];
 }
 
-function parseCloudAlert(raw: any): CloudAvailabilityAlert {
+function parseCloudAlert(raw: unknown): CloudAvailabilityAlert {
 	return {
 		...raw,
 		server_type_ids: JSON.parse(raw.server_type_ids),
@@ -39,7 +39,7 @@ function parseCloudAlert(raw: any): CloudAvailabilityAlert {
 	};
 }
 
-function parseCloudAlertHistory(raw: any): CloudAlertHistory {
+function parseCloudAlertHistory(raw: unknown): CloudAlertHistory {
 	return {
 		...raw,
 		triggered_at: new Date(raw.triggered_at)

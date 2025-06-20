@@ -242,7 +242,7 @@ describe('AuctionService', () => {
 		});
 
 		it('should measure and return execution duration', async () => {
-			const startTime = Date.now();
+			const _startTime = Date.now();
 
 			const mockServers = [mockHetznerAuctionServer];
 			const mockTransformed = [mockRawServerData];

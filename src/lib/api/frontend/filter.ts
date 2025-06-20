@@ -14,7 +14,7 @@ export function generateFilterQuery(
 	withDatacenters: boolean,
 	recentlySeen: boolean = true
 ): SQLStatement {
-	let query = SQL` cpu_count >= ${filter.cpuCount} and (`;
+	const query = SQL` cpu_count >= ${filter.cpuCount} and (`;
 
 	// location filtering
 	if (filter.locationGermany) {
@@ -123,8 +123,8 @@ export async function getPrices(
 	conn: AsyncDuckDBConnection,
 	filter: ServerFilter
 ): Promise<ServerPriceStat[]> {
-	let prices_filter_query = generateFilterQuery(filter, true, true, false);
-	let prices_query = SQL`
+	const prices_filter_query = generateFilterQuery(filter, true, true, false);
+	const prices_query = SQL`
         select
 			min(price + ${HETZNER_IPV4_COST_CENTS / 100}) as min_price, -- Add IPv4 cost
 			max(price + ${HETZNER_IPV4_COST_CENTS / 100}) as max_price, -- Add IPv4 cost
@@ -168,8 +168,8 @@ export async function getConfigurations(
 	conn: AsyncDuckDBConnection,
 	filter: ServerFilter
 ): Promise<ServerConfiguration[]> {
-	let configurations_filter_query = generateFilterQuery(filter, true, true, false);
-	let configurations_query = SQL`
+	const configurations_filter_query = generateFilterQuery(filter, true, true, false);
+	const configurations_query = SQL`
     SELECT
         * exclude(last_seen),
         extract('epoch' from last_seen) as last_seen

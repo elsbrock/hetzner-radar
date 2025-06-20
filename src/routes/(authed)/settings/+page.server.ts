@@ -172,7 +172,7 @@ export const actions: Actions = {
 			return error(500, { message: 'Database connection error.' });
 		}
 
-		const userRecord: any = await db
+		const userRecord: unknown = await db
 			.prepare('SELECT email FROM user WHERE id = ?')
 			.bind(event.locals.user.id)
 			.first();

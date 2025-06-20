@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { settingsStore } from '$lib/stores/settings';
 	import type {
 		ChartConfiguration,
 		ChartData,

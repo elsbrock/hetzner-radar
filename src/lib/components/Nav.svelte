@@ -10,8 +10,7 @@
 		faHouse,
 		faKey,
 		faRightFromBracket,
-		faServer,
-		faUser
+		faServer
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {

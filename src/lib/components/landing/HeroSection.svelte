@@ -23,7 +23,7 @@
 		<h1
 			class="mb-6 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
 		>
-			Stop&nbsp;{#each letters as letter, i}<span
+			Stop&nbsp;{#each letters as letter, i (i)}<span
 					class="scary-letter"
 					class:animate={startAnimation}
 					style="animation-delay: {i * 0.05}s;">{letter}</span

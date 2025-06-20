@@ -13,11 +13,11 @@ export interface User {
 	created_at: string;
 }
 
-export async function getUserId(db: any, email: string): Promise<string> {
+export async function getUserId(db: unknown, email: string): Promise<string> {
 	return db.prepare('SELECT id FROM user WHERE email = ?').bind(email).first('id');
 }
 
-export async function getUser(db: any, userId: string): Promise<User | null> {
+export async function getUser(db: unknown, userId: string): Promise<User | null> {
 	const result = await db
 		.prepare(
 			'SELECT id, email, discord_webhook_url, notification_preferences, created_at FROM user WHERE id = ?'
@@ -35,13 +35,17 @@ export async function getUser(db: any, userId: string): Promise<User | null> {
 	};
 }
 
-export async function createUser(db: any, email: string) {
+export async function createUser(db: unknown, email: string) {
 	const userId = generateIdFromEntropySize(10);
 	await db.prepare('INSERT INTO user (id, email) VALUES (?, ?)').bind(userId, email).run();
 	return userId;
 }
 
-export async function updateUserDiscordWebhook(db: any, userId: string, webhookUrl: string | null) {
+export async function updateUserDiscordWebhook(
+	db: unknown,
+	userId: string,
+	webhookUrl: string | null
+) {
 	await db
 		.prepare('UPDATE user SET discord_webhook_url = ? WHERE id = ?')
 		.bind(webhookUrl, userId)
@@ -49,7 +53,7 @@ export async function updateUserDiscordWebhook(db: any, userId: string, webhookU
 }
 
 export async function updateUserNotificationPreferences(
-	db: any,
+	db: unknown,
 	userId: string,
 	preferences: UserNotificationPreferences
 ) {
