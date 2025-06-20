@@ -46,13 +46,13 @@ export const load: PageServerLoad = async ({ platform }) => {
 					.catch(() => 0),
 
 				db
-					.prepare('SELECT COUNT(*) as count FROM auctions')
+					.prepare('SELECT COUNT(DISTINCT id) as count FROM auctions')
 					.first<CountQueryResult>()
 					.then((result) => Number((result as unknown as CountQueryResult)?.count ?? 0n))
 					.catch(() => 0),
 
 				db
-					.prepare("SELECT COUNT(*) as count FROM auctions WHERE DATE(created_at) = DATE('now')")
+					.prepare('SELECT COUNT(*) as count FROM current_auctions')
 					.first<CountQueryResult>()
 					.then((result) => Number((result as unknown as CountQueryResult)?.count ?? 0n))
 					.catch(() => 0)
