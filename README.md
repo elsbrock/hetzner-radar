@@ -35,8 +35,9 @@ statically built using SvelteKit. DuckDB is still used for querying the database
 on the client, while Cloudflare Workers handle session management, storing alerts
 and sending email notifications (using D1 for backend storage).
 
-We fetch the latest auction data from Hetzner once per hour, rebuild the
-database, update the website and push new configurations to the backend.
+We fetch the latest auction data from Hetzner once per hour and rebuild the
+database for the static website. Additionally, our Cloudflare Worker imports
+auction data every 5 minutes directly into the backend for real-time processing.
 The raw data is stored in the `data` branch, where we currently maintain
 three months of history. We may consider purging older data if the branch
 becomes too large.
@@ -59,7 +60,7 @@ This backend storage approach significantly reduces D1 database reads by:
 - **Deduplication**: Eliminates storage of unchanged auction data, reducing both storage costs and query complexity
 - **Optimized indexing**: The `current_auctions` table has specialized indices for efficient alert matching
 
-Auction data is imported every 5 minutes from Hetzner's API via Cloudflare Workers, with only price changes and new listings being stored in the historical `auctions` table, while all current states are refreshed in `current_auctions`. This backend storage complements the existing client-side DuckDB approach during the architectural transition.
+Auction data is imported every 5 minutes from Hetzner's API directly by our Cloudflare Worker (AuctionImportDO), with only price changes and new listings being stored in the historical `auctions` table, while all current states are refreshed in `current_auctions`. This backend storage complements the existing client-side DuckDB approach during the architectural transition.
 
 ## Development
 

@@ -2,7 +2,6 @@ import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
 import type { RequestHandler } from "@sveltejs/kit";
 import {
-  prepareServerData,
   findMatchingAlerts,
   groupAlertsByAlertId,
   processAlert,
@@ -45,8 +44,9 @@ function validateRequest(request: Request): {
 /**
  * POST handler for the push endpoint
  *
- * This endpoint receives server data from Hetzner, processes it, and triggers alerts
+ * This endpoint receives server data from Hetzner and triggers alerts
  * when matching servers are found. It also stores matched auctions for each alert.
+ * Note: Auction data import is now handled by the worker service.
  */
 export const POST: RequestHandler = async (event) => {
   const start = performance.now();
@@ -70,13 +70,14 @@ export const POST: RequestHandler = async (event) => {
     // Parse the request body
     const configs = (await request.json()) as RawServerData[];
 
-    // Prepare server data for insertion
-    const auctionBatch = await prepareServerData(db, configs);
+    // Store the current auction data temporarily in memory for alert matching
+    // Note: Actual auction data import is handled by the worker service
+    const tempAuctions = configs.map(config => ({
+      ...config,
+      seen: new Date().toISOString() // Use current timestamp for alert matching
+    }));
 
-    // Insert server data into auctions table
-    await db.batch(auctionBatch);
-
-    // Find matching alerts
+    // Find matching alerts using the temporary auction data
     const matchedAlerts = await findMatchingAlerts(db);
 
     // Group matched alerts by alert ID
