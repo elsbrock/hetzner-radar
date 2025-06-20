@@ -145,9 +145,9 @@ git worktree add ../data data
 python import.py ../data ../static/sb.duckdb
 ```
 
-### 2. Setting Up the Cloud Availability Service
+### 2. Setting Up the Worker
 
-The cloud availability service tracks Hetzner Cloud server availability. To run it locally:
+The worker handles multiple functions including auction data fetching, cloud availability tracking, and alert notifications. To run it locally:
 
 1. First, create a `.dev.vars` file in the `worker` directory:
 
@@ -160,14 +160,14 @@ API_KEY=your_api_key_here
 FORWARDEMAIL_API_KEY=your_forwardemail_api_key_here
 ```
 
-2. Install dependencies for the cloud availability worker:
+2. Install dependencies for the worker:
 
 ```sh
 cd worker
 npm install
 ```
 
-3. Start the Cloud Availability worker:
+3. Start the worker:
 
 ```sh
 npx wrangler dev
@@ -192,12 +192,12 @@ npm install
 npm run dev
 ```
 
-The application will be available at http://localhost:5123. If the Cloud Availability worker is running, the backend can automatically interact with it.
+The application will be available at http://localhost:5123. If the worker is running, the backend can automatically interact with it for cloud availability tracking and auction processing.
 
 ### Troubleshooting
 
 - If you see session-related errors, these are expected in development mode and won't affect core functionality.
-- If the cloud status feature shows errors, ensure both Cloud Availability worker is running and was started before the backend.
+- If the cloud status feature shows errors, ensure the worker is running and was started before the backend.
 - Check the browser console and terminal output for detailed error messages.
 
 ## Contributions
