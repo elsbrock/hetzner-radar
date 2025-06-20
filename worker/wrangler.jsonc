@@ -81,7 +81,6 @@
 	 *
 	 * Required secrets (set via `wrangler secret put`):
 	 * - HETZNER_API_TOKEN: Token for Hetzner Cloud API access
-	 * - API_KEY: Authentication key for main app notifications
 	 * - FORWARDEMAIL_API_KEY: API key for ForwardEmail service (alert notifications)
 	 */
 	/**

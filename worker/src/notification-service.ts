@@ -8,17 +8,13 @@ import type { AvailabilityChange, ServerTypeInfo } from './cloud-status-service'
 
 export class NotificationService {
 	private analyticsEngine?: AnalyticsEngineDataset;
-	private mainAppUrl?: string;
-	private apiKey?: string;
 	private doId: string;
 	private storage: DurableObjectStorage;
 
-	constructor(storage: DurableObjectStorage, doId: string, analyticsEngine?: AnalyticsEngineDataset, mainAppUrl?: string, apiKey?: string) {
+	constructor(storage: DurableObjectStorage, doId: string, analyticsEngine?: AnalyticsEngineDataset) {
 		this.storage = storage;
 		this.doId = doId;
 		this.analyticsEngine = analyticsEngine;
-		this.mainAppUrl = mainAppUrl;
-		this.apiKey = apiKey;
 	}
 
 	async handleAvailabilityChanges(changes: AvailabilityChange[]): Promise<void> {

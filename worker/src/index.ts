@@ -7,7 +7,7 @@
  *
  * Required secrets (set via wrangler secret put):
  * - HETZNER_API_TOKEN: Token for accessing Hetzner Cloud API
- * - API_KEY: Authentication key for notifying the main app
+ * - FORWARDEMAIL_API_KEY: API key for email notifications
  *
  * Environment variables (set in wrangler.jsonc):
  * - MAIN_APP_URL: URL of the main application (e.g., https://radar.iodev.org)
@@ -30,7 +30,7 @@ interface Env {
 	FETCH_INTERVAL_MS?: string;
 	ANALYTICS_ENGINE: AnalyticsEngineDataset;
 	MAIN_APP_URL?: string;
-	API_KEY?: string;
+	FORWARDEMAIL_API_KEY?: string;
 	DB: D1Database;
 	AUCTION_IMPORT_INTERVAL_MS?: string;
 	HETZNER_AUCTION_API_URL?: string;
@@ -154,7 +154,7 @@ Combined:
 								DB: this.env.DB ? 'Present' : 'MISSING',
 								ANALYTICS_ENGINE: this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING',
 								MAIN_APP_URL: this.env.MAIN_APP_URL || 'Not set',
-								API_KEY: this.env.API_KEY ? 'Present' : 'MISSING',
+								FORWARDEMAIL_API_KEY: this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING',
 							},
 						},
 					},

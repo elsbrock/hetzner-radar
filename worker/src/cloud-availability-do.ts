@@ -14,8 +14,6 @@ interface CloudAvailabilityEnv {
 	HETZNER_API_TOKEN: string;
 	FETCH_INTERVAL_MS?: string;
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
-	MAIN_APP_URL?: string;
-	API_KEY?: string;
 	FORWARDEMAIL_API_KEY?: string;
 	DB: D1Database;
 }
@@ -43,7 +41,7 @@ export class CloudAvailabilityDO extends DurableObject {
 
 		// Initialize services
 		this.cloudStatusService = new CloudStatusService(env.HETZNER_API_TOKEN, ctx.storage, ctx.id.toString());
-		this.notificationService = new NotificationService(ctx.storage, ctx.id.toString(), env.ANALYTICS_ENGINE, env.MAIN_APP_URL, env.API_KEY);
+		this.notificationService = new NotificationService(ctx.storage, ctx.id.toString(), env.ANALYTICS_ENGINE);
 
 		// Initialize cloud alert notification service
 		this.cloudNotificationService = new CloudNotificationService({
@@ -162,8 +160,6 @@ export class CloudAvailabilityDO extends DurableObject {
 	private logEnvironmentInfo(): void {
 		console.log(`[CloudAvailabilityDO ${this.ctx.id}] Environment variables check:`);
 		console.log(`  - HETZNER_API_TOKEN: ${this.env.HETZNER_API_TOKEN ? 'Present' : 'MISSING'}`);
-		console.log(`  - MAIN_APP_URL: ${this.env.MAIN_APP_URL ? `Present (${this.env.MAIN_APP_URL})` : 'MISSING'}`);
-		console.log(`  - API_KEY: ${this.env.API_KEY ? 'Present' : 'MISSING'}`);
 		console.log(`  - ANALYTICS_ENGINE: ${this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING'}`);
 		console.log(`  - FORWARDEMAIL_API_KEY: ${this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING'}`);
 		console.log(`  - DB: ${this.env.DB ? 'Present' : 'MISSING'}`);

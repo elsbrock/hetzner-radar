@@ -15,8 +15,6 @@ interface AuctionImportEnv {
 	AUCTION_IMPORT_INTERVAL_MS?: string;
 	HETZNER_AUCTION_API_URL?: string;
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
-	MAIN_APP_URL?: string;
-	API_KEY?: string;
 	FORWARDEMAIL_API_KEY?: string;
 }
 
@@ -48,7 +46,7 @@ export class AuctionImportDO extends DurableObject {
 
 		// Initialize services
 		this.auctionService = new AuctionService(this.hetznerAuctionApiUrl, env.DB, ctx.storage, ctx.id.toString());
-		this.notificationService = new NotificationService(ctx.storage, ctx.id.toString(), env.ANALYTICS_ENGINE, env.MAIN_APP_URL, env.API_KEY);
+		this.notificationService = new NotificationService(ctx.storage, ctx.id.toString(), env.ANALYTICS_ENGINE);
 
 		// Initialize alert notification service
 		this.alertNotificationService = new AlertNotificationService({
@@ -198,8 +196,6 @@ export class AuctionImportDO extends DurableObject {
 		console.log(`  - ANALYTICS_ENGINE: ${this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING'}`);
 		console.log(`  - AUCTION_IMPORT_INTERVAL_MS: ${this.auctionImportIntervalMs}ms`);
 		console.log(`  - HETZNER_AUCTION_API_URL: ${this.hetznerAuctionApiUrl}`);
-		console.log(`  - MAIN_APP_URL: ${this.env.MAIN_APP_URL ? `Present (${this.env.MAIN_APP_URL})` : 'MISSING'}`);
-		console.log(`  - API_KEY: ${this.env.API_KEY ? 'Present' : 'MISSING'}`);
 		console.log(`  - FORWARDEMAIL_API_KEY: ${this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING'}`);
 		console.log(`  - Alert notification channels: ${this.alertNotificationService.getChannels().join(', ')}`);
 	}
