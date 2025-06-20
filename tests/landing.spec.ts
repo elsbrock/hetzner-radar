@@ -2,7 +2,6 @@ import test, { expect, type Page } from '@playwright/test'; // Import Page and C
 
 test.describe('Landing Page Tests', () => {
 	let page: Page;
-	const _consoleErrors: string[] = [];
 
 	// Use beforeAll to navigate once and capture initial load errors
 	test.beforeAll(async ({ browser }) => {

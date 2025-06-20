@@ -92,7 +92,6 @@ test.describe('Authentication Flow', () => {
 
 		// Should not show authenticated-only links in main nav
 		const alertsLink = page.getByRole('link', { name: /alerts/i });
-		const _settingsLink = page.getByRole('link', { name: /settings/i });
 
 		// These might not be visible in main nav for unauth users
 		if (await alertsLink.isVisible()) {

@@ -70,7 +70,7 @@ export async function getAlertForUser(
 	userId: string,
 	filter: string
 ): Promise<PriceAlert | null> {
-	const _result = await db
+	const result = await db
 		.prepare('SELECT * FROM price_alert WHERE user_id = ? AND filter = ?')
 		.bind(userId, filter)
 		.first();
@@ -83,7 +83,7 @@ export async function getAlertForUser(
 }
 
 export async function isBelowMaxAlerts(db: DB, userId: string): Promise<boolean> {
-	const _result = await db
+	const result = await db
 		.prepare('SELECT COUNT(*) as count FROM price_alert WHERE user_id = ?')
 		.bind(userId)
 		.first<{ count: number }>();
@@ -152,7 +152,7 @@ export async function updateAlert(
 		sql += ' WHERE user_id = ? AND id = ?';
 		params.push(userId, alertId);
 
-		const _result = await db
+		const result = await db
 			.prepare(sql)
 			.bind(...params)
 			.run();
@@ -164,7 +164,7 @@ export async function updateAlert(
 
 export async function deleteAlert(db: DB, alertId: string, userId: string): Promise<void> {
 	try {
-		const _result = await db
+		const result = await db
 			.prepare('DELETE FROM price_alert WHERE user_id = ? AND id = ?')
 			.bind(userId, alertId)
 			.run();

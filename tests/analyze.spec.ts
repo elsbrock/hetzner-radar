@@ -38,7 +38,6 @@ test('analyze: filter functionality works', async ({ page }) => {
 
 	// Get the current state by checking the input
 	const germanyInput = page.locator('label:has-text("Germany") input[type="checkbox"]');
-	const _isGermanyChecked = await germanyInput.isChecked();
 
 	// Click the label to toggle Germany filter
 	await germanyLabel.click();
