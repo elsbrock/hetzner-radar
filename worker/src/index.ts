@@ -100,10 +100,10 @@ Combined:
 		try {
 			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
-			return await (stub as any).getStatus();
+			return await (stub as { getStatus(): Promise<unknown> }).getStatus();
 		} catch (e: unknown) {
 			console.error('Error in Worker getStatus RPC:', e);
-			throw new Error(`Error calling getStatus on DO: ${e.message}`);
+			throw new Error(`Error calling getStatus on DO: ${e instanceof Error ? e.message : String(e)}`);
 		}
 	}
 
@@ -111,10 +111,10 @@ Combined:
 		try {
 			const durableObjectId = this.env.AUCTION_IMPORT_DO.idFromName('singleton-auction-import-v1');
 			const stub = this.env.AUCTION_IMPORT_DO.get(durableObjectId);
-			return await (stub as any).getAuctionStats();
+			return await (stub as { getAuctionStats(): Promise<unknown> }).getAuctionStats();
 		} catch (e: unknown) {
 			console.error('Error in Worker getAuctionStats RPC:', e);
-			throw new Error(`Error calling getAuctionStats on DO: ${e.message}`);
+			throw new Error(`Error calling getAuctionStats on DO: ${e instanceof Error ? e.message : String(e)}`);
 		}
 	}
 

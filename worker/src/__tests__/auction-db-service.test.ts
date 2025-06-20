@@ -4,11 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuctionDatabaseService } from '../auction-db-service';
-import {
-	createMockD1Database,
-	mockCurrentAuctionStates as _mockCurrentAuctionStates,
-	type MockD1Database,
-} from './fixtures/database-mocks';
+import { createMockD1Database, type MockD1Database } from './fixtures/database-mocks';
 import { mockRawServerData } from './fixtures/auction-data';
 
 describe('AuctionDatabaseService', () => {
@@ -17,7 +13,7 @@ describe('AuctionDatabaseService', () => {
 
 	beforeEach(() => {
 		mockDb = createMockD1Database();
-		service = new AuctionDatabaseService(mockDb as any);
+		service = new AuctionDatabaseService(mockDb as D1Database);
 		vi.clearAllMocks();
 	});
 
@@ -35,7 +31,7 @@ describe('AuctionDatabaseService', () => {
 
 		it('should process new auction correctly', async () => {
 			// Mock that no current state exists (new auction)
-			mockDb.prepare = vi.fn().mockImplementation((query: string) => {
+			mockDb.prepare = vi.fn().mockImplementation(() => {
 				const mockStmt = {
 					bind: vi.fn().mockReturnThis(),
 					all: vi.fn().mockResolvedValue({ results: [] }), // Empty results = new auction
@@ -214,9 +210,9 @@ describe('AuctionDatabaseService', () => {
 		it('should handle null/undefined values in server data', async () => {
 			const configWithNulls = {
 				...mockRawServerData,
-				ram_size: null as any,
-				nvme_count: undefined as any,
-				bandwidth: null as any,
+				ram_size: null as number | null,
+				nvme_count: undefined as number | undefined,
+				bandwidth: null as number | null,
 			};
 
 			mockDb.prepare = vi.fn().mockImplementation((query: string) => {

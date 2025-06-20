@@ -141,7 +141,7 @@ export const mockMatchingAlertsQueryResult = [
 ];
 
 // Mock empty query result
-export const mockEmptyAlertsQueryResult: any[] = [];
+export const mockEmptyAlertsQueryResult: unknown[] = [];
 
 // Mock multiple alerts query result
 export const mockMultipleAlertsQueryResult = [

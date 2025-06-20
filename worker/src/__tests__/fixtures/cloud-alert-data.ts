@@ -245,5 +245,5 @@ export const mockCloudNotificationServiceResult = {
 // Mock empty arrays for testing edge cases
 export const mockEmptyAvailabilityChanges: AvailabilityChange[] = [];
 export const mockEmptyCloudAlerts: CloudAlert[] = [];
-export const mockEmptyRawAlertRecords: any[] = [];
-export const mockEmptyRawUserRecords: any[] = [];
+export const mockEmptyRawAlertRecords: unknown[] = [];
+export const mockEmptyRawUserRecords: unknown[] = [];

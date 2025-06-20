@@ -33,7 +33,7 @@ describe('AuctionService', () => {
 	beforeEach(() => {
 		mockDb = createMockD1Database();
 		mockStorage = createMockDurableObjectStorage();
-		service = new AuctionService(testApiUrl, mockDb as any, mockStorage as any, testDoId);
+		service = new AuctionService(testApiUrl, mockDb as D1Database, mockStorage as DurableObjectStorage, testDoId);
 
 		// Reset all mocks
 		vi.clearAllMocks();
@@ -41,15 +41,15 @@ describe('AuctionService', () => {
 		// Setup mock instances
 		mockAuctionClient = {
 			fetchAuctionData: vi.fn(),
-		} as any;
+		} as HetznerAuctionClient;
 
 		mockDbService = {
 			storeAuctionData: vi.fn(),
-		} as any;
+		} as AuctionDatabaseService;
 
 		// Mock constructors
-		(HetznerAuctionClient as any).mockImplementation(() => mockAuctionClient);
-		(AuctionDatabaseService as any).mockImplementation(() => mockDbService);
+		vi.mocked(HetznerAuctionClient).mockImplementation(() => mockAuctionClient);
+		vi.mocked(AuctionDatabaseService).mockImplementation(() => mockDbService);
 	});
 
 	describe('fetchAndImportAuctions', () => {
@@ -64,13 +64,13 @@ describe('AuctionService', () => {
 			};
 
 			// Setup mocks
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			(mockDbService.storeAuctionData as any).mockResolvedValue(mockStats);
+			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
 
 			// Spy on storage.put
 			const storagePutSpy = vi.spyOn(mockStorage, 'put');
@@ -96,13 +96,13 @@ describe('AuctionService', () => {
 		});
 
 		it('should throw error when D1 database is not configured', async () => {
-			const serviceWithoutDb = new AuctionService(testApiUrl, null as any, mockStorage as any, testDoId);
+			const serviceWithoutDb = new AuctionService(testApiUrl, null as unknown as D1Database, mockStorage as DurableObjectStorage, testDoId);
 
 			await expect(serviceWithoutDb.fetchAndImportAuctions()).rejects.toThrow('D1 database is not configured.');
 		});
 
 		it('should handle API fetch errors', async () => {
-			(mockAuctionClient.fetchAuctionData as any).mockRejectedValue(new Error('API Error'));
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockRejectedValue(new Error('API Error'));
 
 			await expect(service.fetchAndImportAuctions()).rejects.toEqual({
 				error: new Error('API Error'),
@@ -112,7 +112,7 @@ describe('AuctionService', () => {
 
 		it('should handle transformation errors', async () => {
 			const mockServers = [mockHetznerAuctionServer];
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockImplementation(() => {
 				throw new Error('Transformation failed');
 			});
@@ -127,13 +127,13 @@ describe('AuctionService', () => {
 			const mockServers = [mockHetznerAuctionServer];
 			const mockTransformed = [mockRawServerData];
 
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			(mockDbService.storeAuctionData as any).mockRejectedValue(new Error('Database error'));
+			vi.mocked(mockDbService.storeAuctionData).mockRejectedValue(new Error('Database error'));
 
 			await expect(service.fetchAndImportAuctions()).rejects.toEqual({
 				error: new Error('Database error'),
@@ -142,7 +142,7 @@ describe('AuctionService', () => {
 		});
 
 		it('should handle empty API response', async () => {
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue([]);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue([]);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue([]);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: [],
@@ -166,13 +166,13 @@ describe('AuctionService', () => {
 			const mockTransformed = [mockRawServerData, { ...mockRawServerData, id: 67890 }];
 			const mockValidated = [mockRawServerData]; // Only one valid
 
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockValidated,
 				invalid: 1,
 			});
-			(mockDbService.storeAuctionData as any).mockResolvedValue({
+			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue({
 				processed: 1,
 				newAuctions: 1,
 				priceChanges: 0,
@@ -196,7 +196,7 @@ describe('AuctionService', () => {
 			const mockServers = [mockHetznerAuctionServer];
 			const mockTransformed = [mockRawServerData];
 
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: [],
@@ -225,13 +225,13 @@ describe('AuctionService', () => {
 				errors: 0,
 			};
 
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			(mockDbService.storeAuctionData as any).mockResolvedValue(mockStats);
+			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
 
 			// Spy on storage.put
 			const storagePutSpy = vi.spyOn(mockStorage, 'put');
@@ -242,8 +242,6 @@ describe('AuctionService', () => {
 		});
 
 		it('should measure and return execution duration', async () => {
-			const _startTime = Date.now();
-
 			const mockServers = [mockHetznerAuctionServer];
 			const mockTransformed = [mockRawServerData];
 			const mockStats = {
@@ -253,13 +251,13 @@ describe('AuctionService', () => {
 				errors: 0,
 			};
 
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			(mockDbService.storeAuctionData as any).mockResolvedValue(mockStats);
+			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
 
 			const result = await service.fetchAndImportAuctions();
 
@@ -279,13 +277,13 @@ describe('AuctionService', () => {
 				errors: 0,
 			};
 
-			(mockAuctionClient.fetchAuctionData as any).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			(mockDbService.storeAuctionData as any).mockResolvedValue(mockStats);
+			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
 
 			await service.fetchAndImportAuctions();
 

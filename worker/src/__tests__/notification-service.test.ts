@@ -46,7 +46,7 @@ describe('NotificationService', () => {
 			writeDataPoint: vi.fn(),
 		};
 
-		service = new NotificationService(mockStorage as any, testDoId, mockAnalyticsEngine as any);
+		service = new NotificationService(mockStorage as DurableObjectStorage, testDoId, mockAnalyticsEngine as AnalyticsEngineDataset);
 
 		vi.clearAllMocks();
 	});
@@ -57,7 +57,7 @@ describe('NotificationService', () => {
 		});
 
 		it('should work without analytics engine', () => {
-			const serviceWithoutAnalytics = new NotificationService(mockStorage as any, testDoId);
+			const serviceWithoutAnalytics = new NotificationService(mockStorage as DurableObjectStorage, testDoId);
 			expect(serviceWithoutAnalytics).toBeInstanceOf(NotificationService);
 		});
 	});
@@ -140,7 +140,7 @@ describe('NotificationService', () => {
 		});
 
 		it('should work without analytics engine', async () => {
-			const serviceWithoutAnalytics = new NotificationService(mockStorage as any, testDoId);
+			const serviceWithoutAnalytics = new NotificationService(mockStorage as DurableObjectStorage, testDoId);
 
 			const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
@@ -238,7 +238,7 @@ describe('NotificationService', () => {
 		});
 
 		it('should work without analytics engine', async () => {
-			const serviceWithoutAnalytics = new NotificationService(mockStorage as any, testDoId);
+			const serviceWithoutAnalytics = new NotificationService(mockStorage as DurableObjectStorage, testDoId);
 
 			// Should not throw error
 			await expect(serviceWithoutAnalytics.writeImportAnalytics(true, mockStats, 1500)).resolves.toBeUndefined();

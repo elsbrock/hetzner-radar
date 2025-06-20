@@ -10,7 +10,7 @@ export class HttpRouter {
 	private doId: string;
 	private storage: DurableObjectStorage;
 	private getCloudStatus: () => Promise<CloudStatusData>;
-	private triggerAuctionImport: () => Promise<any>;
+	private triggerAuctionImport: () => Promise<unknown>;
 	private fetchIntervalMs: number;
 	private auctionImportIntervalMs: number;
 	private auctionApiUrl: string;
@@ -19,7 +19,7 @@ export class HttpRouter {
 		doId: string,
 		storage: DurableObjectStorage,
 		getCloudStatus: () => Promise<CloudStatusData>,
-		triggerAuctionImport: () => Promise<any>,
+		triggerAuctionImport: () => Promise<unknown>,
 		fetchIntervalMs: number,
 		auctionImportIntervalMs: number,
 		auctionApiUrl: string,

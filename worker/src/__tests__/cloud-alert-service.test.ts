@@ -5,16 +5,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CloudAlertService } from '../cloud-alert-service';
 import { CloudNotificationService } from '../cloud-notifications/cloud-notification-service';
+import type { CloudAlertUser } from '../cloud-notifications/cloud-notification-channel';
 import {
 	mockAvailabilityChanges,
 	mockSingleAvailabilityChange,
-	_mockCloudAlerts,
-	_mockSingleCloudAlert,
-	_mockCloudAlertUsers,
 	mockRawCloudAlertRecords,
 	mockRawUserRecords,
 	mockEmptyAvailabilityChanges,
-	_mockEmptyCloudAlerts,
 	mockEmptyRawAlertRecords,
 	mockCloudNotificationServiceResult,
 	mockFailedCloudNotificationResults,
@@ -46,7 +43,7 @@ describe('CloudAlertService', () => {
 
 		mockNotificationService = {
 			processAvailabilityChanges: vi.fn(),
-		} as any;
+		} as CloudNotificationService;
 
 		service = new CloudAlertService({
 			db: mockDb,
@@ -132,7 +129,7 @@ describe('CloudAlertService', () => {
 				.mockReturnValueOnce(mockHistoryStatement); // Insert history
 
 			// Mock notification service
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue(mockCloudNotificationServiceResult);
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue(mockCloudNotificationServiceResult);
 
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
@@ -174,7 +171,7 @@ describe('CloudAlertService', () => {
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
 			// Mock notification service failure
-			(mockNotificationService.processAvailabilityChanges as any).mockRejectedValue(new Error('Notification service failed'));
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockRejectedValue(new Error('Notification service failed'));
 
 			const result = await service.processAvailabilityChanges(mockAvailabilityChanges);
 
@@ -218,7 +215,7 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue({
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue({
 				processed: 1,
 				notifications: 0,
 				results: [],
@@ -280,7 +277,7 @@ describe('CloudAlertService', () => {
 				],
 			};
 
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue(partialFailureResult);
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue(partialFailureResult);
 
 			const result = await service.processAvailabilityChanges(mockAvailabilityChanges);
 
@@ -304,7 +301,7 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue(mockCloudNotificationServiceResult);
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue(mockCloudNotificationServiceResult);
 
 			await service.processAvailabilityChanges(mockAvailabilityChanges);
 
@@ -342,8 +339,8 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
-			let userLookupFunction: (userId: string) => Promise<any>;
-			(mockNotificationService.processAvailabilityChanges as any).mockImplementation(
+			let userLookupFunction: (userId: string) => Promise<CloudAlertUser | null>;
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockImplementation(
 				async (changes: unknown, alerts: unknown, getUserFn: unknown) => {
 					userLookupFunction = getUserFn;
 					return { processed: 0, notifications: 0, results: [] };
@@ -382,8 +379,8 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
-			let userLookupFunction: (userId: string) => Promise<any>;
-			(mockNotificationService.processAvailabilityChanges as any).mockImplementation(
+			let userLookupFunction: (userId: string) => Promise<CloudAlertUser | null>;
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockImplementation(
 				async (changes: unknown, alerts: unknown, getUserFn: unknown) => {
 					userLookupFunction = getUserFn;
 					return { processed: 0, notifications: 0, results: [] };
@@ -415,7 +412,7 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement).mockReturnValue(mockHistoryStatement);
 
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue(mockCloudNotificationServiceResult);
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue(mockCloudNotificationServiceResult);
 
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
@@ -458,7 +455,7 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue({
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue({
 				processed: 1,
 				notifications: 0,
 				results: [],
@@ -471,8 +468,6 @@ describe('CloudAlertService', () => {
 		});
 
 		it('should handle database batch errors in history recording', async () => {
-			const _consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
-
 			const mockAlertsStatement = {
 				bind: vi.fn().mockReturnThis(),
 				all: vi.fn().mockResolvedValue({ results: mockRawCloudAlertRecords }),
@@ -482,7 +477,7 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement);
 
-			(mockNotificationService.processAvailabilityChanges as any).mockResolvedValue(mockCloudNotificationServiceResult);
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockResolvedValue(mockCloudNotificationServiceResult);
 
 			// Mock batch failure
 			mockDb.batch.mockRejectedValue(new Error('History insert failed'));
@@ -528,8 +523,8 @@ describe('CloudAlertService', () => {
 
 			mockDb.prepare.mockReturnValueOnce(mockAlertsStatement).mockReturnValue(mockUserStatement);
 
-			let userLookupFunction: (userId: string) => Promise<any>;
-			(mockNotificationService.processAvailabilityChanges as any).mockImplementation(
+			let userLookupFunction: (userId: string) => Promise<CloudAlertUser | null>;
+			vi.mocked(mockNotificationService.processAvailabilityChanges).mockImplementation(
 				async (changes: unknown, alerts: unknown, getUserFn: unknown) => {
 					userLookupFunction = getUserFn;
 					return { processed: 0, notifications: 0, results: [] };

@@ -2,10 +2,12 @@
  * Database mock fixtures and utilities
  */
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import type { DatabaseStats } from '../../auction-db-service';
 
 export interface MockD1Result {
-	results: any[];
+	results: unknown[];
 	success: boolean;
 	meta: {
 		changed_db: boolean;
@@ -19,10 +21,10 @@ export interface MockD1Result {
 }
 
 export interface MockD1PreparedStatement {
-	bind: (...values: any[]) => MockD1PreparedStatement;
+	bind: (...values: unknown[]) => MockD1PreparedStatement;
 	run: () => Promise<MockD1Result>;
 	all: () => Promise<MockD1Result>;
-	first: () => Promise<any>;
+	first: () => Promise<unknown>;
 }
 
 export interface MockD1Database {
@@ -33,14 +35,14 @@ export interface MockD1Database {
 
 export interface MockDurableObjectStorage {
 	get: <T>(key: string) => Promise<T | undefined>;
-	put: (key: string | Record<string, any>, value?: unknown) => Promise<void>;
+	put: (key: string | Record<string, unknown>, value?: unknown) => Promise<void>;
 	delete: (key: string) => Promise<boolean>;
 	setAlarm: (timestamp: Date | number) => Promise<void>;
 }
 
 export function createMockD1Database(overrides: Partial<MockD1Database> = {}): MockD1Database {
 	const mockStatement: MockD1PreparedStatement = {
-		bind: (..._values: any[]) => mockStatement,
+		bind: (..._values: unknown[]) => mockStatement,
 		run: async () => ({
 			results: [],
 			success: true,
@@ -104,14 +106,14 @@ export function createMockD1Database(overrides: Partial<MockD1Database> = {}): M
 	};
 }
 
-export function createMockDurableObjectStorage(initialData: Record<string, any> = {}): MockDurableObjectStorage {
-	const storage = new Map<string, any>(Object.entries(initialData));
+export function createMockDurableObjectStorage(initialData: Record<string, unknown> = {}): MockDurableObjectStorage {
+	const storage = new Map<string, unknown>(Object.entries(initialData));
 
 	return {
 		get: async <T>(key: string): Promise<T | undefined> => {
 			return storage.get(key) as T | undefined;
 		},
-		put: async (key: string | Record<string, any>, value?: unknown): Promise<void> => {
+		put: async (key: string | Record<string, unknown>, value?: unknown): Promise<void> => {
 			if (typeof key === 'string') {
 				storage.set(key, value);
 			} else {

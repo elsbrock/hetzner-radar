@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CloudStatusService, type AvailabilityChange as _AvailabilityChange } from '../cloud-status-service';
+import { CloudStatusService, type LastSeenMatrix } from '../cloud-status-service';
 import { createMockDurableObjectStorage, type MockDurableObjectStorage } from './fixtures/database-mocks';
 import {
 	mockServerTypes,
@@ -27,7 +27,7 @@ describe('CloudStatusService', () => {
 
 	beforeEach(() => {
 		mockStorage = createMockDurableObjectStorage();
-		service = new CloudStatusService(testApiToken, mockStorage as any, testDoId);
+		service = new CloudStatusService(testApiToken, mockStorage as DurableObjectStorage, testDoId);
 		vi.clearAllMocks();
 	});
 
@@ -112,7 +112,7 @@ describe('CloudStatusService', () => {
 		});
 
 		it('should throw error when API token is missing', async () => {
-			const serviceWithoutToken = new CloudStatusService('', mockStorage as any, testDoId);
+			const serviceWithoutToken = new CloudStatusService('', mockStorage as DurableObjectStorage, testDoId);
 
 			await expect(serviceWithoutToken.fetchAndUpdateStatus()).rejects.toThrow('HETZNER_API_TOKEN is not configured.');
 		});
@@ -281,7 +281,7 @@ describe('CloudStatusService', () => {
 
 			await service.fetchAndUpdateStatus();
 
-			const storedData = putSpy.mock.calls[0][0] as any;
+			const storedData = putSpy.mock.calls[0][0] as { lastSeenAvailable: LastSeenMatrix };
 			const lastSeenAvailable = storedData.lastSeenAvailable;
 
 			// Check that all available server types have updated timestamps
@@ -314,7 +314,7 @@ describe('CloudStatusService', () => {
 			const putSpy = vi.spyOn(mockStorage, 'put');
 			await service.fetchAndUpdateStatus();
 
-			const storedData = putSpy.mock.calls[0][0] as any;
+			const storedData = putSpy.mock.calls[0][0] as { lastSeenAvailable: LastSeenMatrix };
 			const lastSeenAvailable = storedData.lastSeenAvailable;
 
 			// Should have both old and new timestamps
@@ -343,7 +343,7 @@ describe('CloudStatusService', () => {
 
 			await service.fetchAndUpdateStatus();
 
-			const storedData = putSpy.mock.calls[0][0] as any;
+			const storedData = putSpy.mock.calls[0][0] as { lastSeenAvailable: LastSeenMatrix };
 			const serverTypes = storedData.serverTypes;
 
 			const deprecatedType = serverTypes.find((st: unknown) => st.id === 3);
@@ -369,7 +369,7 @@ describe('CloudStatusService', () => {
 
 			await service.fetchAndUpdateStatus();
 
-			const storedData = putSpy.mock.calls[0][0] as any;
+			const storedData = putSpy.mock.calls[0][0] as { lastSeenAvailable: LastSeenMatrix };
 			const serverTypes = storedData.serverTypes;
 			const locations = storedData.locations;
 
@@ -402,7 +402,7 @@ describe('CloudStatusService', () => {
 
 			await service.fetchAndUpdateStatus();
 
-			const storedData = putSpy.mock.calls[0][0] as any;
+			const storedData = putSpy.mock.calls[0][0] as { lastSeenAvailable: LastSeenMatrix };
 			const availability = storedData.availability;
 
 			// Each location should have sorted unique server type IDs

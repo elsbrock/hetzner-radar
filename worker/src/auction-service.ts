@@ -8,6 +8,18 @@ import { HetznerAuctionClient } from './hetzner-auction-client';
 import { AuctionDataTransformer } from './auction-data-transformer';
 import { AuctionDatabaseService } from './auction-db-service';
 
+interface AuctionImportResult {
+	fetched: number;
+	transformed: number;
+	valid: number;
+	invalid: number;
+	processed: number;
+	newAuctions: number;
+	priceChanges: number;
+	errors: number;
+	timestamp: string;
+}
+
 export class AuctionService {
 	private auctionApiUrl: string;
 	private db: D1Database;
@@ -21,7 +33,7 @@ export class AuctionService {
 		this.doId = doId;
 	}
 
-	async fetchAndImportAuctions(): Promise<any> {
+	async fetchAndImportAuctions(): Promise<AuctionImportResult> {
 		console.log(`[AuctionService ${this.doId}] fetchAndImportAuctions called at ${new Date().toISOString()}`);
 
 		if (!this.db) {

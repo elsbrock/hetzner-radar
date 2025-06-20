@@ -21,6 +21,24 @@ export interface ProcessedAlert {
 	error?: string;
 }
 
+interface MatchedAlertData {
+	alert_id: number;
+	alert_name: string;
+	alert_filter: string;
+	alert_price: number;
+	alert_vat_rate: number;
+	alert_user_id: string;
+	alert_includes_ipv4_cost: boolean;
+	alert_email: string | null;
+	alert_discord_webhook_url: string | null;
+	alert_email_notifications: boolean;
+	alert_discord_notifications: boolean;
+	alert_created_at: string;
+	auction_id: number;
+	auction_price: number;
+	auction_seen: string;
+}
+
 export class AlertService {
 	private db: D1Database;
 	private notificationService: AlertNotificationService;
@@ -251,7 +269,7 @@ export class AlertService {
 
 			// Process all alerts in parallel
 			const results = await Promise.allSettled(
-				Array.from(alertMap.entries()).map(([_, data]) => this.processAlert(data.alertInfo, data.matchedAuctions)),
+				Array.from(alertMap.entries()).map(([, data]) => this.processAlert(data.alertInfo, data.matchedAuctions)),
 			);
 
 			// Collect results
@@ -283,16 +301,16 @@ export class AlertService {
 	/**
 	 * Find alerts that match current auction data
 	 */
-	private async findMatchingAlerts(): Promise<any[]> {
+	private async findMatchingAlerts(): Promise<MatchedAlertData[]> {
 		const matchStmt = this.db.prepare(this.MATCH_ALERTS_SQL);
 		const result = await matchStmt.all();
-		return result.results;
+		return result.results as MatchedAlertData[];
 	}
 
 	/**
 	 * Group matched alerts by alert ID
 	 */
-	private groupAlertsByAlertId(matchedAlerts: any[]): Map<
+	private groupAlertsByAlertId(matchedAlerts: MatchedAlertData[]): Map<
 		number,
 		{
 			alertInfo: AlertInfo;

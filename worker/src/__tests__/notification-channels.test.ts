@@ -27,8 +27,8 @@ describe('EmailChannel', () => {
 
 	describe('constructor', () => {
 		it('should initialize with default API URL when not provided', () => {
-			const configWithoutUrl = { ...mockConfig };
-			delete (configWithoutUrl as any).apiUrl;
+			const configWithoutUrl: Partial<EmailChannelConfig> = { ...mockConfig };
+			delete configWithoutUrl.apiUrl;
 
 			const channel = new EmailChannel(configWithoutUrl);
 			expect(channel).toBeInstanceOf(EmailChannel);
@@ -63,8 +63,8 @@ describe('EmailChannel', () => {
 		});
 
 		it('should default to true when email_notifications is null/undefined', () => {
-			const alertWithNullNotifications = { ...mockAlertInfo, email_notifications: null };
-			expect(emailChannel.isEnabled(alertWithNullNotifications as any)).toBe(true);
+			const alertWithNullNotifications = { ...mockAlertInfo, email_notifications: null as unknown as boolean };
+			expect(emailChannel.isEnabled(alertWithNullNotifications)).toBe(true);
 		});
 	});
 
@@ -202,8 +202,8 @@ describe('EmailChannel', () => {
 		});
 
 		it('should format from field correctly without name', async () => {
-			const configWithoutName = { ...mockConfig };
-			delete (configWithoutName as any).fromName;
+			const configWithoutName: Partial<EmailChannelConfig> = { ...mockConfig };
+			delete configWithoutName.fromName;
 
 			const channelWithoutName = new EmailChannel(configWithoutName);
 
@@ -269,8 +269,8 @@ describe('DiscordChannel', () => {
 		});
 
 		it('should default to false when discord_notifications is null/undefined', () => {
-			const alertWithNullNotifications = { ...mockAlertInfo, discord_notifications: null };
-			expect(discordChannel.isEnabled(alertWithNullNotifications as any)).toBe(false);
+			const alertWithNullNotifications = { ...mockAlertInfo, discord_notifications: null as unknown as boolean };
+			expect(discordChannel.isEnabled(alertWithNullNotifications)).toBe(false);
 		});
 	});
 

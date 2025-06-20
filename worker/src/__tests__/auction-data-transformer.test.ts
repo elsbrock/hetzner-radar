@@ -33,7 +33,7 @@ describe('AuctionDataTransformer', () => {
 		it('should continue processing other servers when one fails', () => {
 			// Create an invalid server that will cause an error during transformation
 			const invalidServer = { ...mockHetznerAuctionServer };
-			delete (invalidServer as any).serverDiskData; // Remove required field
+			delete (invalidServer as Partial<typeof invalidServer>).serverDiskData; // Remove required field
 			const servers = [invalidServer, mockHetznerAuctionServerMinimal];
 
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation();

@@ -48,11 +48,10 @@ export class AuctionDataTransformer {
 	 */
 	static transformServers(servers: HetznerAuctionServer[]): RawServerData[] {
 		const transformedServers: RawServerData[] = [];
-		const timestamp = new Date().toISOString();
 
 		for (const server of servers) {
 			try {
-				const transformed = this.transformServer(server, timestamp);
+				const transformed = this.transformServer(server);
 				transformedServers.push(transformed);
 			} catch (error) {
 				console.error(`[AuctionDataTransformer] Failed to transform server ${server.id}:`, error);
@@ -67,7 +66,7 @@ export class AuctionDataTransformer {
 	/**
 	 * Transforms a single server record
 	 */
-	private static transformServer(server: HetznerAuctionServer, timestamp: string): RawServerData {
+	private static transformServer(server: HetznerAuctionServer): RawServerData {
 		// Calculate location from datacenter (matches import.py logic)
 		const location = this.getLocationFromDatacenter(server.datacenter);
 

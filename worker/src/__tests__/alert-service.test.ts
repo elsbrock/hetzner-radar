@@ -40,7 +40,7 @@ describe('AlertService', () => {
 		mockNotificationService = {
 			sendNotification: vi.fn(),
 			getChannels: vi.fn().mockReturnValue(['discord', 'email']),
-		} as any;
+		} as AlertNotificationService;
 
 		service = new AlertService({
 			db: mockDb,
@@ -113,7 +113,7 @@ describe('AlertService', () => {
 				.mockReturnValueOnce(mockDeleteStatement); // Delete alert
 
 			// Mock successful notifications
-			(mockNotificationService.sendNotification as any).mockResolvedValue(mockNotificationResults);
+			vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockNotificationResults);
 
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
@@ -160,7 +160,7 @@ describe('AlertService', () => {
 			});
 			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
 
-			(mockNotificationService.sendNotification as any).mockResolvedValue(mockNotificationResults);
+			vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockNotificationResults);
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
 			await service.processAlerts();
@@ -191,7 +191,7 @@ describe('AlertService', () => {
 			});
 			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
 
-			(mockNotificationService.sendNotification as any).mockResolvedValue(mockNotificationResults);
+			vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockNotificationResults);
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
 			const result = await service.processAlerts();
@@ -219,7 +219,7 @@ describe('AlertService', () => {
 			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
 
 			// Mock failed notifications
-			(mockNotificationService.sendNotification as any).mockResolvedValue(mockFailedNotificationResults);
+			vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockFailedNotificationResults);
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
 			const result = await service.processAlerts();
@@ -241,7 +241,7 @@ describe('AlertService', () => {
 			};
 
 			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
-			(mockNotificationService.sendNotification as any).mockResolvedValue(mockNotificationResults);
+			vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockNotificationResults);
 
 			// Mock database error during batch operation
 			mockDb.batch.mockRejectedValue(new Error('Database connection failed'));
@@ -268,7 +268,7 @@ describe('AlertService', () => {
 			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
 
 			// Mock notification service error
-			(mockNotificationService.sendNotification as any).mockRejectedValue(new Error('SMTP server unavailable'));
+			vi.mocked(mockNotificationService.sendNotification).mockRejectedValue(new Error('SMTP server unavailable'));
 
 			const result = await service.processAlerts();
 
@@ -313,7 +313,7 @@ describe('AlertService', () => {
 			});
 			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
 
-			(mockNotificationService.sendNotification as any).mockResolvedValue(mockNotificationResults);
+			vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockNotificationResults);
 			mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
 
 			await service.processAlerts();

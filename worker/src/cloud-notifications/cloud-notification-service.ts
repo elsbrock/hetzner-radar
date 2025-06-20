@@ -9,7 +9,6 @@ import type {
 	CloudNotificationChannel,
 	CloudNotification,
 	CloudNotificationResult,
-	AvailabilityChange as _AvailabilityChange,
 	CloudAlert,
 	CloudAlertUser,
 	CloudAlertMatch,
@@ -92,7 +91,7 @@ export class CloudNotificationService {
 		// Send notifications for each user
 		const allResults: CloudNotificationResult[] = [];
 
-		for (const [_userId, userMatches] of matchesByUser) {
+		for (const [, userMatches] of matchesByUser) {
 			const user = userMatches[0].user; // All matches have same user
 
 			// Determine which notifications are enabled

@@ -3,21 +3,19 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CloudNotificationService, type _CloudNotificationServiceConfig } from '../cloud-notifications/cloud-notification-service';
+import { CloudNotificationService } from '../cloud-notifications/cloud-notification-service';
 import type {
 	CloudNotificationChannel,
 	CloudNotification,
 	CloudNotificationResult,
 	AvailabilityChange,
 	CloudAlert,
-	_CloudAlertUser,
 } from '../cloud-notifications/cloud-notification-channel';
 import {
 	mockAvailabilityChanges,
 	mockSingleAvailabilityChange,
 	mockCloudAlerts,
 	mockCloudAlertUsers,
-	_mockCloudAlertMatches,
 	mockCloudNotification,
 	mockCloudNotificationResults,
 	mockFailedCloudNotificationResults,
@@ -59,7 +57,7 @@ describe('CloudNotificationService', () => {
 
 	beforeEach(() => {
 		service = new CloudNotificationService({ email: mockEmailConfig });
-		mockGetUserById = vi.fn() as any;
+		mockGetUserById = vi.fn() as CloudNotificationChannel;
 		vi.clearAllMocks();
 	});
 
@@ -83,10 +81,10 @@ describe('CloudNotificationService', () => {
 	describe('processAvailabilityChanges', () => {
 		beforeEach(() => {
 			// Set default mock behavior
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(false);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(false);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
-			(mockCloudEmailChannel.send as any).mockResolvedValue(mockCloudNotificationResults[1]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(false);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(false);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudEmailChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[1]);
 		});
 
 		it('should return zero counts when no changes provided', async () => {
@@ -120,8 +118,8 @@ describe('CloudNotificationService', () => {
 				.mockResolvedValueOnce(mockCloudAlertUsers[1]) // user-2 for alert-2
 				.mockResolvedValueOnce(mockCloudAlertUsers[0]); // user-1 for alert-3
 
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
 
 			const result = await service.processAvailabilityChanges(mockAvailabilityChanges, mockCloudAlerts, mockGetUserById);
 
@@ -142,8 +140,8 @@ describe('CloudNotificationService', () => {
 
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
 
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
 
 			const result = await service.processAvailabilityChanges(mockSingleAvailabilityChange, sameUserAlerts, mockGetUserById);
 
@@ -196,8 +194,8 @@ describe('CloudNotificationService', () => {
 			};
 
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudEmailChannel.send as any).mockResolvedValue(mockCloudNotificationResults[1]);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudEmailChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[1]);
 
 			// Test matching change
 			const matchingResult = await service.processAvailabilityChanges([matchingChange], [specificAlert], mockGetUserById);
@@ -227,8 +225,8 @@ describe('CloudNotificationService', () => {
 			};
 
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
 
 			// Both event types should match
 			const availableResult = await service.processAvailabilityChanges([availableChange], [bothAlert], mockGetUserById);
@@ -241,8 +239,8 @@ describe('CloudNotificationService', () => {
 
 		it('should send Discord notification when enabled', async () => {
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
 
 			const result = await service.processAvailabilityChanges(mockSingleAvailabilityChange, [mockCloudAlerts[0]], mockGetUserById);
 
@@ -252,10 +250,10 @@ describe('CloudNotificationService', () => {
 
 		it('should send email notification when Discord fails', async () => {
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockFailedCloudNotificationResults[0]);
-			(mockCloudEmailChannel.send as any).mockResolvedValue(mockCloudNotificationResults[1]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockFailedCloudNotificationResults[0]);
+			(mockCloudEmailChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[1]);
 
 			const result = await service.processAvailabilityChanges(mockSingleAvailabilityChange, [mockCloudAlerts[0]], mockGetUserById);
 
@@ -291,11 +289,11 @@ describe('CloudNotificationService', () => {
 
 			// Mock to capture the notification object passed to sendNotification
 			let capturedNotification: CloudNotification;
-			(mockCloudDiscordChannel.isEnabled as any).mockImplementation((notification: CloudNotification) => {
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockImplementation((notification: CloudNotification) => {
 				capturedNotification = notification;
 				return notification.discordEnabled && notification.user.discord_webhook_url;
 			});
-			(mockCloudEmailChannel.isEnabled as any).mockImplementation((notification: CloudNotification) => {
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockImplementation((notification: CloudNotification) => {
 				capturedNotification = notification;
 				return notification.emailEnabled && notification.user.email;
 			});
@@ -315,8 +313,8 @@ describe('CloudNotificationService', () => {
 			const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(false);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(false);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(false);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(false);
 
 			await service.processAvailabilityChanges(mockAvailabilityChanges, mockCloudAlerts, mockGetUserById);
 
@@ -345,18 +343,18 @@ describe('CloudNotificationService', () => {
 		};
 
 		beforeEach(() => {
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(false);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(false);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockSuccessResult);
-			(mockCloudEmailChannel.send as any).mockResolvedValue({ ...mockSuccessResult, channel: 'cloud-email' });
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(false);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(false);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockSuccessResult);
+			(mockCloudEmailChannel.send as CloudNotificationChannel).mockResolvedValue({ ...mockSuccessResult, channel: 'cloud-email' });
 		});
 
 		it('should send Discord notification when enabled', async () => {
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockSuccessResult);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockSuccessResult);
 
 			// Access private method for testing
-			const results = await (service as any).sendNotification(mockCloudNotification);
+			const results = await (service as CloudNotificationChannel).sendNotification(mockCloudNotification);
 
 			expect(results).toHaveLength(1);
 			expect(results[0]).toEqual(mockSuccessResult);
@@ -364,14 +362,14 @@ describe('CloudNotificationService', () => {
 		});
 
 		it('should send email when Discord fails', async () => {
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockFailureResult);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockFailureResult);
 
 			const emailResult = { ...mockSuccessResult, channel: 'cloud-email' };
-			(mockCloudEmailChannel.send as any).mockResolvedValue(emailResult);
+			(mockCloudEmailChannel.send as CloudNotificationChannel).mockResolvedValue(emailResult);
 
-			const results = await (service as any).sendNotification(mockCloudNotification);
+			const results = await (service as CloudNotificationChannel).sendNotification(mockCloudNotification);
 
 			expect(results).toHaveLength(2);
 			expect(results[0]).toEqual(mockFailureResult);
@@ -379,11 +377,11 @@ describe('CloudNotificationService', () => {
 		});
 
 		it('should not send email when Discord succeeds', async () => {
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockSuccessResult);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockSuccessResult);
 
-			const results = await (service as any).sendNotification(mockCloudNotification);
+			const results = await (service as CloudNotificationChannel).sendNotification(mockCloudNotification);
 
 			expect(results).toHaveLength(1);
 			expect(results[0]).toEqual(mockSuccessResult);
@@ -397,7 +395,7 @@ describe('CloudNotificationService', () => {
 				discordEnabled: false,
 			};
 
-			const results = await (service as any).sendNotification(disabledNotification);
+			const results = await (service as CloudNotificationChannel).sendNotification(disabledNotification);
 
 			expect(results).toHaveLength(0);
 			expect(mockCloudDiscordChannel.send).not.toHaveBeenCalled();
@@ -409,10 +407,10 @@ describe('CloudNotificationService', () => {
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
 
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockFailureResult);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockFailureResult);
 
-			await (service as any).sendNotification(mockCloudNotification);
+			await (service as CloudNotificationChannel).sendNotification(mockCloudNotification);
 
 			expect(consoleSpy).toHaveBeenCalledWith(
 				`[CloudNotificationService] Processing notifications for user ${mockCloudNotification.user.id}:`,
@@ -458,10 +456,10 @@ describe('CloudNotificationService', () => {
 				return null;
 			});
 
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudEmailChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
-			(mockCloudEmailChannel.send as any).mockResolvedValue(mockCloudNotificationResults[1]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudEmailChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudEmailChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[1]);
 
 			const result = await service.processAvailabilityChanges(
 				mockAvailabilityChanges,
@@ -475,8 +473,8 @@ describe('CloudNotificationService', () => {
 
 		it('should handle errors during notification sending', async () => {
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockRejectedValue(new Error('Channel error'));
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockRejectedValue(new Error('Channel error'));
 
 			// Should not throw, but handle gracefully
 			await expect(service.processAvailabilityChanges(mockSingleAvailabilityChange, [mockCloudAlerts[0]], mockGetUserById)).rejects.toThrow(
@@ -495,8 +493,8 @@ describe('CloudNotificationService', () => {
 			}));
 
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(mockCloudNotificationResults[0]);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(mockCloudNotificationResults[0]);
 
 			const result = await service.processAvailabilityChanges(manyChanges, [mockCloudAlerts[0]], mockGetUserById);
 
@@ -507,10 +505,10 @@ describe('CloudNotificationService', () => {
 
 		it('should calculate statistics correctly', async () => {
 			mockGetUserById.mockResolvedValue(mockCloudAlertUsers[0]);
-			(mockCloudDiscordChannel.isEnabled as any).mockReturnValue(true);
+			(mockCloudDiscordChannel.isEnabled as CloudNotificationChannel).mockReturnValue(true);
 
 			const resultWithChanges = { ...mockCloudNotificationResults[0], changesProcessed: 5 };
-			(mockCloudDiscordChannel.send as any).mockResolvedValue(resultWithChanges);
+			(mockCloudDiscordChannel.send as CloudNotificationChannel).mockResolvedValue(resultWithChanges);
 
 			const result = await service.processAvailabilityChanges(mockAvailabilityChanges, [mockCloudAlerts[0]], mockGetUserById);
 

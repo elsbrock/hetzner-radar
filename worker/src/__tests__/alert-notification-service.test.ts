@@ -204,7 +204,7 @@ describe('AlertNotificationService', () => {
 
 		it('should log appropriate messages during processing', async () => {
 			const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
-			const _consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+			vi.spyOn(console, 'error').mockImplementation();
 			const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
 
 			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(false);
@@ -308,7 +308,7 @@ describe('AlertNotificationService', () => {
 
 			// Mock the channels array to not include discord
 			const emailOnlyChannels = [mockEmailChannel];
-			(serviceWithoutDiscord as any).channels = emailOnlyChannels;
+			(serviceWithoutDiscord as { channels: NotificationChannel[] }).channels = emailOnlyChannels;
 
 			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
 			const emailResult = { channel: 'email', success: true, timestamp: new Date().toISOString() };
@@ -323,7 +323,7 @@ describe('AlertNotificationService', () => {
 		it('should handle channel send method throwing errors', async () => {
 			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(true);
 			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
-			(mockDiscordChannel.send as any).mockRejectedValue(new Error('Discord channel crashed'));
+			vi.mocked(mockDiscordChannel.send).mockRejectedValue(new Error('Discord channel crashed'));
 
 			const emailResult = { channel: 'email', success: true, timestamp: new Date().toISOString() };
 			vi.mocked(mockEmailChannel.send).mockResolvedValue(emailResult);
@@ -344,7 +344,7 @@ describe('AlertNotificationService', () => {
 		it('should handle email channel send method throwing errors', async () => {
 			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(false);
 			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
-			(mockEmailChannel.send as any).mockRejectedValue(new Error('Email channel crashed'));
+			vi.mocked(mockEmailChannel.send).mockRejectedValue(new Error('Email channel crashed'));
 
 			// Should not throw and should return error result
 			const results = await service.sendNotification(mockAlertNotification);
