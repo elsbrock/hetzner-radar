@@ -16,8 +16,8 @@ export interface AlertInfo {
 	vat_rate: number;
 	user_id: string;
 	includes_ipv4_cost: boolean;
-	email: string;
-	discord_webhook_url?: string;
+	email: string | null;
+	discord_webhook_url?: string | null;
 	email_notifications: boolean;
 	discord_notifications: boolean;
 	created_at: string;

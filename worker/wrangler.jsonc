@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "cloud-availability",
+	"name": "server-radar-worker",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-04-22",
 	"workers_dev": false,

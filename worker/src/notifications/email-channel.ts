@@ -43,7 +43,7 @@ export class EmailChannel implements NotificationChannel {
 			}
 
 			const emailBody = this.formatEmailBody(notification);
-			await this.sendEmail(notification.alert.email, emailBody.subject, emailBody.text);
+			await this.sendEmail(notification.alert.email!, emailBody.subject, emailBody.text);
 
 			return {
 				channel: this.name,

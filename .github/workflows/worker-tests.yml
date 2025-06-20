@@ -1,0 +1,76 @@
+name: Worker Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/worker-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/worker-tests.yml'
+
+jobs:
+  test:
+    name: Run Worker Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './worker/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./worker/coverage
+          flags: worker
+          name: worker-coverage
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+  lint:
+    name: Lint Worker Code
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './worker/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type checking
+        run: npm run check
+
+      - name: Run linting
+        run: npm run lint

@@ -51,14 +51,25 @@ export class AlertNotificationService {
 		// Try Discord first if enabled
 		let discordSent = false;
 		if (discordChannel && discordChannel.isEnabled(alert)) {
-			const result = await discordChannel.send(notification);
-			results.push(result);
-			discordSent = result.success;
+			try {
+				const result = await discordChannel.send(notification);
+				results.push(result);
+				discordSent = result.success;
 
-			if (discordSent) {
-				console.log(`[AlertNotificationService] Discord notification sent successfully for alert ${alert.id}`);
-			} else {
-				console.error(`[AlertNotificationService] Discord notification failed for alert ${alert.id}: ${result.error}`);
+				if (discordSent) {
+					console.log(`[AlertNotificationService] Discord notification sent successfully for alert ${alert.id}`);
+				} else {
+					console.error(`[AlertNotificationService] Discord notification failed for alert ${alert.id}: ${result.error}`);
+				}
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+				console.error(`[AlertNotificationService] Discord channel threw error for alert ${alert.id}: ${errorMessage}`);
+				results.push({
+					channel: 'discord',
+					success: false,
+					error: errorMessage,
+					timestamp: new Date().toISOString(),
+				});
 			}
 		} else {
 			console.log(
@@ -70,13 +81,24 @@ export class AlertNotificationService {
 
 		// Send email if enabled AND (Discord wasn't sent OR Discord failed)
 		if (emailChannel && emailChannel.isEnabled(alert) && !discordSent) {
-			const result = await emailChannel.send(notification);
-			results.push(result);
+			try {
+				const result = await emailChannel.send(notification);
+				results.push(result);
 
-			if (result.success) {
-				console.log(`[AlertNotificationService] Email notification sent for alert ${alert.id}`);
-			} else {
-				console.error(`[AlertNotificationService] Email notification failed for alert ${alert.id}: ${result.error}`);
+				if (result.success) {
+					console.log(`[AlertNotificationService] Email notification sent for alert ${alert.id}`);
+				} else {
+					console.error(`[AlertNotificationService] Email notification failed for alert ${alert.id}: ${result.error}`);
+				}
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+				console.error(`[AlertNotificationService] Email channel threw error for alert ${alert.id}: ${errorMessage}`);
+				results.push({
+					channel: 'email',
+					success: false,
+					error: errorMessage,
+					timestamp: new Date().toISOString(),
+				});
 			}
 		}
 
