@@ -1,5 +1,10 @@
-# takes "latest" servers and pushes them to our endpoint
-# endpoint will match alerts and send mails
+# DEPRECATED: This script is no longer used in the CI pipeline
+# 
+# Previously: took "latest" servers and pushed them to /push endpoint for alert processing
+# Now: Worker (AuctionImportDO) imports auction data directly every 5 minutes
+# 
+# The /push endpoint has been removed as auction alerts are now processed automatically
+# in the worker during auction imports. This script is kept for reference only.
 
 import os
 import sys

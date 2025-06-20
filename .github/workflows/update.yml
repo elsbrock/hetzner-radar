@@ -36,7 +36,12 @@ jobs:
           command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Push new data to worker
-        run: cd scripts && poetry run python push.py ../static/sb.duckdb.wasm
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
+      # NOTE: Auction alert processing moved to worker (AuctionImportDO)
+      # Worker imports auction data automatically every 5 minutes from Hetzner API
+      # The /push endpoint has been removed as it's no longer needed
+      # 
+      # Previous step (now deprecated):
+      # - name: Push new data to worker
+      #   run: cd scripts && poetry run python push.py ../static/sb.duckdb.wasm
+      #   env:
+      #     API_KEY: ${{ secrets.API_KEY }}

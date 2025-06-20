@@ -36,19 +36,9 @@ export class NotificationService {
 			}
 		}
 
-		// Notify main app if configured
-		if (this.mainAppUrl && this.apiKey) {
-			console.log(`[NotificationService ${this.doId}] Notifying main app at ${this.mainAppUrl}...`);
-			try {
-				await this.notifyMainApp(changes);
-			} catch (error) {
-				console.error(`[NotificationService ${this.doId}] Failed to notify main app:`, error);
-			}
-		} else {
-			console.log(`[NotificationService ${this.doId}] Main app notification not configured:`);
-			console.log(`  - MAIN_APP_URL: ${this.mainAppUrl || 'MISSING'}`);
-			console.log(`  - API_KEY: ${this.apiKey ? 'Present' : 'MISSING'}`);
-		}
+		// NOTE: Cloud alert processing now handled by CloudAlertService
+		// Legacy main app notification removed to avoid duplicate processing
+		console.log(`[NotificationService ${this.doId}] Cloud alert processing handled by CloudAlertService, not calling legacy endpoint`);
 	}
 
 	private async writeToAnalyticsEngine(changes: AvailabilityChange[]): Promise<void> {
@@ -70,41 +60,6 @@ export class NotificationService {
 		console.log(`[NotificationService ${this.doId}] Wrote ${changes.length} data points to Analytics Engine`);
 	}
 
-	private async notifyMainApp(changes: AvailabilityChange[]): Promise<void> {
-		if (!this.mainAppUrl || !this.apiKey) return;
-
-		const url = `${this.mainAppUrl}/notify`;
-		const requestBody = { changes };
-
-		console.log(`[NotificationService ${this.doId}] Sending notification request to ${url}`);
-
-		const startTime = Date.now();
-
-		try {
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${this.apiKey}`,
-					'Content-Type': 'application/json',
-					'x-auth-key': this.apiKey,
-				},
-				body: JSON.stringify(requestBody),
-			});
-
-			const duration = Date.now() - startTime;
-			console.log(`[NotificationService ${this.doId}] Notification response received in ${duration}ms: ${response.status}`);
-
-			if (!response.ok) {
-				const responseText = await response.text();
-				throw new Error(`Main app notification failed: ${response.status} ${responseText}`);
-			}
-
-			console.log(`[NotificationService ${this.doId}] Successfully notified main app about ${changes.length} changes`);
-		} catch (error) {
-			console.error(`[NotificationService ${this.doId}] Notification request failed:`, error);
-			throw error;
-		}
-	}
 
 	async writeImportAnalytics(success: boolean, stats?: any, duration?: number, error?: string): Promise<void> {
 		if (!this.analyticsEngine) return;
