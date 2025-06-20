@@ -534,18 +534,6 @@
 		groupedDisplayList = groupedResult;
 	});
 
-	// Derived state for total offers (can remain derived)
-	let _totalOffers = $derived(
-		Array.isArray(serverPrices) ? serverPrices.reduce((acc, val) => acc + val.count, 0) : 0
-	);
-
-	// Derived state for available auctions (from last data point)
-	let _availableAuctions = $derived(
-		Array.isArray(serverPrices) && serverPrices.length > 0
-			? (serverPrices[serverPrices.length - 1]?.count ?? 0)
-			: 0
-	);
-
 	// Derived state for total results count from grouped list
 	let totalResults = $derived(
 		groupedDisplayList.reduce((sum, group) => sum + group.servers.length, 0)
@@ -574,17 +562,6 @@
 			.map((server) => server.price)
 			.filter((price) => price !== null && price !== undefined) as number[];
 	}
-
-	// Derived state for QuickStats
-	let _lowestPrice = $derived(() => {
-		const prices = getFilteredPrices();
-		return prices.length > 0 ? Math.min(...prices) : null;
-	});
-
-	let _highestPrice = $derived(() => {
-		const prices = getFilteredPrices();
-		return prices.length > 0 ? Math.max(...prices) : null;
-	});
 
 	// Format price with VAT and timeUnitPrice for display
 	function formatPrice(price: number | null): string {

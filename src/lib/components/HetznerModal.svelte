@@ -5,7 +5,7 @@
 
 	export let open = false;
 	export let config: ServerConfiguration;
-	let _accepted = false;
+	let accepted = false;
 </script>
 
 <Modal title="Before You Go…" bind:open autoclose outsideclose>

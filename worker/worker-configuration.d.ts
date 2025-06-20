@@ -5222,11 +5222,11 @@ declare type EmailExportedHandler<Env = unknown> = (
 	ctx: ExecutionContext,
 ) => void | Promise<void>;
 declare module 'cloudflare:email' {
-	let _EmailMessage: {
+	let EmailMessage: {
 		prototype: EmailMessage;
 		new (from: string, to: string, raw: ReadableStream | string): EmailMessage;
 	};
-	export { _EmailMessage as EmailMessage };
+	export { EmailMessage };
 }
 interface Hyperdrive {
 	/**
