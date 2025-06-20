@@ -559,7 +559,7 @@ export async function getPopularityStats(
       SELECT
 		-- Only count auctions with price updates in the last 70 minutes
 		(SELECT COUNT(DISTINCT id) FROM server 
-		WHERE seen >= NOW() - INTERVAL '70 minutes'
+		WHERE seen >= NOW()::timestamp - INTERVAL '70 minutes'
 		-- Apply the same filter conditions here if provided
 		) AS current_count,
 		AVG(daily_count) AS avg_count_30d
