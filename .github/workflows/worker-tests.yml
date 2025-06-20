@@ -37,17 +37,6 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./worker/coverage
-          flags: worker
-          name: worker-coverage
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
   lint:
     name: Lint Worker Code
     runs-on: ubuntu-latest
