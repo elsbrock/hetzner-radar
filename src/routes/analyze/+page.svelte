@@ -553,9 +553,9 @@
 
 	// Non-derived variables for QuickStats
 	let totalResultsValue = $state(0);
-	let _lowestPriceValue = $state<number | null>(null);
-	let _averagePriceValue = $state<number | null>(null);
-	let _priceRangeValue = $state<number | null>(null);
+	let lowestPriceValue = $state<number | null>(null);
+	let averagePriceValue = $state<number | null>(null);
+	let priceRangeValue = $state<number | null>(null);
 	let availableAuctionsValue = $state(0);
 	let popularityValue = $state<number | null>(1); // Default to 1 (neutral)
 	let lowestPriceFormatted = $state('N/A');
