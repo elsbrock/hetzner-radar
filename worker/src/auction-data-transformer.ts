@@ -1,6 +1,6 @@
 /**
  * Auction Data Transformer
- * 
+ *
  * Transforms raw Hetzner auction data to match the database schema
  * Based on the transformation logic from scripts/import.py
  */
@@ -70,10 +70,10 @@ export class AuctionDataTransformer {
 	private static transformServer(server: HetznerAuctionServer, timestamp: string): RawServerData {
 		// Calculate location from datacenter (matches import.py logic)
 		const location = this.getLocationFromDatacenter(server.datacenter);
-		
+
 		// Extract CPU vendor from CPU string (first word)
 		const cpuVendor = this.extractCpuVendor(server.cpu);
-		
+
 		// Calculate seen timestamp from Hetzner's timestamp data
 		const seenTimestamp = this.calculateSeenTimestamp(server.next_reduce_timestamp, server.next_reduce);
 

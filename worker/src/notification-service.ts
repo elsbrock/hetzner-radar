@@ -1,6 +1,6 @@
 /**
  * Notification Service
- * 
+ *
  * Handles availability change notifications and analytics
  */
 
@@ -13,13 +13,7 @@ export class NotificationService {
 	private doId: string;
 	private storage: DurableObjectStorage;
 
-	constructor(
-		storage: DurableObjectStorage,
-		doId: string,
-		analyticsEngine?: AnalyticsEngineDataset,
-		mainAppUrl?: string,
-		apiKey?: string
-	) {
+	constructor(storage: DurableObjectStorage, doId: string, analyticsEngine?: AnalyticsEngineDataset, mainAppUrl?: string, apiKey?: string) {
 		this.storage = storage;
 		this.doId = doId;
 		this.analyticsEngine = analyticsEngine;

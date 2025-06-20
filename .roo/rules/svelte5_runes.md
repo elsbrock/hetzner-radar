@@ -11,7 +11,7 @@
     - **Instead of (Svelte 4):**
       ```typescript
       // Svelte 4
-      export let name: string = "world";
+      export let name: string = 'world';
       export let count: number;
       export let open: boolean = false;
       ```
@@ -19,14 +19,14 @@
       ```typescript
       // Svelte 5
       interface $$Props {
-        name?: string;
-        count: number; // Required prop
-        open?: boolean;
+      	name?: string;
+      	count: number; // Required prop
+      	open?: boolean;
       }
       let {
-        name = "world",
-        count, // Required, no default
-        open = $bindable(false), // Use $bindable for two-way binding
+      	name = 'world',
+      	count, // Required, no default
+      	open = $bindable(false) // Use $bindable for two-way binding
       } = $props<$$Props>();
       ```
       _Note: The `<$$Props>` type argument is optional if TypeScript can infer types._
@@ -40,7 +40,7 @@
       // Svelte 4 (implicit reactivity)
       let count = 0;
       function increment() {
-        count += 1; // Component updates
+      	count += 1; // Component updates
       }
       ```
     - **Use (Svelte 5):**
@@ -49,12 +49,12 @@
       // Svelte 5
       let count = $state(0);
       function increment() {
-        count += 1; // Component updates because count is $state
+      	count += 1; // Component updates because count is $state
       }
 
       let nonReactive = 0;
       function nonReactiveUpdate() {
-        nonReactive += 1; // This assignment WON'T trigger updates
+      	nonReactive += 1; // This assignment WON'T trigger updates
       }
       ```
 
@@ -68,12 +68,11 @@
     - **Parent Component (Svelte 5):**
       ```typescript
       // Parent.svelte
-      import Child from "./Child.svelte";
+      import Child from './Child.svelte';
       let parentValue = $state(10);
       ```
       ```svelte
-      <Child bind:value={parentValue} />
-      <p>Parent value: {parentValue}</p>
+      <Child bind:value={parentValue} /><p>Parent value: {parentValue}</p>
       ```
 
 **Summary:**

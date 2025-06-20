@@ -8,14 +8,14 @@ Imports from application-specific modules (typically located under `$lib`) shoul
 - **Correct Order Example:**
 
   ```typescript
-  import { someUtil } from "$lib/utils";
-  import { error } from "@sveltejs/kit";
+  import { someUtil } from '$lib/utils';
+  import { error } from '@sveltejs/kit';
   ```
 
 - **Incorrect Order Example:**
   ```typescript
-  import { error } from "@sveltejs/kit";
-  import { someUtil } from "$lib/utils";
+  import { error } from '@sveltejs/kit';
+  import { someUtil } from '$lib/utils';
   ```
 
 Please adjust import statements to follow this convention for better code organization and readability.

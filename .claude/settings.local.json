@@ -1,26 +1,26 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(git commit:*)",
-      "Bash(playwright test)",
-      "Bash(npm run check:*)",
-      "Bash(sed:*)",
-      "Bash(grep:*)",
-      "WebFetch(domain:flowbite-svelte.com)",
-      "Bash(git show:*)",
-      "Bash(npm run lint)",
-      "Bash(rg:*)",
-      "Bash(wc:*)",
-      "Bash(tail:*)",
-      "Bash(git add:*)",
-      "Bash(find:*)",
-      "Bash(npm run build:*)",
-      "mcp__puppeteer__puppeteer_navigate",
-      "mcp__puppeteer__puppeteer_screenshot",
-      "mcp__puppeteer__puppeteer_evaluate",
-      "mcp__puppeteer__puppeteer_click",
-      "mcp__puppeteer__puppeteer_fill"
-    ],
-    "deny": []
-  }
+	"permissions": {
+		"allow": [
+			"Bash(git commit:*)",
+			"Bash(playwright test)",
+			"Bash(npm run check:*)",
+			"Bash(sed:*)",
+			"Bash(grep:*)",
+			"WebFetch(domain:flowbite-svelte.com)",
+			"Bash(git show:*)",
+			"Bash(npm run lint)",
+			"Bash(rg:*)",
+			"Bash(wc:*)",
+			"Bash(tail:*)",
+			"Bash(git add:*)",
+			"Bash(find:*)",
+			"Bash(npm run build:*)",
+			"mcp__puppeteer__puppeteer_navigate",
+			"mcp__puppeteer__puppeteer_screenshot",
+			"mcp__puppeteer__puppeteer_evaluate",
+			"mcp__puppeteer__puppeteer_click",
+			"mcp__puppeteer__puppeteer_fill"
+		],
+		"deny": []
+	}
 }

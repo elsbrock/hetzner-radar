@@ -1,8 +1,8 @@
-import type { LayoutServerLoad } from "./$types";
+import type { LayoutServerLoad } from './$types';
 
 /** @type {import('./$types').PageServerLoad} */
 export const load: LayoutServerLoad = async (event) => {
-  return {
-    session: event.locals.session,
-  };
+	return {
+		session: event.locals.session
+	};
 };

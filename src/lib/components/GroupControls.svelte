@@ -21,22 +21,21 @@
 
 	// Destructure props using $props and $bindable
 	let { groupByField = $bindable('none') } = $props();
-
 </script>
 
 <div class="flex items-center">
-	<ButtonGroup size="xs" class="divide-x divide-gray-300 dark:divide-gray-600 font-semibold">
-		<InputAddon size="sm" class="bg-gray-50 text-gray-900 border-r-0 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
-			<FontAwesomeIcon
-				icon={faSort}
-				class="mr-2"
-			/>Group by
+	<ButtonGroup size="xs" class="divide-x divide-gray-300 font-semibold dark:divide-gray-600">
+		<InputAddon
+			size="sm"
+			class="border-r-0 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+		>
+			<FontAwesomeIcon icon={faSort} class="mr-2" />Group by
 		</InputAddon>
 		<Select
 			id="group-by-field"
 			items={groupByFields}
 			bind:value={groupByField}
-			class="w-[120px] rounded-none rounded-r-lg bg-white text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+			class="w-[120px] rounded-none rounded-r-lg bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			size="sm"
 		/>
 		<!-- No direction button needed for grouping -->

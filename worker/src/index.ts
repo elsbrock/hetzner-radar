@@ -41,7 +41,7 @@ export { CloudAvailabilityDO, AuctionImportDO };
 export default class CloudAvailabilityWorker extends WorkerEntrypoint<Env> {
 	async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
-		
+
 		try {
 			// Route requests based on path
 			if (url.pathname.startsWith('/cloud/') || url.pathname === '/status' || url.pathname === '/') {
@@ -49,30 +49,28 @@ export default class CloudAvailabilityWorker extends WorkerEntrypoint<Env> {
 				const cloudPath = url.pathname.replace('/cloud', '') || '/status';
 				const cloudUrl = new URL(request.url);
 				cloudUrl.pathname = cloudPath;
-				
+
 				const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 				const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
 				const cloudRequest = new Request(cloudUrl.toString(), request);
 				return await stub.fetch(cloudRequest);
-				
 			} else if (url.pathname.startsWith('/auction/')) {
 				// Auction import requests
 				const auctionPath = url.pathname.replace('/auction', '') || '/debug';
 				const auctionUrl = new URL(request.url);
 				auctionUrl.pathname = auctionPath;
-				
+
 				const durableObjectId = this.env.AUCTION_IMPORT_DO.idFromName('singleton-auction-import-v1');
 				const stub = this.env.AUCTION_IMPORT_DO.get(durableObjectId);
 				const auctionRequest = new Request(auctionUrl.toString(), request);
 				return await stub.fetch(auctionRequest);
-				
 			} else if (url.pathname === '/debug' && request.method === 'GET') {
 				// Combined debug endpoint
 				return this.handleCombinedDebug();
-				
 			} else {
 				// Default help response
-				return new Response(`Available endpoints:
+				return new Response(
+					`Available endpoints:
 Cloud Availability:
   - GET /status or /cloud/status (cloud server availability)
   - POST /cloud/trigger (manual cloud status update)
@@ -85,10 +83,12 @@ Auction Import:
 
 Combined:
   - GET /debug (combined debug info for both DOs)
-`, { 
-					status: 404,
-					headers: { 'Content-Type': 'text/plain' }
-				});
+`,
+					{
+						status: 404,
+						headers: { 'Content-Type': 'text/plain' },
+					},
+				);
 			}
 		} catch (e: any) {
 			console.error('Error in Worker fetch:', e);
@@ -123,37 +123,48 @@ Combined:
 			// Get debug info from both DOs
 			const cloudDOId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 			const cloudStub = this.env.CLOUD_STATUS_DO.get(cloudDOId);
-			
+
 			const auctionDOId = this.env.AUCTION_IMPORT_DO.idFromName('singleton-auction-import-v1');
 			const auctionStub = this.env.AUCTION_IMPORT_DO.get(auctionDOId);
 
 			const [cloudDebug, auctionDebug] = await Promise.allSettled([
 				cloudStub.fetch(new Request('http://localhost/debug')),
-				auctionStub.fetch(new Request('http://localhost/debug'))
+				auctionStub.fetch(new Request('http://localhost/debug')),
 			]);
 
-			const cloudData = cloudDebug.status === 'fulfilled' && cloudDebug.value.ok ? 
-				await cloudDebug.value.json() : { error: 'Failed to fetch cloud debug info' };
-			
-			const auctionData = auctionDebug.status === 'fulfilled' && auctionDebug.value.ok ? 
-				await auctionDebug.value.json() : { error: 'Failed to fetch auction debug info' };
+			const cloudData =
+				cloudDebug.status === 'fulfilled' && cloudDebug.value.ok
+					? await cloudDebug.value.json()
+					: { error: 'Failed to fetch cloud debug info' };
 
-			return new Response(JSON.stringify({
-				cloudAvailability: cloudData,
-				auctionImport: auctionData,
-				worker: {
-					timestamp: new Date().toISOString(),
-					environment: {
-						HETZNER_API_TOKEN: this.env.HETZNER_API_TOKEN ? 'Present' : 'MISSING',
-						DB: this.env.DB ? 'Present' : 'MISSING',
-						ANALYTICS_ENGINE: this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING',
-						MAIN_APP_URL: this.env.MAIN_APP_URL || 'Not set',
-						API_KEY: this.env.API_KEY ? 'Present' : 'MISSING'
-					}
-				}
-			}, null, 2), {
-				headers: { 'Content-Type': 'application/json' },
-			});
+			const auctionData =
+				auctionDebug.status === 'fulfilled' && auctionDebug.value.ok
+					? await auctionDebug.value.json()
+					: { error: 'Failed to fetch auction debug info' };
+
+			return new Response(
+				JSON.stringify(
+					{
+						cloudAvailability: cloudData,
+						auctionImport: auctionData,
+						worker: {
+							timestamp: new Date().toISOString(),
+							environment: {
+								HETZNER_API_TOKEN: this.env.HETZNER_API_TOKEN ? 'Present' : 'MISSING',
+								DB: this.env.DB ? 'Present' : 'MISSING',
+								ANALYTICS_ENGINE: this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING',
+								MAIN_APP_URL: this.env.MAIN_APP_URL || 'Not set',
+								API_KEY: this.env.API_KEY ? 'Present' : 'MISSING',
+							},
+						},
+					},
+					null,
+					2,
+				),
+				{
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		} catch (error) {
 			console.error('Error in combined debug:', error);
 			return new Response('Error fetching combined debug info', { status: 500 });

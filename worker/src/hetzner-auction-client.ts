@@ -1,6 +1,6 @@
 /**
  * Hetzner Auction API Client
- * 
+ *
  * Fetches server auction data from Hetzner's API
  */
 
@@ -55,11 +55,11 @@ export class HetznerAuctionClient {
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				console.log(`[HetznerAuctionClient] Fetching auction data, attempt ${attempt}/${maxRetries}`);
-				
+
 				const response = await fetch(this.apiUrl, {
 					headers: {
 						'User-Agent': this.userAgent,
-						'Accept': 'application/json',
+						Accept: 'application/json',
 						'Accept-Encoding': 'gzip, deflate',
 					},
 					cf: {
@@ -73,15 +73,14 @@ export class HetznerAuctionClient {
 					throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
 				}
 
-				const data = await response.json() as HetznerAuctionResponse;
-				
+				const data = (await response.json()) as HetznerAuctionResponse;
+
 				if (!data.server || !Array.isArray(data.server)) {
 					throw new Error('Invalid response format: missing or invalid server array');
 				}
 
 				console.log(`[HetznerAuctionClient] Successfully fetched ${data.server.length} servers`);
 				return data.server;
-
 			} catch (error) {
 				lastError = error instanceof Error ? error : new Error(String(error));
 				console.error(`[HetznerAuctionClient] Attempt ${attempt} failed:`, lastError.message);
@@ -90,7 +89,7 @@ export class HetznerAuctionClient {
 					// Exponential backoff: 1s, 2s, 4s
 					const delay = Math.pow(2, attempt - 1) * 1000;
 					console.log(`[HetznerAuctionClient] Retrying in ${delay}ms...`);
-					await new Promise(resolve => setTimeout(resolve, delay));
+					await new Promise((resolve) => setTimeout(resolve, delay));
 				}
 			}
 		}

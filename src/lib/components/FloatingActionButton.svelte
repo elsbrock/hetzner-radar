@@ -6,13 +6,7 @@
 	import { onDestroy } from 'svelte';
 	import { activeFabId, registerFab, unregisterFab } from '$lib/stores/fabStore';
 
-	let {
-		icon,
-		targetSelector = null,
-		visible,
-		priority,
-		ariaLabel
-	} = $props(); // Remove explicit type argument
+	let { icon, targetSelector = null, visible, priority, ariaLabel } = $props(); // Remove explicit type argument
 
 	// Unique identifier for this FAB instance
 	const fabId = Symbol('fabId');
@@ -51,18 +45,15 @@
 </script>
 
 {#if shouldRender}
-	<div
-		class="fixed bottom-12 right-6 z-50"
-		transition:fly={{ y: 100, duration: 300 }}
-	>
+	<div class="fixed right-6 bottom-12 z-50" transition:fly={{ y: 100, duration: 300 }}>
 		<Button
 			onclick={handleClick}
 			size="lg"
-			class="rounded-full shadow-lg !p-3"
+			class="rounded-full !p-3 shadow-lg"
 			aria-label={ariaLabel}
 			color="primary"
 		>
-			<FontAwesomeIcon icon={icon} class="w-5 h-5 text-white" />
+			<FontAwesomeIcon {icon} class="h-5 w-5 text-white" />
 		</Button>
 	</div>
 {/if}

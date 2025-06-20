@@ -1,6 +1,6 @@
 /**
  * Cloud Status Service
- * 
+ *
  * Handles Hetzner Cloud server availability tracking
  */
 
@@ -150,13 +150,13 @@ export class CloudStatusService {
 			console.log(`[CloudStatusService ${this.doId}] Fetched ${datacentersData.datacenters.length} datacenters.`);
 
 			const processedData = this.processCloudData(serverTypesData.server_types, datacentersData.datacenters);
-			
+
 			// Get previous availability for change detection
 			const previousAvailability = await this.storage.get<AvailabilityMatrix>('availability');
-			
+
 			// Update last seen availability timestamps
 			const updatedLastSeen = await this.updateLastSeenTimestamps(processedData.availability);
-			
+
 			// Store processed data
 			const updateTimestamp = new Date().toISOString();
 			await this.storage.put({
@@ -169,13 +169,12 @@ export class CloudStatusService {
 			});
 
 			// Return changes for handling by the main class
-			const changes = previousAvailability ? 
-				this.detectChanges(previousAvailability, processedData.availability, processedData.serverTypes, processedData.locations) : 
-				[];
+			const changes = previousAvailability
+				? this.detectChanges(previousAvailability, processedData.availability, processedData.serverTypes, processedData.locations)
+				: [];
 
 			console.log(`[CloudStatusService ${this.doId}] Data stored successfully at ${updateTimestamp}.`);
 			return changes;
-
 		} catch (error) {
 			console.error(`[CloudStatusService ${this.doId}] Error during fetch/update:`, error);
 			throw error;
@@ -238,10 +237,10 @@ export class CloudStatusService {
 	}
 
 	private async updateLastSeenTimestamps(availability: AvailabilityMatrix): Promise<LastSeenMatrix> {
-		const existingLastSeen = await this.storage.get<LastSeenMatrix>('lastSeenAvailable') || {};
+		const existingLastSeen = (await this.storage.get<LastSeenMatrix>('lastSeenAvailable')) || {};
 		const updatedLastSeen = { ...existingLastSeen };
 		const updateTimestamp = new Date().toISOString();
-		
+
 		let lastSeenUpdates = 0;
 		for (const [locationId, availableServerTypes] of Object.entries(availability)) {
 			for (const serverTypeId of availableServerTypes) {
@@ -250,7 +249,7 @@ export class CloudStatusService {
 				lastSeenUpdates++;
 			}
 		}
-		
+
 		console.log(`[CloudStatusService ${this.doId}] Updated ${lastSeenUpdates} last seen timestamps`);
 		return updatedLastSeen;
 	}

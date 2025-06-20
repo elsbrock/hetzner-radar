@@ -1,6 +1,6 @@
 /**
  * HTTP Router
- * 
+ *
  * Handles HTTP endpoints for the worker
  */
 
@@ -22,7 +22,7 @@ export class HttpRouter {
 		triggerAuctionImport: () => Promise<any>,
 		fetchIntervalMs: number,
 		auctionImportIntervalMs: number,
-		auctionApiUrl: string
+		auctionApiUrl: string,
 	) {
 		this.doId = doId;
 		this.storage = storage;
@@ -35,7 +35,7 @@ export class HttpRouter {
 
 	async handleRequest(request: Request): Promise<Response> {
 		const url = new URL(request.url);
-		
+
 		switch (url.pathname) {
 			// Legacy routes (maintained for compatibility)
 			case '/status':
@@ -44,19 +44,19 @@ export class HttpRouter {
 				return this.handleImportAuctions(request);
 			case '/debug':
 				return this.handleDebug(request, url.searchParams);
-			
+
 			// Cloud availability routes
 			case '/cloud/status':
 				return this.handleStatus(request);
 			case '/cloud/debug':
 				return this.handleCloudDebug(request, url.searchParams);
-			
+
 			// Auction import routes
 			case '/auction/import':
 				return this.handleImportAuctions(request);
 			case '/auction/debug':
 				return this.handleAuctionDebug(request, url.searchParams);
-			
+
 			default:
 				return this.handleNotFound();
 		}
@@ -86,24 +86,30 @@ export class HttpRouter {
 		try {
 			console.log(`[HttpRouter ${this.doId}] Manual auction import triggered`);
 			const result = await this.triggerAuctionImport();
-			
-			return new Response(JSON.stringify({ 
-				success: true, 
-				message: 'Auction import completed successfully',
-				...result
-			}), {
-				headers: { 'Content-Type': 'application/json' },
-			});
+
+			return new Response(
+				JSON.stringify({
+					success: true,
+					message: 'Auction import completed successfully',
+					...result,
+				}),
+				{
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		} catch (error: any) {
 			console.error(`[HttpRouter ${this.doId}] Manual auction import failed:`, error);
-			return new Response(JSON.stringify({ 
-				success: false, 
-				error: error?.error?.message || error?.message || String(error),
-				duration: error?.duration
-			}), { 
-				status: 500,
-				headers: { 'Content-Type': 'application/json' },
-			});
+			return new Response(
+				JSON.stringify({
+					success: false,
+					error: error?.error?.message || error?.message || String(error),
+					duration: error?.duration,
+				}),
+				{
+					status: 500,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		}
 	}
 
@@ -117,7 +123,7 @@ export class HttpRouter {
 			const lastAuctionImport = await this.storage.get<string>('lastAuctionImport');
 			const currentAlarm = await this.storage.getAlarm();
 			const verbose = params.get('verbose') === 'true';
-			
+
 			const debugInfo = {
 				doId: this.doId,
 				lastCloudUpdate: lastCloudUpdate || 'never',
@@ -125,11 +131,11 @@ export class HttpRouter {
 				nextAlarm: currentAlarm ? new Date(currentAlarm).toISOString() : 'none',
 				intervals: {
 					cloudStatus: `${this.fetchIntervalMs}ms (${Math.round(this.fetchIntervalMs / 60000)}min)`,
-					auctionImport: `${this.auctionImportIntervalMs}ms (${Math.round(this.auctionImportIntervalMs / 60000)}min)`
+					auctionImport: `${this.auctionImportIntervalMs}ms (${Math.round(this.auctionImportIntervalMs / 60000)}min)`,
 				},
 				auctionApiUrl: this.auctionApiUrl,
 				timestamp: new Date().toISOString(),
-				uptime: currentAlarm ? `Next scheduled: ${new Date(currentAlarm).toLocaleString()}` : 'No alarm set'
+				uptime: currentAlarm ? `Next scheduled: ${new Date(currentAlarm).toLocaleString()}` : 'No alarm set',
 			};
 
 			if (verbose) {
@@ -142,14 +148,21 @@ export class HttpRouter {
 			});
 		} catch (error) {
 			console.error(`[HttpRouter ${this.doId}] Debug endpoint error:`, error);
-			return new Response(JSON.stringify({ 
-				error: 'Error fetching debug info',
-				doId: this.doId,
-				timestamp: new Date().toISOString()
-			}, null, 2), { 
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return new Response(
+				JSON.stringify(
+					{
+						error: 'Error fetching debug info',
+						doId: this.doId,
+						timestamp: new Date().toISOString(),
+					},
+					null,
+					2,
+				),
+				{
+					status: 500,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		}
 	}
 
@@ -162,7 +175,7 @@ export class HttpRouter {
 			const lastCloudUpdate = await this.storage.get<string>('lastUpdated');
 			const currentAlarm = await this.storage.getAlarm();
 			const verbose = params.get('verbose') === 'true';
-			
+
 			const debugInfo = {
 				type: 'cloud-availability',
 				doId: this.doId,
@@ -170,7 +183,7 @@ export class HttpRouter {
 				nextAlarm: currentAlarm ? new Date(currentAlarm).toISOString() : 'none',
 				interval: `${this.fetchIntervalMs}ms (${Math.round(this.fetchIntervalMs / 60000)}min)`,
 				timestamp: new Date().toISOString(),
-				nextScheduled: currentAlarm ? new Date(currentAlarm).toLocaleString() : 'No alarm set'
+				nextScheduled: currentAlarm ? new Date(currentAlarm).toLocaleString() : 'No alarm set',
 			};
 
 			if (verbose) {
@@ -189,15 +202,22 @@ export class HttpRouter {
 			});
 		} catch (error) {
 			console.error(`[HttpRouter ${this.doId}] Cloud debug endpoint error:`, error);
-			return new Response(JSON.stringify({ 
-				error: 'Error fetching cloud debug info',
-				type: 'cloud-availability',
-				doId: this.doId,
-				timestamp: new Date().toISOString()
-			}, null, 2), { 
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return new Response(
+				JSON.stringify(
+					{
+						error: 'Error fetching cloud debug info',
+						type: 'cloud-availability',
+						doId: this.doId,
+						timestamp: new Date().toISOString(),
+					},
+					null,
+					2,
+				),
+				{
+					status: 500,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		}
 	}
 
@@ -210,7 +230,7 @@ export class HttpRouter {
 			const lastAuctionImport = await this.storage.get<string>('lastAuctionImport');
 			const currentAlarm = await this.storage.getAlarm();
 			const verbose = params.get('verbose') === 'true';
-			
+
 			const debugInfo = {
 				type: 'auction-import',
 				doId: this.doId,
@@ -219,7 +239,7 @@ export class HttpRouter {
 				interval: `${this.auctionImportIntervalMs}ms (${Math.round(this.auctionImportIntervalMs / 60000)}min)`,
 				auctionApiUrl: this.auctionApiUrl,
 				timestamp: new Date().toISOString(),
-				nextScheduled: currentAlarm ? new Date(currentAlarm).toLocaleString() : 'No alarm set'
+				nextScheduled: currentAlarm ? new Date(currentAlarm).toLocaleString() : 'No alarm set',
 			};
 
 			if (verbose) {
@@ -238,15 +258,22 @@ export class HttpRouter {
 			});
 		} catch (error) {
 			console.error(`[HttpRouter ${this.doId}] Auction debug endpoint error:`, error);
-			return new Response(JSON.stringify({ 
-				error: 'Error fetching auction debug info',
-				type: 'auction-import',
-				doId: this.doId,
-				timestamp: new Date().toISOString()
-			}, null, 2), { 
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return new Response(
+				JSON.stringify(
+					{
+						error: 'Error fetching auction debug info',
+						type: 'auction-import',
+						doId: this.doId,
+						timestamp: new Date().toISOString(),
+					},
+					null,
+					2,
+				),
+				{
+					status: 500,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		}
 	}
 
@@ -274,8 +301,8 @@ Examples for local development:
 - curl http://localhost:8787/cloud/status
 - curl http://localhost:8787/cloud/debug?verbose=true
 - curl -X POST http://localhost:8787/auction/import
-- curl http://localhost:8787/auction/debug`, 
-			{ status: 404 }
+- curl http://localhost:8787/auction/debug`,
+			{ status: 404 },
 		);
 	}
 }

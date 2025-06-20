@@ -1,16 +1,16 @@
-import { getData } from "$lib/api/frontend/dbapi";
-import { type ServerConfiguration } from "$lib/api/frontend/filter";
-import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
-import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
-import SQL from "sql-template-strings";
+import { getData } from '$lib/api/frontend/dbapi';
+import { type ServerConfiguration } from '$lib/api/frontend/filter';
+import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
+import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
+import SQL from 'sql-template-strings';
 
 export async function getCheapestConfigurations(
-  conn: AsyncDuckDBConnection,
+	conn: AsyncDuckDBConnection
 ): Promise<ServerConfiguration[]> {
-  return (
-    await getData<ServerConfiguration>(
-      conn,
-      SQL`
+	return (
+		await getData<ServerConfiguration>(
+			conn,
+			SQL`
 		WITH latest_configs AS (
 				SELECT DISTINCT ON (cpu)
 						-- Exclude the specified columns
@@ -33,23 +33,23 @@ export async function getCheapestConfigurations(
 		FROM latest_configs
 		ORDER BY price ASC
 		LIMIT 4;
-	`,
-    )
-  ).map((d: ServerConfiguration) => {
-    d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
-    d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
-    d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
-    return d;
-  });
+	`
+		)
+	).map((d: ServerConfiguration) => {
+		d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
+		d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
+		d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+		return d;
+	});
 }
 
 export async function getCheapestDiskConfigurations(
-  conn: AsyncDuckDBConnection,
+	conn: AsyncDuckDBConnection
 ): Promise<ServerConfiguration[]> {
-  return (
-    await getData<ServerConfiguration>(
-      conn,
-      SQL`
+	return (
+		await getData<ServerConfiguration>(
+			conn,
+			SQL`
 		WITH latest_configs AS (
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
@@ -72,23 +72,23 @@ export async function getCheapestDiskConfigurations(
 		FROM latest_configs
 		ORDER BY (price / hdd_size) ASC
 		LIMIT 4;
-	`,
-    )
-  ).map((d: ServerConfiguration) => {
-    d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
-    d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
-    d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
-    return d;
-  });
+	`
+		)
+	).map((d: ServerConfiguration) => {
+		d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
+		d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
+		d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+		return d;
+	});
 }
 
 export async function getCheapestRamConfigurations(
-  conn: AsyncDuckDBConnection,
+	conn: AsyncDuckDBConnection
 ): Promise<ServerConfiguration[]> {
-  return (
-    await getData<ServerConfiguration>(
-      conn,
-      SQL`
+	return (
+		await getData<ServerConfiguration>(
+			conn,
+			SQL`
 		WITH latest_configs AS (
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
@@ -111,23 +111,23 @@ export async function getCheapestRamConfigurations(
 		FROM latest_configs
 		ORDER BY (price / ram_size) ASC
 		LIMIT 4;
-	`,
-    )
-  ).map((d: ServerConfiguration) => {
-    d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
-    d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
-    d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
-    return d;
-  });
+	`
+		)
+	).map((d: ServerConfiguration) => {
+		d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
+		d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
+		d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+		return d;
+	});
 }
 
 export async function getCheapestNvmeConfigurations(
-  conn: AsyncDuckDBConnection,
+	conn: AsyncDuckDBConnection
 ): Promise<ServerConfiguration[]> {
-  return (
-    await getData<ServerConfiguration>(
-      conn,
-      SQL`
+	return (
+		await getData<ServerConfiguration>(
+			conn,
+			SQL`
 		WITH latest_configs AS (
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
@@ -152,23 +152,23 @@ export async function getCheapestNvmeConfigurations(
 		-- Order by price per GB of NVMe storage
 		ORDER BY (price / NULLIF(nvme_size, 0)) ASC
 		LIMIT 4;
-	`,
-    )
-  ).map((d: ServerConfiguration) => {
-    d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
-    d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
-    d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
-    return d;
-  });
+	`
+		)
+	).map((d: ServerConfiguration) => {
+		d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
+		d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
+		d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+		return d;
+	});
 }
 
 export async function getCheapestSataConfigurations(
-  conn: AsyncDuckDBConnection,
+	conn: AsyncDuckDBConnection
 ): Promise<ServerConfiguration[]> {
-  return (
-    await getData<ServerConfiguration>(
-      conn,
-      SQL`
+	return (
+		await getData<ServerConfiguration>(
+			conn,
+			SQL`
 		WITH latest_configs AS (
 				SELECT DISTINCT ON (cpu)
 						-- Exclude specified columns
@@ -193,12 +193,12 @@ export async function getCheapestSataConfigurations(
 		-- Order by price per GB of SATA storage
 		ORDER BY (price / NULLIF(sata_size, 0)) ASC
 		LIMIT 4;
-	`,
-    )
-  ).map((d: ServerConfiguration) => {
-    d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
-    d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
-    d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
-    return d;
-  });
+	`
+		)
+	).map((d: ServerConfiguration) => {
+		d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
+		d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
+		d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+		return d;
+	});
 }

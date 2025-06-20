@@ -56,6 +56,7 @@ As part of our transition to a backend-only architecture, we're implementing a d
 - **`current_auctions` table**: Maintains the current state of all active auctions (one row per auction). This table is continuously updated with the latest auction data, regardless of whether prices have changed.
 
 This backend storage approach significantly reduces D1 database reads by:
+
 - **Alert matching**: Queries run against the smaller `current_auctions` table (~100K records) instead of the full historical dataset (~1M+ records)
 - **Deduplication**: Eliminates storage of unchanged auction data, reducing both storage costs and query complexity
 - **Optimized indexing**: The `current_auctions` table has specialized indices for efficient alert matching
@@ -65,6 +66,7 @@ Auction data is imported every 5 minutes from Hetzner's API directly by our Clou
 ## Development
 
 To set up your development environment, you'll need:
+
 - Python 3 for data ingestion
 - Node.js 18+ for running the website
 - Wrangler CLI for running Cloudflare Workers locally

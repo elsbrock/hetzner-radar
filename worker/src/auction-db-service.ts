@@ -1,6 +1,6 @@
 /**
  * Auction Database Service
- * 
+ *
  * Handles database operations for auction data
  * Based on the logic from src/lib/api/backend/alerts-push.ts
  */
@@ -28,7 +28,7 @@ export class AuctionDatabaseService {
 	 */
 	async storeAuctionData(configs: RawServerData[]): Promise<DatabaseStats> {
 		console.log(`[AuctionDatabaseService] Processing ${configs.length} auction records`);
-		
+
 		const stats: DatabaseStats = {
 			processed: 0,
 			newAuctions: 0,
@@ -43,22 +43,21 @@ export class AuctionDatabaseService {
 		try {
 			// Get current prices and last_changed timestamps
 			const currentStates = await this.getCurrentAuctionStates(configs);
-			
+
 			// Update latest batch time
 			await this.updateLatestBatch();
-			
+
 			// Prepare statements for batch processing
 			const statements = await this.prepareStatements(configs, currentStates, stats);
-			
+
 			// Execute all statements in batch
 			console.log(`[AuctionDatabaseService] Executing ${statements.length} database statements`);
 			await this.db.batch(statements);
-			
+
 			stats.processed = configs.length;
 			console.log(`[AuctionDatabaseService] Successfully processed ${stats.processed} records`, stats);
-			
+
 			return stats;
-			
 		} catch (error) {
 			console.error('[AuctionDatabaseService] Failed to store auction data:', error);
 			stats.errors = configs.length;
@@ -72,28 +71,28 @@ export class AuctionDatabaseService {
 	private async getCurrentAuctionStates(configs: RawServerData[]): Promise<Map<number, { price: number; last_changed: string }>> {
 		const currentStates = new Map<number, { price: number; last_changed: string }>();
 		const chunkSize = 100; // SQLite has a default limit of 999 variables
-		
+
 		for (let i = 0; i < configs.length; i += chunkSize) {
 			const chunk = configs.slice(i, i + chunkSize);
 			if (chunk.length === 0) continue;
-			
+
 			const query = `
 				SELECT id, price, last_changed
 				FROM current_auctions
 				WHERE id IN (${chunk.map(() => '?').join(',')})
 			`;
-			
+
 			const stmt = this.db.prepare(query);
-			const results = await stmt.bind(...chunk.map(c => c.id)).all();
-			
+			const results = await stmt.bind(...chunk.map((c) => c.id)).all();
+
 			for (const row of results.results) {
 				currentStates.set(row.id as number, {
 					price: row.price as number,
-					last_changed: row.last_changed as string
+					last_changed: row.last_changed as string,
 				});
 			}
 		}
-		
+
 		console.log(`[AuctionDatabaseService] Found ${currentStates.size} existing auction states`);
 		return currentStates;
 	}
@@ -115,10 +114,10 @@ export class AuctionDatabaseService {
 	private async prepareStatements(
 		configs: RawServerData[],
 		currentStates: Map<number, { price: number; last_changed: string }>,
-		stats: DatabaseStats
+		stats: DatabaseStats,
 	): Promise<D1PreparedStatement[]> {
 		const statements: D1PreparedStatement[] = [];
-		
+
 		// Prepare statements
 		const auctionInsertSql = `
 			INSERT OR IGNORE INTO auctions (
@@ -143,18 +142,60 @@ export class AuctionDatabaseService {
 
 		for (const config of configs) {
 			const currentState = currentStates.get(config.id);
-			
+
 			// Check if this is a new auction or if price has changed
 			const isNew = currentState === undefined;
 			const priceChanged = currentState !== undefined && currentState.price !== config.price;
-			
+
 			if (isNew) stats.newAuctions++;
 			if (priceChanged) stats.priceChanges++;
-			
+
 			// Only insert into auctions table if new or price changed
 			if (isNew || priceChanged) {
 				const auctionStmt = this.db.prepare(auctionInsertSql);
-				statements.push(auctionStmt.bind(
+				statements.push(
+					auctionStmt.bind(
+						config.id,
+						config.information,
+						config.datacenter,
+						config.location,
+						config.cpu_vendor,
+						config.cpu,
+						config.cpu_count,
+						config.is_highio,
+						config.ram,
+						config.ram_size ?? 0,
+						config.is_ecc,
+						config.hdd_arr,
+						config.nvme_count ?? 0,
+						config.nvme_drives,
+						config.nvme_size ?? 0,
+						config.sata_count ?? 0,
+						config.sata_drives,
+						config.sata_size ?? 0,
+						config.hdd_count ?? 0,
+						config.hdd_drives,
+						config.hdd_size ?? 0,
+						config.with_inic,
+						config.with_hwr,
+						config.with_gpu,
+						config.with_rps,
+						config.traffic,
+						config.bandwidth ?? 0,
+						config.price,
+						config.fixed_price,
+						config.seen,
+					),
+				);
+			}
+
+			// Determine last_changed timestamp
+			const lastChanged = isNew || priceChanged ? config.seen : currentState?.last_changed || config.seen;
+
+			// Always update current_auctions
+			const currentStmt = this.db.prepare(currentAuctionUpsertSql);
+			statements.push(
+				currentStmt.bind(
 					config.id,
 					config.information,
 					config.datacenter,
@@ -184,54 +225,16 @@ export class AuctionDatabaseService {
 					config.bandwidth ?? 0,
 					config.price,
 					config.fixed_price,
-					config.seen
-				));
-			}
-			
-			// Determine last_changed timestamp
-			const lastChanged = (isNew || priceChanged) 
-				? config.seen 
-				: (currentState?.last_changed || config.seen);
-			
-			// Always update current_auctions
-			const currentStmt = this.db.prepare(currentAuctionUpsertSql);
-			statements.push(currentStmt.bind(
-				config.id,
-				config.information,
-				config.datacenter,
-				config.location,
-				config.cpu_vendor,
-				config.cpu,
-				config.cpu_count,
-				config.is_highio,
-				config.ram,
-				config.ram_size ?? 0,
-				config.is_ecc,
-				config.hdd_arr,
-				config.nvme_count ?? 0,
-				config.nvme_drives,
-				config.nvme_size ?? 0,
-				config.sata_count ?? 0,
-				config.sata_drives,
-				config.sata_size ?? 0,
-				config.hdd_count ?? 0,
-				config.hdd_drives,
-				config.hdd_size ?? 0,
-				config.with_inic,
-				config.with_hwr,
-				config.with_gpu,
-				config.with_rps,
-				config.traffic,
-				config.bandwidth ?? 0,
-				config.price,
-				config.fixed_price,
-				config.seen,
-				lastChanged,
-				config.id // for the WHERE clause in created_at subquery
-			));
+					config.seen,
+					lastChanged,
+					config.id, // for the WHERE clause in created_at subquery
+				),
+			);
 		}
 
-		console.log(`[AuctionDatabaseService] Prepared ${statements.length} statements: ${stats.newAuctions} new, ${stats.priceChanges} price changes`);
+		console.log(
+			`[AuctionDatabaseService] Prepared ${statements.length} statements: ${stats.newAuctions} new, ${stats.priceChanges} price changes`,
+		);
 		return statements;
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * Cloud Availability Durable Object
- * 
+ *
  * Handles Hetzner Cloud server availability tracking
  */
 
@@ -63,9 +63,10 @@ export class CloudAvailabilityDO extends DurableObject {
 
 			// Trigger initial fetch if needed
 			if (!lastUpdated) {
-				this.fetchCloudStatus().catch((err) => console.error(`[CloudAvailabilityDO ${this.ctx.id}] Initial cloud status fetch failed:`, err));
+				this.fetchCloudStatus().catch((err) =>
+					console.error(`[CloudAvailabilityDO ${this.ctx.id}] Initial cloud status fetch failed:`, err),
+				);
 			}
-
 		} catch (err) {
 			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Initialization check failed:`, err);
 		} finally {
@@ -75,7 +76,7 @@ export class CloudAvailabilityDO extends DurableObject {
 
 	async alarm(): Promise<void> {
 		console.log(`[CloudAvailabilityDO ${this.ctx.id}] Alarm triggered for cloud status update...`);
-		
+
 		try {
 			await this.fetchCloudStatus();
 		} catch (error) {

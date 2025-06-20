@@ -1,6 +1,6 @@
 /**
  * Auction Service
- * 
+ *
  * Handles Hetzner auction data import
  */
 
@@ -37,7 +37,7 @@ export class AuctionService {
 			const dbService = new AuctionDatabaseService(this.db);
 
 			console.log(`[AuctionService ${this.doId}] Fetching auction data from: ${this.auctionApiUrl}`);
-			
+
 			// Fetch raw auction data
 			const rawServers = await auctionClient.fetchAuctionData();
 			console.log(`[AuctionService ${this.doId}] Fetched ${rawServers.length} auction records`);
@@ -76,7 +76,6 @@ export class AuctionService {
 			});
 
 			return { ...stats, duration, fetched: rawServers.length, transformed: transformedServers.length, valid: valid.length, invalid };
-
 		} catch (error) {
 			const duration = Date.now() - startTime;
 			console.error(`[AuctionService ${this.doId}] Auction import failed after ${duration}ms:`, error);

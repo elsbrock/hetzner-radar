@@ -1,6 +1,6 @@
 /**
  * Auction Import Durable Object
- * 
+ *
  * Handles Hetzner auction data import
  */
 
@@ -36,7 +36,9 @@ export class AuctionImportDO extends DurableObject {
 
 		this.ctx = ctx;
 		this.env = env;
-		this.auctionImportIntervalMs = env.AUCTION_IMPORT_INTERVAL_MS ? parseInt(env.AUCTION_IMPORT_INTERVAL_MS) : DEFAULT_AUCTION_IMPORT_INTERVAL_MS;
+		this.auctionImportIntervalMs = env.AUCTION_IMPORT_INTERVAL_MS
+			? parseInt(env.AUCTION_IMPORT_INTERVAL_MS)
+			: DEFAULT_AUCTION_IMPORT_INTERVAL_MS;
 		this.hetznerAuctionApiUrl = env.HETZNER_AUCTION_API_URL || DEFAULT_HETZNER_AUCTION_API_URL;
 
 		// Initialize services
@@ -69,7 +71,6 @@ export class AuctionImportDO extends DurableObject {
 			if (!lastAuctionImport) {
 				this.fetchAuctions().catch((err) => console.error(`[AuctionImportDO ${this.ctx.id}] Initial auction import failed:`, err));
 			}
-
 		} catch (err) {
 			console.error(`[AuctionImportDO ${this.ctx.id}] Initialization check failed:`, err);
 		} finally {
@@ -79,7 +80,7 @@ export class AuctionImportDO extends DurableObject {
 
 	async alarm(): Promise<void> {
 		console.log(`[AuctionImportDO ${this.ctx.id}] Alarm triggered for auction import...`);
-		
+
 		try {
 			await this.fetchAuctions();
 		} catch (error) {
@@ -99,7 +100,7 @@ export class AuctionImportDO extends DurableObject {
 	async getAuctionStats() {
 		try {
 			await this.ensureInitialized();
-			
+
 			if (!this.env.DB) {
 				throw new Error('D1 database is not configured.');
 			}

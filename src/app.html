@@ -1,53 +1,47 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Server Radar – Find Best Deals on Hetzner Dedicated Servers</title>
-    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Script to prevent theme flicker using localStorage -->
-    <script>
-      (function () {
-        let theme = "light"; // Default theme
-        try {
-          const settingsString = localStorage.getItem("sr-settings");
-          if (settingsString) {
-            const settings = JSON.parse(settingsString);
-            // Use stored theme if available
-            if (settings && typeof settings.theme === "string") {
-              theme = settings.theme;
-            } else {
-              // Fallback to system preference if theme not in settings
-              theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light";
-            }
-          } else {
-            // Fallback to system preference if no settings stored
-            theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-          }
-        } catch (e) {
-          console.error("Error reading theme from localStorage", e);
-          // Fallback to system preference on error
-          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-        }
+	<head>
+		<meta charset="utf-8" />
+		<title>Server Radar – Find Best Deals on Hetzner Dedicated Servers</title>
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Script to prevent theme flicker using localStorage -->
+		<script>
+			(function () {
+				let theme = 'light'; // Default theme
+				try {
+					const settingsString = localStorage.getItem('sr-settings');
+					if (settingsString) {
+						const settings = JSON.parse(settingsString);
+						// Use stored theme if available
+						if (settings && typeof settings.theme === 'string') {
+							theme = settings.theme;
+						} else {
+							// Fallback to system preference if theme not in settings
+							theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+						}
+					} else {
+						// Fallback to system preference if no settings stored
+						theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+					}
+				} catch (e) {
+					console.error('Error reading theme from localStorage', e);
+					// Fallback to system preference on error
+					theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				}
 
-        // Apply the 'dark' class to the <html> element if needed
-        if (theme === "dark") {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark"); // Ensure it's removed if light
-        }
-      })();
-    </script>
-    <!-- End script -->
-    %sveltekit.head%
-  </head>
-  <body data-sveltekit-preload-data="hover" class="bg-gray-50 dark:bg-gray-900">
-    <div style="display: contents">%sveltekit.body%</div>
-  </body>
+				// Apply the 'dark' class to the <html> element if needed
+				if (theme === 'dark') {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark'); // Ensure it's removed if light
+				}
+			})();
+		</script>
+		<!-- End script -->
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover" class="bg-gray-50 dark:bg-gray-900">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
 </html>

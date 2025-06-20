@@ -1,79 +1,79 @@
 {
-  "name": "server-radar",
-  "main": ".svelte-kit/cloudflare/_worker.js",
-  "compatibility_date": "2024-11-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1,
-  },
-  "assets": {
-    "binding": "ASSETS",
-    "directory": ".svelte-kit/cloudflare",
-  },
-  "placement": {
-    "mode": "off",
-  },
-  "d1_databases": [
-    {
-      "database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
-      "preview_database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
-      "binding": "DB",
-      "database_name": "DB",
-    },
-  ],
-  "services": [
-    {
-      "binding": "RADAR_WORKER",
-      "service": "cloud-availability"
-    }
-  ],
-  "unsafe": {
-    "bindings": [
-      {
-        "name": "RATE_LIMIT",
-        "type": "ratelimit",
-        "namespace_id": "1001",
-        "simple": {
-          "limit": 3,
-          "period": 60,
-        },
-      },
-    ],
-  },
-  "env": {
-    "production": {
-      "compatibility_date": "2024-09-23",
-      "placement": {
-        "mode": "smart",
-      },
-      "vars": {
-        "NODE_VERSION": "22",
-      },
-      "d1_databases": [
-        {
-          "database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
-          "binding": "DB",
-          "database_name": "DB",
-        },
-      ],
-    },
-    "preview": {
-      "compatibility_date": "2024-09-23",
-      "compatibility_flags": ["nodejs_compat"],
-      "placement": {
-        "mode": "smart",
-      },
-      "vars": {
-        "NODE_VERSION": "22",
-      },
-      "d1_databases": [
-        {
-          "database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
-          "binding": "DB",
-          "database_name": "DB",
-        },
-      ],
-    },
-  },
+	"name": "server-radar",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2024-11-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	},
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"placement": {
+		"mode": "off"
+	},
+	"d1_databases": [
+		{
+			"database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
+			"preview_database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
+			"binding": "DB",
+			"database_name": "DB"
+		}
+	],
+	"services": [
+		{
+			"binding": "RADAR_WORKER",
+			"service": "cloud-availability"
+		}
+	],
+	"unsafe": {
+		"bindings": [
+			{
+				"name": "RATE_LIMIT",
+				"type": "ratelimit",
+				"namespace_id": "1001",
+				"simple": {
+					"limit": 3,
+					"period": 60
+				}
+			}
+		]
+	},
+	"env": {
+		"production": {
+			"compatibility_date": "2024-09-23",
+			"placement": {
+				"mode": "smart"
+			},
+			"vars": {
+				"NODE_VERSION": "22"
+			},
+			"d1_databases": [
+				{
+					"database_id": "1138185b-a1aa-4d0b-96f8-7e1388b91a2a",
+					"binding": "DB",
+					"database_name": "DB"
+				}
+			]
+		},
+		"preview": {
+			"compatibility_date": "2024-09-23",
+			"compatibility_flags": ["nodejs_compat"],
+			"placement": {
+				"mode": "smart"
+			},
+			"vars": {
+				"NODE_VERSION": "22"
+			},
+			"d1_databases": [
+				{
+					"database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
+					"binding": "DB",
+					"database_name": "DB"
+				}
+			]
+		}
+	}
 }
