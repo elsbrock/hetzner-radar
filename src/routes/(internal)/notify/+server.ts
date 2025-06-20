@@ -1,3 +1,16 @@
+/**
+ * DEPRECATED: This notify endpoint is deprecated in favor of worker-based cloud alert processing.
+ *
+ * Cloud alert processing has been moved to the Cloudflare Worker (CloudAvailabilityDO) for:
+ * - Better performance and reliability
+ * - Automatic processing during cloud status checks
+ * - Modular notification system with fallback logic
+ * - Easier testing and maintenance
+ *
+ * This endpoint is kept temporarily for backward compatibility and may be removed
+ * in a future version. New cloud alert logic should be implemented in the worker.
+ */
+
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { dev } from '$app/environment';
@@ -20,6 +33,11 @@ interface AvailabilityChange {
 }
 
 export const POST: RequestHandler = async ({ request, platform }) => {
+	// Log deprecation warning
+	console.warn(
+		'[DEPRECATED] Notify endpoint is deprecated - cloud alert processing moved to worker'
+	);
+
 	// Verify API key
 	const authKey = request.headers.get('x-auth-key');
 	if (!dev && (!authKey || authKey !== env.API_KEY)) {

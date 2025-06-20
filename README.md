@@ -89,6 +89,26 @@ The alert system has been redesigned with a worker-based architecture for improv
 
 The legacy push endpoint (`/api/push`) is deprecated but maintained temporarily for backward compatibility. All new alert processing happens automatically in the worker during auction imports.
 
+### Cloud Alert Processing Architecture
+
+Cloud availability alerts use the same worker-based architecture for consistent performance and reliability:
+
+**Cloud Alert Processing Flow:**
+
+1. **Status Monitoring**: CloudAvailabilityDO checks Hetzner Cloud API every 60 seconds
+2. **Change Detection**: Compares current availability with previous state
+3. **Alert Matching**: Matches availability changes against user-defined cloud alerts
+4. **Notification Dispatch**: Multi-channel notifications with the same fallback logic
+
+**Integration Benefits:**
+
+- **Unified Architecture**: Both auction and cloud alerts use same notification channels
+- **Real-time Processing**: Cloud alerts process immediately when availability changes
+- **Shared Infrastructure**: Email and Discord channels reused across alert types
+- **Consistent Behavior**: Same fallback logic and error handling patterns
+
+The legacy notify endpoint (`/api/notify`) is deprecated but maintained temporarily for backward compatibility. All new cloud alert processing happens automatically in the worker during cloud status updates.
+
 ## Development
 
 To set up your development environment, you'll need:
