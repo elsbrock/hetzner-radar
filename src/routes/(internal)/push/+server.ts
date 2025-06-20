@@ -1,3 +1,16 @@
+/**
+ * DEPRECATED: This push endpoint is deprecated in favor of worker-based alert processing.
+ *
+ * Alert processing has been moved to the Cloudflare Worker (AuctionImportDO) for:
+ * - Better performance and reliability
+ * - Automatic processing during auction imports
+ * - Modular notification system
+ * - Easier testing and maintenance
+ *
+ * This endpoint is kept temporarily for backward compatibility and may be removed
+ * in a future version. New alert logic should be implemented in the worker.
+ */
+
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from '@sveltejs/kit';
@@ -51,6 +64,9 @@ function validateRequest(request: Request): {
 export const POST: RequestHandler = async (event) => {
 	const start = performance.now();
 	const request = event.request;
+
+	// Log deprecation warning
+	console.warn('[DEPRECATED] Push endpoint is deprecated - alert processing moved to worker');
 
 	// Validate the request
 	const validation = validateRequest(request);

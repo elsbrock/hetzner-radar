@@ -63,6 +63,32 @@ This backend storage approach significantly reduces D1 database reads by:
 
 Auction data is imported every 5 minutes from Hetzner's API directly by our Cloudflare Worker (AuctionImportDO), with only price changes and new listings being stored in the historical `auctions` table, while all current states are refreshed in `current_auctions`. This backend storage complements the existing client-side DuckDB approach during the architectural transition.
 
+### Alert Processing Architecture
+
+The alert system has been redesigned with a worker-based architecture for improved reliability and performance:
+
+**Alert Processing Flow:**
+
+1. **Auction Import**: The AuctionImportDO worker fetches new auction data every 5 minutes
+2. **Change Detection**: Only processes alerts when auction data changes (new listings or price changes)
+3. **Alert Matching**: Complex SQL-based matching against user-defined filter criteria
+4. **Notification Dispatch**: Multi-channel notifications with fallback logic
+
+**Notification Channels:**
+
+- **Email**: Primary notification method using ForwardEmail API
+- **Discord**: Optional webhook-based notifications with rich embeds
+- **Extensible Design**: Channel-based architecture allows easy addition of new notification methods (SMS, Slack, etc.)
+
+**Key Features:**
+
+- **Fallback Logic**: If Discord notifications fail, falls back to email
+- **Atomic Processing**: Alert deletion and history storage happen in database transactions
+- **Performance Optimized**: Parallel processing of multiple alerts
+- **Comprehensive Logging**: Full audit trail for debugging and monitoring
+
+The legacy push endpoint (`/api/push`) is deprecated but maintained temporarily for backward compatibility. All new alert processing happens automatically in the worker during auction imports.
+
 ## Development
 
 To set up your development environment, you'll need:
@@ -110,6 +136,8 @@ The cloud availability service tracks Hetzner Cloud server availability. To run 
 HETZNER_API_TOKEN=your_hetzner_api_token_here
 # this is an internal API key used when notifying the backend
 API_KEY=your_api_key_here
+# API key for ForwardEmail service (for alert notifications)
+FORWARDEMAIL_API_KEY=your_forwardemail_api_key_here
 ```
 
 2. Install dependencies for the cloud availability worker:

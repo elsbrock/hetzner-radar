@@ -7,6 +7,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import { AuctionService } from './auction-service';
 import { NotificationService } from './notification-service';
+import { AlertService } from './alert-service';
+import { AlertNotificationService } from './notifications/alert-notification-service';
 
 interface AuctionImportEnv {
 	DB: D1Database;
@@ -15,6 +17,7 @@ interface AuctionImportEnv {
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
 	MAIN_APP_URL?: string;
 	API_KEY?: string;
+	FORWARDEMAIL_API_KEY?: string;
 }
 
 const DEFAULT_AUCTION_IMPORT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -30,6 +33,8 @@ export class AuctionImportDO extends DurableObject {
 	// Services
 	private auctionService: AuctionService;
 	private notificationService: NotificationService;
+	private alertService: AlertService;
+	private alertNotificationService: AlertNotificationService;
 
 	constructor(ctx: DurableObjectState, env: AuctionImportEnv) {
 		super(ctx, env);
@@ -44,6 +49,24 @@ export class AuctionImportDO extends DurableObject {
 		// Initialize services
 		this.auctionService = new AuctionService(this.hetznerAuctionApiUrl, env.DB, ctx.storage, ctx.id.toString());
 		this.notificationService = new NotificationService(ctx.storage, ctx.id.toString(), env.ANALYTICS_ENGINE, env.MAIN_APP_URL, env.API_KEY);
+
+		// Initialize alert notification service
+		this.alertNotificationService = new AlertNotificationService({
+			email: env.FORWARDEMAIL_API_KEY
+				? {
+						apiKey: env.FORWARDEMAIL_API_KEY,
+						fromName: 'Server Radar',
+						fromEmail: 'no-reply@radar.iodev.org',
+					}
+				: undefined,
+		});
+
+		// Initialize alert service
+		this.alertService = new AlertService({
+			db: env.DB,
+			notificationService: this.alertNotificationService,
+			doId: ctx.id.toString(),
+		});
 
 		this.logEnvironmentInfo();
 	}
@@ -124,13 +147,47 @@ export class AuctionImportDO extends DurableObject {
 	}
 
 	private async fetchAuctions(): Promise<void> {
+		const startTime = Date.now();
+		let auctionImportResult: any = null;
+		let alertProcessingResult: any[] = [];
+
 		try {
-			const result = await this.auctionService.fetchAndImportAuctions();
-			console.log(`[AuctionImportDO ${this.ctx.id}] Auction import completed:`, result);
-			await this.notificationService.writeImportAnalytics(true, result, result.duration);
+			// Import auction data
+			auctionImportResult = await this.auctionService.fetchAndImportAuctions();
+			console.log(`[AuctionImportDO ${this.ctx.id}] Auction import completed:`, auctionImportResult);
+
+			// Process alerts if auction import was successful
+			if (auctionImportResult && (auctionImportResult.newAuctions > 0 || auctionImportResult.priceChanges > 0)) {
+				console.log(`[AuctionImportDO ${this.ctx.id}] Processing alerts after auction changes...`);
+				alertProcessingResult = await this.alertService.processAlerts();
+
+				const successfulAlerts = alertProcessingResult.filter((a) => a.success).length;
+				const totalNotifications = alertProcessingResult.reduce((sum, a) => sum + a.notifications, 0);
+
+				console.log(
+					`[AuctionImportDO ${this.ctx.id}] Alert processing completed: ${successfulAlerts}/${alertProcessingResult.length} alerts processed, ${totalNotifications} notifications sent`,
+				);
+			} else {
+				console.log(`[AuctionImportDO ${this.ctx.id}] No auction changes detected, skipping alert processing`);
+			}
+
+			// Write analytics for successful import
+			const duration = Date.now() - startTime;
+			await this.notificationService.writeImportAnalytics(
+				true,
+				{
+					...auctionImportResult,
+					alertsProcessed: alertProcessingResult.length,
+					alertsSuccessful: alertProcessingResult.filter((a) => a.success).length,
+					notificationsSent: alertProcessingResult.reduce((sum, a) => sum + a.notifications, 0),
+				},
+				duration,
+			);
 		} catch (error: any) {
-			console.error(`[AuctionImportDO ${this.ctx.id}] Failed to import auctions:`, error);
-			await this.notificationService.writeImportAnalytics(false, undefined, error?.error?.message || error?.message);
+			const duration = Date.now() - startTime;
+			console.error(`[AuctionImportDO ${this.ctx.id}] Failed during auction import/alert processing:`, error);
+
+			await this.notificationService.writeImportAnalytics(false, undefined, duration, error?.message || 'Unknown error');
 			throw error;
 		}
 	}
@@ -143,5 +200,7 @@ export class AuctionImportDO extends DurableObject {
 		console.log(`  - HETZNER_AUCTION_API_URL: ${this.hetznerAuctionApiUrl}`);
 		console.log(`  - MAIN_APP_URL: ${this.env.MAIN_APP_URL ? `Present (${this.env.MAIN_APP_URL})` : 'MISSING'}`);
 		console.log(`  - API_KEY: ${this.env.API_KEY ? 'Present' : 'MISSING'}`);
+		console.log(`  - FORWARDEMAIL_API_KEY: ${this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING'}`);
+		console.log(`  - Alert notification channels: ${this.alertNotificationService.getChannels().join(', ')}`);
 	}
 }
