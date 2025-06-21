@@ -24,7 +24,7 @@ export class AuctionDatabaseService {
 	/**
 	 * Processes and stores auction data with dual table architecture
 	 * - Only inserts into auctions table if price has changed (deduplication)
-	 * - Always updates current_auctions table with latest state
+	 * - Truncates and repopulates current_auctions table with latest state
 	 */
 	async storeAuctionData(configs: RawServerData[]): Promise<DatabaseStats> {
 		console.log(`[AuctionDatabaseService] Processing ${configs.length} auction records`);
@@ -41,11 +41,15 @@ export class AuctionDatabaseService {
 		}
 
 		try {
-			// Get current prices and last_changed timestamps
+			// Get current prices and last_changed timestamps before truncating
 			const currentStates = await this.getCurrentAuctionStates(configs);
 
 			// Update latest batch time
 			await this.updateLatestBatch();
+
+			// Truncate current_auctions table
+			console.log('[AuctionDatabaseService] Truncating current_auctions table');
+			await this.db.prepare('DELETE FROM current_auctions').run();
 
 			// Prepare statements for batch processing
 			const statements = await this.prepareStatements(configs, currentStates, stats);
@@ -129,15 +133,14 @@ export class AuctionDatabaseService {
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
-		const currentAuctionUpsertSql = `
-			INSERT OR REPLACE INTO current_auctions (
+		const currentAuctionInsertSql = `
+			INSERT INTO current_auctions (
 				id, information, datacenter, location, cpu_vendor, cpu, cpu_count, is_highio,
 				ram, ram_size, is_ecc, hdd_arr, nvme_count, nvme_drives, nvme_size,
 				sata_count, sata_drives, sata_size, hdd_count, hdd_drives, hdd_size,
 				with_inic, with_hwr, with_gpu, with_rps, traffic, bandwidth, price,
 				fixed_price, seen, last_changed, created_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-					COALESCE((SELECT created_at FROM current_auctions WHERE id = ?), datetime('now')))
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
 		`;
 
 		for (const config of configs) {
@@ -192,8 +195,8 @@ export class AuctionDatabaseService {
 			// Determine last_changed timestamp
 			const lastChanged = isNew || priceChanged ? config.seen : currentState?.last_changed || config.seen;
 
-			// Always update current_auctions
-			const currentStmt = this.db.prepare(currentAuctionUpsertSql);
+			// Always insert into current_auctions (table was truncated)
+			const currentStmt = this.db.prepare(currentAuctionInsertSql);
 			statements.push(
 				currentStmt.bind(
 					config.id,
@@ -227,7 +230,6 @@ export class AuctionDatabaseService {
 					config.fixed_price,
 					config.seen,
 					lastChanged,
-					config.id, // for the WHERE clause in created_at subquery
 				),
 			);
 		}
