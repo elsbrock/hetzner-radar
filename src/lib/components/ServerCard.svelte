@@ -17,8 +17,8 @@
 		timeUnitPrice = 'perMonth',
 		config,
 		loading = false,
-		displayStoragePrice: _displayStoragePrice, // Included but not yet used in rendering logic
-		displayRamPrice: _displayRamPrice, // Included but not yet used in rendering logic
+		displayStoragePrice, // Included but not yet used in rendering logic
+		displayRamPrice, // Included but not yet used in rendering logic
 		clickable = true, // Default to clickable
 		buttons
 	}: {
