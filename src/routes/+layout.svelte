@@ -11,6 +11,7 @@
 	import { session } from '$lib/stores/session';
 	import { onDestroy, onMount } from 'svelte';
 	import { initializeDB, tearDownDB } from '../stores/db';
+	import AnimatedBackground from '$lib/components/AnimatedBackground.svelte';
 
 	let { data, children } = $props<
 		import('./$types').LayoutData & { children: import('svelte').Snippet }
@@ -109,8 +110,10 @@
 	<meta name="theme-color" content="#FF7F50" />
 </svelte:head>
 
+<AnimatedBackground />
+
 <div
-	class="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800"
+	class="flex min-h-screen flex-col"
 >
 	<div class="flex-grow">
 		<Banner version={4} id="cloud-availability-alerts">
