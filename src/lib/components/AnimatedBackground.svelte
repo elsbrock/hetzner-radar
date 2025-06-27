@@ -60,8 +60,8 @@
 		});
 
 		// Grid settings
-		const gridSize = 50;
-		const gridOpacity = 0.15;
+		const gridSize = 40;
+		const gridOpacity = 0.1;
 
 		// Initialize gradient points with theme colors
 		let gradientPoints: GradientPoint[] = [];
@@ -182,21 +182,25 @@
 		// Draw grid with perspective
 		const drawGrid = () => {
 			const centerX = canvas.width / 2;
-			const centerY = canvas.height * 0.8;
-			const perspective = 500;
+			const centerY = canvas.height * 0.9; // Balanced position for globe effect
+			const perspective = 400; // Stronger perspective for more pronounced curve
 
 			ctx.strokeStyle = isDarkMode
 				? `rgba(255, 255, 255, ${gridOpacity})`
 				: `rgba(0, 0, 0, ${gridOpacity * 0.5})`;
 			ctx.lineWidth = 0.5;
 
+			// Calculate grid bounds based on screen size
+			const gridExtentY = Math.max(40, Math.ceil(canvas.height / gridSize));
+			const gridExtentX = Math.max(50, Math.ceil(canvas.width / gridSize));
+
 			// Horizontal lines
-			for (let y = -10; y <= 20; y++) {
+			for (let y = -20; y <= gridExtentY; y++) {
 				ctx.beginPath();
-				for (let x = -30; x <= 30; x++) {
+				for (let x = -gridExtentX; x <= gridExtentX; x++) {
 					const px = centerX + (x * gridSize * perspective) / (perspective + y * gridSize);
 					const py = centerY + (y * gridSize * perspective) / (perspective + y * gridSize);
-					if (x === -30) {
+					if (x === -gridExtentX) {
 						ctx.moveTo(px, py);
 					} else {
 						ctx.lineTo(px, py);
@@ -206,12 +210,12 @@
 			}
 
 			// Vertical lines
-			for (let x = -30; x <= 30; x++) {
+			for (let x = -gridExtentX; x <= gridExtentX; x++) {
 				ctx.beginPath();
-				for (let y = -10; y <= 20; y++) {
+				for (let y = -20; y <= gridExtentY; y++) {
 					const px = centerX + (x * gridSize * perspective) / (perspective + y * gridSize);
 					const py = centerY + (y * gridSize * perspective) / (perspective + y * gridSize);
-					if (y === -10) {
+					if (y === -20) {
 						ctx.moveTo(px, py);
 					} else {
 						ctx.lineTo(px, py);
