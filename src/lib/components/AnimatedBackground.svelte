@@ -24,6 +24,9 @@
 		speedY: number;
 		color: string;
 		opacity: number;
+		baseOpacity: number;
+		twinklePhase: number;
+		twinkleSpeed: number;
 	}
 
 	interface GradientPoint {
@@ -110,6 +113,9 @@
 			speedY: number;
 			color: string;
 			opacity: number;
+			baseOpacity: number;
+			twinklePhase: number;
+			twinkleSpeed: number;
 
 			constructor() {
 				this.x = Math.random() * canvas.width;
@@ -118,7 +124,10 @@
 				this.speedX = (Math.random() - 0.5) * 0.5;
 				this.speedY = (Math.random() - 0.5) * 0.5;
 				this.color = isDarkMode ? '#FF7F50' : '#FF7F50'; // Primary color
-				this.opacity = Math.random() * 0.5 + 0.3;
+				this.baseOpacity = Math.random() * 0.3 + 0.2;
+				this.opacity = this.baseOpacity;
+				this.twinklePhase = Math.random() * Math.PI * 2;
+				this.twinkleSpeed = Math.random() * 0.02 + 0.01; // Slow twinkling
 			}
 
 			update() {
@@ -132,6 +141,11 @@
 				// Constrain to canvas
 				this.x = Math.max(0, Math.min(canvas.width, this.x));
 				this.y = Math.max(0, Math.min(canvas.height, this.y));
+
+				// Subtle twinkling effect
+				this.twinklePhase += this.twinkleSpeed;
+				const twinkle = Math.sin(this.twinklePhase) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
+				this.opacity = this.baseOpacity * twinkle;
 			}
 
 			draw() {
