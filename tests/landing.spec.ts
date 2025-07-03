@@ -22,14 +22,11 @@ test.describe('Landing Page Tests', () => {
 		await expect(page.locator('h1')).toBeVisible();
 		// Check that h1 contains the key parts of the text, handling spaces and animated letters
 		const h1Text = await page.locator('h1').textContent();
-		// Normalize spaces (including non-breaking spaces) in the text
+		// Normalize ALL whitespace (including non-breaking spaces and any extra spaces)
 		const normalizedText = h1Text?.replace(/[\s\u00A0]+/g, ' ').trim() || '';
-		// Check that the text contains all key parts in order
-		expect(normalizedText).toContain('Stop');
-		expect(normalizedText).toContain('Overpaying');
-		expect(normalizedText).toContain('for Hetzner Auction Servers');
-		// Also verify the full pattern is correct
-		expect(normalizedText).toBe('Stop Overpaying for Hetzner Auction Servers');
+		// Use a regex pattern that's flexible about spaces between words
+		const expectedPattern = /^Stop\s+Overpaying\s+for\s+Hetzner\s+Auction\s+Servers$/;
+		expect(normalizedText).toMatch(expectedPattern);
 	});
 
 	test('should display key introductory text', async () => {
@@ -115,13 +112,11 @@ test.describe('Landing Page Tests', () => {
 			await expect(page.locator('h1')).toBeVisible();
 			// Verify h1 contains the expected text with flexible matching for animated content
 			const h1Text = await page.locator('h1').textContent();
-			// Normalize spaces (including non-breaking spaces) in the text
+			// Normalize ALL whitespace (including non-breaking spaces and any extra spaces)
 			const normalizedText = h1Text?.replace(/[\s\u00A0]+/g, ' ').trim() || '';
-			// Check that the text contains all key parts
-			expect(normalizedText).toContain('Stop');
-			expect(normalizedText).toContain('Overpaying');
-			expect(normalizedText).toContain('for Hetzner Auction Servers');
-			expect(normalizedText).toBe('Stop Overpaying for Hetzner Auction Servers');
+			// Use a regex pattern that's flexible about spaces between words
+			const expectedPattern = /^Stop\s+Overpaying\s+for\s+Hetzner\s+Auction\s+Servers$/;
+			expect(normalizedText).toMatch(expectedPattern);
 			// Check for the hamburger menu button using test ID
 			await expect(page.getByTestId('nav-hamburger')).toBeVisible();
 		});
