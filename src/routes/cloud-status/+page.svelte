@@ -211,10 +211,13 @@
 					activeServerTypes.some((st) => st.id === id)
 				).length;
 				// Only count as available if it's active AND has been seen available at least once
-				const activeAvailableCount = availableTypes.filter((id) =>
-					activeServerTypes.some((st) => st.id === id) &&
-					getLastSeenAvailable(location.id, id) !== null
-				).length;
+				// We need to check all active supported types, not just those in availableTypes
+				const activeAvailableCount = activeSupportedCount > 0
+					? supportedTypes.filter((id) =>
+							activeServerTypes.some((st) => st.id === id) &&
+							getLastSeenAvailable(location.id, id) !== null
+					  ).length
+					: 0;
 
 				totalSupported += activeSupportedCount;
 				totalAvailable += activeAvailableCount;
