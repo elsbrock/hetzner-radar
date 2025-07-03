@@ -5,7 +5,8 @@
 	import 'leaflet/dist/leaflet.css';
 	import type L from 'leaflet';
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	// import QuickStat from '$lib/components/QuickStat.svelte';
 	import { fade as _fade, slide as _slide } from 'svelte/transition';
 	import { formatRelativeTime, getAvailabilityRecency } from '$lib/util';
@@ -44,15 +45,45 @@
 	let showCloudAlertModal = $state(false);
 	let editingCloudAlert = $state<any>(null);
 
+	// Get initial filter values from URL query parameters
+	const params = $page.url.searchParams;
+	const initialShowAvailableOnly = params.get('available') === 'true';
+	const initialShowRecentlyAvailable = params.get('recent') === 'true';
+	const initialArchitectureFilter = params.get('arch') || 'all';
+	const initialCpuTypeFilter = params.get('cpu') || 'all';
+	const initialSearchQuery = params.get('search') || '';
+
 	// Filter states
-	let showAvailableOnly = $state(false);
-	let showRecentlyAvailable = $state(false);
-	let architectureFilter = $state('all');
-	let cpuTypeFilter = $state('all');
-	let searchQuery = $state('');
+	let showAvailableOnly = $state(initialShowAvailableOnly);
+	let showRecentlyAvailable = $state(initialShowRecentlyAvailable);
+	let architectureFilter = $state(initialArchitectureFilter);
+	let cpuTypeFilter = $state(initialCpuTypeFilter);
+	let searchQuery = $state(initialSearchQuery);
 
 	// Collapsed groups state
 	let collapsedGroups = $state(new Set<string>());
+
+	// Update URL when filters change
+	$effect(() => {
+		if (!browser) return;
+		
+		const params = new URLSearchParams();
+		
+		// Only add parameters if they differ from defaults
+		if (showAvailableOnly) params.set('available', 'true');
+		if (showRecentlyAvailable) params.set('recent', 'true');
+		if (architectureFilter !== 'all') params.set('arch', architectureFilter);
+		if (cpuTypeFilter !== 'all') params.set('cpu', cpuTypeFilter);
+		if (searchQuery) params.set('search', searchQuery);
+		
+		// Construct the new URL
+		const newUrl = params.toString() ? `?${params.toString()}` : $page.url.pathname;
+		
+		// Update the URL without triggering navigation
+		if ($page.url.search !== (params.toString() ? `?${params.toString()}` : '')) {
+			goto(newUrl, { replaceState: true, keepFocus: true, noScroll: true });
+		}
+	});
 
 	// Server type and location options based on cloud status data
 	const serverTypeOptions = $derived(
