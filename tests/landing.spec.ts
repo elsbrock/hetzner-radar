@@ -20,10 +20,11 @@ test.describe('Landing Page Tests', () => {
 	test('should display the main heading', async () => {
 		// Check that h1 exists and is visible
 		await expect(page.locator('h1')).toBeVisible();
-		// Check that h1 contains the key parts of the text (avoiding the animated word)
+		// Check that h1 contains the key parts of the text, handling spaces and animated letters
 		const h1Text = await page.locator('h1').textContent();
-		expect(h1Text).toContain('Stop');
-		expect(h1Text).toContain('for Hetzner Auction Servers');
+		// Normalize spaces in the text
+		const normalizedText = h1Text?.replace(/\s+/g, ' ').trim() || '';
+		expect(normalizedText).toMatch(/Stop\s+\w+\s+for Hetzner Auction Servers/);
 	});
 
 	test('should display key introductory text', async () => {
@@ -105,8 +106,12 @@ test.describe('Landing Page Tests', () => {
 		test('should display main heading and hamburger menu on mobile', async ({ page }) => {
 			await page.setViewportSize({ width: 375, height: 667 });
 			await page.goto('/');
-			// Check that h1 exists and is visible (text is animated so we check visibility instead)
+			// Check that h1 exists and is visible
 			await expect(page.locator('h1')).toBeVisible();
+			// Verify h1 contains the expected text with flexible matching for animated content
+			const h1Text = await page.locator('h1').textContent();
+			const normalizedText = h1Text?.replace(/\s+/g, ' ').trim() || '';
+			expect(normalizedText).toMatch(/Stop\s+\w+\s+for Hetzner Auction Servers/);
 			// Check for the hamburger menu button using test ID
 			await expect(page.getByTestId('nav-hamburger')).toBeVisible();
 		});
