@@ -18,14 +18,20 @@ test.describe('Landing Page Tests', () => {
 	});
 
 	test('should display the main heading', async () => {
-		// Target the h1 and check its text content, using \s to match any whitespace (incl. &nbsp;)
-		await expect(page.locator('h1')).toContainText(
-			/Stop\s+Overpaying\s+for\s+Hetzner\s+Auction\s+Servers/i
-		);
+		// Check that h1 exists and is visible
+		const h1 = page.locator('h1');
+		await expect(h1).toBeVisible();
+		
+		// Instead of exact text matching, verify the h1 contains all the essential words
+		// This is more resilient to changes in spacing and element structure
+		await expect(h1).toContainText('Stop');
+		await expect(h1).toContainText('Overpaying');
+		await expect(h1).toContainText('for Hetzner Auction Servers');
 	});
 
 	test('should display key introductory text', async () => {
-		await expect(page.getByText(/Stop.*Overpaying.*for Hetzner Auction Servers/)).toBeVisible();
+		// Check for h1 visibility instead of exact text matching due to animated letters
+		await expect(page.locator('h1')).toBeVisible();
 		await expect(page.getByText(/instant notifications/i)).toBeVisible();
 		await expect(page.getByText(/free, open-source tool/i)).toBeVisible();
 	});
@@ -102,8 +108,16 @@ test.describe('Landing Page Tests', () => {
 		test('should display main heading and hamburger menu on mobile', async ({ page }) => {
 			await page.setViewportSize({ width: 375, height: 667 });
 			await page.goto('/');
-			// Target the h1 and check its text content, using \s to match any whitespace
-			await expect(page.locator('h1')).toContainText(/Stop\s+Overpaying/i);
+			// Check that h1 exists and is visible
+			const h1 = page.locator('h1');
+			await expect(h1).toBeVisible();
+			
+			// Verify the h1 contains all the essential words
+			// This approach is more resilient to spacing and structure changes
+			await expect(h1).toContainText('Stop');
+			await expect(h1).toContainText('Overpaying');
+			await expect(h1).toContainText('for Hetzner Auction Servers');
+			
 			// Check for the hamburger menu button using test ID
 			await expect(page.getByTestId('nav-hamburger')).toBeVisible();
 		});
