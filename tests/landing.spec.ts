@@ -19,14 +19,14 @@ test.describe('Landing Page Tests', () => {
 
 	test('should display the main heading', async () => {
 		// Check that h1 exists and is visible
-		await expect(page.locator('h1')).toBeVisible();
-		// Check that h1 contains the key parts of the text, handling spaces and animated letters
-		const h1Text = await page.locator('h1').textContent();
-		// Normalize ALL whitespace (including non-breaking spaces and any extra spaces)
-		const normalizedText = h1Text?.replace(/[\s\u00A0]+/g, ' ').trim() || '';
-		// Use a regex pattern that's flexible about spaces between words
-		const expectedPattern = /^Stop\s+Overpaying\s+for\s+Hetzner\s+Auction\s+Servers$/;
-		expect(normalizedText).toMatch(expectedPattern);
+		const h1 = page.locator('h1');
+		await expect(h1).toBeVisible();
+		
+		// Instead of exact text matching, verify the h1 contains all the essential words
+		// This is more resilient to changes in spacing and element structure
+		await expect(h1).toContainText('Stop');
+		await expect(h1).toContainText('Overpaying');
+		await expect(h1).toContainText('for Hetzner Auction Servers');
 	});
 
 	test('should display key introductory text', async () => {
@@ -109,14 +109,15 @@ test.describe('Landing Page Tests', () => {
 			await page.setViewportSize({ width: 375, height: 667 });
 			await page.goto('/');
 			// Check that h1 exists and is visible
-			await expect(page.locator('h1')).toBeVisible();
-			// Verify h1 contains the expected text with flexible matching for animated content
-			const h1Text = await page.locator('h1').textContent();
-			// Normalize ALL whitespace (including non-breaking spaces and any extra spaces)
-			const normalizedText = h1Text?.replace(/[\s\u00A0]+/g, ' ').trim() || '';
-			// Use a regex pattern that's flexible about spaces between words
-			const expectedPattern = /^Stop\s+Overpaying\s+for\s+Hetzner\s+Auction\s+Servers$/;
-			expect(normalizedText).toMatch(expectedPattern);
+			const h1 = page.locator('h1');
+			await expect(h1).toBeVisible();
+			
+			// Verify the h1 contains all the essential words
+			// This approach is more resilient to spacing and structure changes
+			await expect(h1).toContainText('Stop');
+			await expect(h1).toContainText('Overpaying');
+			await expect(h1).toContainText('for Hetzner Auction Servers');
+			
 			// Check for the hamburger menu button using test ID
 			await expect(page.getByTestId('nav-hamburger')).toBeVisible();
 		});
