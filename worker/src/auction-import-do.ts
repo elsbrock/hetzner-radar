@@ -145,7 +145,6 @@ export class AuctionImportDO extends DurableObject {
 	}
 
 	private async fetchAuctions(): Promise<void> {
-		const startTime = Date.now();
 		let auctionImportResult: unknown = null;
 		let alertProcessingResult: unknown[] = [];
 
@@ -168,7 +167,6 @@ export class AuctionImportDO extends DurableObject {
 			} else {
 				console.log(`[AuctionImportDO ${this.ctx.id}] No auction changes detected, skipping alert processing`);
 			}
-
 		} catch (error: unknown) {
 			console.error(`[AuctionImportDO ${this.ctx.id}] Failed during auction import/alert processing:`, error);
 			throw error;

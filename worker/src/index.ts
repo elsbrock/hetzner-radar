@@ -119,7 +119,17 @@ Combined:
 		try {
 			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
 			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
-			return await (stub as { getHistoricalAvailability(options: any): Promise<unknown> }).getHistoricalAvailability(options);
+			return await (
+				stub as {
+					getHistoricalAvailability(options: {
+						startDate: string;
+						endDate: string;
+						serverTypeId?: number;
+						locationId?: number;
+						granularity?: 'hour' | 'day' | 'week';
+					}): Promise<unknown>;
+				}
+			).getHistoricalAvailability(options);
 		} catch (e: unknown) {
 			console.error('Error in Worker getHistoricalAvailability RPC:', e);
 			throw new Error(`Error calling getHistoricalAvailability on DO: ${e instanceof Error ? e.message : String(e)}`);

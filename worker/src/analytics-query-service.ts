@@ -101,7 +101,6 @@ export class AnalyticsQueryService {
 		serverTypeId?: number,
 		locationId?: number,
 		granularity: 'hour' | 'day' | 'week' = 'hour',
-		env?: { CF_ACCOUNT_ID?: string },
 	): string {
 		// Base query components
 		const timeFormat = this.getTimeFormat(granularity);
@@ -140,16 +139,26 @@ export class AnalyticsQueryService {
 		}
 	}
 
-	private transformResults(rawData: any[]): AvailabilityDataPoint[] {
-		return rawData.map((row) => ({
-			timestamp: row.time_bucket,
-			serverTypeId: parseInt(row.serverTypeId),
-			locationId: parseInt(row.locationId),
-			serverTypeName: row.serverTypeName || `Server ${row.serverTypeId}`,
-			locationName: row.locationName || `Location ${row.locationId}`,
-			available: row.availability === 1,
-			availabilityRate: row.availability,
-		}));
+	private transformResults(rawData: unknown[]): AvailabilityDataPoint[] {
+		return rawData.map((row) => {
+			const typedRow = row as {
+				time_bucket: string;
+				serverTypeId: string;
+				locationId: string;
+				serverTypeName?: string;
+				locationName?: string;
+				availability: number;
+			};
+			return {
+				timestamp: typedRow.time_bucket,
+				serverTypeId: parseInt(typedRow.serverTypeId),
+				locationId: parseInt(typedRow.locationId),
+				serverTypeName: typedRow.serverTypeName || `Server ${typedRow.serverTypeId}`,
+				locationName: typedRow.locationName || `Location ${typedRow.locationId}`,
+				available: typedRow.availability === 1,
+				availabilityRate: typedRow.availability,
+			};
+		});
 	}
 
 	/**
@@ -208,13 +217,21 @@ export class AnalyticsQueryService {
 				throw new Error(`Analytics Engine query error: ${JSON.stringify(result.errors)}`);
 			}
 
-			return result.data.map((row: any) => ({
-				serverTypeId: parseInt(row.serverTypeId),
-				locationId: parseInt(row.locationId),
-				availabilityPercentage: (row.availableDataPoints / row.totalDataPoints) * 100,
-				totalHours: row.totalDataPoints,
-				availableHours: row.availableDataPoints,
-			}));
+			return result.data.map((row: unknown) => {
+				const typedRow = row as {
+					serverTypeId: string;
+					locationId: string;
+					availableDataPoints: number;
+					totalDataPoints: number;
+				};
+				return {
+					serverTypeId: parseInt(typedRow.serverTypeId),
+					locationId: parseInt(typedRow.locationId),
+					availabilityPercentage: (typedRow.availableDataPoints / typedRow.totalDataPoints) * 100,
+					totalHours: typedRow.totalDataPoints,
+					availableHours: typedRow.availableDataPoints,
+				};
+			});
 		} catch (error) {
 			console.error('[AnalyticsQueryService] Summary query failed:', error);
 			throw error;
