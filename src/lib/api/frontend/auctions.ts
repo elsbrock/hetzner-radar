@@ -1,24 +1,24 @@
-import { getData } from '$lib/api/frontend/dbapi';
-import type { ServerConfiguration } from '$lib/api/frontend/filter';
-import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
-import SQL, { SQLStatement } from 'sql-template-strings';
+import { getData } from "$lib/api/frontend/dbapi";
+import type { ServerConfiguration } from "$lib/api/frontend/filter";
+import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
+import SQL, { SQLStatement } from "sql-template-strings";
 
 export interface AuctionResult {
-	id: string;
-	lastPrice: number;
-	lastSeen: number; // Unix timestamp
+  id: string;
+  lastPrice: number;
+  lastSeen: number; // Unix timestamp
 }
 
 export async function getAuctionsForConfiguration(
-	conn: AsyncDuckDBConnection,
-	config: ServerConfiguration,
-	recentlySeen: boolean = true
+  conn: AsyncDuckDBConnection,
+  config: ServerConfiguration,
+  recentlySeen: boolean = true,
 ): Promise<AuctionResult[]> {
-	const sortedNvmeDrives = [...config.nvme_drives].sort((a, b) => a - b);
-	const sortedSataDrives = [...config.sata_drives].sort((a, b) => a - b);
-	const sortedHddDrives = [...config.hdd_drives].sort((a, b) => a - b);
+  const sortedNvmeDrives = [...config.nvme_drives].sort((a, b) => a - b);
+  const sortedSataDrives = [...config.sata_drives].sort((a, b) => a - b);
+  const sortedHddDrives = [...config.hdd_drives].sort((a, b) => a - b);
 
-	const query: SQLStatement = SQL`
+  const query: SQLStatement = SQL`
 			WITH filtered_servers AS (
 				SELECT
 					id,
@@ -39,21 +39,23 @@ export async function getAuctionsForConfiguration(
 					AND with_rps = ${config.with_rps}
 	`;
 
-	if (recentlySeen) {
-		query.append(SQL` AND seen > (now()::timestamp - interval '70 minute')::timestamp`);
-	}
+  if (recentlySeen) {
+    query.append(
+      SQL` AND seen > (now()::timestamp - interval '70 minute')::timestamp`,
+    );
+  }
 
-	const nvmeListLiteral = `[${sortedNvmeDrives.join(',')}]`;
-	query.append(` AND list_sort(nvme_drives) = `).append(nvmeListLiteral);
+  const nvmeListLiteral = `[${sortedNvmeDrives.join(",")}]`;
+  query.append(` AND list_sort(nvme_drives) = `).append(nvmeListLiteral);
 
-	const sataListLiteral = `[${sortedSataDrives.join(',')}]`;
-	query.append(` AND list_sort(sata_drives) = `).append(sataListLiteral);
+  const sataListLiteral = `[${sortedSataDrives.join(",")}]`;
+  query.append(` AND list_sort(sata_drives) = `).append(sataListLiteral);
 
-	const hddListLiteral = `[${sortedHddDrives.join(',')}]`;
-	query.append(` AND list_sort(hdd_drives) = `).append(hddListLiteral);
+  const hddListLiteral = `[${sortedHddDrives.join(",")}]`;
+  query.append(` AND list_sort(hdd_drives) = `).append(hddListLiteral);
 
-	// Complete the query with the final SELECT to get only the most recent entry for each auction
-	query.append(SQL`
+  // Complete the query with the final SELECT to get only the most recent entry for each auction
+  query.append(SQL`
 			)
 			SELECT
 				id,
@@ -65,5 +67,5 @@ export async function getAuctionsForConfiguration(
 			LIMIT 6
 	`);
 
-	return await getData<AuctionResult>(conn, query);
+  return await getData<AuctionResult>(conn, query);
 }

@@ -3,7 +3,7 @@ name: Fetch Hetzner Auction data
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron: '13 * * * *'
+    - cron: "13 * * * *"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

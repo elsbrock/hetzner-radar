@@ -2,50 +2,51 @@
  * Statistics
  */
 
-import { getData } from '$lib/api/frontend/dbapi';
-import { generateFilterQuery } from '$lib/api/frontend/filter';
-import type { ServerFilter } from '$lib/filter';
-import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
-import SQL from 'sql-template-strings';
+import { getData } from "$lib/api/frontend/dbapi";
+import { generateFilterQuery } from "$lib/api/frontend/filter";
+import type { ServerFilter } from "$lib/filter";
+import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
+import SQL from "sql-template-strings";
 
 export type NameValuePair = {
-	name: string;
-	value: string;
+  name: string;
+  value: string;
 };
 
 export async function getDatacenters(
-	conn: AsyncDuckDBConnection,
-	filter: ServerFilter
+  conn: AsyncDuckDBConnection,
+  filter: ServerFilter,
 ): Promise<NameValuePair[]> {
-	const datacenter_filter_query = generateFilterQuery(filter, true, false);
-	const datacenters_query =
-		SQL`select distinct datacenter as name, datacenter as value from server where`
-			.append(datacenter_filter_query)
-			.append(SQL` order by datacenter`);
-	return getData<NameValuePair>(conn, datacenters_query);
+  const datacenter_filter_query = generateFilterQuery(filter, true, false);
+  const datacenters_query =
+    SQL`select distinct datacenter as name, datacenter as value from server where`
+      .append(datacenter_filter_query)
+      .append(SQL` order by datacenter`);
+  return getData<NameValuePair>(conn, datacenters_query);
 }
 
 export async function getCPUModels(
-	conn: AsyncDuckDBConnection,
-	filter: ServerFilter
+  conn: AsyncDuckDBConnection,
+  filter: ServerFilter,
 ): Promise<NameValuePair[]> {
-	const cpumodel_filter_query = generateFilterQuery(filter, false, true);
-	const cpumodel_query = SQL`select distinct cpu as name, cpu as value from server where`
-		.append(cpumodel_filter_query)
-		.append(SQL` order by cpu`);
-	return getData<NameValuePair>(conn, cpumodel_query);
+  const cpumodel_filter_query = generateFilterQuery(filter, false, true);
+  const cpumodel_query =
+    SQL`select distinct cpu as name, cpu as value from server where`
+      .append(cpumodel_filter_query)
+      .append(SQL` order by cpu`);
+  return getData<NameValuePair>(conn, cpumodel_query);
 }
 
 export type TemporalStat = {
-	x: number;
-	y: number;
+  x: number;
+  y: number;
 };
 export async function getRamPriceStats(
-	conn: AsyncDuckDBConnection,
-	withECC?: boolean,
-	country?: string
+  conn: AsyncDuckDBConnection,
+  withECC?: boolean,
+  country?: string,
 ): Promise<TemporalStat[]> {
-	const query = SQL`
+  const query = SQL`
 		select
 			x, min(price_per_gb) as y
 		from (
@@ -54,30 +55,30 @@ export async function getRamPriceStats(
 				price / ram_size as price_per_gb
 			from
 				server`;
-	if (withECC !== undefined || country) {
-		query.append(SQL` where 1 = 1`);
-		if (withECC !== undefined) {
-			query.append(SQL` and is_ecc = ${withECC}`);
-		}
-		if (country) {
-			query.append(SQL` and country = ${country}`);
-		}
-	}
-	query.append(SQL`
+  if (withECC !== undefined || country) {
+    query.append(SQL` where 1 = 1`);
+    if (withECC !== undefined) {
+      query.append(SQL` and is_ecc = ${withECC}`);
+    }
+    if (country) {
+      query.append(SQL` and country = ${country}`);
+    }
+  }
+  query.append(SQL`
 		) group by
 			x
 		order by
 			x
 	`);
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
 export async function getDiskPriceStats(
-	conn: AsyncDuckDBConnection,
-	diskType: string
+  conn: AsyncDuckDBConnection,
+  diskType: string,
 ): Promise<TemporalStat[]> {
-	const query = {
-		sql: `
+  const query = {
+    sql: `
 			select
 				x, min(price_per_tb) as y
 			from (
@@ -94,13 +95,15 @@ export async function getDiskPriceStats(
 			order by
 				x
 		`,
-		values: []
-	};
-	return getData<TemporalStat>(conn, query as any);
+    values: [],
+  };
+  return getData<TemporalStat>(conn, query as any);
 }
 
-export async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
-	const query = SQL`
+export async function getGPUPriceStats(
+  conn: AsyncDuckDBConnection,
+): Promise<TemporalStat[]> {
+  const query = SQL`
 		select
 			x, min(price) as y
 		from (
@@ -117,15 +120,15 @@ export async function getGPUPriceStats(conn: AsyncDuckDBConnection): Promise<Tem
 		order by
 			x
 	`;
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
 export async function getCPUVendorPriceStats(
-	conn: AsyncDuckDBConnection,
-	vendor: string,
-	country?: string
+  conn: AsyncDuckDBConnection,
+  vendor: string,
+  country?: string,
 ): Promise<TemporalStat[]> {
-	const query = SQL`
+  const query = SQL`
 		select
 			x, min(price) as y
 		from (
@@ -137,23 +140,23 @@ export async function getCPUVendorPriceStats(
 			where
 				cpu_vendor = ${vendor}
 	`;
-	if (country) {
-		query.append(SQL` and country = ${country}`);
-	}
-	query.append(SQL`)
+  if (country) {
+    query.append(SQL` and country = ${country}`);
+  }
+  query.append(SQL`)
 		group by
 			x
 		order by
 			x
 	`);
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
 export async function getVolumeStats(
-	conn: AsyncDuckDBConnection,
-	country?: string
+  conn: AsyncDuckDBConnection,
+  country?: string,
 ): Promise<TemporalStat[]> {
-	const query = SQL`
+  const query = SQL`
 		select
 			x, count(distinct id)::int as y
 		from (
@@ -163,25 +166,25 @@ export async function getVolumeStats(
 			from
 				server
 	`;
-	if (country) {
-		query.append(SQL`where location = ${country}`);
-	}
-	query.append(SQL`
+  if (country) {
+    query.append(SQL`where location = ${country}`);
+  }
+  query.append(SQL`
 		)
 		group by
 			x
 		order by
 			x
 	`);
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
 export async function getVolumeByDatacenterStats(
-	conn: AsyncDuckDBConnection,
-	datacenter: string,
-	country: string
+  conn: AsyncDuckDBConnection,
+  datacenter: string,
+  country: string,
 ): Promise<TemporalStat[]> {
-	const query = SQL`
+  const query = SQL`
 		select
 			x, count(distinct id)::int as y
 		from (
@@ -199,88 +202,90 @@ export async function getVolumeByDatacenterStats(
 		order by
 			x
 	`;
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
 export async function getVolumeByDatacenterByCountryStats(
-	conn: AsyncDuckDBConnection
+  conn: AsyncDuckDBConnection,
 ): Promise<{ [datacenter: string]: { [country: string]: TemporalStat[] } }> {
-	// Get all datacenters and countries
-	const datacentersQuery = SQL`
+  // Get all datacenters and countries
+  const datacentersQuery = SQL`
 		select distinct datacenter
 		from server
 		where datacenter is not null and datacenter != ''
 		order by datacenter
 	`;
 
-	const countriesQuery = SQL`
+  const countriesQuery = SQL`
 		select distinct location as country
 		from server
 		where location is not null and location != ''
 		order by location
 	`;
 
-	const [datacenters, countries] = await Promise.all([
-		getData<{ datacenter: string }>(conn, datacentersQuery),
-		getData<{ country: string }>(conn, countriesQuery)
-	]);
+  const [datacenters, countries] = await Promise.all([
+    getData<{ datacenter: string }>(conn, datacentersQuery),
+    getData<{ country: string }>(conn, countriesQuery),
+  ]);
 
-	const result: {
-		[datacenter: string]: { [country: string]: TemporalStat[] };
-	} = {};
+  const result: {
+    [datacenter: string]: { [country: string]: TemporalStat[] };
+  } = {};
 
-	// Initialize the result structure
-	for (const dc of datacenters) {
-		result[dc.datacenter] = {};
-	}
+  // Initialize the result structure
+  for (const dc of datacenters) {
+    result[dc.datacenter] = {};
+  }
 
-	// Query for each datacenter and country combination
-	const promises = [];
+  // Query for each datacenter and country combination
+  const promises = [];
 
-	for (const dc of datacenters) {
-		for (const country of countries) {
-			const promise = getVolumeByDatacenterStats(conn, dc.datacenter, country.country).then(
-				(stats) => {
-					if (!result[dc.datacenter]) {
-						result[dc.datacenter] = {};
-					}
-					result[dc.datacenter][country.country] = stats;
-				}
-			);
-			promises.push(promise);
-		}
-	}
+  for (const dc of datacenters) {
+    for (const country of countries) {
+      const promise = getVolumeByDatacenterStats(
+        conn,
+        dc.datacenter,
+        country.country,
+      ).then((stats) => {
+        if (!result[dc.datacenter]) {
+          result[dc.datacenter] = {};
+        }
+        result[dc.datacenter][country.country] = stats;
+      });
+      promises.push(promise);
+    }
+  }
 
-	await Promise.all(promises);
+  await Promise.all(promises);
 
-	return result;
+  return result;
 }
 
 export async function getDatacenterList(
-	conn: AsyncDuckDBConnection,
-	country?: string
+  conn: AsyncDuckDBConnection,
+  country?: string,
 ): Promise<string[]> {
-	const query = SQL`
+  const query = SQL`
 		select distinct datacenter
 		from server
 		where datacenter is not null and datacenter != ''
 	`;
 
-	if (country) {
-		query.append(SQL` and location = ${country}`);
-	}
+  if (country) {
+    query.append(SQL` and location = ${country}`);
+  }
 
-	query.append(SQL` order by datacenter`);
+  query.append(SQL` order by datacenter`);
 
-	const result = await getData<{ datacenter: string }>(conn, query);
-	return result.map((item) => item.datacenter);
+  const result = await getData<{ datacenter: string }>(conn, query);
+  return result.map((item) => item.datacenter);
 }
 
 export async function getVolumeByCPUVendorStats(
-	conn: AsyncDuckDBConnection,
-	vendor: string
+  conn: AsyncDuckDBConnection,
+  vendor: string,
 ): Promise<TemporalStat[]> {
-	const query = SQL`
+  const query = SQL`
 		select
 			x, count(distinct id)::int as y
 		from (
@@ -297,11 +302,13 @@ export async function getVolumeByCPUVendorStats(
 		order by
 			x
 	`;
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
-export async function getPriceIndexStats(conn: AsyncDuckDBConnection): Promise<TemporalStat[]> {
-	const query = SQL`
+export async function getPriceIndexStats(
+  conn: AsyncDuckDBConnection,
+): Promise<TemporalStat[]> {
+  const query = SQL`
 		WITH config_daily_prices AS (
 				-- Calculate the daily min price for each configuration
 				SELECT
@@ -383,15 +390,17 @@ export async function getPriceIndexStats(conn: AsyncDuckDBConnection): Promise<T
 		FROM daily_price_index
 		ORDER BY date;
 	`;
-	return getData<TemporalStat>(conn, query);
+  return getData<TemporalStat>(conn, query);
 }
 
 export type LastUpdate = {
-	last_updated: number;
+  last_updated: number;
 };
 
-export async function getSoldAuctionPriceStats(c: AsyncDuckDBConnection): Promise<TemporalStat[]> {
-	const query = SQL`
+export async function getSoldAuctionPriceStats(
+  c: AsyncDuckDBConnection,
+): Promise<TemporalStat[]> {
+  const query = SQL`
 		WITH RankedAuctions AS (
 			SELECT
 				id,
@@ -416,20 +425,22 @@ export async function getSoldAuctionPriceStats(c: AsyncDuckDBConnection): Promis
 		GROUP BY 1 -- Group by the first selected column (date_trunc('day', seen))
 		ORDER BY 1; -- Order by the first selected column (date_trunc('day', seen))
 	`;
-	try {
-		const result = await getData<TemporalStat>(c, query);
-		return result;
-	} catch (error) {
-		console.error('Error in getSoldAuctionPriceStats:', error);
-		return [];
-	}
+  try {
+    const result = await getData<TemporalStat>(c, query);
+    return result;
+  } catch (error) {
+    console.error("Error in getSoldAuctionPriceStats:", error);
+    return [];
+  }
 }
 
-export function getLastUpdated(conn: AsyncDuckDBConnection): Promise<LastUpdate[]> {
-	return getData<LastUpdate>(
-		conn,
-		SQL`select extract('epoch' from seen)::int as last_updated from server order by last_updated desc limit 1`
-	);
+export function getLastUpdated(
+  conn: AsyncDuckDBConnection,
+): Promise<LastUpdate[]> {
+  return getData<LastUpdate>(
+    conn,
+    SQL`select extract('epoch' from seen)::int as last_updated from server order by last_updated desc limit 1`,
+  );
 }
 
 /**
@@ -441,14 +452,14 @@ export function getLastUpdated(conn: AsyncDuckDBConnection): Promise<LastUpdate[
  * @returns Array of TemporalStat objects
  */
 export async function getVolumeByCPUModelStats(
-	conn: AsyncDuckDBConnection,
-	vendor: string,
-	model?: string,
-	limit?: number
+  conn: AsyncDuckDBConnection,
+  vendor: string,
+  model?: string,
+  limit?: number,
 ): Promise<{ [model: string]: TemporalStat[] }> {
-	// If a specific model is requested, get volume data for just that model
-	if (model) {
-		const query = SQL`
+  // If a specific model is requested, get volume data for just that model
+  if (model) {
+    const query = SQL`
       select
         EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
         count(distinct id)::int as y
@@ -463,12 +474,12 @@ export async function getVolumeByCPUModelStats(
         x
     `;
 
-		const result = await getData<TemporalStat>(conn, query);
-		return { [model]: result };
-	}
+    const result = await getData<TemporalStat>(conn, query);
+    return { [model]: result };
+  }
 
-	// Otherwise, get the top N models by volume
-	const topModelsQuery = SQL`
+  // Otherwise, get the top N models by volume
+  const topModelsQuery = SQL`
     select
       cpu as model,
       count(distinct id) as count
@@ -484,18 +495,21 @@ export async function getVolumeByCPUModelStats(
       count desc
   `;
 
-	if (limit) {
-		topModelsQuery.append(SQL` limit ${limit}`);
-	}
+  if (limit) {
+    topModelsQuery.append(SQL` limit ${limit}`);
+  }
 
-	const topModels = await getData<{ model: string; count: number }>(conn, topModelsQuery);
+  const topModels = await getData<{ model: string; count: number }>(
+    conn,
+    topModelsQuery,
+  );
 
-	// Initialize result object
-	const result: { [model: string]: TemporalStat[] } = {};
+  // Initialize result object
+  const result: { [model: string]: TemporalStat[] } = {};
 
-	// Query volume data for each top model
-	const promises = topModels.map(async ({ model }) => {
-		const modelQuery = SQL`
+  // Query volume data for each top model
+  const promises = topModels.map(async ({ model }) => {
+    const modelQuery = SQL`
       select
         EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
         count(distinct id)::int as y
@@ -510,13 +524,13 @@ export async function getVolumeByCPUModelStats(
         x
     `;
 
-		const modelStats = await getData<TemporalStat>(conn, modelQuery);
-		result[model] = modelStats;
-	});
+    const modelStats = await getData<TemporalStat>(conn, modelQuery);
+    result[model] = modelStats;
+  });
 
-	await Promise.all(promises);
+  await Promise.all(promises);
 
-	return result;
+  return result;
 }
 
 /**
@@ -526,11 +540,11 @@ export async function getVolumeByCPUModelStats(
  * @returns A number representing the ratio of current auction count to 30-day average
  */
 export async function getPopularityStats(
-	conn: AsyncDuckDBConnection,
-	filter?: ServerFilter
+  conn: AsyncDuckDBConnection,
+  filter?: ServerFilter,
 ): Promise<number> {
-	// Start with base query
-	const query = SQL`
+  // Start with base query
+  const query = SQL`
     WITH daily_counts AS (
       SELECT
         date_trunc('day', seen) AS day,
@@ -539,16 +553,16 @@ export async function getPopularityStats(
         server
   `;
 
-	// Apply filter if provided
-	if (filter) {
-		const filterQuery = generateFilterQuery(filter, false, false);
-		if (filterQuery.text.trim() !== '') {
-			query.append(SQL` WHERE `).append(filterQuery);
-		}
-	}
+  // Apply filter if provided
+  if (filter) {
+    const filterQuery = generateFilterQuery(filter, false, false);
+    if (filterQuery.text.trim() !== "") {
+      query.append(SQL` WHERE `).append(filterQuery);
+    }
+  }
 
-	// Complete the query to calculate current count vs 30-day average
-	query.append(SQL`
+  // Complete the query to calculate current count vs 30-day average
+  query.append(SQL`
       GROUP BY
         day
       ORDER BY
@@ -578,12 +592,12 @@ export async function getPopularityStats(
       stats
   `);
 
-	const result = await getData<{ popularity_ratio: number }>(conn, query);
+  const result = await getData<{ popularity_ratio: number }>(conn, query);
 
-	// Return 1 (neutral) if no data is available
-	if (result.length === 0) {
-		return 1;
-	}
+  // Return 1 (neutral) if no data is available
+  if (result.length === 0) {
+    return 1;
+  }
 
-	return result[0].popularity_ratio;
+  return result[0].popularity_ratio;
 }

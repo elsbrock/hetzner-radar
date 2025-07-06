@@ -4,13 +4,13 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'worker/**'
-      - '.github/workflows/worker-tests.yml'
+      - "worker/**"
+      - ".github/workflows/worker-tests.yml"
   pull_request:
     branches: [main, develop]
     paths:
-      - 'worker/**'
-      - '.github/workflows/worker-tests.yml'
+      - "worker/**"
+      - ".github/workflows/worker-tests.yml"
 
 jobs:
   test:
@@ -27,9 +27,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: './package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -51,9 +51,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: './package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
 
       - name: Install dependencies
         run: npm ci

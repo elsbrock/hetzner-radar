@@ -26,7 +26,8 @@
       "Bash(npx eslint:*)",
       "Bash(node:*)",
       "Bash(npx prettier:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx playwright test:*)"
     ],
     "deny": []
   }

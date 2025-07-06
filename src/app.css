@@ -1,10 +1,10 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /* Global font size adjustment */
 html {
-	font-size: 0.9rem; /* Reduce base font size by 10% */
+  font-size: 0.9rem; /* Reduce base font size by 10% */
 }
 
 /* 

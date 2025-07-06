@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       code:
-        description: 'Authorization code (leave empty for step 1)'
+        description: "Authorization code (leave empty for step 1)"
         required: false
 
 permissions:
-  actions: write  # Required for cache management
-  contents: read  # Required for basic repository access
+  actions: write # Required for cache management
+  contents: read # Required for basic repository access
 
 jobs:
   auth:
