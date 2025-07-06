@@ -5,6 +5,7 @@
 	import 'leaflet/dist/leaflet.css';
 	import type L from 'leaflet';
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
+	import CloudAvailabilityChart from '$lib/components/CloudAvailabilityChart.svelte';
 	import { invalidateAll, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	// import QuickStat from '$lib/components/QuickStat.svelte';
@@ -25,7 +26,10 @@
 		Button,
 		Input,
 		Select,
-		Toggle
+		Toggle,
+		Card,
+		ButtonGroup,
+		Label
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
@@ -52,6 +56,9 @@
 	const initialArchitectureFilter = params.get('arch') || 'all';
 	const initialCpuTypeFilter = params.get('cpu') || 'all';
 	const initialSearchQuery = params.get('search') || '';
+	
+	// Feature flag from URL
+	const enableAvailabilityPatterns = params.get('timeline') === 'true';
 
 	// Filter states
 	let showAvailableOnly = $state(initialShowAvailableOnly);
@@ -62,6 +69,14 @@
 
 	// Collapsed groups state
 	let collapsedGroups = $state(new Set<string>());
+	
+	// Availability patterns state
+	let showAvailabilityPatterns = $state(false);
+	let availabilityViewMode = $state<'location' | 'serverType'>('location');
+	let selectedPatternLocationId = $state<number | undefined>();
+	let selectedPatternServerTypeId = $state<number | undefined>();
+	let patternDateRange = $state<'24h' | '7d' | '30d'>('7d');
+	let patternGranularity = $state<'hour' | 'day' | 'week'>('hour');
 
 	// Update URL when filters change
 	$effect(() => {
@@ -99,6 +114,29 @@
 			name: `${loc.city}, ${loc.country} (${loc.name})`
 		})) || []
 	);
+	
+	// Compute date ranges for patterns
+	const patternDateRanges = $derived(() => {
+		const now = new Date();
+		const ranges = {
+			'24h': {
+				start: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+				end: now,
+				granularity: 'hour' as const
+			},
+			'7d': {
+				start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+				end: now,
+				granularity: 'hour' as const
+			},
+			'30d': {
+				start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+				end: now,
+				granularity: 'day' as const
+			}
+		};
+		return ranges[patternDateRange];
+	});
 
 	function openCreateAlertModal() {
 		editingCloudAlert = null;
@@ -882,6 +920,143 @@
 			<Spinner size="8" />
 			<p class="ml-3 text-lg text-gray-600 dark:text-gray-300">Loading availability data...</p>
 		</div>
+	{/if}
+
+	<!-- Availability Patterns Section -->
+	{#if data.statusData && !data.error && enableAvailabilityPatterns}
+		<section class="mt-8 mb-8">
+			<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
+				<Card class="!p-0">
+					<div class="border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700">
+						<div class="flex flex-wrap items-center justify-between gap-4">
+							<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+								Availability Patterns
+							</h3>
+							<Button
+								size="sm"
+								color={showAvailabilityPatterns ? 'primary' : 'light'}
+								on:click={() => showAvailabilityPatterns = !showAvailabilityPatterns}
+							>
+								{showAvailabilityPatterns ? 'Hide' : 'Show'} Timeline
+							</Button>
+						</div>
+					</div>
+					
+					{#if showAvailabilityPatterns}
+						<div class="p-4">
+							<!-- Controls -->
+							<div class="mb-4 flex flex-wrap gap-4">
+								<!-- View Mode Toggle -->
+								<div class="flex items-center gap-2">
+									<Label>View by:</Label>
+									<ButtonGroup>
+										<Button
+											size="xs"
+											color={availabilityViewMode === 'location' ? 'primary' : 'light'}
+											on:click={() => {
+												availabilityViewMode = 'location';
+												selectedPatternServerTypeId = undefined;
+											}}
+										>
+											Location
+										</Button>
+										<Button
+											size="xs"
+											color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
+											on:click={() => {
+												availabilityViewMode = 'serverType';
+												selectedPatternLocationId = undefined;
+											}}
+										>
+											Server Type
+										</Button>
+									</ButtonGroup>
+								</div>
+								
+								<!-- Location/Server Type Selector -->
+								{#if availabilityViewMode === 'location'}
+									<Select
+										bind:value={selectedPatternLocationId}
+										size="sm"
+										class="w-64"
+										placeholder="Select a location"
+									>
+										<option value={undefined} disabled>Select a location</option>
+										{#each locationOptions as location}
+											<option value={location.value}>{location.name}</option>
+										{/each}
+									</Select>
+								{:else}
+									<Select
+										bind:value={selectedPatternServerTypeId}
+										size="sm"
+										class="w-64"
+										placeholder="Select a server type"
+									>
+										<option value={undefined} disabled>Select a server type</option>
+										{#each serverTypeOptions as serverType}
+											<option value={serverType.value}>{serverType.name}</option>
+										{/each}
+									</Select>
+								{/if}
+								
+								<!-- Date Range Selector -->
+								<div class="flex items-center gap-2">
+									<Label>Time range:</Label>
+									<ButtonGroup>
+										<Button
+											size="xs"
+											color={patternDateRange === '24h' ? 'primary' : 'light'}
+											on:click={() => patternDateRange = '24h'}
+										>
+											24 Hours
+										</Button>
+										<Button
+											size="xs"
+											color={patternDateRange === '7d' ? 'primary' : 'light'}
+											on:click={() => patternDateRange = '7d'}
+										>
+											7 Days
+										</Button>
+										<Button
+											size="xs"
+											color={patternDateRange === '30d' ? 'primary' : 'light'}
+											on:click={() => patternDateRange = '30d'}
+										>
+											30 Days
+										</Button>
+									</ButtonGroup>
+								</div>
+							</div>
+							
+							<!-- Chart -->
+							{#if (availabilityViewMode === 'location' && selectedPatternLocationId) || (availabilityViewMode === 'serverType' && selectedPatternServerTypeId)}
+								<CloudAvailabilityChart
+									startDate={patternDateRanges().start}
+									endDate={patternDateRanges().end}
+									granularity={patternDateRanges().granularity}
+									viewMode={availabilityViewMode}
+									selectedLocationId={selectedPatternLocationId}
+									selectedServerTypeId={selectedPatternServerTypeId}
+									serverTypes={data.statusData.serverTypes}
+									locations={data.statusData.locations}
+								/>
+							{:else}
+								<div class="flex h-64 items-center justify-center text-gray-500 dark:text-gray-400">
+									<p>
+										{#if availabilityViewMode === 'location'}
+											Select a location to view availability patterns
+										{:else}
+											Select a server type to view availability patterns
+										{/if}
+									</p>
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</Card>
+			</div>
+		</section>
 	{/if}
 
 	<section class="mt-12 mb-8">

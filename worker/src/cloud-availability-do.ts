@@ -9,6 +9,7 @@ import { CloudStatusService } from './cloud-status-service';
 import { NotificationService } from './notification-service';
 import { CloudAlertService } from './cloud-alert-service';
 import { CloudNotificationService } from './cloud-notifications/cloud-notification-service';
+import { AnalyticsQueryService } from './analytics-query-service';
 
 interface CloudAvailabilityEnv {
 	HETZNER_API_TOKEN: string;
@@ -16,6 +17,8 @@ interface CloudAvailabilityEnv {
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
 	FORWARDEMAIL_API_KEY?: string;
 	DB: D1Database;
+	CF_ACCOUNT_ID?: string;
+	CF_BEARER_TOKEN?: string;
 }
 
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
@@ -31,6 +34,7 @@ export class CloudAvailabilityDO extends DurableObject {
 	private notificationService: NotificationService;
 	private cloudAlertService: CloudAlertService;
 	private cloudNotificationService: CloudNotificationService;
+	private analyticsQueryService: AnalyticsQueryService;
 
 	constructor(ctx: DurableObjectState, env: CloudAvailabilityEnv) {
 		super(ctx, env);
@@ -60,6 +64,9 @@ export class CloudAvailabilityDO extends DurableObject {
 			notificationService: this.cloudNotificationService,
 			doId: ctx.id.toString(),
 		});
+
+		// Initialize analytics query service
+		this.analyticsQueryService = new AnalyticsQueryService();
 
 		this.logEnvironmentInfo();
 	}
@@ -125,6 +132,34 @@ export class CloudAvailabilityDO extends DurableObject {
 		}
 	}
 
+	async getHistoricalAvailability(options: {
+		startDate: string;
+		endDate: string;
+		serverTypeId?: number;
+		locationId?: number;
+		granularity?: 'hour' | 'day' | 'week';
+	}) {
+		try {
+			console.log(`[CloudAvailabilityDO ${this.ctx.id}] Getting historical availability:`, options);
+
+			// Use the analytics query service to fetch historical data
+			const historicalData = await this.analyticsQueryService.queryAvailabilityHistory(options, {
+				ANALYTICS_ENGINE: this.env.ANALYTICS_ENGINE!,
+				CF_ACCOUNT_ID: this.env.CF_ACCOUNT_ID,
+				CF_BEARER_TOKEN: this.env.CF_BEARER_TOKEN,
+			});
+
+			return {
+				data: historicalData,
+				query: options,
+				timestamp: new Date().toISOString(),
+			};
+		} catch (error) {
+			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Error in getHistoricalAvailability RPC:`, error);
+			throw error;
+		}
+	}
+
 	private async fetchCloudStatus(): Promise<void> {
 		try {
 			const changes = await this.cloudStatusService.fetchAndUpdateStatus();
@@ -163,6 +198,8 @@ export class CloudAvailabilityDO extends DurableObject {
 		console.log(`  - ANALYTICS_ENGINE: ${this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING'}`);
 		console.log(`  - FORWARDEMAIL_API_KEY: ${this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING'}`);
 		console.log(`  - DB: ${this.env.DB ? 'Present' : 'MISSING'}`);
+		console.log(`  - CF_ACCOUNT_ID: ${this.env.CF_ACCOUNT_ID ? 'Present' : 'MISSING'}`);
+		console.log(`  - CF_BEARER_TOKEN: ${this.env.CF_BEARER_TOKEN ? 'Present' : 'MISSING'}`);
 		console.log(`  - FETCH_INTERVAL_MS: ${this.fetchIntervalMs}ms`);
 		console.log(`  - Cloud alert notification channels: ${this.cloudNotificationService.getChannels().join(', ')}`);
 	}

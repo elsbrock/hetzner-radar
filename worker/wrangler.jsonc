@@ -42,7 +42,7 @@
 	"analytics_engine_datasets": [
 		{
 			"binding": "ANALYTICS_ENGINE",
-			"dataset": "cloud_availability",
+			"dataset": "cloud_availability_v2",
 		},
 	],
 	"vars": {

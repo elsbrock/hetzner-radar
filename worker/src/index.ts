@@ -34,6 +34,8 @@ interface Env {
 	DB: D1Database;
 	AUCTION_IMPORT_INTERVAL_MS?: string;
 	HETZNER_AUCTION_API_URL?: string;
+	CF_ACCOUNT_ID?: string;
+	CF_BEARER_TOKEN?: string;
 }
 
 export { CloudAvailabilityDO, AuctionImportDO };
@@ -104,6 +106,23 @@ Combined:
 		} catch (e: unknown) {
 			console.error('Error in Worker getStatus RPC:', e);
 			throw new Error(`Error calling getStatus on DO: ${e instanceof Error ? e.message : String(e)}`);
+		}
+	}
+
+	async getHistoricalAvailability(options: {
+		startDate: string;
+		endDate: string;
+		serverTypeId?: number;
+		locationId?: number;
+		granularity?: 'hour' | 'day' | 'week';
+	}) {
+		try {
+			const durableObjectId = this.env.CLOUD_STATUS_DO.idFromName('singleton-cloud-availability-v1');
+			const stub = this.env.CLOUD_STATUS_DO.get(durableObjectId);
+			return await (stub as { getHistoricalAvailability(options: any): Promise<unknown> }).getHistoricalAvailability(options);
+		} catch (e: unknown) {
+			console.error('Error in Worker getHistoricalAvailability RPC:', e);
+			throw new Error(`Error calling getHistoricalAvailability on DO: ${e instanceof Error ? e.message : String(e)}`);
 		}
 	}
 

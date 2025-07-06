@@ -27,7 +27,9 @@
       "Bash(node:*)",
       "Bash(npx prettier:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx playwright test:*)"
+      "Bash(npx playwright test:*)",
+      "Bash(npm run format:*)",
+      "WebFetch(domain:developers.cloudflare.com)"
     ],
     "deny": []
   }

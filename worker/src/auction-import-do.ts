@@ -169,23 +169,8 @@ export class AuctionImportDO extends DurableObject {
 				console.log(`[AuctionImportDO ${this.ctx.id}] No auction changes detected, skipping alert processing`);
 			}
 
-			// Write analytics for successful import
-			const duration = Date.now() - startTime;
-			await this.notificationService.writeImportAnalytics(
-				true,
-				{
-					...auctionImportResult,
-					alertsProcessed: alertProcessingResult.length,
-					alertsSuccessful: alertProcessingResult.filter((a) => a.success).length,
-					notificationsSent: alertProcessingResult.reduce((sum, a) => sum + a.notifications, 0),
-				},
-				duration,
-			);
 		} catch (error: unknown) {
-			const duration = Date.now() - startTime;
 			console.error(`[AuctionImportDO ${this.ctx.id}] Failed during auction import/alert processing:`, error);
-
-			await this.notificationService.writeImportAnalytics(false, undefined, duration, error?.message || 'Unknown error');
 			throw error;
 		}
 	}

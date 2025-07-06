@@ -55,26 +55,4 @@ export class NotificationService {
 
 		console.log(`[NotificationService ${this.doId}] Wrote ${changes.length} data points to Analytics Engine`);
 	}
-
-	async writeImportAnalytics(success: boolean, stats?: unknown, duration?: number, error?: string): Promise<void> {
-		if (!this.analyticsEngine) return;
-
-		try {
-			if (success && stats) {
-				this.analyticsEngine.writeDataPoint({
-					blobs: ['auction_import', 'success'],
-					doubles: [stats.processed || 0, stats.newAuctions || 0, stats.priceChanges || 0, duration || 0],
-					indexes: ['auction_import_success'],
-				});
-			} else {
-				this.analyticsEngine.writeDataPoint({
-					blobs: ['auction_import', 'error', error || 'unknown'],
-					doubles: [duration || 0],
-					indexes: ['auction_import_error'],
-				});
-			}
-		} catch (analyticsError) {
-			console.error(`[NotificationService ${this.doId}] Failed to write analytics:`, analyticsError);
-		}
-	}
 }
