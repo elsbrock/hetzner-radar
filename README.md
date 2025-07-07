@@ -8,7 +8,15 @@ aims to enhance this by offering advanced filtering, a comprehensive pricing
 history and target price alerts. Additionally, we track server volumes and other
 relevant statistics.
 
-https://github.com/user-attachments/assets/cb49e923-0315-49aa-a3c2-2dbef2ee0596
+<img width="320" src="https://github.com/user-attachments/assets/e32aaa07-a651-4dc2-8df3-0d5b8ee4a8b8"/>
+<img width="320" src="https://github.com/user-attachments/assets/47d5a2f7-c924-49cc-b271-c58d5a28a921"/>
+<img width="320" src="https://github.com/user-attachments/assets/e1de28a0-7e84-48c1-8238-4869b7163c0d"/>
+<img width="320" src="https://github.com/user-attachments/assets/3e3ce873-4356-4e27-a80b-431d81dbb1c9"/>
+<img width="320" src="https://github.com/user-attachments/assets/aa91e605-1c09-4050-8dba-d2fd28b7bf1b"/>
+<img width="320" src="https://github.com/user-attachments/assets/1ec0d4b3-4f1e-44f9-8b79-bf45eccc4ddf"/>
+
+<br/>
+<br/>
 
 > [!NOTE]
 > This is an independent project and is not officially affiliated with Hetzner.
