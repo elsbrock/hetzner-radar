@@ -60,7 +60,7 @@
     "typescript": "5.8.3",
     "typescript-eslint": "8.36.0",
     "validator": "13.15.15",
-    "vite": "6.3.5",
+    "vite": "7.0.4",
     "vite-plugin-remove-console": "2.2.0",
     "vitest": "3.2.4"
   },
