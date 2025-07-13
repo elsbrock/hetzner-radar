@@ -15,15 +15,15 @@
 	},
 	"devDependencies": {
 		"typescript": "5.8.3",
-		"wrangler": "4.23.0",
+		"wrangler": "4.24.3",
 		"vitest": "3.2.4",
-		"@cloudflare/workers-types": "^4.20250619.0",
+		"@cloudflare/workers-types": "^4.20250705.0",
 		"@vitest/coverage-v8": "3.2.4",
-		"eslint": "^9.28.0",
+		"eslint": "^9.31.0",
 		"eslint-config-prettier": "^10.1.5",
-		"typescript-eslint": "^8.33.1",
+		"typescript-eslint": "^8.36.0",
 		"prettier": "^3.6.2",
-		"@eslint/js": "^9.28.0",
+		"@eslint/js": "^9.31.0",
 		"globals": "^16.2.0"
 	}
 }
