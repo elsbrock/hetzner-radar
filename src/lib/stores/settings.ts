@@ -1,7 +1,10 @@
 import { writable } from "svelte/store";
+import { DEFAULT_CURRENCY, type CurrencyRate } from "$lib/currency";
 
 export type Settings = {
   vatSelection?: { countryCode: string };
+  currencySelection?: { code: string };
+  exchangeRate?: CurrencyRate;
   // Allow other keys for flexibility
   [key: string]: unknown;
 };
@@ -16,7 +19,7 @@ export type Settings = {
  */
 
 // Function to initialize settings from localStorage
-function createSettingsStore() {
+export function createSettingsStore() {
   const storedSettings =
     typeof window !== "undefined" ? localStorage.getItem("sr-settings") : null;
 
@@ -27,11 +30,17 @@ function createSettingsStore() {
   // Ensure vatSelection exists with a default if not set
   if (initialSettings.vatSelection === undefined) {
     initialSettings.vatSelection = { countryCode: "DE" };
-    // Persist the default if it was just added and we are in a browser context
-    // Only write back if settings were initially empty to avoid overwriting concurrent changes
-    if (typeof window !== "undefined" && !storedSettings) {
-      localStorage.setItem("sr-settings", JSON.stringify(initialSettings));
-    }
+  }
+
+  // Ensure currencySelection exists with a default if not set
+  if (initialSettings.currencySelection === undefined) {
+    initialSettings.currencySelection = { code: DEFAULT_CURRENCY };
+  }
+
+  // Persist defaults if they were just added and we are in a browser context
+  // Only write back if settings were initially empty to avoid overwriting concurrent changes
+  if (typeof window !== "undefined" && !storedSettings) {
+    localStorage.setItem("sr-settings", JSON.stringify(initialSettings));
   }
 
   const { subscribe, set, update } = writable<Settings>(initialSettings);
