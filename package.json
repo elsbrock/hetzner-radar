@@ -17,9 +17,9 @@
   },
   "devDependencies": {
     "@duckdb/duckdb-wasm": "1.30.0",
-    "@fortawesome/fontawesome-svg-core": "6.7.2",
-    "@fortawesome/free-brands-svg-icons": "6.7.2",
-    "@fortawesome/free-solid-svg-icons": "6.7.2",
+    "@fortawesome/fontawesome-svg-core": "7.0.1",
+    "@fortawesome/free-brands-svg-icons": "7.0.1",
+    "@fortawesome/free-solid-svg-icons": "7.0.1",
     "@fortawesome/svelte-fontawesome": "0.2.4",
     "@oslojs/crypto": "1.0.1",
     "@oslojs/encoding": "1.1.0",
