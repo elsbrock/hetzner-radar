@@ -29,7 +29,8 @@
 		SK: { name: 'Slovakia', rate: 0.2, flag: '🇸🇰' },
 		SI: { name: 'Slovenia', rate: 0.22, flag: '🇸🇮' },
 		ES: { name: 'Spain', rate: 0.21, flag: '🇪🇸' },
-		SE: { name: 'Sweden', rate: 0.25, flag: '🇸🇪' }
+		SE: { name: 'Sweden', rate: 0.25, flag: '🇸🇪' },
+		GB: { name: 'United Kingdom', rate: 0.20, flag: '🇬🇧' }
 	};
 </script>
 
