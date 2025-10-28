@@ -10,6 +10,7 @@ import { getUser } from "$lib/api/backend/user";
 import { getCloudAlertsForUser } from "$lib/api/backend/cloud-alerts";
 import { MAX_PRICE, MIN_PRICE } from "$lib/constants";
 import {
+  error,
   fail,
   type Actions,
   type ServerLoad,
@@ -19,13 +20,18 @@ import {
 
 /** @type {import('./$types').PageServerLoad} */
 export const load: ServerLoad = async (event: ServerLoadEvent) => {
-  const db = event.platform?.env.DB;
+  const env = event.platform?.env;
+  const db = env?.DB;
+
+  if (!db) {
+    throw error(500, "Database binding is not configured");
+  }
 
   // Fetch cloud status data for server types and locations
   let cloudStatusData = null;
   try {
-    if (event.platform?.env?.CLOUD_STATUS) {
-      const cloudStatusWorker = event.platform.env.CLOUD_STATUS;
+    if (env?.CLOUD_STATUS) {
+      const cloudStatusWorker = env.CLOUD_STATUS;
       cloudStatusData = await cloudStatusWorker.getStatus();
     }
   } catch (error) {
@@ -33,9 +39,9 @@ export const load: ServerLoad = async (event: ServerLoadEvent) => {
   }
 
   const [alertResults, user, cloudAlerts] = await Promise.all([
-    getAlertsForUser(db!, event.locals.user!.id.toString()),
-    getUser(db!, event.locals.user!.id.toString()),
-    getCloudAlertsForUser(db!, event.locals.user!.id.toString()),
+    getAlertsForUser(db, event.locals.user!.id.toString()),
+    getUser(db, event.locals.user!.id.toString()),
+    getCloudAlertsForUser(db, event.locals.user!.id.toString()),
   ]);
 
   return {
@@ -85,7 +91,15 @@ function validateAlert(name: string, price: string, filter?: string) {
 
 export const actions: Actions = {
   add: async (event: RequestEvent) => {
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
+
+    if (!db) {
+      return fail(500, {
+        success: false,
+        error: "Database binding is not configured.",
+      });
+    }
     const formData = await event.request.formData();
     const name = formData.get("name") as string;
     const filter = formData.get("filter") as string;
@@ -120,7 +134,7 @@ export const actions: Actions = {
 
     // verify user is below the limit
     const isBelow = await isBelowMaxAlerts(
-      db!,
+      db,
       event.locals.user!.id.toString(),
     );
     if (!isBelow) {
@@ -129,7 +143,7 @@ export const actions: Actions = {
 
     try {
       await createAlert(
-        db!,
+        db,
         event.locals.user!.id.toString(),
         name,
         filter,
@@ -138,15 +152,23 @@ export const actions: Actions = {
         emailNotifications,
         discordNotifications,
       );
-    } catch {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       return fail(500, { success: false, error: "Failed to create alert" });
     }
 
     return { success: true };
   },
   edit: async (event: RequestEvent) => {
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
+
+    if (!db) {
+      return fail(500, {
+        success: false,
+        error: "Database binding is not configured.",
+      });
+    }
     const formData = await event.request.formData();
     const name = formData.get("name") as string;
     const price = formData.get("price") as string;
@@ -171,7 +193,7 @@ export const actions: Actions = {
 
     try {
       await updateAlert(
-        db!,
+        db,
         event.locals.user!.id.toString(),
         alertId,
         name,
@@ -179,15 +201,23 @@ export const actions: Actions = {
         emailNotifications,
         discordNotifications,
       );
-    } catch {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       return fail(500, { success: false, error: "Failed to update alert" });
     }
 
     return { success: true };
   },
   delete: async (event: RequestEvent) => {
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
+
+    if (!db) {
+      return fail(500, {
+        success: false,
+        error: "Database binding is not configured.",
+      });
+    }
     const formData = await event.request.formData();
     const alertId = formData.get("alertId") as string;
 
@@ -196,9 +226,9 @@ export const actions: Actions = {
     }
 
     try {
-      await deleteAlert(db!, alertId, event.locals.user!.id.toString());
-    } catch {
-      console.error(e);
+      await deleteAlert(db, alertId, event.locals.user!.id.toString());
+    } catch (error) {
+      console.error(error);
       return fail(500, { success: false, error: "Failed to delete alert" });
     }
 

@@ -6,7 +6,7 @@ export interface PriceAlert {
   user_id: string;
   name: string;
   filter: string;
-  price: string;
+  price: number;
   vat_rate: number; // Added VAT rate
   email_notifications: boolean;
   discord_notifications: boolean;
@@ -17,6 +17,10 @@ export interface PriceAlertHistory {
   id: string;
   user_id: string;
   alert_id: string;
+  name: string;
+  filter: string;
+  price: number;
+  trigger_price: number;
   vat_rate: number; // Added VAT rate
   email_notifications: boolean;
   discord_notifications: boolean;
@@ -28,16 +32,46 @@ export interface UserAlerts {
   triggeredResults: PriceAlertHistory[];
 }
 
-function parsePriceAlert(raw: unknown): PriceAlert {
+type PriceAlertRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  filter: string;
+  price: number;
+  vat_rate: number;
+  email_notifications: number | boolean;
+  discord_notifications: number | boolean;
+  created_at: string;
+};
+
+type PriceAlertHistoryRow = {
+  id: string;
+  user_id: string;
+  alert_id: string;
+  name: string;
+  filter: string;
+  price: number;
+  trigger_price: number;
+  vat_rate: number;
+  email_notifications: number | boolean;
+  discord_notifications: number | boolean;
+  triggered_at: string;
+};
+
+function parsePriceAlert(raw: PriceAlertRow): PriceAlert {
   return {
     ...raw,
+    email_notifications: Boolean(raw.email_notifications),
+    discord_notifications: Boolean(raw.discord_notifications),
     created_at: new Date(raw.created_at),
   };
 }
 
-function parsePriceAlertHistory(raw: unknown): PriceAlertHistory {
+function parsePriceAlertHistory(raw: PriceAlertHistoryRow): PriceAlertHistory {
   return {
     ...raw,
+    email_notifications: Boolean(raw.email_notifications),
+    discord_notifications: Boolean(raw.discord_notifications),
     triggered_at: new Date(raw.triggered_at),
   };
 }
@@ -51,14 +85,14 @@ export async function getAlertsForUser(
       "SELECT * FROM price_alert WHERE user_id = ? ORDER BY created_at DESC",
     )
     .bind(userId)
-    .all();
+    .all<PriceAlertRow>();
 
   const triggeredResultsRaw = await db
     .prepare(
       "SELECT * FROM price_alert_history WHERE user_id = ? ORDER BY triggered_at DESC LIMIT 10",
     )
     .bind(userId)
-    .all();
+    .all<PriceAlertHistoryRow>();
 
   const activeResults: PriceAlert[] =
     activeResultsRaw.results.map(parsePriceAlert);
@@ -80,7 +114,7 @@ export async function getAlertForUser(
   const result = await db
     .prepare("SELECT * FROM price_alert WHERE user_id = ? AND filter = ?")
     .bind(userId, filter)
-    .first();
+    .first<PriceAlertRow>();
 
   if (!result) {
     return null;
@@ -98,7 +132,7 @@ export async function isBelowMaxAlerts(
     .bind(userId)
     .first<{ count: number }>();
 
-  return ((result as unknown as { count: number })?.count ?? 0) < MAX_ALERTS;
+  return (result?.count ?? 0) < MAX_ALERTS;
 }
 
 export async function createAlert(

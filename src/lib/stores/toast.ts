@@ -8,16 +8,29 @@ interface Toast {
   icon: ToastType;
 }
 
-const toastQueue = writable<Toast[]>([]);
-
-function addToast(toast: {
+type ToastInput = {
   message: string;
-  type: ToastType;
+  type?: ToastType;
+  color?: "green" | "red";
+  icon?: ToastType;
   dismissible?: boolean;
   timeout?: number;
-}) {
-  const color = toast.type === "success" ? "green" : "red";
-  const icon = toast.type;
+};
+
+const toastQueue = writable<Toast[]>([]);
+
+function resolveToastType(input: ToastInput): ToastType {
+  if (input.type) return input.type;
+  if (input.icon) return input.icon;
+  if (input.color) return input.color === "green" ? "success" : "error";
+  return "success";
+}
+
+function addToast(toast: ToastInput) {
+  const type = resolveToastType(toast);
+  const color = toast.color ?? (type === "success" ? "green" : "red");
+  const icon = toast.icon ?? type;
+
   toastQueue.update((queue) => [
     ...queue,
     { id: Date.now(), color, icon, message: toast.message },

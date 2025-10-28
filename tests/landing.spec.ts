@@ -1,4 +1,4 @@
-import test, { expect, type Page } from "@playwright/test"; // Import Page and ConsoleMessage from playwright
+import test, { expect, type Page } from "./fixtures"; // Use shared fixtures with Playwright types
 
 test.describe("Landing Page Tests", () => {
   let page: Page;

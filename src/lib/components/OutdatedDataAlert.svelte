@@ -12,7 +12,7 @@
 
 	let reloading = false;
 	let showElement = false;
-	let timer: unknown;
+	let timer: ReturnType<typeof setTimeout> | null = null;
 
 	$: if (lastUpdate) {
 		const now = dayjs();
@@ -23,20 +23,25 @@
 		const remainingTime = threshold - elapsedSeconds;
 		console.log('remaining time', remainingTime);
 
-		if (elapsedSeconds > threshold) {
+		if (elapsedSeconds >= threshold) {
 			showElement = true;
 		} else {
-			if (timer) {
+			if (timer !== null) {
 				clearTimeout(timer);
 			}
-			timer = setTimeout(() => {
+			if (remainingTime > 0) {
+				timer = setTimeout(() => {
+					showElement = true;
+					timer = null;
+				}, remainingTime * 1000);
+			} else {
 				showElement = true;
-			}, remainingTime * 1000);
+			}
 		}
 	}
 
 	onDestroy(() => {
-		if (timer) {
+		if (timer !== null) {
 			clearTimeout(timer);
 		}
 	});

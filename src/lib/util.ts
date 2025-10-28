@@ -1,8 +1,14 @@
-export function debounce(fn: unknown, delay: number) {
-  let timeoutID: number;
-  return function (...args: unknown) {
-    clearTimeout(timeoutID);
-    timeoutID = setTimeout(() => fn(...args), timeoutID ? delay : 0) as any;
+export function debounce<T extends (...args: any[]) => void>(
+  fn: T,
+  delay: number,
+) {
+  let timeoutID: ReturnType<typeof setTimeout> | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (timeoutID) {
+      clearTimeout(timeoutID);
+    }
+    timeoutID = setTimeout(() => fn(...args), timeoutID ? delay : 0);
   };
 }
 
@@ -31,8 +37,8 @@ export function formatRelativeTime(
     } else {
       return date.toLocaleDateString();
     }
-  } catch {
-    console.error("Error formatting relative time:", e);
+  } catch (error) {
+    console.error("Error formatting relative time:", error);
     return "Invalid Date";
   }
 }

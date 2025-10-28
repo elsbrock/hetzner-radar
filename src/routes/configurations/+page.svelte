@@ -27,6 +27,9 @@
 	import { db } from '../../stores/db';
 
 	let loading = $state(true);
+	let selectedTimeUnit = $derived((
+		$settingsStore.timeUnitPrice ?? 'perMonth'
+	) as 'perMonth' | 'perHour');
 
 	let cheapestConfigurations: ServerConfiguration[] = $state([]);
 	let cheapDiskConfigurations: ServerConfiguration[] = $state([]);
@@ -110,9 +113,9 @@
 					{/each}
 				{:else}
 					{#each cheapestConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-						<ServerCard
-							timeUnitPrice={$settingsStore.timeUnitPrice}
-							{config}
+							<ServerCard
+								timeUnitPrice={selectedTimeUnit}
+								{config}
 							loading={false}
 							displayStoragePrice={undefined}
 							displayRamPrice={undefined}
@@ -146,7 +149,7 @@
 				{:else}
 					{#each cheapDiskConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
 						<ServerCard
-							timeUnitPrice={$settingsStore.timeUnitPrice}
+							timeUnitPrice={selectedTimeUnit}
 							{config}
 							loading={false}
 							displayStoragePrice="perTB"
@@ -181,7 +184,7 @@
 				{:else}
 					{#each cheapRamConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
 						<ServerCard
-							timeUnitPrice={$settingsStore.timeUnitPrice}
+							timeUnitPrice={selectedTimeUnit}
 							{config}
 							loading={false}
 							displayRamPrice="perGB"
@@ -216,7 +219,7 @@
 				{:else}
 					{#each cheapNvmeConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
 						<ServerCard
-							timeUnitPrice={$settingsStore.timeUnitPrice}
+							timeUnitPrice={selectedTimeUnit}
 							{config}
 							loading={false}
 							displayStoragePrice="perTB"
@@ -248,7 +251,7 @@
 				{:else}
 					{#each cheapSataConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
 						<ServerCard
-							timeUnitPrice={$settingsStore.timeUnitPrice}
+							timeUnitPrice={selectedTimeUnit}
 							{config}
 							loading={false}
 							displayStoragePrice="perTB"

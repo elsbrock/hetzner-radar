@@ -29,6 +29,11 @@
 		twinkleSpeed: number;
 	}
 
+	interface ParticleWithBehavior extends Particle {
+		update(): void;
+		draw(): void;
+	}
+
 	interface GradientPoint {
 		x: number;
 		y: number;
@@ -38,13 +43,67 @@
 		targetY?: number;
 	}
 
-	let canvas = $state<HTMLCanvasElement>();
+	const createParticle = (
+		canvas: HTMLCanvasElement,
+		ctx: CanvasRenderingContext2D,
+		isDarkModeRef: () => boolean,
+	): ParticleWithBehavior => {
+		const width = canvas.width || window.innerWidth;
+		const height = canvas.height || window.innerHeight;
+		const particle: Particle = {
+			x: Math.random() * width,
+			y: Math.random() * height,
+			size: Math.random() * 2 + 1,
+			speedX: (Math.random() - 0.5) * 0.5,
+			speedY: (Math.random() - 0.5) * 0.5,
+			color: '#FF7F50',
+			opacity: 1,
+			baseOpacity: Math.random() * 0.3 + 0.2,
+			twinklePhase: Math.random() * Math.PI * 2,
+			twinkleSpeed: Math.random() * 0.02 + 0.01,
+		};
+
+		const update = () => {
+			particle.x += particle.speedX;
+			particle.y += particle.speedY;
+
+			const width = canvas.width || window.innerWidth;
+			const height = canvas.height || window.innerHeight;
+
+			if (particle.x < 0 || particle.x > width) particle.speedX *= -1;
+			if (particle.y < 0 || particle.y > height) particle.speedY *= -1;
+
+			particle.x = Math.max(0, Math.min(width, particle.x));
+			particle.y = Math.max(0, Math.min(height, particle.y));
+
+			particle.twinklePhase += particle.twinkleSpeed;
+			const twinkle = Math.sin(particle.twinklePhase) * 0.3 + 0.7;
+			particle.opacity = particle.baseOpacity * twinkle;
+			particle.color = isDarkModeRef() ? '#FF7F50' : '#FF7F50';
+		};
+
+		const draw = () => {
+			ctx.beginPath();
+			ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+			const alpha = Math.floor(particle.opacity * 255)
+				.toString(16)
+				.padStart(2, '0');
+			ctx.fillStyle = `${particle.color}${alpha}`;
+			ctx.fill();
+		};
+
+		return { ...particle, update, draw };
+	};
+
+	let canvas = $state<HTMLCanvasElement | null>(null);
 	let isDarkMode = $state(false);
 
 	onMount(() => {
-		if (!browser || !canvas) return;
+		if (!browser) return;
+		const currentCanvas = canvas;
+		if (!currentCanvas) return;
 
-		const ctx = canvas.getContext('2d');
+		const ctx = currentCanvas.getContext('2d');
 		if (!ctx) return;
 
 		// Check for dark mode
@@ -70,24 +129,26 @@
 		let gradientPoints: GradientPoint[] = [];
 
 		const updateGradientColors = () => {
+			const width = currentCanvas.width;
+			const height = currentCanvas.height;
 			gradientPoints = [
 				{
-					x: canvas.width * 0.2,
-					y: canvas.height * 0.3,
-					radius: canvas.width * 0.4,
+					x: width * 0.2,
+					y: height * 0.3,
+					radius: width * 0.4,
 					color: isDarkMode ? 'rgba(255, 127, 80, 0.15)' : 'rgba(255, 127, 80, 0.1)' // Primary color with opacity
 				},
 				{
-					x: canvas.width * 0.8,
-					y: canvas.height * 0.7,
-					radius: canvas.width * 0.5,
+					x: width * 0.8,
+					y: height * 0.7,
+					radius: width * 0.5,
 					color: isDarkMode ? 'rgba(255, 159, 112, 0.1)' : 'rgba(255, 159, 112, 0.08)' // Lighter variant
 				}
 			];
 		};
 
 		// Particle system
-		const particles: Particle[] = [];
+		const particles: ParticleWithBehavior[] = [];
 		const particleCount = Math.min(50, Math.floor(window.innerWidth / 40));
 
 		// Resize canvas function
@@ -95,8 +156,8 @@
 			const width = window.innerWidth;
 			const height = window.innerHeight;
 
-			canvas.width = width;
-			canvas.height = height;
+			currentCanvas.width = width;
+			currentCanvas.height = height;
 
 			updateGradientColors();
 		};
@@ -104,61 +165,8 @@
 		// Initialize canvas size
 		resizeCanvas();
 
-		// Particle class implementation
-		class ParticleImpl implements Particle {
-			x: number;
-			y: number;
-			size: number;
-			speedX: number;
-			speedY: number;
-			color: string;
-			opacity: number;
-			baseOpacity: number;
-			twinklePhase: number;
-			twinkleSpeed: number;
-
-			constructor() {
-				this.x = Math.random() * canvas.width;
-				this.y = Math.random() * canvas.height;
-				this.size = Math.random() * 2 + 1;
-				this.speedX = (Math.random() - 0.5) * 0.5;
-				this.speedY = (Math.random() - 0.5) * 0.5;
-				this.color = isDarkMode ? '#FF7F50' : '#FF7F50'; // Primary color
-				this.baseOpacity = Math.random() * 0.3 + 0.2;
-				this.opacity = this.baseOpacity;
-				this.twinklePhase = Math.random() * Math.PI * 2;
-				this.twinkleSpeed = Math.random() * 0.02 + 0.01; // Slow twinkling
-			}
-
-			update() {
-				this.x += this.speedX;
-				this.y += this.speedY;
-
-				// Bounce off edges
-				if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-				if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-
-				// Constrain to canvas
-				this.x = Math.max(0, Math.min(canvas.width, this.x));
-				this.y = Math.max(0, Math.min(canvas.height, this.y));
-
-				// Subtle twinkling effect
-				this.twinklePhase += this.twinkleSpeed;
-				const twinkle = Math.sin(this.twinklePhase) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
-				this.opacity = this.baseOpacity * twinkle;
-			}
-
-			draw() {
-				ctx.beginPath();
-				ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-				ctx.fillStyle = `${this.color}${Math.floor(this.opacity * 255).toString(16).padStart(2, '0')}`;
-				ctx.fill();
-			}
-		}
-
-		// Initialize particles
 		for (let i = 0; i < particleCount; i++) {
-			particles.push(new ParticleImpl());
+			particles.push(createParticle(currentCanvas, ctx, () => isDarkMode));
 		}
 
 		// Connect particles with lines
@@ -195,8 +203,10 @@
 
 		// Draw grid with perspective
 		const drawGrid = () => {
-			const centerX = canvas.width / 2;
-			const centerY = canvas.height * 0.9; // Balanced position for globe effect
+			const width = currentCanvas.width;
+			const height = currentCanvas.height;
+			const centerX = width / 2;
+			const centerY = height * 0.9; // Balanced position for globe effect
 			const perspective = 400; // Stronger perspective for more pronounced curve
 
 			ctx.strokeStyle = isDarkMode
@@ -205,8 +215,8 @@
 			ctx.lineWidth = 0.5;
 
 			// Calculate grid bounds based on screen size
-			const gridExtentY = Math.max(40, Math.ceil(canvas.height / gridSize));
-			const gridExtentX = Math.max(50, Math.ceil(canvas.width / gridSize));
+			const gridExtentY = Math.max(40, Math.ceil(height / gridSize));
+			const gridExtentX = Math.max(50, Math.ceil(width / gridSize));
 
 			// Horizontal lines
 			for (let y = -20; y <= gridExtentY; y++) {
@@ -256,9 +266,11 @@
 
 		// Animation loop
 		const animate = () => {
+			const width = currentCanvas.width;
+			const height = currentCanvas.height;
 			// Clear canvas
 			ctx.fillStyle = isDarkMode ? '#111827' : '#f9fafb';
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.fillRect(0, 0, width, height);
 
 			// Update gradient colors if theme changed
 			if (isDarkMode !== document.documentElement.classList.contains('dark')) {
@@ -276,7 +288,7 @@
 				gradient.addColorStop(0, point.color);
 				gradient.addColorStop(1, 'transparent');
 				ctx.fillStyle = gradient;
-				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				ctx.fillRect(0, 0, width, height);
 			});
 
 			// Draw grid
@@ -293,8 +305,7 @@
 
 		// Handle mouse movement
 		const handleMouseMove = (e: MouseEvent) => {
-			if (!canvas) return;
-			const rect = canvas.getBoundingClientRect();
+			const rect = currentCanvas.getBoundingClientRect();
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
 
@@ -335,4 +346,4 @@
 	});
 </script>
 
-<canvas bind:this={canvas} class="fixed inset-0 -z-10 h-full w-full" />
+<canvas bind:this={canvas} class="fixed inset-0 -z-10 h-full w-full"></canvas>

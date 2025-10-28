@@ -1,6 +1,6 @@
 <script lang="ts">
 	import GenericChart from './GenericChart.svelte';
-	import type { ChartOptions } from 'chart.js';
+	import type { ChartOptions, TooltipItem } from 'chart.js';
 	import { Spinner, Alert } from 'flowbite-svelte';
 	
 	interface AvailabilityDataPoint {
@@ -41,7 +41,14 @@
 	
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let chartData = $state<any[]>([]);
+	type ChartSeries = {
+		name: string;
+		data: { x: number; y: number }[];
+		color?: string;
+		fill?: boolean;
+	};
+
+	let chartData = $state<ChartSeries[]>([]);
 	
 	// Fetch data when parameters change
 	$effect(() => {
@@ -101,7 +108,7 @@
 		}
 	}
 	
-	function transformDataForLocationView(data: AvailabilityDataPoint[]) {
+	function transformDataForLocationView(data: AvailabilityDataPoint[]): ChartSeries[] {
 		// Group by server type
 		const groupedData = new Map<number, AvailabilityDataPoint[]>();
 		
@@ -128,7 +135,7 @@
 		});
 	}
 	
-	function transformDataForServerTypeView(data: AvailabilityDataPoint[]) {
+	function transformDataForServerTypeView(data: AvailabilityDataPoint[]): ChartSeries[] {
 		// Group by location
 		const groupedData = new Map<number, AvailabilityDataPoint[]>();
 		
@@ -186,7 +193,7 @@
 	}
 	
 	// Chart options for availability visualization
-	const chartOptions: Partial<ChartOptions<'line'>> = {
+	const chartOptions: ChartOptions<'line'> = {
 		scales: {
 			x: {
 				type: 'time',
@@ -230,8 +237,8 @@
 		plugins: {
 			tooltip: {
 				callbacks: {
-					label: function(context) {
-						const label = context.dataset.label || '';
+					label: (context: TooltipItem<'line'>) => {
+						const label = context.dataset.label ?? '';
 						const value = context.parsed.y;
 						return `${label}: ${value === 1 ? 'Available' : 'Not Available'}`;
 					}
@@ -243,6 +250,8 @@
 			}
 		}
 	};
+
+	const chartOptionsForGeneric: Partial<ChartOptions<'line'>> = chartOptions;
 </script>
 
 <div class="w-full">
@@ -261,9 +270,9 @@
 		</Alert>
 	{:else}
 		<div class="h-96">
-			<GenericChart 
-				data={chartData} 
-				options={chartOptions} 
+			<GenericChart
+				data={chartData}
+				options={chartOptionsForGeneric as Partial<ChartOptions<any>>}
 				type="line"
 				legendShow={true}
 			/>

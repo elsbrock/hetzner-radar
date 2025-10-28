@@ -20,10 +20,17 @@ export async function handleError({ error, event }) {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const db = event.platform?.env.DB;
+  const env = event.platform?.env;
+  const db = env?.DB;
 
   // Retrieve the session token from cookies
   const sessionToken = event.cookies.get(SESSION_COOKIE_NAME);
+
+  if (!db) {
+    event.locals.user = null;
+    event.locals.session = null;
+    return resolve(event);
+  }
 
   if (!sessionToken) {
     // No session token present

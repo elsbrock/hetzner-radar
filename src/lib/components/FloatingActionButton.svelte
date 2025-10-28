@@ -1,12 +1,24 @@
 <script lang="ts">
 	import { Button } from 'flowbite-svelte';
-	import type { _IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome'; // Use named import
 	import { fly } from 'svelte/transition';
 	import { onDestroy } from 'svelte';
 	import { activeFabId, registerFab, unregisterFab } from '$lib/stores/fabStore';
 
-	let { icon, targetSelector = null, visible, priority, ariaLabel } = $props(); // Remove explicit type argument
+	let {
+		icon,
+		targetSelector = null,
+		visible,
+		priority,
+		ariaLabel
+	}: {
+		icon: IconDefinition;
+		targetSelector?: string | null;
+		visible: boolean;
+		priority: number;
+		ariaLabel: string;
+	} = $props();
 
 	// Unique identifier for this FAB instance
 	const fabId = Symbol('fabId');

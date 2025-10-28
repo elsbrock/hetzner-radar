@@ -1,7 +1,7 @@
 import { alphabet, generateRandomString } from "oslo/crypto";
 
 export async function generateEmailVerificationCode(
-  db: unknown,
+  db: DB,
   email: string,
 ): Promise<string> {
   const code = generateRandomString(6, alphabet("0-9"));
@@ -25,7 +25,7 @@ export async function generateEmailVerificationCode(
 }
 
 export async function verifyCodeExists(
-  db: unknown,
+  db: DB,
   email: string,
   code: string,
 ): Promise<boolean> {
@@ -35,18 +35,18 @@ export async function verifyCodeExists(
         "SELECT count(*) as count FROM email_verification_code WHERE code = ? and email = ? and expires_at > datetime('now')",
       )
       .bind(code, email)
-      .first("count")) === 1
+      .first<number>("count")) === 1
   );
 }
 
-export async function deleteVerificationCodes(db: unknown, email: string) {
+export async function deleteVerificationCodes(db: DB, email: string) {
   return db
     .prepare("DELETE FROM email_verification_code WHERE email = ?")
     .bind(email)
     .run();
 }
 
-export async function deleteExpiredVerificationCodes(db: unknown) {
+export async function deleteExpiredVerificationCodes(db: DB) {
   return db
     .prepare(
       "DELETE FROM email_verification_code WHERE expires_at < datetime('now')",

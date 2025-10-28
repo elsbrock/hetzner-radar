@@ -22,8 +22,20 @@ import type { Actions } from "./$types";
 export const actions: Actions = {
   identify: rateLimit(async (event) => {
     try {
-      const db = event.platform?.env.DB;
+      const env = event.platform?.env;
+      const db = env?.DB;
+      if (!db) {
+        return fail(500, {
+          error: "Database connection error.",
+        });
+      }
       const formData = await event.request.formData();
+      if (!db) {
+        return fail(500, {
+          error: "Database connection error.",
+        });
+      }
+
       let email = formData.get("email") as string;
       const tosAgree = formData.get("tosagree") as string;
       const cookieConsent = formData.get("cookieconsent") as string;
@@ -57,7 +69,7 @@ export const actions: Actions = {
       const verificationCode = await generateEmailVerificationCode(db, email);
       console.log("verification code", verificationCode);
 
-      await sendMail(event.platform?.env, {
+      await sendMail(env, {
         from: {
           name: "Server Radar",
           email: "no-reply@radar.iodev.org",
@@ -90,7 +102,13 @@ https://radar.iodev.org/`,
 
   authenticate: rateLimit(async (event) => {
     try {
-      const db = event.platform?.env.DB;
+      const env = event.platform?.env;
+      const db = env?.DB;
+      if (!db) {
+        return fail(500, {
+          error: "Database connection error.",
+        });
+      }
       const formData = await event.request.formData();
       const code = formData.get("code") as string;
       let email = formData.get("email") as string;

@@ -129,14 +129,14 @@ async function getData<T>(
 
     stmt = await conn.prepare(query.sql);
     const arrowResult = await stmt.query(...query.values);
-    results = arrowResult.toArray().map((row: unknown) => row.toJSON());
+    results = arrowResult.toArray().map((row) => row.toJSON() as T);
 
     const endTime = performance.now();
     const timing = (endTime - startTime) / 1000;
 
     console.debug(`${results.length} results in ${timing.toFixed(4)}s`);
-  } catch {
-    console.error("error executing query", getRawQuery(query), e);
+  } catch (error) {
+    console.error("error executing query", getRawQuery(query), error);
   } finally {
     stmt?.close();
   }

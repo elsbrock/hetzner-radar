@@ -32,12 +32,12 @@ export function generateIdFromEntropySize(size: number): string {
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string | undefined;
 }
 
 export async function createSession(
-  db: unknown,
+  db: DB,
   token: string,
   userId: string,
   email: string,
@@ -68,7 +68,7 @@ export async function createSession(
 }
 
 export async function validateSessionToken(
-  db: unknown,
+  db: DB,
   token: string,
 ): Promise<SessionValidationResult> {
   // Probabilistic cleanup: Run on ~1% of requests
@@ -90,6 +90,13 @@ export async function validateSessionToken(
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   console.log("Validating session ID:", sessionId);
 
+  interface SessionRow {
+    id: string;
+    user_id: string;
+    expires_at: string;
+    email: string | null;
+  }
+
   const row = await db
     .prepare(
       `SELECT session.id, session.user_id, session.expires_at, user.email
@@ -98,7 +105,7 @@ export async function validateSessionToken(
              WHERE session.id = ?`,
     )
     .bind(sessionId)
-    .first();
+    .first<SessionRow>();
 
   console.log("validate session token", row);
 
@@ -113,13 +120,13 @@ export async function validateSessionToken(
   const session: Session = {
     id: row.id,
     userId: row.user_id,
-    email: row.email,
+    email: row.email ?? undefined,
     expiresAt,
   };
 
   const user: User = {
     id: row.user_id,
-    email: row.email,
+    email: row.email ?? undefined,
   };
 
   const now = new Date();
@@ -151,7 +158,7 @@ export async function validateSessionToken(
 }
 
 export async function invalidateSession(
-  db: unknown,
+  db: DB,
   sessionId: string,
 ): Promise<void> {
   await db.prepare("DELETE FROM session WHERE id = ?").bind(sessionId).run();

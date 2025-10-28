@@ -30,16 +30,42 @@ export interface UserCloudAlerts {
   triggeredAlerts: CloudAlertHistory[];
 }
 
-function parseCloudAlert(raw: unknown): CloudAvailabilityAlert {
+type CloudAlertRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  server_type_ids: string;
+  location_ids: string;
+  alert_on: "available" | "unavailable" | "both";
+  email_notifications: number | boolean;
+  discord_notifications: number | boolean;
+  created_at: string;
+};
+
+type CloudAlertHistoryRow = {
+  id: string;
+  alert_id: string;
+  user_id: string;
+  server_type_id: number;
+  server_type_name: string;
+  location_id: number;
+  location_name: string;
+  event_type: "available" | "unavailable";
+  triggered_at: string;
+};
+
+function parseCloudAlert(raw: CloudAlertRow): CloudAvailabilityAlert {
   return {
     ...raw,
     server_type_ids: JSON.parse(raw.server_type_ids),
     location_ids: JSON.parse(raw.location_ids),
+    email_notifications: Boolean(raw.email_notifications),
+    discord_notifications: Boolean(raw.discord_notifications),
     created_at: new Date(raw.created_at),
   };
 }
 
-function parseCloudAlertHistory(raw: unknown): CloudAlertHistory {
+function parseCloudAlertHistory(raw: CloudAlertHistoryRow): CloudAlertHistory {
   return {
     ...raw,
     triggered_at: new Date(raw.triggered_at),
@@ -55,14 +81,14 @@ export async function getCloudAlertsForUser(
       "SELECT * FROM cloud_availability_alert WHERE user_id = ? ORDER BY created_at DESC",
     )
     .bind(userId)
-    .all();
+    .all<CloudAlertRow>();
 
   const triggeredAlertsRaw = await db
     .prepare(
       "SELECT * FROM cloud_alert_history WHERE user_id = ? ORDER BY triggered_at DESC LIMIT 20",
     )
     .bind(userId)
-    .all();
+    .all<CloudAlertHistoryRow>();
 
   const activeAlerts: CloudAvailabilityAlert[] =
     activeAlertsRaw.results.map(parseCloudAlert);
@@ -86,7 +112,7 @@ export async function getCloudAlertById(
       "SELECT * FROM cloud_availability_alert WHERE id = ? AND user_id = ?",
     )
     .bind(alertId, userId)
-    .first();
+    .first<CloudAlertRow>();
 
   if (!result) {
     return null;
@@ -106,9 +132,7 @@ export async function isBelowMaxCloudAlerts(
     .bind(userId)
     .first<{ count: number }>();
 
-  return (
-    ((result as unknown as { count: number })?.count ?? 0) < MAX_CLOUD_ALERTS
-  );
+  return (result?.count ?? 0) < MAX_CLOUD_ALERTS;
 }
 
 export async function createCloudAlert(
@@ -246,7 +270,7 @@ export async function getActiveCloudAlertsForMatching(
 ): Promise<CloudAvailabilityAlert[]> {
   const results = await db
     .prepare("SELECT * FROM cloud_availability_alert ORDER BY created_at")
-    .all();
+    .all<CloudAlertRow>();
 
   return results.results.map(parseCloudAlert);
 }

@@ -1,12 +1,12 @@
-import { filesize, type FileSizeOptions } from "filesize";
+import { filesize, type FilesizeOptions } from "filesize";
 
-const fileSizeOptions: FileSizeOptions = {
+const fileSizeOptions: FilesizeOptions = {
   base: 10,
   round: 0,
   standard: "si",
 };
 
-const diskSizeOptions: FileSizeOptions = {
+const diskSizeOptions: FilesizeOptions = {
   base: 10,
   round: 2,
   standard: "si",

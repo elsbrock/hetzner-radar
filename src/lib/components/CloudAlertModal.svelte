@@ -18,6 +18,9 @@
 	import { addToast } from '$lib/stores/toast';
 	import { invalidateAll } from '$app/navigation';
 	import { createEventDispatcher } from 'svelte';
+	import type { CloudAvailabilityAlert } from '$lib/api/backend/cloud-alerts';
+
+	type Option = { value: number; name: string };
 
 	let {
 		open = $bindable(false),
@@ -26,9 +29,9 @@
 		locationOptions = []
 	}: {
 		open: boolean;
-		alert: unknown | null;
-		serverTypeOptions: Array<{ value: number; name: string }>;
-		locationOptions: Array<{ value: number; name: string }>;
+		alert: CloudAvailabilityAlert | null;
+		serverTypeOptions: Option[];
+		locationOptions: Option[];
 	} = $props();
 
 	const dispatch = createEventDispatcher();
@@ -123,8 +126,9 @@
 
 		isSubmitting = true;
 		try {
-			const url = alert ? `/cloud-alerts/${alert.id}` : '/cloud-alerts';
-			const method = alert ? 'PATCH' : 'POST';
+			const existingAlert = alert;
+			const url = existingAlert ? `/cloud-alerts/${existingAlert.id}` : '/cloud-alerts';
+			const method = existingAlert ? 'PATCH' : 'POST';
 
 			const response = await fetch(url, {
 				method,
@@ -143,7 +147,7 @@
 
 			if (response.ok) {
 				addToast({
-					message: alert ? 'Cloud alert updated successfully' : 'Cloud alert created successfully',
+					message: existingAlert ? 'Cloud alert updated successfully' : 'Cloud alert created successfully',
 					type: 'success',
 					dismissible: true,
 					timeout: 3000
@@ -223,7 +227,12 @@
 						<li class="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
 							<Checkbox
 								checked={type.checked}
-								on:change={(e) => updateSelectedServerTypes(type.value, e.target.checked)}
+								on:change={(event) =>
+									updateSelectedServerTypes(
+										type.value,
+										(event.currentTarget as HTMLInputElement).checked
+									)
+								}
 							>
 								{type.name}
 							</Checkbox>

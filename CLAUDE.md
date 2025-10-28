@@ -59,6 +59,7 @@ python scripts/import.py data static/sb.duckdb  # Import data
 6. **API Routes**: Use `+server.ts` files with proper HTTP method exports
 7. **Error Handling**: Use SvelteKit's error handling patterns
 8. **Authentication**: Session-based auth with email verification
+9. **Commit Checklist**: Always run `npm run check` (and address any errors or warnings) before committing changes
 
 ## Important Notes
 

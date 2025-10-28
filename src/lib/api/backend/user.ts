@@ -13,23 +13,33 @@ export interface User {
   created_at: string;
 }
 
-export async function getUserId(db: unknown, email: string): Promise<string> {
-  return db
+export async function getUserId(db: DB, email: string): Promise<string | null> {
+  const id = await db
     .prepare("SELECT id FROM user WHERE email = ?")
     .bind(email)
-    .first("id");
+    .first<string>("id");
+
+  return id ?? null;
 }
 
 export async function getUser(
-  db: unknown,
+  db: DB,
   userId: string,
 ): Promise<User | null> {
+  type UserRow = {
+    id: string;
+    email: string;
+    discord_webhook_url?: string | null;
+    notification_preferences?: string | null;
+    created_at: string;
+  };
+
   const result = await db
     .prepare(
       "SELECT id, email, discord_webhook_url, notification_preferences, created_at FROM user WHERE id = ?",
     )
     .bind(userId)
-    .first();
+    .first<UserRow>();
 
   if (!result) return null;
 
@@ -41,7 +51,7 @@ export async function getUser(
   };
 }
 
-export async function createUser(db: unknown, email: string) {
+export async function createUser(db: DB, email: string) {
   const userId = generateIdFromEntropySize(10);
   await db
     .prepare("INSERT INTO user (id, email) VALUES (?, ?)")
@@ -51,7 +61,7 @@ export async function createUser(db: unknown, email: string) {
 }
 
 export async function updateUserDiscordWebhook(
-  db: unknown,
+  db: DB,
   userId: string,
   webhookUrl: string | null,
 ) {
@@ -62,7 +72,7 @@ export async function updateUserDiscordWebhook(
 }
 
 export async function updateUserNotificationPreferences(
-  db: unknown,
+  db: DB,
   userId: string,
   preferences: UserNotificationPreferences,
 ) {

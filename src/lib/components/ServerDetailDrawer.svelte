@@ -115,6 +115,9 @@
 	let vatSuffix = $derived(
 		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
 	);
+	let selectedTimeUnit = $derived((
+		$settingsStore.timeUnitPrice ?? 'perMonth'
+	) as 'perMonth' | 'perHour');
 
 	// Calculate color hue for markup percentage (green=0% to red=100%)
 	// Hue range: 120 (green) down to 0 (red)
@@ -220,14 +223,16 @@
 						loading={loadingPrices}
 						toolbarShow={false}
 						legendShow={false}
-						timeUnitPrice={$settingsStore.timeUnitPrice}
+						timeUnitPrice={selectedTimeUnit}
 					/>
 				</div>
 				<span class="text-lg font-bold text-gray-900 dark:text-white">
 					{displayPrice.toFixed(2)} €
 				</span>
 				<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>
-				<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">monthly</span>
+				<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
+					{selectedTimeUnit === 'perMonth' ? 'monthly' : 'hourly'}
+				</span>
 				<!-- Markup Percentage Display -->
 				{#if config.markup_percentage !== null}
 					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">

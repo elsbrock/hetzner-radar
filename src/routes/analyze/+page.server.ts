@@ -12,7 +12,8 @@ export const load: PageServerLoad = async (event) => {
   }
 
   console.log("loading data");
-  const db = event.platform?.env.DB;
+  const env = event.platform?.env;
+  const db = env?.DB;
   const filterString = event.url.searchParams.get("filter");
 
   if (db && event.locals.user) {
@@ -29,7 +30,7 @@ export const load: PageServerLoad = async (event) => {
     // Load alert data if filter is provided
     if (filterString) {
       const filter = decodeFilterString(filterString);
-      alert = getAlertForUser(
+      alert = await getAlertForUser(
         db,
         event.locals.user.id.toString(),
         JSON.stringify(filter),

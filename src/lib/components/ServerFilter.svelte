@@ -1,5 +1,5 @@
 <script lang="ts">
-	type SliderSizeType = string | number | FileSizeReturnArray | FileSizeReturnObject;
+type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -30,7 +30,7 @@
 		faTags
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import type { FileSizeReturnArray, FileSizeReturnObject } from 'filesize';
+import type { FilesizeArray, FilesizeObject } from 'filesize';
 	import { Button, ButtonGroup, Label, MultiSelect, Toggle } from 'flowbite-svelte';
 	import { onMount } from 'svelte';
 	import { RangeSlider } from 'svelte-range-slider-pips';

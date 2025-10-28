@@ -23,7 +23,8 @@ export const load: PageServerLoad = async (event) => {
     throw redirect(302, "/auth/login");
   }
 
-  const db = event.platform?.env.DB;
+  const env = event.platform?.env;
+  const db = env?.DB;
   if (!db) {
     throw error(500, { message: "Database connection error." });
   }
@@ -51,7 +52,8 @@ export const actions: Actions = {
       return error(401, { message: "Authentication required." });
     }
 
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
     if (!db) {
       return error(500, { message: "Database connection error." });
     }
@@ -91,7 +93,8 @@ export const actions: Actions = {
       return error(401, { message: "Authentication required." });
     }
 
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
     if (!db) {
       return error(500, { message: "Database connection error." });
     }
@@ -138,7 +141,8 @@ export const actions: Actions = {
       return error(401, { message: "Authentication required." });
     }
 
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
     if (!db) {
       return error(500, { message: "Database connection error." });
     }
@@ -184,19 +188,20 @@ export const actions: Actions = {
     if (!event.locals.user || !event.locals.session) {
       return error(401, { message: "Authentication required." });
     }
-    const db = event.platform?.env.DB;
+    const env = event.platform?.env;
+    const db = env?.DB;
     if (!db) {
       console.error("Database connection not available for delete action");
       return error(500, { message: "Database connection error." });
     }
 
-    const userRecord: unknown = await db
+    const userRecord = await db
       .prepare("SELECT email FROM user WHERE id = ?")
       .bind(event.locals.user.id)
-      .first();
+      .first<{ email: string }>();
 
     let userEmail: string | null = null;
-    if (userRecord && typeof userRecord.email === "string") {
+    if (userRecord?.email) {
       userEmail = userRecord.email;
     }
 
@@ -217,7 +222,7 @@ export const actions: Actions = {
       .bind(event.locals.user.id)
       .run();
 
-    await sendMail(event.platform?.env, {
+    await sendMail(env, {
       from: {
         name: "Server Radar",
         email: "mail@radar.iodev.org",

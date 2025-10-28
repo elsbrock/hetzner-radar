@@ -47,16 +47,19 @@ export const load: PageServerLoad = async ({
 }): Promise<LoadOutput> => {
   console.log("Executing /cloud-status server load function...");
 
+  const env = platform?.env;
+  const radarWorker = env?.RADAR_WORKER;
+
   try {
     // In development mode, use wrangler dev service binding
     if (dev) {
       console.log("Development mode: Using wrangler dev service binding");
-      if (!platform?.env?.RADAR_WORKER) {
+      if (!radarWorker) {
         throw new Error(
           "RADAR_WORKER binding not found in development mode. Please run 'npx wrangler dev' instead of 'npm run dev'.",
         );
       }
-      const statusData = await platform.env.RADAR_WORKER.getStatus();
+      const statusData = (await radarWorker.getStatus()) as CloudStatusData;
       return {
         statusData,
         user: locals.user,
@@ -64,7 +67,7 @@ export const load: PageServerLoad = async ({
     }
 
     // In production mode, use the service binding
-    if (!platform?.env?.RADAR_WORKER) {
+    if (!radarWorker) {
       console.error(
         "FATAL: RADAR_WORKER binding not found in platform.env. Check wrangler.toml and deployment.",
       );
@@ -79,8 +82,7 @@ export const load: PageServerLoad = async ({
       `[${new Date().toISOString()}] Calling getStatus() on RADAR_WORKER service binding...`,
     );
 
-    const statusData: CloudStatusData =
-      await platform.env.RADAR_WORKER.getStatus();
+    const statusData = (await radarWorker.getStatus()) as CloudStatusData;
     console.log(
       `[${new Date().toISOString()}] Successfully received status data from DO via fetch.`,
     );

@@ -3,21 +3,24 @@ import type { RequestEvent } from "./$types";
 
 export async function GET(event: RequestEvent) {
   if (!event.locals.user) {
-    return error(401, { message: "Authentication required." });
+    throw error(401, { message: "Authentication required." });
   }
-  const db = event.platform?.env.DB;
+
+  const env = event.platform?.env;
+  const db = env?.DB;
+
   if (!db) {
     console.error("Database connection not available for exportData");
-    return error(500, { message: "Database connection error." });
+    throw error(500, { message: "Database connection error." });
   }
 
   const userId = event.locals.user.id;
 
   try {
-    const userData: unknown = await db
+    const userData = await db
       .prepare("SELECT id, email, created_at FROM user WHERE id = ?")
       .bind(userId)
-      .first();
+      .first<{ id: string; email: string; created_at: string }>();
 
     const sessionsQuery = await db
       .prepare("SELECT id, expires_at FROM session WHERE user_id = ?")
@@ -42,11 +45,19 @@ export async function GET(event: RequestEvent) {
     const priceAlertHistoryRaw = priceAlertHistoryQuery?.results || [];
 
     const fullPriceAlertHistory = [];
-    for (const historyItem of priceAlertHistoryRaw) {
-      if (
-        typeof (historyItem as any).id !== "string" &&
-        typeof (historyItem as any).id !== "number"
-      ) {
+    type AlertHistoryRow = {
+      id: string;
+      name: string;
+      filter: string;
+      price: number;
+      trigger_price: number;
+      created_at: string;
+      triggered_at: string;
+      vat_rate: number;
+    };
+
+    for (const historyItem of priceAlertHistoryRaw as AlertHistoryRow[]) {
+      if (typeof historyItem.id !== "string") {
         console.warn(
           "Skipping price alert history item with invalid ID:",
           historyItem,
@@ -57,11 +68,11 @@ export async function GET(event: RequestEvent) {
         .prepare(
           "SELECT auction_id, auction_seen_at, match_price, matched_at FROM alert_auction_matches WHERE alert_history_id = ?",
         )
-        .bind((historyItem as any).id)
+        .bind(historyItem.id)
         .all();
       const matchesResults = matchesQuery?.results || [];
       fullPriceAlertHistory.push({
-        ...(historyItem as any),
+        ...historyItem,
         matches: matchesResults,
       });
     }

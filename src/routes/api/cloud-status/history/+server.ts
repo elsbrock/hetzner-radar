@@ -53,7 +53,10 @@ export const GET: RequestHandler = async ({ url, platform }) => {
     }
 
     // Check for worker binding
-    if (!platform?.env?.RADAR_WORKER) {
+    const env = platform?.env;
+    const radarWorker = env?.RADAR_WORKER;
+
+    if (!radarWorker) {
       console.error("[cloud-status/history] RADAR_WORKER binding not found");
       return json(
         { error: "Cloud status service is not available" },
@@ -91,8 +94,9 @@ export const GET: RequestHandler = async ({ url, platform }) => {
       "[cloud-status/history] Fetching historical availability:",
       options,
     );
-    const historicalData =
-      await platform.env.RADAR_WORKER.getHistoricalAvailability(options);
+    const historicalData = (await radarWorker.getHistoricalAvailability(
+      options,
+    )) as Record<string, unknown>;
 
     // Return the data
     return json({

@@ -115,21 +115,21 @@ let isSmallScreen: boolean = $state(false);
 
 		function updateSidebarHeight() {
 			// Measure header and footer heights
-			const nav = document.querySelector('nav');
-			const footer = document.querySelector('footer');
-			const banner =
-				document.querySelector('#cloud-availability-alerts') ||
-				document.querySelector('[id*="banner"]');
+			const nav = document.querySelector('nav') as HTMLElement | null;
+			const footer = document.querySelector('footer') as HTMLElement | null;
+			const bannerElement = (document.querySelector('#cloud-availability-alerts') ||
+				document.querySelector('[id*="banner"]')) as HTMLElement | null;
 
 			let totalOffset = 0;
 			if (nav) totalOffset += nav.offsetHeight;
 			if (footer) totalOffset += footer.offsetHeight;
-			if (banner && banner.offsetHeight > 0) totalOffset += banner.offsetHeight; // Only if banner is visible
+			if (bannerElement && bannerElement.offsetHeight > 0)
+				totalOffset += bannerElement.offsetHeight; // Only if banner is visible
 
 			console.log('Sidebar height calculation:', {
 				nav: nav?.offsetHeight,
 				footer: footer?.offsetHeight,
-				banner: banner?.offsetHeight,
+				banner: bannerElement?.offsetHeight,
 				total: totalOffset
 			});
 
@@ -142,10 +142,10 @@ let isSmallScreen: boolean = $state(false);
 
 		// Recalculate when banner visibility might change
 		const observer = new MutationObserver(updateSidebarHeight);
-		const banner =
-			document.querySelector('[data-testid="banner"]') || document.querySelector('.banner');
-		if (banner) {
-			observer.observe(banner.parentElement || document.body, {
+		const observedBanner = (document.querySelector('[data-testid="banner"]') ||
+			document.querySelector('.banner')) as HTMLElement | null;
+		if (observedBanner) {
+			observer.observe(observedBanner.parentElement || document.body, {
 				childList: true,
 				subtree: true,
 				attributes: true,
@@ -560,6 +560,10 @@ let isSmallScreen: boolean = $state(false);
 	}
 
 	// Format price with VAT and timeUnitPrice for display
+	let selectedTimeUnit = $derived((
+		$settingsStore.timeUnitPrice ?? 'perMonth'
+	) as 'perMonth' | 'perHour');
+
 	function formatPrice(price: number | null): string {
 		if (price === null || Number.isNaN(price) || !Number.isFinite(price)) return 'N/A';
 
@@ -567,7 +571,7 @@ let isSmallScreen: boolean = $state(false);
 			($settingsStore?.vatSelection?.countryCode as keyof typeof vatOptions) ?? 'NET';
 		const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
 		const vatRate = selectedOption.rate || 0; // Ensure rate is a number
-		const timeUnit = $settingsStore.timeUnitPrice || 'perMonth';
+		const timeUnit = selectedTimeUnit;
 
 		// Apply VAT
 		const priceWithVat = price * (1 + vatRate);
@@ -913,11 +917,7 @@ let isSmallScreen: boolean = $state(false);
 					</div>
 
 					<div class="h-[320px] pt-5">
-						<ServerPriceChart
-							data={serverPrices}
-							{loading}
-							timeUnitPrice={$settingsStore.timeUnitPrice}
-						/>
+			<ServerPriceChart data={serverPrices} {loading} timeUnitPrice={selectedTimeUnit} />
 					</div>
 				</div>
 
@@ -972,7 +972,7 @@ let isSmallScreen: boolean = $state(false);
 							<ServerList
 								groupedList={groupedDisplayList}
 								{groupByField}
-								timeUnitPrice={$settingsStore.timeUnitPrice}
+								timeUnitPrice={selectedTimeUnit}
 							/>
 						{:else}
 							<!-- Show No Results Alert -->

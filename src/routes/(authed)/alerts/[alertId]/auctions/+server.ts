@@ -18,13 +18,19 @@ export async function GET({ params, locals, platform }: RequestEvent) {
     throw error(400, "Alert ID is required");
   }
 
-  const db = platform?.env.DB;
+  const env = platform?.env;
+  const db = env?.DB;
   if (!db) {
     throw error(500, "Database connection failed");
   }
 
   try {
     // First verify that the alert belongs to the current user
+    type AlertHistorySummary = {
+      id: string;
+      name: string;
+    };
+
     const alertHistoryResult = await db
       .prepare(
         `
@@ -34,7 +40,7 @@ export async function GET({ params, locals, platform }: RequestEvent) {
     `,
       )
       .bind(alertId, locals.user.id)
-      .all();
+      .all<AlertHistorySummary>();
 
     // Check if we found the alert in history
     if (alertHistoryResult.results.length > 0) {

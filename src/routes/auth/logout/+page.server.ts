@@ -14,7 +14,10 @@ export const actions: Actions = {
       blankCookie.attributes as any,
     );
     if (event.locals.session?.id) {
-      await invalidateSession(event.platform?.env.DB, event.locals.session.id);
+      const db = event.platform?.env?.DB;
+      if (db) {
+        await invalidateSession(db, event.locals.session.id);
+      }
     }
   },
 };

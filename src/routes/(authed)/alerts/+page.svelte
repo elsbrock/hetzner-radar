@@ -11,8 +11,26 @@
 	import { invalidateAll } from '$app/navigation';
 	import { MAX_ALERTS } from '$lib/api/backend/alerts.js';
 	import { MAX_CLOUD_ALERTS } from '$lib/api/backend/cloud-alerts.js';
+	import type { CloudAvailabilityAlert } from '$lib/api/backend/cloud-alerts';
 	import { page } from '$app/stores';
 	import type { PriceAlert } from '$lib/api/backend/alerts';
+
+	type CloudStatusSummary = {
+		serverTypes?: Array<{
+			id: number;
+			name: string;
+			description?: string;
+			cores: number;
+			memory: number;
+		}>;
+		locations?: Array<{
+			id: number;
+			name: string;
+			city: string;
+			country: string;
+		}>;
+	};
+	type AlertsPageData = import('./$types').PageData;
 
 	import dayjs from 'dayjs';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -52,15 +70,31 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
-	let { data } = $props();
+	let { data }: { data: AlertsPageData } = $props();
+	const cloudStatusData = $derived((data.cloudStatusData ?? null) as CloudStatusSummary | null);
 
 	// Tabs state
 	let activeTab = $state('price-alerts');
+	let priceAlertsTabOpen = $state(false);
+	let cloudAlertsTabOpen = $state(false);
 
 	// Initialize and sync with URL
 	$effect(() => {
 		const tabParam = $page.url.searchParams.get('tab');
 		activeTab = tabParam === 'cloud-alerts' ? 'cloud-alerts' : 'price-alerts';
+	});
+
+	$effect(() => {
+		priceAlertsTabOpen = activeTab === 'price-alerts';
+		cloudAlertsTabOpen = activeTab === 'cloud-alerts';
+	});
+
+	$effect(() => {
+		if (priceAlertsTabOpen) {
+			activeTab = 'price-alerts';
+		} else if (cloudAlertsTabOpen) {
+			activeTab = 'cloud-alerts';
+		}
 	});
 
 	// Price alerts state
@@ -72,7 +106,7 @@
 
 	// Cloud alerts state
 	let showCloudAlertModal = $state(false);
-	let editingCloudAlert = $state(null);
+	let editingCloudAlert = $state<CloudAvailabilityAlert | null>(null);
 
 	// Delete confirmation modal state
 	let showDeleteModal = $state(false);
@@ -210,24 +244,24 @@
 		showCloudAlertModal = true;
 	}
 
-	function openEditCloudAlertModal(alert: unknown) {
+	function openEditCloudAlertModal(alert: CloudAvailabilityAlert) {
 		editingCloudAlert = alert;
 		showCloudAlertModal = true;
 	}
 
 	// Generate server type and location options from cloud status data
 	const serverTypeOptions = $derived(
-		data.cloudStatusData?.serverTypes?.map((st) => ({
+		(cloudStatusData?.serverTypes ?? []).map((st) => ({
 			value: st.id,
 			name: `${st.name.toUpperCase()} - ${st.cores} Core${st.cores > 1 ? 's' : ''} / ${st.memory} GB RAM`
-		})) || []
+		}))
 	);
 
 	const locationOptions = $derived(
-		data.cloudStatusData?.locations?.map((loc) => ({
+		(cloudStatusData?.locations ?? []).map((loc) => ({
 			value: loc.id,
 			name: `${loc.city}, ${loc.country} (${loc.name})`
-		})) || []
+		}))
 	);
 </script>
 
@@ -257,8 +291,8 @@
 		</div>
 
 		<!-- Tabs -->
-		<Tabs bind:activeTabValue={activeTab} contentClass="mt-6">
-			<TabItem value="price-alerts" open={activeTab === 'price-alerts'}>
+		<Tabs contentClass="mt-6">
+			<TabItem bind:open={priceAlertsTabOpen}>
 				<div slot="title" class="flex items-center gap-2">
 					<BellRingSolid class="h-4 w-4" />
 					Price Alerts
@@ -526,7 +560,7 @@
 				</div>
 			</TabItem>
 
-			<TabItem value="cloud-alerts" open={activeTab === 'cloud-alerts'}>
+			<TabItem bind:open={cloudAlertsTabOpen}>
 				<div slot="title" class="flex items-center gap-2">
 					<BullhornSolid class="h-4 w-4" />
 					Cloud Alerts
@@ -626,7 +660,7 @@
 														{/if}
 													{/each}
 													{#if alert.server_type_ids.length > 2}
-														<Badge color="gray" class="text-xs"
+														<Badge color="primary" class="text-xs"
 															>+{alert.server_type_ids.length - 2}</Badge
 														>
 													{/if}
@@ -648,7 +682,7 @@
 														{/if}
 													{/each}
 													{#if alert.location_ids.length > 2}
-														<Badge color="gray" class="text-xs"
+														<Badge color="primary" class="text-xs"
 															>+{alert.location_ids.length - 2}</Badge
 														>
 													{/if}
