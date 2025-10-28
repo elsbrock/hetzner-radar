@@ -71,33 +71,29 @@
 
 	let { data } = $props<{ data: import('./$types').PageData }>();
 
-	let lastUpdate = $state<number | undefined>(undefined);
-	let serverList = $state<ServerConfiguration[]>([]);
-	// let filteredServerList = $state<ServerConfiguration[]>([]); // No longer needed directly for display
-	let serverPrices = $state<ServerPriceStat[]>([]);
-	let cpuModels = $state<NameValuePair[]>([]);
-	let datacenters = $state<NameValuePair[]>([]);
+	let lastUpdate: number | undefined = $state(undefined);
+	let serverList: ServerConfiguration[] = $state([]);
+	let serverPrices: ServerPriceStat[] = $state([]);
+	let cpuModels: NameValuePair[] = $state([]);
+	let datacenters: NameValuePair[] = $state([]);
 	let priceMin: number | null = $state(null);
 	let priceMax: number | null = $state(null);
-	let sortField = $state<SortField>('price');
-	let sortDirection = $state<'asc' | 'desc'>('asc');
-	let groupByField = $state<GroupByField>('none'); // Updated state type
-	let queryTime = $state<number | undefined>(undefined);
+	let sortField: SortField = $state('price');
+	let sortDirection: 'asc' | 'desc' = $state('asc');
+	let groupByField: GroupByField = $state('none');
+	let queryTime: number | undefined = $state(undefined);
 	let loading = $state(true);
 	let selectedAlert: PriceAlert | null = $state(null);
 	let alertDialogOpen = $state(false);
 	let storedFilter: ServerFilterType | null = $state(null);
 
-	// State to hold the final grouped list for display
-	// let displayList: ServerConfiguration[] = $state([]); // Replaced by groupedDisplayList
-	let groupedDisplayList: GroupedServerList = $state([]); // Added state
-	let isFilterCollapsed = $state(false);
-	let mounted = $state(false); // State to track client-side mount
+let groupedDisplayList: GroupedServerList = $state([]);
+let isFilterCollapsed = $state(false);
+let mounted: boolean = $state(false);
 
-	// FAB Visibility State
-	let filterIsIntersecting = $state(true); // Start with filter section visible
-	let resultsAreIntersecting = $state(false);
-	let isSmallScreen = $state(false); // Track if viewport is small (e.g., <= 1024px)
+let filterIsIntersecting: boolean = $state(true);
+let resultsAreIntersecting: boolean = $state(false);
+let isSmallScreen: boolean = $state(false);
 	function handleSaveFilter(e: Event) {
 		saveFilter($filter);
 		addToast({ message: 'Filter saved.', color: 'green', icon: 'success' });
