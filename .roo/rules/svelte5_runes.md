@@ -5,7 +5,6 @@
 **Details:**
 
 1.  **Props (`$props` vs `export let`):**
-
     - Define component properties using the `$props()` rune.
     - Optionally, define a `$$Props` interface for type safety.
     - **Instead of (Svelte 4):**
@@ -32,7 +31,6 @@
       _Note: The `<$$Props>` type argument is optional if TypeScript can infer types._
 
 2.  **Reactive State (`$state` vs `let`):**
-
     - Declare local variables that need to trigger reactivity upon assignment using `$state()`.
     - Plain `let` variables are not reactive in runes mode.
     - **Instead of (Svelte 4 - reactivity triggered implicitly):**

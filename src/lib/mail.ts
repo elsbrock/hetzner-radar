@@ -25,7 +25,9 @@ export async function sendMail(
   }
 
   if (!env?.FORWARDEMAIL_API_KEY) {
-    console.warn("FORWARDEMAIL_API_KEY is not configured; skipping email send.");
+    console.warn(
+      "FORWARDEMAIL_API_KEY is not configured; skipping email send.",
+    );
     return;
   }
   const { from, to, subject, text } = mailOptions;

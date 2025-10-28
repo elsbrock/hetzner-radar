@@ -65,7 +65,9 @@ declare global {
 
   interface DB {
     prepare(query: string): PreparedStatement;
-    batch(statements: PreparedStatement[]): Promise<Array<QueryResult<unknown>>>;
+    batch(
+      statements: PreparedStatement[],
+    ): Promise<Array<QueryResult<unknown>>>;
   }
 
   interface PlatformEnv {

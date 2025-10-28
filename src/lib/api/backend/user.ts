@@ -22,10 +22,7 @@ export async function getUserId(db: DB, email: string): Promise<string | null> {
   return id ?? null;
 }
 
-export async function getUser(
-  db: DB,
-  userId: string,
-): Promise<User | null> {
+export async function getUser(db: DB, userId: string): Promise<User | null> {
   type UserRow = {
     id: string;
     email: string;
