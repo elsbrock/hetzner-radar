@@ -55,16 +55,25 @@
 	const initialShowRecentlyAvailable = params.get('recent') === 'true';
 	const initialArchitectureFilter = params.get('arch') || 'all';
 	const initialCpuTypeFilter = params.get('cpu') || 'all';
+	const initialCategoryFilter = params.get('category') || 'all';
 	const initialSearchQuery = params.get('search') || '';
 	
 	// Feature flag from URL
 	const enableAvailabilityPatterns = params.get('timeline') === 'true';
+
+	const CATEGORY_LABELS: Record<string, string> = {
+		regular_purpose: 'Regular Purpose',
+		general_purpose: 'General Purpose',
+		cost_optimized: 'Cost Optimized',
+		storage_optimized: 'Storage Optimized'
+	};
 
 	// Filter states
 	let showAvailableOnly = $state(initialShowAvailableOnly);
 	let showRecentlyAvailable = $state(initialShowRecentlyAvailable);
 	let architectureFilter = $state(initialArchitectureFilter);
 	let cpuTypeFilter = $state(initialCpuTypeFilter);
+	let categoryFilter = $state(initialCategoryFilter);
 	let searchQuery = $state(initialSearchQuery);
 
 	// Collapsed groups state
@@ -89,6 +98,7 @@
 		if (showRecentlyAvailable) params.set('recent', 'true');
 		if (architectureFilter !== 'all') params.set('arch', architectureFilter);
 		if (cpuTypeFilter !== 'all') params.set('cpu', cpuTypeFilter);
+		if (categoryFilter !== 'all') params.set('category', categoryFilter);
 		if (searchQuery) params.set('search', searchQuery);
 		
 		// Construct the new URL
@@ -113,6 +123,21 @@
 			value: loc.id,
 			name: `${loc.city}, ${loc.country} (${loc.name})`
 		})) || []
+	);
+
+	const categoryOptions = $derived(
+		(() => {
+			if (!data.statusData?.serverTypes) return [];
+			const categories = new Set<string>();
+			data.statusData.serverTypes.forEach((st) => {
+				if (st.category) {
+					categories.add(st.category);
+				}
+			});
+			return Array.from(categories)
+				.sort((a, b) => formatCategory(a).localeCompare(formatCategory(b)))
+				.map((category) => ({ value: category, name: formatCategory(category) }));
+		})()
 	);
 	
 	// Compute date ranges for patterns
@@ -332,6 +357,11 @@
 
 					// Apply search and availability filters
 					const filteredServerTypes = serverTypes.filter((serverType) => {
+						// Category filter
+						if (categoryFilter !== 'all' && serverType.category !== categoryFilter) {
+							return false;
+						}
+
 						// Search filter
 						if (searchQuery && !serverType.name.toLowerCase().includes(searchQuery.toLowerCase())) {
 							return false;
@@ -385,6 +415,11 @@
 			collapsedGroups.add(key);
 		}
 		collapsedGroups = new Set(collapsedGroups);
+	}
+
+	function formatCategory(category: string | null | undefined): string {
+		if (!category) return 'Unknown';
+		return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 	}
 
 	function expandAll() {
@@ -710,6 +745,13 @@
 						<option value="dedicated">Dedicated</option>
 					</Select>
 
+					<Select bind:value={categoryFilter} class="py-2 text-sm" size="sm">
+						<option value="all">All Categories</option>
+						{#each categoryOptions as option (option.value)}
+							<option value={option.value}>{option.name}</option>
+						{/each}
+					</Select>
+
 					<Input
 						bind:value={searchQuery}
 						placeholder="Search server types..."
@@ -786,23 +828,32 @@
 														class="sticky left-0 z-10 flex items-center bg-white px-4 py-4 font-medium whitespace-nowrap text-gray-900 dark:bg-gray-800 dark:text-white"
 													>
 														<div class="flex flex-col">
-															<div class="flex items-center space-x-2">
-																<span class="text-base font-semibold"
-																	>{serverType.name.toUpperCase()}</span
-																>
-																{#if serverType.deprecated}
+								<div class="flex items-center space-x-2">
+									<span class="text-base font-semibold"
+										>{serverType.name.toUpperCase()}</span
+									>
+									{#if serverType.deprecated}
 																	<Badge
 																		color="yellow"
 																		class="inline-flex items-center px-1.5 py-0.5 text-xs"
 																		id="deprecated-{serverType.id}"
 																	>
 																		<ExclamationCircleSolid class="mr-1 h-3 w-3" /> Deprecated
-																	</Badge>
-																	<Tooltip triggeredBy="#deprecated-{serverType.id}" class="z-50"
-																		>This server type is deprecated.</Tooltip
-																	>
-																{/if}
-															</div>
+										</Badge>
+										<Tooltip triggeredBy="#deprecated-{serverType.id}" class="z-50"
+											>This server type is deprecated.</Tooltip
+										>
+									{/if}
+
+									{#if serverType.category}
+										<Badge
+											color="purple"
+											class="inline-flex items-center px-1.5 py-0.5 text-xs"
+										>
+											{formatCategory(serverType.category)}
+										</Badge>
+									{/if}
+								</div>
 															<span class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 																{serverType.cores} Cores / {serverType.memory} GB RAM / {serverType.disk}
 																GB Disk

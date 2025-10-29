@@ -13,6 +13,8 @@ import {
 	mockLastSeenMatrix,
 	mockHetznerServerTypesResponse,
 	mockHetznerDatacentersResponse,
+	mockHetznerServerTypesResponsePaginatedPage1,
+	mockHetznerServerTypesResponsePaginatedPage2,
 } from './fixtures/cloud-data';
 
 // Mock fetch globally
@@ -90,8 +92,9 @@ describe('CloudStatusService', () => {
 			const result = await service.fetchAndUpdateStatus();
 
 			expect(mockFetch).toHaveBeenCalledTimes(2);
-			expect(mockFetch).toHaveBeenCalledWith(
-				'https://api.hetzner.cloud/v1/server_types',
+			expect(mockFetch).toHaveBeenNthCalledWith(
+				1,
+				'https://api.hetzner.cloud/v1/server_types?page=1&per_page=50',
 				expect.objectContaining({
 					headers: expect.objectContaining({
 						Authorization: `Bearer ${testApiToken}`,
@@ -99,8 +102,9 @@ describe('CloudStatusService', () => {
 					}),
 				}),
 			);
-			expect(mockFetch).toHaveBeenCalledWith(
-				'https://api.hetzner.cloud/v1/datacenters?per_page=50',
+			expect(mockFetch).toHaveBeenNthCalledWith(
+				2,
+				'https://api.hetzner.cloud/v1/datacenters?page=1&per_page=50',
 				expect.objectContaining({
 					headers: expect.objectContaining({
 						Authorization: `Bearer ${testApiToken}`,
@@ -109,6 +113,40 @@ describe('CloudStatusService', () => {
 			);
 
 			expect(Array.isArray(result)).toBe(true);
+		});
+
+		it('should fetch all paginated server type pages', async () => {
+			mockFetch
+				.mockResolvedValueOnce({
+					ok: true,
+					json: async () => mockHetznerServerTypesResponsePaginatedPage1,
+				})
+				.mockResolvedValueOnce({
+					ok: true,
+					json: async () => mockHetznerServerTypesResponsePaginatedPage2,
+				})
+				.mockResolvedValueOnce({
+					ok: true,
+					json: async () => mockHetznerDatacentersResponse,
+				});
+
+			await service.fetchAndUpdateStatus();
+
+			expect(mockFetch).toHaveBeenNthCalledWith(
+				1,
+				'https://api.hetzner.cloud/v1/server_types?page=1&per_page=50',
+				expect.anything(),
+			);
+			expect(mockFetch).toHaveBeenNthCalledWith(
+				2,
+				'https://api.hetzner.cloud/v1/server_types?page=2&per_page=50',
+				expect.anything(),
+			);
+			expect(mockFetch).toHaveBeenNthCalledWith(
+				3,
+				'https://api.hetzner.cloud/v1/datacenters?page=1&per_page=50',
+				expect.anything(),
+			);
 		});
 
 		it('should throw error when API token is missing', async () => {
@@ -164,12 +202,18 @@ describe('CloudStatusService', () => {
 						expect.objectContaining({
 							id: 1,
 							name: 'cx11',
+							category: 'regular_purpose',
+							storageType: 'local',
 							isDeprecated: false,
+							deprecated: false,
 						}),
 						expect.objectContaining({
 							id: 3,
 							name: 'cx31',
+							category: 'regular_purpose',
+							storageType: 'local',
 							isDeprecated: true,
+							deprecated: true,
 						}),
 					]),
 					locations: expect.arrayContaining([

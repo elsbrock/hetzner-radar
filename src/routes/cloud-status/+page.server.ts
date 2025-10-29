@@ -19,7 +19,10 @@ interface ServerTypeInfo {
   disk: number;
   cpu_type: "shared" | "dedicated";
   architecture: string;
+  category: string;
+  storageType: "local" | "network";
   deprecated: boolean;
+  isDeprecated?: boolean;
 }
 
 type AvailabilityMatrix = Record<number, number[]>;
@@ -59,11 +62,12 @@ export const load: PageServerLoad = async ({
           "RADAR_WORKER binding not found in development mode. Please run 'npx wrangler dev' instead of 'npm run dev'.",
         );
       }
-      const statusData = (await radarWorker.getStatus()) as CloudStatusData;
-      return {
-        statusData,
-        user: locals.user,
-      };
+    const statusData = (await radarWorker.getStatus()) as CloudStatusData;
+    const normalizedStatusData = normalizeStatusData(statusData);
+    return {
+      statusData: normalizedStatusData,
+      user: locals.user,
+    };
     }
 
     // In production mode, use the service binding
@@ -83,12 +87,13 @@ export const load: PageServerLoad = async ({
     );
 
     const statusData = (await radarWorker.getStatus()) as CloudStatusData;
+    const normalizedStatusData = normalizeStatusData(statusData);
     console.log(
       `[${new Date().toISOString()}] Successfully received status data from DO via fetch.`,
     );
 
     return {
-      statusData: statusData,
+      statusData: normalizedStatusData,
       user: locals.user,
     };
   } catch (err) {
@@ -109,3 +114,26 @@ export const load: PageServerLoad = async ({
     };
   }
 };
+
+function normalizeStatusData(statusData: CloudStatusData): CloudStatusData {
+  if (!statusData?.serverTypes) return statusData;
+
+  const normalizedServerTypes = statusData.serverTypes.map((serverType) => {
+    const deprecated =
+      typeof serverType.deprecated === "boolean"
+        ? serverType.deprecated
+        : Boolean((serverType as ServerTypeInfo).isDeprecated);
+
+    return {
+      ...serverType,
+      deprecated,
+      category: serverType.category || "regular_purpose",
+      storageType: serverType.storageType || "local",
+    } satisfies ServerTypeInfo;
+  });
+
+  return {
+    ...statusData,
+    serverTypes: normalizedServerTypes,
+  };
+}

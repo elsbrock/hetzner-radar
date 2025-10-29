@@ -118,8 +118,48 @@ export class CloudAvailabilityDO extends DurableObject {
 		}
 	}
 
-	async fetch(): Promise<Response> {
-		return new Response('This DO is accessed via RPC only', { status: 404 });
+	async fetch(request: Request): Promise<Response> {
+		const url = new URL(request.url);
+		const path = url.pathname;
+
+		try {
+			if (request.method === 'GET' && (path === '/' || path === '/status')) {
+				const status = await this.getStatus();
+				return new Response(JSON.stringify(status), {
+					headers: { 'Content-Type': 'application/json' },
+				});
+			}
+
+			if (request.method === 'POST' && path === '/trigger') {
+				await this.fetchCloudStatus();
+				return new Response(
+					JSON.stringify({
+						status: 'ok',
+						triggeredAt: new Date().toISOString(),
+					}),
+					{ headers: { 'Content-Type': 'application/json' } },
+				);
+			}
+
+			if (request.method === 'GET' && path === '/debug') {
+				const statusData = await this.getStatus();
+				const storageKeys = await this.ctx.storage.list();
+				const snapshot = {
+					doId: this.ctx.id.toString(),
+					timestamp: new Date().toISOString(),
+					keys: Array.from(storageKeys.keys()),
+					serverTypeCount: statusData.serverTypes?.length ?? 0,
+				};
+				return new Response(JSON.stringify(snapshot, null, 2), {
+					headers: { 'Content-Type': 'application/json' },
+				});
+			}
+
+			return new Response('Not found', { status: 404 });
+		} catch (error) {
+			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Error handling fetch:`, error);
+			return new Response('Internal error', { status: 500 });
+		}
 	}
 
 	async getStatus() {

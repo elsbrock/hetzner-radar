@@ -13,11 +13,28 @@ interface HetznerServerType {
 	disk: number;
 	storage_type: 'local' | 'network';
 	cpu_type: 'shared' | 'dedicated';
+	category: string;
 	architecture: string;
 	deprecation: {
 		unavailable_after: string;
 		announced: string;
 	} | null;
+}
+
+interface HetznerPaginationMeta {
+    page: number;
+    per_page: number;
+    previous_page: number | null;
+    next_page: number | null;
+    last_page: number;
+    total_entries: number;
+}
+
+interface HetznerPaginatedResponse<T> {
+    [key: string]: T[] | unknown;
+    meta?: {
+        pagination?: HetznerPaginationMeta;
+    };
 }
 
 interface HetznerLocation {
@@ -61,7 +78,10 @@ export interface ServerTypeInfo {
 	disk: number;
 	cpu_type: 'shared' | 'dedicated';
 	architecture: string;
+	category: string;
+	storageType: 'local' | 'network';
 	isDeprecated: boolean;
+	deprecated: boolean;
 }
 
 export type AvailabilityMatrix = Record<number, number[]>;
@@ -134,22 +154,30 @@ export class CloudStatusService {
 
 		try {
 			console.log(`[CloudStatusService ${this.doId}] Fetching server types...`);
-			const serverTypesResponse = await fetch(`${HETZNER_API_BASE}/server_types`, { headers });
-			if (!serverTypesResponse.ok) {
-				throw new Error(`Failed to fetch server types: ${serverTypesResponse.status} ${await serverTypesResponse.text()}`);
-			}
-			const serverTypesData = (await serverTypesResponse.json()) as { server_types: HetznerServerType[] };
-			console.log(`[CloudStatusService ${this.doId}] Fetched ${serverTypesData.server_types.length} server types.`);
+			const serverTypes = await this.fetchPaginatedResource<HetznerServerType>({
+				path: 'server_types',
+				dataKey: 'server_types',
+				headers,
+				resourceName: 'server types',
+			});
+			console.log(`[CloudStatusService ${this.doId}] Fetched ${serverTypes.length} server types.`);
+			console.log(
+				`[CloudStatusService ${this.doId}] Server type preview: ${serverTypes
+					.slice(0, 20)
+					.map((st) => `${st.name}(${st.category || 'unknown'})`)
+					.join(', ')}`,
+			);
 
-			console.log(`[CloudStatusService ${this.doId}] Fetching datacenters...`);
-			const datacentersResponse = await fetch(`${HETZNER_API_BASE}/datacenters?per_page=50`, { headers });
-			if (!datacentersResponse.ok) {
-				throw new Error(`Failed to fetch datacenters: ${datacentersResponse.status} ${await datacentersResponse.text()}`);
-			}
-			const datacentersData = (await datacentersResponse.json()) as { datacenters: HetznerDatacenter[] };
-			console.log(`[CloudStatusService ${this.doId}] Fetched ${datacentersData.datacenters.length} datacenters.`);
+            console.log(`[CloudStatusService ${this.doId}] Fetching datacenters...`);
+            const datacenters = await this.fetchPaginatedResource<HetznerDatacenter>({
+                path: 'datacenters',
+                dataKey: 'datacenters',
+                headers,
+                resourceName: 'datacenters',
+            });
+            console.log(`[CloudStatusService ${this.doId}] Fetched ${datacenters.length} datacenters.`);
 
-			const processedData = this.processCloudData(serverTypesData.server_types, datacentersData.datacenters);
+			const processedData = this.processCloudData(serverTypes, datacenters);
 
 			// Get previous availability for change detection
 			const previousAvailability = await this.storage.get<AvailabilityMatrix>('availability');
@@ -181,6 +209,50 @@ export class CloudStatusService {
 		}
 	}
 
+	private async fetchPaginatedResource<T>({
+		path,
+		dataKey,
+		headers,
+		resourceName,
+	}: {
+		path: string;
+		dataKey: string;
+		headers: Record<string, string>;
+		resourceName: string;
+	}): Promise<T[]> {
+		const results: T[] = [];
+		let page = 1;
+		const perPage = 50;
+
+		while (true) {
+			const url = new URL(`${HETZNER_API_BASE}/${path}`);
+			url.searchParams.set('page', page.toString());
+			url.searchParams.set('per_page', perPage.toString());
+
+			const response = await fetch(url.toString(), { headers });
+			if (!response.ok) {
+				throw new Error(`Failed to fetch ${resourceName}: ${response.status} ${await response.text()}`);
+			}
+
+			const data = (await response.json()) as HetznerPaginatedResponse<T>;
+			const items = data[dataKey];
+			if (!Array.isArray(items)) {
+				throw new Error(`Invalid ${resourceName} response: missing ${dataKey} array`);
+			}
+
+			results.push(...(items as T[]));
+
+			const nextPage = data.meta?.pagination?.next_page;
+			if (!nextPage || nextPage === page) {
+				break;
+			}
+
+			page = nextPage;
+		}
+
+		return results;
+	}
+
 	private processCloudData(serverTypes: HetznerServerType[], datacenters: HetznerDatacenter[]) {
 		const processedServerTypes: ServerTypeInfo[] = serverTypes.map((st) => ({
 			id: st.id,
@@ -191,7 +263,10 @@ export class CloudStatusService {
 			disk: st.disk,
 			cpu_type: st.cpu_type,
 			architecture: st.architecture,
+			category: st.category,
+			storageType: st.storage_type,
 			isDeprecated: st.deprecation !== null,
+			deprecated: st.deprecation !== null,
 		}));
 		processedServerTypes.sort((a, b) => a.name.localeCompare(b.name));
 

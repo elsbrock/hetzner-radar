@@ -4,7 +4,7 @@
  * Handles HTTP endpoints for the worker
  */
 
-import type { CloudStatusData } from './cloud-status-service';
+import type { CloudStatusData, LocationInfo, ServerTypeInfo } from './cloud-status-service';
 
 export class HttpRouter {
 	private doId: string;
@@ -175,6 +175,8 @@ export class HttpRouter {
 			const lastCloudUpdate = await this.storage.get<string>('lastUpdated');
 			const currentAlarm = await this.storage.getAlarm();
 			const verbose = params.get('verbose') === 'true';
+			const serverTypes = (await this.storage.get<ServerTypeInfo[]>('serverTypes')) || [];
+			const locations = (await this.storage.get<LocationInfo[]>('locations')) || [];
 
 			const debugInfo = {
 				type: 'cloud-availability',
@@ -184,6 +186,18 @@ export class HttpRouter {
 				interval: `${this.fetchIntervalMs}ms (${Math.round(this.fetchIntervalMs / 60000)}min)`,
 				timestamp: new Date().toISOString(),
 				nextScheduled: currentAlarm ? new Date(currentAlarm).toLocaleString() : 'No alarm set',
+				snapshot: {
+					serverTypeCount: serverTypes.length,
+					locationCount: locations.length,
+					categories: Array.from(new Set(serverTypes.map((st) => st.category))).sort(),
+					sampleServerTypes: serverTypes.slice(0, 10).map((st) => ({
+						id: st.id,
+						name: st.name,
+						category: st.category,
+						architecture: st.architecture,
+						cpuType: st.cpu_type,
+					})),
+				},
 			};
 
 			if (verbose) {

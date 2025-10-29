@@ -21,7 +21,10 @@ export const mockServerTypes: ServerTypeInfo[] = [
 		disk: 25,
 		cpu_type: 'shared',
 		architecture: 'x86',
+		category: 'regular_purpose',
+		storageType: 'local',
 		isDeprecated: false,
+		deprecated: false,
 	},
 	{
 		id: 2,
@@ -32,7 +35,10 @@ export const mockServerTypes: ServerTypeInfo[] = [
 		disk: 40,
 		cpu_type: 'shared',
 		architecture: 'x86',
+		category: 'regular_purpose',
+		storageType: 'local',
 		isDeprecated: false,
+		deprecated: false,
 	},
 	{
 		id: 3,
@@ -43,7 +49,10 @@ export const mockServerTypes: ServerTypeInfo[] = [
 		disk: 80,
 		cpu_type: 'shared',
 		architecture: 'x86',
+		category: 'regular_purpose',
+		storageType: 'local',
 		isDeprecated: true,
+		deprecated: true,
 	},
 ];
 
@@ -109,13 +118,14 @@ export const mockHetznerServerTypesResponse = {
 	server_types: [
 		{
 			id: 1,
-			name: 'cx11',
+            name: 'cx11',
 			description: '1 vCPU, 1 GB RAM, 25 GB Disk',
 			cores: 1,
 			memory: 1073741824,
 			disk: 25,
 			storage_type: 'local' as const,
 			cpu_type: 'shared' as const,
+			category: 'regular_purpose',
 			architecture: 'x86',
 			deprecation: null,
 		},
@@ -128,6 +138,7 @@ export const mockHetznerServerTypesResponse = {
 			disk: 40,
 			storage_type: 'local' as const,
 			cpu_type: 'shared' as const,
+			category: 'regular_purpose',
 			architecture: 'x86',
 			deprecation: null,
 		},
@@ -140,18 +151,29 @@ export const mockHetznerServerTypesResponse = {
 			disk: 80,
 			storage_type: 'local' as const,
 			cpu_type: 'shared' as const,
+			category: 'regular_purpose',
 			architecture: 'x86',
 			deprecation: {
 				unavailable_after: '2024-12-31T23:59:59+00:00',
 				announced: '2023-12-01T00:00:00+00:00',
-			},
-		},
-	],
+            },
+        },
+    ],
+    meta: {
+        pagination: {
+            page: 1,
+            per_page: 50,
+            previous_page: null,
+            next_page: null,
+            last_page: 1,
+            total_entries: 3,
+        },
+    },
 };
 
 export const mockHetznerDatacentersResponse = {
-	datacenters: [
-		{
+    datacenters: [
+        {
 			id: 1,
 			name: 'nbg1-dc3',
 			description: 'Nuremberg 1 DC 3',
@@ -185,15 +207,15 @@ export const mockHetznerDatacentersResponse = {
 				longitude: 12.370071,
 				network_zone: 'eu-central',
 			},
-			server_types: {
-				supported: [1, 2, 3],
-				available: [1, 3],
-				available_for_migration: [1, 2, 3],
-			},
-		},
-		{
-			id: 3,
-			name: 'hel1-dc2',
+            server_types: {
+                supported: [1, 2, 3],
+                available: [1, 3],
+                available_for_migration: [1, 2, 3],
+            },
+        },
+        {
+            id: 3,
+            name: 'hel1-dc2',
 			description: 'Helsinki 1 DC 2',
 			location: {
 				id: 3,
@@ -209,7 +231,73 @@ export const mockHetznerDatacentersResponse = {
 				supported: [1, 2, 3],
 				available: [2, 3],
 				available_for_migration: [1, 2, 3],
-			},
+            },
+        },
+    ],
+    meta: {
+        pagination: {
+            page: 1,
+            per_page: 50,
+            previous_page: null,
+            next_page: null,
+            last_page: 1,
+            total_entries: 3,
+        },
+    },
+};
+
+export const mockHetznerServerTypesResponsePaginatedPage1 = {
+	server_types: [
+		{
+			id: 1,
+            name: 'cx11',
+            description: '1 vCPU, 1 GB RAM, 25 GB Disk',
+            cores: 1,
+            memory: 1073741824,
+            disk: 25,
+			storage_type: 'local' as const,
+			cpu_type: 'shared' as const,
+			category: 'regular_purpose',
+			architecture: 'x86',
+			deprecation: null,
 		},
 	],
+    meta: {
+        pagination: {
+            page: 1,
+            per_page: 50,
+            previous_page: null,
+            next_page: 2,
+            last_page: 2,
+            total_entries: 2,
+        },
+    },
+};
+
+export const mockHetznerServerTypesResponsePaginatedPage2 = {
+	server_types: [
+		{
+            id: 99,
+            name: 'ccx23',
+            description: '4 vCPU, 16 GB RAM, 80 GB Disk',
+            cores: 4,
+            memory: 17179869184,
+            disk: 80,
+			storage_type: 'local' as const,
+			cpu_type: 'dedicated' as const,
+			category: 'general_purpose',
+			architecture: 'x86',
+			deprecation: null,
+		},
+	],
+    meta: {
+        pagination: {
+            page: 2,
+            per_page: 50,
+            previous_page: 1,
+            next_page: null,
+            last_page: 2,
+            total_entries: 2,
+        },
+    },
 };
