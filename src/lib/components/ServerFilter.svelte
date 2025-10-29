@@ -66,28 +66,31 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 		filterStore.set(createDefaultFilter());
 	}
 
-	onMount(() => {
-		const urlFilter = getFilterFromURL($page.url.searchParams);
-		const storedFilterValue = loadFilter();
+onMount(() => {
+	const urlFilter = getFilterFromURL($page.url.searchParams);
+	const storedFilterValue = loadFilter();
+	const base = createDefaultFilter();
 
-		if (urlFilter) {
-			filter = { ...createDefaultFilter(), ...urlFilter };
-			addToast({
-				color: 'green',
-				message: 'Using filter from URL',
-				icon: 'success'
-			});
-		} else if (storedFilterValue) {
-			_hasStoredFilter = true;
-			filter = { ...createDefaultFilter(), ...storedFilterValue };
-			addToast({
-				color: 'green',
-				message: 'Using stored filter settings',
-				icon: 'success'
-			});
-		}
-		// No 'else' needed as filter is already initialized with default
-	});
+	Object.assign(filter, base);
+
+	if (urlFilter) {
+		Object.assign(filter, urlFilter);
+		addToast({
+			color: 'green',
+			message: 'Using filter from URL',
+			icon: 'success'
+		});
+	} else if (storedFilterValue) {
+		_hasStoredFilter = true;
+		Object.assign(filter, storedFilterValue);
+		addToast({
+			color: 'green',
+			message: 'Using stored filter settings',
+			icon: 'success'
+		});
+	}
+	// Defaults already applied via Object.assign
+});
 
 	function updateUrl(newFilter: ServerFilter | null) {
 		if (newFilter && typeof window !== 'undefined') {
@@ -124,12 +127,14 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 		console.log('ServerFilter: New filterStore value after update:', $filterStore);
 	});
 
-	function updateFilterFromUrl(newFilter: ServerFilter | null) {
-		if (newFilter) {
-			// Reassign the state object to ensure reactivity update
-			filter = { ...filter, ...newFilter };
-		}
+function updateFilterFromUrl(newFilter: ServerFilter | null) {
+	if (!newFilter) {
+		return;
 	}
+
+	const base = createDefaultFilter();
+	Object.assign(filter, base, newFilter);
+}
 
 	$effect(() => {
 		const filterString = $page.url.searchParams.get('filter');
