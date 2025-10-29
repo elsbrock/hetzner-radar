@@ -6,6 +6,7 @@ type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 	import { getFormattedDiskSize, getFormattedMemorySize } from '$lib/disksize';
 	import {
 		decodeFilterString,
+		createDefaultFilter,
 		defaultFilter,
 		encodeFilter,
 		getFilterFromURL,
@@ -51,7 +52,7 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 		damping: 1
 	};
 
-	let filter = $state({ ...defaultFilter });
+	let filter = $state(createDefaultFilter());
 	let _hasStoredFilter = false;
 
 	// Log initial state for debugging
@@ -62,7 +63,7 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 	// This ensures consistent state between server and client rendering
 	if ($filterStore === null) {
 		console.log('ServerFilter: Initializing filter store with default values');
-		filterStore.set({ ...defaultFilter });
+		filterStore.set(createDefaultFilter());
 	}
 
 	onMount(() => {
@@ -70,7 +71,7 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 		const storedFilterValue = loadFilter();
 
 		if (urlFilter) {
-			Object.assign(filter, urlFilter);
+			filter = { ...createDefaultFilter(), ...urlFilter };
 			addToast({
 				color: 'green',
 				message: 'Using filter from URL',
@@ -78,7 +79,7 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 			});
 		} else if (storedFilterValue) {
 			_hasStoredFilter = true;
-			Object.assign(filter, storedFilterValue);
+			filter = { ...createDefaultFilter(), ...storedFilterValue };
 			addToast({
 				color: 'green',
 				message: 'Using stored filter settings',

@@ -68,6 +68,42 @@ export const defaultFilter: ServerFilter = {
   extrasRPS: false,
 };
 
+function cloneFilter(filter: ServerFilter): ServerFilter {
+  return JSON.parse(JSON.stringify(filter)) as ServerFilter;
+}
+
+export function createDefaultFilter(): ServerFilter {
+  return cloneFilter(defaultFilter);
+}
+
+function mergeWithDefaultFilter(
+  partial: Partial<ServerFilter> | null | undefined,
+): ServerFilter {
+  const base = createDefaultFilter();
+  if (!partial) {
+    return base;
+  }
+
+  return Object.assign(base, partial);
+}
+
+function safeParseJSON(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error("Failed to parse JSON filter:", error);
+    return null;
+  }
+}
+
+function coerceServerFilter(value: unknown): ServerFilter | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  return mergeWithDefaultFilter(value as Partial<ServerFilter>);
+}
+
 export function encodeFilter(filter: ServerFilter): string {
   const filterString = LZString.compressToEncodedURIComponent(
     JSON.stringify(filter),
@@ -82,8 +118,8 @@ export function decodeFilterString(filterString: string): ServerFilter | null {
     if (!decompressed) {
       return null;
     }
-    const filter = JSON.parse(decompressed);
-    return filter;
+    const parsed = safeParseJSON(decompressed);
+    return coerceServerFilter(parsed);
   } catch (e) {
     console.error("Error decoding filter string:", e);
     return null;
@@ -102,10 +138,22 @@ export function getFilterFromURL(params: URLSearchParams): ServerFilter | null {
   return null;
 }
 
+export function parseStoredFilter(
+  raw: string | null | undefined,
+): ServerFilter | null {
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = safeParseJSON(raw);
+  return coerceServerFilter(parsed);
+}
+
 export function loadFilter(): ServerFilter | null {
   const storedFilter = localStorage.getItem("radar-filter");
   if (storedFilter) {
-    return JSON.parse(storedFilter);
+    const parsed = safeParseJSON(storedFilter);
+    return coerceServerFilter(parsed);
   }
   return null;
 }
@@ -123,57 +171,56 @@ export function saveFilter(filter: ServerFilter | null) {
 export function convertServerConfigurationToFilter(
   serverConfiguration: ServerConfiguration,
 ): ServerFilter {
-  return {
-    version: 1,
+  const base = createDefaultFilter();
 
-    cpuCount: 1,
-    cpuIntel: true,
-    cpuAMD: true,
+  base.cpuCount = 1;
+  base.cpuIntel = true;
+  base.cpuAMD = true;
 
-    ramInternalSize: [
-      getInverseMemoryExp(serverConfiguration.ram_size),
-      getInverseMemoryExp(serverConfiguration.ram_size),
-    ],
+  const ramSize = getInverseMemoryExp(serverConfiguration.ram_size);
+  base.ramInternalSize = [ramSize, ramSize];
 
-    ssdNvmeCount: Array(2)
-      .fill(serverConfiguration.nvme_drives.length)
-      .flat()
-      .slice(0, 2) as [number, number],
-    ssdNvmeInternalSize: computeFilterRange(
-      serverConfiguration.nvme_drives,
-      250,
-    ),
+  base.ssdNvmeCount = Array(2)
+    .fill(serverConfiguration.nvme_drives.length)
+    .flat()
+    .slice(0, 2) as [number, number];
+  base.ssdNvmeInternalSize = computeFilterRange(
+    serverConfiguration.nvme_drives,
+    250,
+  );
 
-    ssdSataCount: Array(2)
-      .fill(serverConfiguration.sata_drives.length)
-      .flat()
-      .slice(0, 2) as [number, number],
-    ssdSataInternalSize: computeFilterRange(
-      serverConfiguration.sata_drives,
-      250,
-    ),
+  base.ssdSataCount = Array(2)
+    .fill(serverConfiguration.sata_drives.length)
+    .flat()
+    .slice(0, 2) as [number, number];
+  base.ssdSataInternalSize = computeFilterRange(
+    serverConfiguration.sata_drives,
+    250,
+  );
 
-    hddCount: Array(2)
-      .fill(serverConfiguration.hdd_drives.length)
-      .flat()
-      .slice(0, 2) as [number, number],
-    hddInternalSize: computeFilterRange(serverConfiguration.hdd_drives, 500),
+  base.hddCount = Array(2)
+    .fill(serverConfiguration.hdd_drives.length)
+    .flat()
+    .slice(0, 2) as [number, number];
+  base.hddInternalSize = computeFilterRange(
+    serverConfiguration.hdd_drives,
+    500,
+  );
 
-    selectedCpuModels: [serverConfiguration.cpu],
+  base.selectedCpuModels = [serverConfiguration.cpu];
 
-    extrasECC: serverConfiguration.is_ecc,
-    extrasINIC: serverConfiguration.with_inic,
-    extrasHWR: serverConfiguration.with_hwr,
-    extrasGPU: serverConfiguration.with_gpu,
-    extrasRPS: serverConfiguration.with_rps,
+  base.extrasECC = serverConfiguration.is_ecc;
+  base.extrasINIC = serverConfiguration.with_inic;
+  base.extrasHWR = serverConfiguration.with_hwr;
+  base.extrasGPU = serverConfiguration.with_gpu;
+  base.extrasRPS = serverConfiguration.with_rps;
 
-    recentlySeen: false,
+  base.recentlySeen = false;
+  base.locationGermany = true;
+  base.locationFinland = true;
+  base.selectedDatacenters = [];
 
-    locationGermany: true,
-    locationFinland: true,
-
-    selectedDatacenters: [],
-  };
+  return base;
 }
 
 export function isIdenticalFilter(

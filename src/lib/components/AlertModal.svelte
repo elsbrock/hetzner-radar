@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { invalidate } from '$app/navigation';
 	import { MAX_ALERTS, MAX_NAME_LENGTH, type PriceAlert } from '$lib/api/backend/alerts';
+	import { createDefaultFilter } from '$lib/filter';
 	import { filter } from '$lib/stores/filter';
 	import { session } from '$lib/stores/session';
 	import { addToast } from '$lib/stores/toast';
@@ -83,6 +84,14 @@
 	const hasValidNotificationSelection = $derived(emailSelected || discordSelected);
 
 	const action = $derived(alert ? '/alerts?/edit' : '/alerts?/add');
+	const serializedFilter = $derived(() => {
+		if (alert && typeof alert.filter === 'string') {
+			return alert.filter;
+		}
+
+		const activeFilter = $filter ?? createDefaultFilter();
+		return JSON.stringify(activeFilter);
+	});
 </script>
 
 <Modal bind:open size="md" autoclose={false} outsideclose class="mx-auto w-full max-w-md">
@@ -161,7 +170,7 @@
 			{/if}
 
 			<input type="hidden" name="alertId" value={alert?.id} />
-			<input type="hidden" name="filter" value={JSON.stringify(alert ? alert.filter : $filter)} />
+			<input type="hidden" name="filter" value={serializedFilter} />
 			{#if !alert}
 				<input type="hidden" name="vatRate" value={$settingsStore.currentVatRate ?? 0} />
 			{/if}

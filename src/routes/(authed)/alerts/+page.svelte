@@ -6,7 +6,7 @@
 	import AlertModal from '$lib/components/AlertModal.svelte';
 	import AlertAuctionsDrawer from '$lib/components/AlertAuctionsDrawer.svelte';
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
-	import { encodeFilter } from '$lib/filter';
+	import { encodeFilter, parseStoredFilter } from '$lib/filter';
 	import { addToast } from '$lib/stores/toast';
 	import { invalidateAll } from '$app/navigation';
 	import { MAX_ALERTS } from '$lib/api/backend/alerts.js';
@@ -39,6 +39,14 @@
 	dayjs.extend(localizedFormat);
 	dayjs.extend(utc);
 	dayjs.extend(timezone);
+
+	function resolveAnalyzeTarget(rawFilter: string | null | undefined) {
+		const parsed = parseStoredFilter(rawFilter);
+		return {
+			href: parsed ? `/analyze?filter=${encodeFilter(parsed)}` : '/analyze',
+			missing: !parsed
+		};
+	}
 
 	import {
 		Tabs,
@@ -403,9 +411,13 @@
 											</div>
 											<div class="mt-3 self-center md:mt-0">
 												<ButtonGroup>
+													{@const analyzeTarget = resolveAnalyzeTarget(alert.filter)}
 													<Button
 														size="xs"
-														href={`/analyze?filter=${encodeFilter(JSON.parse(alert.filter))}`}
+														href={analyzeTarget.href}
+														title={analyzeTarget.missing
+															? 'Saved filter was unavailable; opening Analyze with defaults.'
+															: 'Open Analyze with this saved search'}
 													>
 														<FontAwesomeIcon icon={faMagnifyingGlass} />
 													</Button>
@@ -508,9 +520,13 @@
 											</div>
 											<div class="mt-3 w-full self-center md:mt-0 md:w-1/5">
 												<ButtonGroup>
+													{@const analyzeTarget = resolveAnalyzeTarget(alert.filter)}
 													<Button
 														size="xs"
-														href={`/analyze?filter=${encodeFilter(JSON.parse(alert.filter))}`}
+														href={analyzeTarget.href}
+														title={analyzeTarget.missing
+															? 'Saved filter was unavailable; opening Analyze with defaults.'
+															: 'Open Analyze with this saved search'}
 													>
 														<FontAwesomeIcon icon={faMagnifyingGlass} />
 													</Button>
