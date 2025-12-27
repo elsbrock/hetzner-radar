@@ -104,17 +104,6 @@
 						Help us improve by reporting bugs or submitting fixes
 					</p>
 				</div>
-				<div
-					class="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-500 dark:bg-gray-800"
-				>
-					<div class="mb-2 flex items-center gap-3">
-						<span class="text-orange-500">☕</span>
-						<span class="font-semibold text-gray-800 dark:text-gray-200">Support Development</span>
-					</div>
-					<p class="text-sm text-gray-600 dark:text-gray-400">
-						Buy us a coffee to fuel late-night coding sessions
-					</p>
-				</div>
 			</div>
 			<div class="text-center">
 				<p class="text-sm text-gray-500 italic dark:text-gray-400">

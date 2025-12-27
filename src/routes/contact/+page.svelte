@@ -1,12 +1,6 @@
 <script>
 	import { faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
-	import {
-		faCoffee,
-		faEnvelope,
-		faHandsHelping,
-		faInfoCircle,
-		faRocket
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faEnvelope, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button, Card } from 'flowbite-svelte';
 </script>
@@ -29,7 +23,7 @@
 		</div>
 
 		<!-- Contact Methods Section -->
-		<section class="grid grid-cols-1 gap-8 md:grid-cols-3">
+		<section class="mx-auto max-w-md">
 			<!-- Email Contact Card -->
 			<Card
 				class="flex flex-col items-center justify-between text-center shadow-lg dark:bg-gray-800"
@@ -49,58 +43,6 @@
 				<Button href="mailto:mail@radar.iodev.org" color="primary" class="w-full">
 					<FontAwesomeIcon icon={faEnvelope} class="mr-2" />
 					Send Email
-				</Button>
-			</Card>
-
-			<!-- GitHub Sponsorship Card -->
-			<Card
-				class="flex flex-col items-center justify-between text-center shadow-lg dark:bg-gray-800"
-			>
-				<div>
-					<FontAwesomeIcon
-						icon={faHandsHelping}
-						size="3x"
-						class="mb-4 text-green-500 dark:text-green-400"
-					/>
-					<h3 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-gray-100">Support Us</h3>
-					<p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-						If you appreciate what we do and would like to support the project, consider becoming a
-						sponsor on GitHub. Your support helps us maintain and improve Server Radar.
-					</p>
-				</div>
-
-				<Button href="https://github.com/sponsors/elsbrock" color="alternative" class="w-full">
-					<FontAwesomeIcon icon={faRocket} class="mr-2 h-5 w-5" />
-					Sponsor on Github
-				</Button>
-			</Card>
-
-			<!-- Buy Me a Coffee Card -->
-			<Card
-				class="flex flex-col items-center justify-between text-center shadow-lg dark:bg-gray-800"
-			>
-				<div>
-					<FontAwesomeIcon
-						icon={faCoffee}
-						size="3x"
-						class="mb-4 text-amber-500 dark:text-amber-400"
-					/>
-					<h3 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-gray-100">
-						Buy Me a Coffee
-					</h3>
-					<p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-						Enjoy using Server Radar? Consider buying me a coffee to fuel future development and
-						show your appreciation for this project.
-					</p>
-				</div>
-
-				<Button
-					href="https://www.buymeacoffee.com/elsbrock"
-					color="yellow"
-					class="w-full dark:border-amber-600 dark:bg-amber-600 dark:text-white dark:hover:bg-amber-700"
-				>
-					<FontAwesomeIcon icon={faCoffee} class="mr-2" />
-					Buy Me a Coffee
 				</Button>
 			</Card>
 		</section>
