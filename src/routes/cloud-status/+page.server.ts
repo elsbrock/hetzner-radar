@@ -62,12 +62,12 @@ export const load: PageServerLoad = async ({
           "RADAR_WORKER binding not found in development mode. Please run 'npx wrangler dev' instead of 'npm run dev'.",
         );
       }
-    const statusData = (await radarWorker.getStatus()) as CloudStatusData;
-    const normalizedStatusData = normalizeStatusData(statusData);
-    return {
-      statusData: normalizedStatusData,
-      user: locals.user,
-    };
+      const statusData = (await radarWorker.getStatus()) as CloudStatusData;
+      const normalizedStatusData = normalizeStatusData(statusData);
+      return {
+        statusData: normalizedStatusData,
+        user: locals.user,
+      };
     }
 
     // In production mode, use the service binding

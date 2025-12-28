@@ -22,19 +22,19 @@ interface HetznerServerType {
 }
 
 interface HetznerPaginationMeta {
-    page: number;
-    per_page: number;
-    previous_page: number | null;
-    next_page: number | null;
-    last_page: number;
-    total_entries: number;
+	page: number;
+	per_page: number;
+	previous_page: number | null;
+	next_page: number | null;
+	last_page: number;
+	total_entries: number;
 }
 
 interface HetznerPaginatedResponse<T> {
-    [key: string]: T[] | unknown;
-    meta?: {
-        pagination?: HetznerPaginationMeta;
-    };
+	[key: string]: T[] | unknown;
+	meta?: {
+		pagination?: HetznerPaginationMeta;
+	};
 }
 
 interface HetznerLocation {
@@ -168,14 +168,14 @@ export class CloudStatusService {
 					.join(', ')}`,
 			);
 
-            console.log(`[CloudStatusService ${this.doId}] Fetching datacenters...`);
-            const datacenters = await this.fetchPaginatedResource<HetznerDatacenter>({
-                path: 'datacenters',
-                dataKey: 'datacenters',
-                headers,
-                resourceName: 'datacenters',
-            });
-            console.log(`[CloudStatusService ${this.doId}] Fetched ${datacenters.length} datacenters.`);
+			console.log(`[CloudStatusService ${this.doId}] Fetching datacenters...`);
+			const datacenters = await this.fetchPaginatedResource<HetznerDatacenter>({
+				path: 'datacenters',
+				dataKey: 'datacenters',
+				headers,
+				resourceName: 'datacenters',
+			});
+			console.log(`[CloudStatusService ${this.doId}] Fetched ${datacenters.length} datacenters.`);
 
 			const processedData = this.processCloudData(serverTypes, datacenters);
 

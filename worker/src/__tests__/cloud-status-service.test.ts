@@ -132,21 +132,9 @@ describe('CloudStatusService', () => {
 
 			await service.fetchAndUpdateStatus();
 
-			expect(mockFetch).toHaveBeenNthCalledWith(
-				1,
-				'https://api.hetzner.cloud/v1/server_types?page=1&per_page=50',
-				expect.anything(),
-			);
-			expect(mockFetch).toHaveBeenNthCalledWith(
-				2,
-				'https://api.hetzner.cloud/v1/server_types?page=2&per_page=50',
-				expect.anything(),
-			);
-			expect(mockFetch).toHaveBeenNthCalledWith(
-				3,
-				'https://api.hetzner.cloud/v1/datacenters?page=1&per_page=50',
-				expect.anything(),
-			);
+			expect(mockFetch).toHaveBeenNthCalledWith(1, 'https://api.hetzner.cloud/v1/server_types?page=1&per_page=50', expect.anything());
+			expect(mockFetch).toHaveBeenNthCalledWith(2, 'https://api.hetzner.cloud/v1/server_types?page=2&per_page=50', expect.anything());
+			expect(mockFetch).toHaveBeenNthCalledWith(3, 'https://api.hetzner.cloud/v1/datacenters?page=1&per_page=50', expect.anything());
 		});
 
 		it('should throw error when API token is missing', async () => {

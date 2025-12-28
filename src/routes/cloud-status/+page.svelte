@@ -186,7 +186,10 @@
 		disk: number;
 		cpu_type: 'shared' | 'dedicated';
 		architecture: string;
+		category: string;
+		storageType: 'local' | 'network';
 		deprecated: boolean;
+		isDeprecated?: boolean;
 	}
 
 	const groupedServerTypes = $derived(
