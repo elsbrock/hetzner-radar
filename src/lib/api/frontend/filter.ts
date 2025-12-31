@@ -106,22 +106,22 @@ export function generateFilterQuery(
   // NVMe size filtering - per-disk or total mode (default to per-disk for backwards compatibility)
   if (filter.ssdNvmeSizeMode === "total") {
     query.append(
-      SQL` and nvme_size >= ${filter.ssdNvmeInternalSize[0] * 250} and nvme_size <= ${filter.ssdNvmeInternalSize[1] * 250}`,
+      SQL` and nvme_size >= ${filter.ssdNvmeInternalSize[0] * 500} and nvme_size <= ${filter.ssdNvmeInternalSize[1] * 500}`,
     );
   } else {
     query.append(
-      SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * 250} AND x <= ${filter.ssdNvmeInternalSize[1] * 250})) = array_length(nvme_drives)`,
+      SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * 500} AND x <= ${filter.ssdNvmeInternalSize[1] * 500})) = array_length(nvme_drives)`,
     );
   }
 
   // SATA size filtering - per-disk or total mode
   if (filter.ssdSataSizeMode === "total") {
     query.append(
-      SQL` and sata_size >= ${filter.ssdSataInternalSize[0] * 250} and sata_size <= ${filter.ssdSataInternalSize[1] * 250}`,
+      SQL` and sata_size >= ${filter.ssdSataInternalSize[0] * 500} and sata_size <= ${filter.ssdSataInternalSize[1] * 500}`,
     );
   } else {
     query.append(
-      SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * 250} AND x <= ${filter.ssdSataInternalSize[1] * 250})) = array_length(sata_drives)`,
+      SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * 500} AND x <= ${filter.ssdSataInternalSize[1] * 500})) = array_length(sata_drives)`,
     );
   }
 

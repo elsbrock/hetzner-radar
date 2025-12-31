@@ -58,8 +58,81 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 	let hddCollapsed = $state(true);
 	let extrasCollapsed = $state(true);
 
+	// Per-disk size slider max values
+	const NVME_PER_DISK_MAX = 18;
+	const SATA_PER_DISK_MAX = 14;
+	const HDD_PER_DISK_MAX = 44;
+
+	// Max device counts
+	const NVME_MAX_DEVICES = 8;
+	const SATA_MAX_DEVICES = 4;
+	const HDD_MAX_DEVICES = 15;
+
 	let filter = $state(createDefaultFilter());
 	let _hasStoredFilter = false;
+
+	// Dynamic slider max based on size mode
+	let nvmeSizeMax = $derived(
+		filter.ssdNvmeSizeMode === 'total' ? NVME_PER_DISK_MAX * NVME_MAX_DEVICES : NVME_PER_DISK_MAX
+	);
+	let sataSizeMax = $derived(
+		filter.ssdSataSizeMode === 'total' ? SATA_PER_DISK_MAX * SATA_MAX_DEVICES : SATA_PER_DISK_MAX
+	);
+	let hddSizeMax = $derived(
+		filter.hddSizeMode === 'total' ? HDD_PER_DISK_MAX * HDD_MAX_DEVICES : HDD_PER_DISK_MAX
+	);
+
+	// Track previous size modes to detect changes and clamp values
+	let prevNvmeSizeMode = $state<string | undefined>(undefined);
+	let prevSataSizeMode = $state<string | undefined>(undefined);
+	let prevHddSizeMode = $state<string | undefined>(undefined);
+
+	// Clamp slider values when switching from total to per-disk mode
+	$effect(() => {
+		const currentMode = filter.ssdNvmeSizeMode;
+		if (prevNvmeSizeMode !== undefined && prevNvmeSizeMode === 'total' && currentMode !== 'total') {
+			// Switching from total to per-disk - clamp values
+			const clamped = filter.ssdNvmeInternalSize.map((v) =>
+				Math.min(v, NVME_PER_DISK_MAX)
+			) as [number, number];
+			if (
+				clamped[0] !== filter.ssdNvmeInternalSize[0] ||
+				clamped[1] !== filter.ssdNvmeInternalSize[1]
+			) {
+				filter = { ...filter, ssdNvmeInternalSize: clamped };
+			}
+		}
+		prevNvmeSizeMode = currentMode;
+	});
+
+	$effect(() => {
+		const currentMode = filter.ssdSataSizeMode;
+		if (prevSataSizeMode !== undefined && prevSataSizeMode === 'total' && currentMode !== 'total') {
+			const clamped = filter.ssdSataInternalSize.map((v) =>
+				Math.min(v, SATA_PER_DISK_MAX)
+			) as [number, number];
+			if (
+				clamped[0] !== filter.ssdSataInternalSize[0] ||
+				clamped[1] !== filter.ssdSataInternalSize[1]
+			) {
+				filter = { ...filter, ssdSataInternalSize: clamped };
+			}
+		}
+		prevSataSizeMode = currentMode;
+	});
+
+	$effect(() => {
+		const currentMode = filter.hddSizeMode;
+		if (prevHddSizeMode !== undefined && prevHddSizeMode === 'total' && currentMode !== 'total') {
+			const clamped = filter.hddInternalSize.map((v) =>
+				Math.min(v, HDD_PER_DISK_MAX)
+			) as [number, number];
+			if (clamped[0] !== filter.hddInternalSize[0] || clamped[1] !== filter.hddInternalSize[1]) {
+				filter = { ...filter, hddInternalSize: clamped };
+			}
+		}
+		prevHddSizeMode = currentMode;
+	});
 
 	// Initialize the filter store immediately with default values if it's null
 	if ($filterStore === null) {
@@ -501,7 +574,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					<RangeSlider
 						bind:values={filter.ssdNvmeInternalSize}
 						min={0}
-						max={18}
+						max={nvmeSizeMax}
 						hoverable={false}
 						{springValues}
 						pips
@@ -587,7 +660,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					<RangeSlider
 						bind:values={filter.ssdSataInternalSize}
 						min={0}
-						max={14}
+						max={sataSizeMax}
 						hoverable={false}
 						{springValues}
 						pips
@@ -673,7 +746,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					<RangeSlider
 						bind:values={filter.hddInternalSize}
 						min={4}
-						max={44}
+						max={hddSizeMax}
 						hoverable={false}
 						{springValues}
 						pips
