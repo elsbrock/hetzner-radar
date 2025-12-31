@@ -204,9 +204,9 @@
 	</div>
 
 	<div class="flex md:order-2 lg:hidden">
-		<Button href="/analyze" aria-label="Analyze" size="xs">
+		<Button href="/analyze" aria-label="Auctions" size="xs">
 			<FontAwesomeIcon class="h-5 w-5" icon={faBinoculars} /><span class="ml-2 hidden md:inline">
-				Analyze</span
+				Auctions</span
 			>
 		</Button>
 		<NavHamburger
@@ -242,7 +242,7 @@
 			<span
 				class="text-base text-black dark:text-gray-200 {activeUrl === '/analyze'
 					? 'border-primary-500 border-b-2'
-					: ''}">Analyze</span
+					: ''}">Auctions</span
 			>
 		</NavLi>
 		<NavLi
