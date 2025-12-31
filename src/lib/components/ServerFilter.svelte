@@ -110,21 +110,24 @@ onMount(() => {
 	$effect(() => {
 		const currentFilterState = JSON.stringify(filter);
 
-		// Only update if the filter has actually changed and we have a previous state
-		if (previousFilterState && currentFilterState !== previousFilterState) {
+		// Update if the filter has actually changed
+		// Also update on first load (when previousFilterState is empty) to sync URL filter to store
+		const isFirstLoad = previousFilterState === '';
+		const hasChanged = currentFilterState !== previousFilterState;
+
+		if (hasChanged) {
 			console.log('ServerFilter: Filter changed, updating store with:', filter);
-			console.log('ServerFilter: Previous filterStore value:', $filterStore);
 
 			// Update the store immediately for reactivity elsewhere (like data fetching)
 			filterStore.set({ ...filter });
 
-			// Update the URL only after a delay
-			debouncedUpdateUrl({ ...filter });
+			// Only update URL after user changes (not on initial load from URL)
+			if (!isFirstLoad) {
+				debouncedUpdateUrl({ ...filter });
+			}
 		}
 
 		previousFilterState = currentFilterState;
-
-		console.log('ServerFilter: New filterStore value after update:', $filterStore);
 	});
 
 function updateFilterFromUrl(newFilter: ServerFilter | null) {

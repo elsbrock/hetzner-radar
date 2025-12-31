@@ -35,8 +35,8 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
 
-    /* Run tests in headed mode locally, headless in CI */
-    headless: !!process.env.CI,
+    /* Run in headless mode */
+    headless: true,
 
     /* Action timeout (waiting for elements, etc.) */
     actionTimeout: process.env.CI ? 60000 : 30000,
