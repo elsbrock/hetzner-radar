@@ -1039,13 +1039,6 @@ let isSmallScreen: boolean = $state(false);
 							</div>
 						{/if}
 					</div>
-					{#if !loading && totalResults > 100}
-						<Alert class="mx-5 mb-5" color="red">
-							<FontAwesomeIcon icon={faWarning} class="me-1 h-4 w-4" />
-							We found more than 100 configurations and limited the results. Please use the filter to
-							narrow down the results.</Alert
-						>
-					{/if}
 					{#if loading}
 						<!-- Loading Spinner -->
 						<p class="mt-1 ml-5 text-sm font-normal text-gray-500 dark:text-gray-400">
@@ -1056,7 +1049,7 @@ let isSmallScreen: boolean = $state(false);
 						{#if totalResults > 0}
 							<!-- Show >100 Alert if needed -->
 							{#if totalResults > 100}
-								<Alert class="mx-5 mb-5" color="red">
+								<Alert class="mx-5 mt-4" color="red">
 									<FontAwesomeIcon icon={faWarning} class="me-1 h-4 w-4" />
 									We found more than 100 configurations and limited the results. Please use the filter
 									to narrow down the results.

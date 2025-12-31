@@ -27,6 +27,7 @@ type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 		faHardDrive,
 		faMemory,
 		faMicrochip,
+		faRotateLeft,
 		faStopwatch,
 		faTags
 	} from '@fortawesome/free-solid-svg-icons';
@@ -52,53 +53,93 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 		damping: 1
 	};
 
+	// Collapsible section states (collapsed by default for less common filters)
+	let nvmeCollapsed = $state(true);
+	let sataCollapsed = $state(true);
+	let hddCollapsed = $state(true);
+	let extrasCollapsed = $state(true);
+
 	let filter = $state(createDefaultFilter());
 	let _hasStoredFilter = false;
 
-	// Log initial state for debugging
-	console.log('ServerFilter: Initial filter state created with defaultFilter', () => filter);
-	console.log('ServerFilter: Initial filterStore value', $filterStore);
-
 	// Initialize the filter store immediately with default values if it's null
-	// This ensures consistent state between server and client rendering
 	if ($filterStore === null) {
-		console.log('ServerFilter: Initializing filter store with default values');
 		filterStore.set(createDefaultFilter());
 	}
 
-onMount(() => {
-	const urlFilter = getFilterFromURL($page.url.searchParams);
-	const storedFilterValue = loadFilter();
-	const base = createDefaultFilter();
-
-	Object.assign(filter, base);
-
-	if (urlFilter) {
-		Object.assign(filter, urlFilter);
-		addToast({
-			color: 'green',
-			message: 'Using filter from URL',
-			icon: 'success'
-		});
-	} else if (storedFilterValue) {
-		_hasStoredFilter = true;
-		Object.assign(filter, storedFilterValue);
-		addToast({
-			color: 'green',
-			message: 'Using stored filter settings',
-			icon: 'success'
-		});
+	// Parse collapsed state from URL param (format: "nvme,sata,hdd,extras" for expanded sections)
+	function parseExpandedSections(param: string | null): void {
+		if (!param) return; // Keep defaults if no param
+		const expanded = param.split(',');
+		nvmeCollapsed = !expanded.includes('nvme');
+		sataCollapsed = !expanded.includes('sata');
+		hddCollapsed = !expanded.includes('hdd');
+		extrasCollapsed = !expanded.includes('extras');
 	}
-	// Defaults already applied via Object.assign
-});
+
+	// Build expanded sections param
+	function getExpandedSectionsParam(): string | null {
+		const expanded: string[] = [];
+		if (!nvmeCollapsed) expanded.push('nvme');
+		if (!sataCollapsed) expanded.push('sata');
+		if (!hddCollapsed) expanded.push('hdd');
+		if (!extrasCollapsed) expanded.push('extras');
+		return expanded.length > 0 ? expanded.join(',') : null;
+	}
+
+	onMount(() => {
+		const urlFilter = getFilterFromURL($page.url.searchParams);
+		const storedFilterValue = loadFilter();
+		const base = createDefaultFilter();
+
+		// Load collapsed state from URL
+		parseExpandedSections($page.url.searchParams.get('expanded'));
+
+		Object.assign(filter, base);
+
+		if (urlFilter) {
+			Object.assign(filter, urlFilter);
+			addToast({
+				color: 'green',
+				message: 'Using filter from URL',
+				icon: 'success'
+			});
+		} else if (storedFilterValue) {
+			_hasStoredFilter = true;
+			Object.assign(filter, storedFilterValue);
+			addToast({
+				color: 'green',
+				message: 'Using stored filter settings',
+				icon: 'success'
+			});
+		}
+	});
 
 	function updateUrl(newFilter: ServerFilter | null) {
 		if (newFilter && typeof window !== 'undefined') {
 			const newUrl = new URL(window.location.href);
 			newUrl.searchParams.set('filter', encodeFilter(newFilter));
-			// Use SvelteKit's replaceState to update URL without navigation
+
+			// Save expanded sections state
+			const expandedParam = getExpandedSectionsParam();
+			if (expandedParam) {
+				newUrl.searchParams.set('expanded', expandedParam);
+			} else {
+				newUrl.searchParams.delete('expanded');
+			}
+
 			replaceState(newUrl, window.history.state);
 		}
+	}
+
+	function resetFilter() {
+		const base = createDefaultFilter();
+		filter = { ...base };
+		addToast({
+			color: 'green',
+			message: 'Filter reset to defaults',
+			icon: 'success'
+		});
 	}
 
 	const debouncedUpdateUrl = debounce(updateUrl, 500); // 500ms delay
@@ -116,8 +157,6 @@ onMount(() => {
 		const hasChanged = currentFilterState !== previousFilterState;
 
 		if (hasChanged) {
-			console.log('ServerFilter: Filter changed, updating store with:', filter);
-
 			// Update the store immediately for reactivity elsewhere (like data fetching)
 			filterStore.set({ ...filter });
 
@@ -128,6 +167,16 @@ onMount(() => {
 		}
 
 		previousFilterState = currentFilterState;
+	});
+
+	// Track collapsed state and update URL when it changes
+	let previousExpandedState = $state('');
+	$effect(() => {
+		const currentExpandedState = getExpandedSectionsParam() ?? '';
+		if (previousExpandedState !== '' && currentExpandedState !== previousExpandedState) {
+			debouncedUpdateUrl({ ...filter });
+		}
+		previousExpandedState = currentExpandedState;
 	});
 
 function updateFilterFromUrl(newFilter: ServerFilter | null) {
@@ -190,23 +239,34 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 	<!-- Regular Layout - Hidden when collapsed on desktop but visible on mobile -->
 	<div class="flex items-center justify-between py-2 {isFilterCollapsed ? 'sm:hidden' : ''}">
 		<h1 class="text-xl font-semibold dark:text-white">Filter Settings</h1>
-		<Button
-			color="alternative"
-			size="sm"
-			class="!p-2"
-			onclick={() => (isFilterCollapsed = !isFilterCollapsed)}
-			aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
-		>
-			{#if isFilterCollapsed}
-				<FontAwesomeIcon class="block sm:hidden" icon={faChevronDown} />
-				<!-- Corrected: Down when collapsed -->
-				<FontAwesomeIcon class="hidden sm:block" icon={faChevronRight} />
-			{:else}
-				<FontAwesomeIcon class="block sm:hidden" icon={faChevronUp} />
-				<!-- Corrected: Up when expanded -->
-				<FontAwesomeIcon class="hidden sm:block" icon={faChevronLeft} />
-			{/if}
-		</Button>
+		<div class="flex gap-1">
+			<Button
+				color="alternative"
+				size="sm"
+				class="!p-2"
+				onclick={resetFilter}
+				aria-label="Reset filter to defaults"
+			>
+				<FontAwesomeIcon icon={faRotateLeft} />
+			</Button>
+			<Button
+				color="alternative"
+				size="sm"
+				class="!p-2"
+				onclick={() => (isFilterCollapsed = !isFilterCollapsed)}
+				aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
+			>
+				{#if isFilterCollapsed}
+					<FontAwesomeIcon class="block sm:hidden" icon={faChevronDown} />
+					<!-- Corrected: Down when collapsed -->
+					<FontAwesomeIcon class="hidden sm:block" icon={faChevronRight} />
+				{:else}
+					<FontAwesomeIcon class="block sm:hidden" icon={faChevronUp} />
+					<!-- Corrected: Up when expanded -->
+					<FontAwesomeIcon class="hidden sm:block" icon={faChevronLeft} />
+				{/if}
+			</Button>
+		</div>
 	</div>
 
 	<!-- Collapsed Desktop View - Only visible when collapsed on desktop -->
@@ -231,36 +291,40 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 	<ul class="space-y-2 font-medium {isFilterCollapsed ? 'hidden' : ''}" data-testid="server-filter">
 		<!-- Location Filters -->
 		<li class="flex items-center justify-between">
-			<h2 class="flex items-center dark:text-white">
+			<h2 class="flex items-center text-base font-semibold dark:text-white">
 				<FontAwesomeIcon class="me-1 h-4 w-4" icon={faGlobe} /> Location
 			</h2>
 		</li>
 		<li>
-			<Toggle
-				size="small"
-				checked={filter.locationGermany}
-				onchange={(e: Event) => {
-					const target = e.target as HTMLInputElement;
-					console.log('Germany toggle changed:', target.checked);
-					filter = { ...filter, locationGermany: target.checked };
-				}}>Germany</Toggle
-			>
+			<div class="flex items-center justify-between">
+				<Label class="text-sm">Germany</Label>
+				<Toggle
+					size="small"
+					checked={filter.locationGermany}
+					onchange={(e: Event) => {
+						const target = e.target as HTMLInputElement;
+						filter = { ...filter, locationGermany: target.checked };
+					}}
+				/>
+			</div>
 		</li>
 		<li>
-			<Toggle
-				size="small"
-				checked={filter.locationFinland}
-				onchange={(e: Event) => {
-					const target = e.target as HTMLInputElement;
-					console.log('Finland toggle changed:', target.checked);
-					filter = { ...filter, locationFinland: target.checked };
-				}}>Finland</Toggle
-			>
+			<div class="flex items-center justify-between">
+				<Label class="text-sm">Finland</Label>
+				<Toggle
+					size="small"
+					checked={filter.locationFinland}
+					onchange={(e: Event) => {
+						const target = e.target as HTMLInputElement;
+						filter = { ...filter, locationFinland: target.checked };
+					}}
+				/>
+			</div>
 		</li>
 
 		<!-- Datacenter Filters -->
 		<li>
-			<h2 class="dark:text-white">
+			<h2 class="text-base font-semibold dark:text-white">
 				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faBoxesStacked} />Datacenter
 			</h2>
 		</li>
@@ -275,34 +339,37 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 
 		<!-- CPU Filters -->
 		<li>
-			<h2 class="dark:text-white">
+			<h2 class="text-base font-semibold dark:text-white">
 				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faMicrochip} />CPU
 			</h2>
 		</li>
-		<li><Label class="text-sm">Vendor</Label></li>
 		<li>
-			<Toggle
-				size="small"
-				checked={filter.cpuIntel}
-				onchange={(e: Event) => {
-					const target = e.target as HTMLInputElement;
-					console.log('Intel CPU toggle changed:', target.checked);
-					filter = { ...filter, cpuIntel: target.checked };
-				}}>Intel</Toggle
-			>
+			<div class="flex items-center justify-between">
+				<Label class="text-sm">Intel</Label>
+				<Toggle
+					size="small"
+					checked={filter.cpuIntel}
+					onchange={(e: Event) => {
+						const target = e.target as HTMLInputElement;
+						filter = { ...filter, cpuIntel: target.checked };
+					}}
+				/>
+			</div>
 		</li>
 		<li>
-			<Toggle
-				size="small"
-				checked={filter.cpuAMD}
-				onchange={(e: Event) => {
-					const target = e.target as HTMLInputElement;
-					console.log('AMD CPU toggle changed:', target.checked);
-					filter = { ...filter, cpuAMD: target.checked };
-				}}>AMD</Toggle
-			>
+			<div class="flex items-center justify-between">
+				<Label class="text-sm">AMD</Label>
+				<Toggle
+					size="small"
+					checked={filter.cpuAMD}
+					onchange={(e: Event) => {
+						const target = e.target as HTMLInputElement;
+						filter = { ...filter, cpuAMD: target.checked };
+					}}
+				/>
+			</div>
 		</li>
-		<li><h2 class="dark:text-white">Model</h2></li>
+		<li><h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Model</h3></li>
 		<li>
 			<MultiSelect
 				class="text-sm"
@@ -314,7 +381,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 
 		<!-- Memory Filters -->
 		<li>
-			<h2 class="dark:text-white">
+			<h2 class="text-base font-semibold dark:text-white">
 				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faMemory} />Memory
 			</h2>
 		</li>
@@ -338,9 +405,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 				pips
 				range
 				pushy
-				on:change={(e) => {
-					console.log('RAM size slider changed:', e.detail);
-					// Force a filter update by creating a new object
+				on:change={() => {
 					filter = { ...filter };
 				}}
 			/>
@@ -349,34 +414,25 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<div class="flex items-center justify-between">
 				<Label class="text-sm">ECC</Label>
 				<div>
-					<ButtonGroup class="flex">
+					<ButtonGroup size="xs">
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('ECC button clicked: true');
-								// Create a new object to ensure reactivity
 								filter = { ...filter, extrasECC: true };
-								console.log('Filter after update:', filter);
 							}}
 							checked={filter.extrasECC === true}>yes</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('ECC button clicked: false');
-								// Create a new object to ensure reactivity
 								filter = { ...filter, extrasECC: false };
-								console.log('Filter after update:', filter);
 							}}
 							checked={filter.extrasECC === false}>no</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('ECC button clicked: null');
-								// Create a new object to ensure reactivity
 								filter = { ...filter, extrasECC: null };
-								console.log('Filter after update:', filter);
 							}}
 							checked={filter.extrasECC === null}>any</Button
 						>
@@ -387,342 +443,415 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 
 		<!-- Disk Filters -->
 		<li>
-			<h2 class="dark:text-white">
+			<h2 class="text-base font-semibold dark:text-white">
 				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faHardDrive} />Disks
 			</h2>
 		</li>
 
 		<!-- SSD (NVMe) Filters -->
-		<li>
-			<h3 class="dark:text-white">SSDs (NVMe)</h3>
-		</li>
-		<li class="flex justify-between">
-			<Label class="text-sm">Devices</Label>
-			<span class="ml-2 text-right dark:text-gray-400">
-				{#if filter.ssdNvmeCount[0] === filter.ssdNvmeCount[1]}
-					{filter.ssdNvmeCount[0] === 0 ? 'none' : filter.ssdNvmeCount[0]}
-				{:else}
-					{filter.ssdNvmeCount[0]} – {filter.ssdNvmeCount[1]}
+		<li class="border-l-2 border-gray-200 pl-3 dark:border-gray-600">
+			<div class="space-y-3">
+				<button
+					type="button"
+					class="flex w-full items-center justify-between text-left"
+					onclick={() => (nvmeCollapsed = !nvmeCollapsed)}
+				>
+					<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">SSDs (NVMe)</h3>
+					<FontAwesomeIcon
+						icon={nvmeCollapsed ? faChevronDown : faChevronUp}
+						class="h-3 w-3 text-gray-500"
+					/>
+				</button>
+				{#if !nvmeCollapsed}
+					<div class="flex justify-between">
+						<Label class="text-sm">Devices</Label>
+						<span class="ml-2 text-right dark:text-gray-400">
+							{#if filter.ssdNvmeCount[0] === filter.ssdNvmeCount[1]}
+								{filter.ssdNvmeCount[0] === 0 ? 'none' : filter.ssdNvmeCount[0]}
+							{:else}
+								{filter.ssdNvmeCount[0]} – {filter.ssdNvmeCount[1]}
+							{/if}
+						</span>
+					</div>
+					<RangeSlider
+						bind:values={filter.ssdNvmeCount}
+						min={0}
+						max={8}
+						hoverable={false}
+						{springValues}
+						pips
+						range
+						pushy
+						on:change={() => {
+							filter = { ...filter };
+						}}
+					/>
+					<div class="flex justify-between">
+						<Label class="text-sm"
+							>{filter.ssdNvmeSizeMode === 'total' ? 'Total Size' : 'Size/Disk'}</Label
+						>
+						<span class="ml-2 text-right dark:text-gray-400">
+							{#if ssdNvmeSizeLower === ssdNvmeSizeUpper}
+								{ssdNvmeSizeLower}
+							{:else}
+								{ssdNvmeSizeLower} – {ssdNvmeSizeUpper}
+							{/if}
+						</span>
+					</div>
+					<RangeSlider
+						bind:values={filter.ssdNvmeInternalSize}
+						min={0}
+						max={18}
+						hoverable={false}
+						{springValues}
+						pips
+						range
+						pushy
+						on:change={() => {
+							filter = { ...filter };
+						}}
+					/>
+					<div class="flex items-center justify-between">
+						<Label class="text-sm">Filter by</Label>
+						<ButtonGroup size="xs">
+							<Button
+								size="xs"
+								onclick={() => {
+									filter = { ...filter, ssdNvmeSizeMode: 'per-disk' };
+								}}
+								checked={filter.ssdNvmeSizeMode !== 'total'}>per disk</Button
+							>
+							<Button
+								size="xs"
+								onclick={() => {
+									filter = { ...filter, ssdNvmeSizeMode: 'total' };
+								}}
+								checked={filter.ssdNvmeSizeMode === 'total'}>total</Button
+							>
+						</ButtonGroup>
+					</div>
 				{/if}
-			</span>
-		</li>
-		<li>
-			<RangeSlider
-				bind:values={filter.ssdNvmeCount}
-				min={0}
-				max={8}
-				hoverable={false}
-				{springValues}
-				pips
-				range
-				pushy
-				on:change={(e) => {
-					console.log('SSD NVMe count slider changed:', e.detail);
-					// Force a filter update by creating a new object
-					filter = { ...filter };
-				}}
-			/>
-		</li>
-		<li class="flex justify-between">
-			<Label class="text-sm">Size</Label>
-			<span class="ml-2 text-right dark:text-gray-400">
-				{#if ssdNvmeSizeLower === ssdNvmeSizeUpper}
-					{ssdNvmeSizeLower}
-				{:else}
-					{ssdNvmeSizeLower} – {ssdNvmeSizeUpper}
-				{/if}
-			</span>
-		</li>
-		<li>
-			<RangeSlider
-				bind:values={filter.ssdNvmeInternalSize}
-				min={0}
-				max={18}
-				hoverable={false}
-				{springValues}
-				pips
-				range
-				pushy
-				on:change={(e) => {
-					console.log('SSD NVMe size slider changed:', e.detail);
-					// Force a filter update by creating a new object
-					filter = { ...filter };
-				}}
-			/>
+			</div>
 		</li>
 
 		<!-- SSD (SATA) Filters -->
-		<li>
-			<h3 class="dark:text-white">SSDs (SATA)</h3>
-		</li>
-		<li class="flex justify-between">
-			<Label class="text-sm">Devices</Label>
-			<span class="ml-2 text-right dark:text-gray-400">
-				{#if filter.ssdSataCount[0] === filter.ssdSataCount[1]}
-					{filter.ssdSataCount[0] === 0 ? 'none' : filter.ssdSataCount[0]}
-				{:else}
-					{filter.ssdSataCount[0]} – {filter.ssdSataCount[1]}
+		<li class="border-l-2 border-gray-200 pl-3 dark:border-gray-600">
+			<div class="space-y-3">
+				<button
+					type="button"
+					class="flex w-full items-center justify-between text-left"
+					onclick={() => (sataCollapsed = !sataCollapsed)}
+				>
+					<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">SSDs (SATA)</h3>
+					<FontAwesomeIcon
+						icon={sataCollapsed ? faChevronDown : faChevronUp}
+						class="h-3 w-3 text-gray-500"
+					/>
+				</button>
+				{#if !sataCollapsed}
+					<div class="flex justify-between">
+						<Label class="text-sm">Devices</Label>
+						<span class="ml-2 text-right dark:text-gray-400">
+							{#if filter.ssdSataCount[0] === filter.ssdSataCount[1]}
+								{filter.ssdSataCount[0] === 0 ? 'none' : filter.ssdSataCount[0]}
+							{:else}
+								{filter.ssdSataCount[0]} – {filter.ssdSataCount[1]}
+							{/if}
+						</span>
+					</div>
+					<RangeSlider
+						bind:values={filter.ssdSataCount}
+						min={0}
+						max={4}
+						hoverable={false}
+						{springValues}
+						pips
+						range
+						pushy
+						on:change={() => {
+							filter = { ...filter };
+						}}
+					/>
+					<div class="flex justify-between">
+						<Label class="text-sm"
+							>{filter.ssdSataSizeMode === 'total' ? 'Total Size' : 'Size/Disk'}</Label
+						>
+						<span class="ml-2 text-right dark:text-gray-400">
+							{#if ssdSataSizeLower === ssdSataSizeUpper}
+								{ssdSataSizeLower}
+							{:else}
+								{ssdSataSizeLower} – {ssdSataSizeUpper}
+							{/if}
+						</span>
+					</div>
+					<RangeSlider
+						bind:values={filter.ssdSataInternalSize}
+						min={0}
+						max={14}
+						hoverable={false}
+						{springValues}
+						pips
+						range
+						pushy
+						on:change={() => {
+							filter = { ...filter };
+						}}
+					/>
+					<div class="flex items-center justify-between">
+						<Label class="text-sm">Filter by</Label>
+						<ButtonGroup size="xs">
+							<Button
+								size="xs"
+								onclick={() => {
+									filter = { ...filter, ssdSataSizeMode: 'per-disk' };
+								}}
+								checked={filter.ssdSataSizeMode !== 'total'}>per disk</Button
+							>
+							<Button
+								size="xs"
+								onclick={() => {
+									filter = { ...filter, ssdSataSizeMode: 'total' };
+								}}
+								checked={filter.ssdSataSizeMode === 'total'}>total</Button
+							>
+						</ButtonGroup>
+					</div>
 				{/if}
-			</span>
-		</li>
-		<li>
-			<RangeSlider
-				bind:values={filter.ssdSataCount}
-				min={0}
-				max={4}
-				hoverable={false}
-				{springValues}
-				pips
-				range
-				pushy
-				on:change={(e) => {
-					console.log('SSD SATA count slider changed:', e.detail);
-					// Force a filter update by creating a new object
-					filter = { ...filter };
-				}}
-			/>
-		</li>
-		<li class="flex justify-between">
-			<Label class="text-sm">Size</Label>
-			<span class="ml-2 text-right dark:text-gray-400">
-				{#if ssdSataSizeLower === ssdSataSizeUpper}
-					{ssdSataSizeLower}
-				{:else}
-					{ssdSataSizeLower} – {ssdSataSizeUpper}
-				{/if}
-			</span>
-		</li>
-		<li>
-			<RangeSlider
-				bind:values={filter.ssdSataInternalSize}
-				min={0}
-				max={14}
-				hoverable={false}
-				{springValues}
-				pips
-				range
-				pushy
-				on:change={(e) => {
-					console.log('SSD SATA size slider changed:', e.detail);
-					// Force a filter update by creating a new object
-					filter = { ...filter };
-				}}
-			/>
+			</div>
 		</li>
 
 		<!-- HDD Filters -->
-		<li>
-			<h3 class="dark:text-white">HDDs</h3>
-		</li>
-		<li class="flex justify-between">
-			<Label class="text-sm">Devices</Label>
-			<span class="ml-2 text-right dark:text-gray-400">
-				{#if filter.hddCount[0] === filter.hddCount[1]}
-					{filter.hddCount[0] === 0 ? 'none' : filter.hddCount[0]}
-				{:else}
-					{filter.hddCount[0]} – {filter.hddCount[1]}
+		<li class="border-l-2 border-gray-200 pl-3 dark:border-gray-600">
+			<div class="space-y-3">
+				<button
+					type="button"
+					class="flex w-full items-center justify-between text-left"
+					onclick={() => (hddCollapsed = !hddCollapsed)}
+				>
+					<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">HDDs</h3>
+					<FontAwesomeIcon
+						icon={hddCollapsed ? faChevronDown : faChevronUp}
+						class="h-3 w-3 text-gray-500"
+					/>
+				</button>
+				{#if !hddCollapsed}
+					<div class="flex justify-between">
+						<Label class="text-sm">Devices</Label>
+						<span class="ml-2 text-right dark:text-gray-400">
+							{#if filter.hddCount[0] === filter.hddCount[1]}
+								{filter.hddCount[0] === 0 ? 'none' : filter.hddCount[0]}
+							{:else}
+								{filter.hddCount[0]} – {filter.hddCount[1]}
+							{/if}
+						</span>
+					</div>
+					<RangeSlider
+						bind:values={filter.hddCount}
+						min={0}
+						max={15}
+						hoverable={false}
+						{springValues}
+						pips
+						range
+						pushy
+						on:change={() => {
+							filter = { ...filter };
+						}}
+					/>
+					<div class="flex justify-between">
+						<Label class="text-sm"
+							>{filter.hddSizeMode === 'total' ? 'Total Size' : 'Size/Disk'}</Label
+						>
+						<span class="ml-2 text-right dark:text-gray-400">
+							{#if hddSizeLower === hddSizeUpper}
+								{hddSizeLower}
+							{:else}
+								{hddSizeLower} – {hddSizeUpper}
+							{/if}
+						</span>
+					</div>
+					<RangeSlider
+						bind:values={filter.hddInternalSize}
+						min={4}
+						max={44}
+						hoverable={false}
+						{springValues}
+						pips
+						range
+						pushy
+						on:change={() => {
+							filter = { ...filter };
+						}}
+					/>
+					<div class="flex items-center justify-between">
+						<Label class="text-sm">Filter by</Label>
+						<ButtonGroup size="xs">
+							<Button
+								size="xs"
+								onclick={() => {
+									filter = { ...filter, hddSizeMode: 'per-disk' };
+								}}
+								checked={filter.hddSizeMode !== 'total'}>per disk</Button
+							>
+							<Button
+								size="xs"
+								onclick={() => {
+									filter = { ...filter, hddSizeMode: 'total' };
+								}}
+								checked={filter.hddSizeMode === 'total'}>total</Button
+							>
+						</ButtonGroup>
+					</div>
 				{/if}
-			</span>
-		</li>
-		<li>
-			<RangeSlider
-				bind:values={filter.hddCount}
-				min={0}
-				max={15}
-				hoverable={false}
-				{springValues}
-				pips
-				range
-				pushy
-				on:change={(e) => {
-					console.log('HDD count slider changed:', e.detail);
-					// Force a filter update by creating a new object
-					filter = { ...filter };
-				}}
-			/>
-		</li>
-		<li class="flex justify-between">
-			<Label class="text-sm">HDD Size</Label>
-			<span class="ml-2 text-right dark:text-gray-400">
-				{#if hddSizeLower === hddSizeUpper}
-					{hddSizeLower}
-				{:else}
-					{hddSizeLower} – {hddSizeUpper}
-				{/if}
-			</span>
-		</li>
-		<li>
-			<RangeSlider
-				bind:values={filter.hddInternalSize}
-				min={4}
-				max={44}
-				hoverable={false}
-				{springValues}
-				pips
-				range
-				pushy
-				on:change={(e) => {
-					console.log('HDD size slider changed:', e.detail);
-					// Force a filter update by creating a new object
-					filter = { ...filter };
-				}}
-			/>
+			</div>
 		</li>
 
 		<!-- Extras Filters -->
 		<li>
-			<h2 class="dark:text-white">
-				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faTags} />Extras
-			</h2>
+			<button
+				type="button"
+				class="flex w-full items-center justify-between text-left"
+				onclick={() => (extrasCollapsed = !extrasCollapsed)}
+			>
+				<h2 class="text-base font-semibold dark:text-white">
+					<FontAwesomeIcon class="me-2 h-4 w-4" icon={faTags} />Extras
+				</h2>
+				<FontAwesomeIcon
+					icon={extrasCollapsed ? faChevronDown : faChevronUp}
+					class="h-3 w-3 text-gray-500"
+				/>
+			</button>
 		</li>
-		<!-- Intel NIC -->
-		<li>
-			<div class="flex items-center justify-between">
-				<Label class="text-sm">Intel NIC</Label>
-				<div>
-					<ButtonGroup class="flex">
+		{#if !extrasCollapsed}
+			<!-- Intel NIC -->
+			<li>
+				<div class="flex items-center justify-between">
+					<Label class="text-sm">Intel NIC</Label>
+					<ButtonGroup size="xs">
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('INIC button clicked: true');
 								filter = { ...filter, extrasINIC: true };
 							}}
 							checked={filter.extrasINIC === true}>yes</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('INIC button clicked: false');
 								filter = { ...filter, extrasINIC: false };
 							}}
 							checked={filter.extrasINIC === false}>no</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('INIC button clicked: null');
 								filter = { ...filter, extrasINIC: null };
 							}}
 							checked={filter.extrasINIC === null}>any</Button
 						>
 					</ButtonGroup>
 				</div>
-			</div>
-		</li>
-		<!-- Hardware RAID -->
-		<li>
-			<div class="flex items-center justify-between">
-				<Label class="text-sm">Hardware RAID</Label>
-				<div>
-					<ButtonGroup class="flex">
+			</li>
+			<!-- Hardware RAID -->
+			<li>
+				<div class="flex items-center justify-between">
+					<Label class="text-sm">Hardware RAID</Label>
+					<ButtonGroup size="xs">
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('HWR button clicked: true');
 								filter = { ...filter, extrasHWR: true };
 							}}
 							checked={filter.extrasHWR === true}>yes</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('HWR button clicked: false');
 								filter = { ...filter, extrasHWR: false };
 							}}
 							checked={filter.extrasHWR === false}>no</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('HWR button clicked: null');
 								filter = { ...filter, extrasHWR: null };
 							}}
 							checked={filter.extrasHWR === null}>any</Button
 						>
 					</ButtonGroup>
 				</div>
-			</div>
-		</li>
-		<!-- GPU -->
-		<li>
-			<div class="flex items-center justify-between">
-				<Label class="text-sm">GPU</Label>
-				<div>
-					<ButtonGroup class="flex">
+			</li>
+			<!-- GPU -->
+			<li>
+				<div class="flex items-center justify-between">
+					<Label class="text-sm">GPU</Label>
+					<ButtonGroup size="xs">
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('GPU button clicked: true');
 								filter = { ...filter, extrasGPU: true };
 							}}
 							checked={filter.extrasGPU === true}>yes</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('GPU button clicked: false');
 								filter = { ...filter, extrasGPU: false };
 							}}
 							checked={filter.extrasGPU === false}>no</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('GPU button clicked: null');
 								filter = { ...filter, extrasGPU: null };
 							}}
 							checked={filter.extrasGPU === null}>any</Button
 						>
 					</ButtonGroup>
 				</div>
-			</div>
-		</li>
-		<!-- Redundant Power Supply -->
-		<li>
-			<div class="flex items-center justify-between">
-				<Label class="text-sm">Redundant Power Supply</Label>
-				<div>
-					<ButtonGroup class="flex">
+			</li>
+			<!-- Redundant Power Supply -->
+			<li>
+				<div class="flex items-center justify-between">
+					<Label class="text-sm">Redundant PSU</Label>
+					<ButtonGroup size="xs">
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('RPS button clicked: true');
 								filter = { ...filter, extrasRPS: true };
 							}}
 							checked={filter.extrasRPS === true}>yes</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('RPS button clicked: false');
 								filter = { ...filter, extrasRPS: false };
 							}}
 							checked={filter.extrasRPS === false}>no</Button
 						>
 						<Button
-							size="sm"
+							size="xs"
 							onclick={() => {
-								console.log('RPS button clicked: null');
 								filter = { ...filter, extrasRPS: null };
 							}}
 							checked={filter.extrasRPS === null}>any</Button
 						>
 					</ButtonGroup>
 				</div>
-			</div>
-		</li>
+			</li>
+		{/if}
 		<!-- Recently Seen -->
 		<li>
-			<div class="my-3">
+			<div class="flex items-center justify-between">
+				<Label class="text-sm">Recently Seen</Label>
 				<Toggle
 					size="small"
 					checked={filter.recentlySeen}
 					onchange={(e: Event) => {
 						const target = e.target as HTMLInputElement;
-						console.log('Recently Seen toggle changed:', target.checked);
 						filter = { ...filter, recentlySeen: target.checked };
-					}}>Recently Seen</Toggle
-				>
+					}}
+				/>
 			</div>
 		</li>
 	</ul>

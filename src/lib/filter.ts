@@ -25,6 +25,11 @@ export type ServerFilter = {
   hddCount: [number, number];
   hddInternalSize: [number, number];
 
+  // Size filter mode: 'per-disk' filters individual disk sizes, 'total' filters sum of all disks
+  ssdNvmeSizeMode: "per-disk" | "total";
+  ssdSataSizeMode: "per-disk" | "total";
+  hddSizeMode: "per-disk" | "total";
+
   selectedDatacenters: string[];
   selectedCpuModels: string[];
 
@@ -57,6 +62,10 @@ export const defaultFilter: ServerFilter = {
 
   hddCount: [0, 15],
   hddInternalSize: [4, 44],
+
+  ssdNvmeSizeMode: "per-disk",
+  ssdSataSizeMode: "per-disk",
+  hddSizeMode: "per-disk",
 
   selectedDatacenters: [],
   selectedCpuModels: [],
@@ -208,6 +217,10 @@ export function convertServerConfigurationToFilter(
   );
 
   base.selectedCpuModels = [serverConfiguration.cpu];
+
+  base.ssdNvmeSizeMode = "per-disk";
+  base.ssdSataSizeMode = "per-disk";
+  base.hddSizeMode = "per-disk";
 
   base.extrasECC = serverConfiguration.is_ecc;
   base.extrasINIC = serverConfiguration.with_inic;
