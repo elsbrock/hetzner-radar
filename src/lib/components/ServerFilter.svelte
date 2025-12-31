@@ -139,15 +139,25 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 	Object.assign(filter, base, newFilter);
 }
 
+	// Track the last URL filter string to detect ACTUAL URL changes (not just filter state changes)
+	let lastUrlFilterString = $state<string | null>(null);
+
 	$effect(() => {
 		const filterString = $page.url.searchParams.get('filter');
-		if (filterString) {
-			console.log('ServerFilter: Found filter in URL:', filterString);
-			const decodedFilter = decodeFilterString(filterString);
-			// Avoid infinite loop by checking if filter actually changed
-			if (JSON.stringify(decodedFilter) !== JSON.stringify(filter)) {
-				console.log('ServerFilter: Updating filter from URL with:', decodedFilter);
-				updateFilterFromUrl(decodedFilter);
+
+		// Only update if the URL filter string ACTUALLY changed
+		// This prevents the effect from reverting user changes when they modify the filter
+		// (since the URL won't be updated until the debounced updateUrl runs)
+		if (filterString !== lastUrlFilterString) {
+			lastUrlFilterString = filterString;
+
+			if (filterString) {
+				console.log('ServerFilter: URL filter changed to:', filterString);
+				const decodedFilter = decodeFilterString(filterString);
+				if (decodedFilter) {
+					console.log('ServerFilter: Updating filter from URL with:', decodedFilter);
+					updateFilterFromUrl(decodedFilter);
+				}
 			}
 		}
 	});

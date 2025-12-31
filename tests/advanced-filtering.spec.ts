@@ -52,7 +52,9 @@ test.describe("Advanced Filtering", () => {
     expect(finalCount).toBeLessThanOrEqual(afterLocationCount);
   });
 
-  test("should persist filter state after page refresh", async ({ page }, testInfo) => {
+  test("should persist filter state after page refresh", async ({
+    page,
+  }, testInfo) => {
     testInfo.setTimeout(60000); // Extended timeout for page reload with DuckDB
     await page.goto("/analyze");
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll, replaceState } from '$app/navigation';
+	import { page } from '$app/stores';
 	import type { PriceAlert } from '$lib/api/backend/alerts';
 	import { withDbConnections } from '$lib/api/frontend/dbapi';
 	import {
@@ -110,8 +111,88 @@ let isSmallScreen: boolean = $state(false);
 		e.stopPropagation();
 	}
 
+	// URL parameter names for view state
+	const URL_PARAM_GROUP = 'group';
+	const URL_PARAM_SORT = 'sort';
+	const URL_PARAM_DIR = 'dir';
+	const URL_PARAM_COLLAPSED = 'collapsed';
+
+	// Valid values for URL params
+	const validGroupByFields: GroupByField[] = ['none', 'cpu_vendor', 'cpu_model', 'best_price'];
+	const validSortFields: SortField[] = ['price', 'ram', 'storage'];
+	const validSortDirections: ('asc' | 'desc')[] = ['asc', 'desc'];
+
+	// Track last URL state to avoid unnecessary updates
+	let lastViewStateUrl = $state('');
+
+	// Update URL with current view state (debounced)
+	function updateViewStateUrl() {
+		if (typeof window === 'undefined') return;
+
+		const url = new URL(window.location.href);
+
+		// Only add non-default values to URL
+		if (groupByField !== 'none') {
+			url.searchParams.set(URL_PARAM_GROUP, groupByField);
+		} else {
+			url.searchParams.delete(URL_PARAM_GROUP);
+		}
+
+		if (sortField !== 'price') {
+			url.searchParams.set(URL_PARAM_SORT, sortField);
+		} else {
+			url.searchParams.delete(URL_PARAM_SORT);
+		}
+
+		if (sortDirection !== 'asc') {
+			url.searchParams.set(URL_PARAM_DIR, sortDirection);
+		} else {
+			url.searchParams.delete(URL_PARAM_DIR);
+		}
+
+		if (isFilterCollapsed) {
+			url.searchParams.set(URL_PARAM_COLLAPSED, '1');
+		} else {
+			url.searchParams.delete(URL_PARAM_COLLAPSED);
+		}
+
+		const newUrlString = url.toString();
+		if (newUrlString !== lastViewStateUrl) {
+			lastViewStateUrl = newUrlString;
+			replaceState(url, window.history.state);
+		}
+	}
+
+	const debouncedUpdateViewStateUrl = debounce(updateViewStateUrl, 300);
+
 	onMount(() => {
 		storedFilter = loadFilter();
+
+		// Read view state from URL on mount
+		const urlParams = $page.url.searchParams;
+
+		const groupParam = urlParams.get(URL_PARAM_GROUP);
+		if (groupParam && validGroupByFields.includes(groupParam as GroupByField)) {
+			groupByField = groupParam as GroupByField;
+		}
+
+		const sortParam = urlParams.get(URL_PARAM_SORT);
+		if (sortParam && validSortFields.includes(sortParam as SortField)) {
+			sortField = sortParam as SortField;
+		}
+
+		const dirParam = urlParams.get(URL_PARAM_DIR);
+		if (dirParam && validSortDirections.includes(dirParam as 'asc' | 'desc')) {
+			sortDirection = dirParam as 'asc' | 'desc';
+		}
+
+		const collapsedParam = urlParams.get(URL_PARAM_COLLAPSED);
+		if (collapsedParam === '1') {
+			isFilterCollapsed = true;
+		}
+
+		// Initialize lastViewStateUrl to current URL to avoid immediate update
+		lastViewStateUrl = window.location.href;
 
 		function updateSidebarHeight() {
 			// Measure header and footer heights
@@ -155,6 +236,20 @@ let isSmallScreen: boolean = $state(false);
 
 		// Cleanup observer on component destroy
 		return () => observer.disconnect();
+	});
+
+	// Effect to sync view state changes to URL
+	$effect(() => {
+		// Track dependencies explicitly
+		const _group = groupByField;
+		const _sort = sortField;
+		const _dir = sortDirection;
+		const _collapsed = isFilterCollapsed;
+
+		// Only update URL after initial mount (when lastViewStateUrl is set)
+		if (browser && lastViewStateUrl !== '') {
+			debouncedUpdateViewStateUrl();
+		}
 	});
 
 	// Effect for setting up Intersection Observers and screen size checks (client-side only)

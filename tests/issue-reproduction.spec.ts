@@ -89,8 +89,13 @@ test.describe("Issue Reproduction", () => {
     // Get all CPU options from any select
     let allCpuOptions: string[] = [];
     for (let i = 0; i < selectCount; i++) {
-      const options = await modelSelects.nth(i).locator("option").allTextContents();
-      const cpuOptions = options.filter((o) => o.includes("Intel") || o.includes("AMD"));
+      const options = await modelSelects
+        .nth(i)
+        .locator("option")
+        .allTextContents();
+      const cpuOptions = options.filter(
+        (o) => o.includes("Intel") || o.includes("AMD"),
+      );
       if (cpuOptions.length > 0) {
         console.log(`Select ${i} has ${cpuOptions.length} CPU options`);
         allCpuOptions = allCpuOptions.concat(cpuOptions);
@@ -101,7 +106,9 @@ test.describe("Issue Reproduction", () => {
 
     // Note: i5-12500 is not in current dataset - the issue may be data-dependent
     // The available CPUs show what's currently in the auction database
-    console.log("Note: Issue #205 may be data-dependent - i5-12500 not in current data");
+    console.log(
+      "Note: Issue #205 may be data-dependent - i5-12500 not in current data",
+    );
 
     // The underlying issue is: when a CPU filter is applied via URL,
     // if the CPU string doesn't exactly match the database, no results show
@@ -144,7 +151,12 @@ test.describe("Issue Reproduction", () => {
 
     const initialGermany = await germanyInput.isChecked();
     const initialFinland = await finlandInput.isChecked();
-    console.log("Initial: Germany:", initialGermany, "Finland:", initialFinland);
+    console.log(
+      "Initial: Germany:",
+      initialGermany,
+      "Finland:",
+      initialFinland,
+    );
 
     const initialCount = await page.getByTestId("server-card").count();
     console.log("Initial count:", initialCount);
@@ -156,7 +168,12 @@ test.describe("Issue Reproduction", () => {
 
     const afterClickGermany = await germanyInput.isChecked();
     const afterClickFinland = await finlandInput.isChecked();
-    console.log("After click: Germany:", afterClickGermany, "Finland:", afterClickFinland);
+    console.log(
+      "After click: Germany:",
+      afterClickGermany,
+      "Finland:",
+      afterClickFinland,
+    );
 
     // Get the count after filter (should be Finland-only)
     await page.waitForLoadState("networkidle");
@@ -183,7 +200,12 @@ test.describe("Issue Reproduction", () => {
     // Check checkbox states after reload
     const reloadGermany = await germanyInput.isChecked();
     const reloadFinland = await finlandInput.isChecked();
-    console.log("After reload: Germany:", reloadGermany, "Finland:", reloadFinland);
+    console.log(
+      "After reload: Germany:",
+      reloadGermany,
+      "Finland:",
+      reloadFinland,
+    );
 
     // Count after reload
     const reloadedCount = await page.getByTestId("server-card").count();
