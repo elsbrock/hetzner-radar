@@ -7,7 +7,13 @@
 	import { convertServerConfigurationToFilter, getHetznerLink } from '$lib/filter';
 	import { filter } from '$lib/stores/filter';
 	import { settingsStore } from '$lib/stores/settings';
-	import { faExternalLinkAlt, faFilter, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowDown,
+		faChartLine,
+		faExternalLinkAlt,
+		faFilter,
+		faShoppingCart
+	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
 	import {
@@ -127,6 +133,28 @@
 	let serverPrices = $state<any[]>([]);
 	let loadingPrices = $state(true);
 
+	// Derived stats from serverPrices
+	let lowestPriceRecord = $derived(
+		serverPrices.length > 0
+			? serverPrices.reduce((min, p) => (p.min_price < min.min_price ? p : min), serverPrices[0])
+			: null
+	);
+	let lowestPrice = $derived(lowestPriceRecord?.min_price ?? null);
+	let lowestPriceDate = $derived(lowestPriceRecord?.seen ? dayjs.unix(lowestPriceRecord.seen) : null);
+	let averageSupply = $derived(
+		serverPrices.length > 0
+			? Math.round(serverPrices.reduce((sum, p) => sum + p.count, 0) / serverPrices.length)
+			: null
+	);
+	let currentSupply = $derived(
+		serverPrices.length > 0 ? serverPrices[serverPrices.length - 1]?.count ?? null : null
+	);
+	let supplyTrend = $derived(
+		averageSupply !== null && currentSupply !== null && averageSupply > 0
+			? Math.round(((currentSupply - averageSupply) / averageSupply) * 100)
+			: null
+	);
+
 	// Fetch prices using $effect
 	$effect(() => {
 		const currentConfig = config; // Capture current value
@@ -243,6 +271,58 @@
 					</div>
 				{/if}
 			</div>
+
+			<!-- Auction Stats -->
+			{#if !loadingPrices && serverPrices.length > 0}
+				<div
+					class="mb-3 grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
+				>
+					<!-- Lowest Price -->
+					<div class="flex items-start gap-2">
+						<Fa icon={faArrowDown} class="mt-0.5 text-green-500" size="sm" />
+						<div>
+							<div class="text-xs text-gray-500 dark:text-gray-400">Lowest Price</div>
+							<div class="font-semibold text-gray-900 dark:text-white">
+								{lowestPrice !== null ? `${(lowestPrice * (1 + selectedOption.rate)).toFixed(2)} €` : '—'}
+							</div>
+							{#if lowestPriceDate}
+								<div class="text-xs text-gray-400 dark:text-gray-500">
+									{lowestPriceDate.format('MMM D, YYYY')}
+								</div>
+							{/if}
+						</div>
+					</div>
+
+					<!-- Average Supply -->
+					<div class="flex items-start gap-2">
+						<Fa icon={faChartLine} class="mt-0.5 text-blue-500" size="sm" />
+						<div>
+							<div class="text-xs text-gray-500 dark:text-gray-400">Avg. Supply</div>
+							<div class="font-semibold text-gray-900 dark:text-white">
+								{averageSupply !== null ? `${averageSupply}/day` : '—'}
+							</div>
+							{#if supplyTrend !== null}
+								<div class="text-xs">
+									{#if supplyTrend > 0}
+										<span class="text-green-600 dark:text-green-400">+{supplyTrend}%</span>
+									{:else if supplyTrend < 0}
+										<span class="text-red-600 dark:text-red-400">{supplyTrend}%</span>
+									{:else}
+										<span class="text-gray-400 dark:text-gray-500">stable</span>
+									{/if}
+									<span class="text-gray-400 dark:text-gray-500">now</span>
+								</div>
+							{/if}
+						</div>
+					</div>
+				</div>
+			{:else if loadingPrices}
+				<div
+					class="mb-3 animate-pulse rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
+				>
+					<div class="h-12"></div>
+				</div>
+			{/if}
 		</div>
 
 		<!-- Server Hardware Details -->
