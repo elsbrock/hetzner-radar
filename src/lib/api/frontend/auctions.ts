@@ -1,5 +1,6 @@
 import { getData } from "$lib/api/frontend/dbapi";
 import type { ServerConfiguration } from "$lib/api/frontend/filter";
+import type { ServerFilter } from "$lib/filter";
 import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
 import SQL, { SQLStatement } from "sql-template-strings";
 
@@ -12,7 +13,7 @@ export interface AuctionResult {
 export async function getAuctionsForConfiguration(
   conn: AsyncDuckDBConnection,
   config: ServerConfiguration,
-  recentlySeen: boolean = true,
+  filter: ServerFilter,
 ): Promise<AuctionResult[]> {
   const sortedNvmeDrives = [...config.nvme_drives].sort((a, b) => a - b);
   const sortedSataDrives = [...config.sata_drives].sort((a, b) => a - b);
@@ -39,10 +40,60 @@ export async function getAuctionsForConfiguration(
 					AND with_rps = ${config.with_rps}
 	`;
 
-  if (recentlySeen) {
+  if (filter.recentlySeen) {
     query.append(
       SQL` AND seen > (now()::timestamp - interval '70 minute')::timestamp`,
     );
+  }
+
+  // Location filtering
+  const locationConditions: string[] = [];
+  if (filter.locationGermany) {
+    locationConditions.push("location = 'Germany'");
+  }
+  if (filter.locationFinland) {
+    locationConditions.push("location = 'Finland'");
+  }
+  if (locationConditions.length > 0) {
+    query
+      .append(SQL` AND (`)
+      .append(locationConditions.join(" OR "))
+      .append(SQL`)`);
+  } else {
+    // No locations selected - return no results
+    query.append(SQL` AND 1=0`);
+  }
+
+  // Datacenter filtering
+  if (filter.selectedDatacenters.length > 0) {
+    const cityPrefixes = ["FSN", "NBG", "HEL"];
+    const selectedPrefixes = filter.selectedDatacenters.filter((d) =>
+      cityPrefixes.includes(d),
+    );
+    const selectedSpecific = filter.selectedDatacenters.filter(
+      (d) => !cityPrefixes.includes(d),
+    );
+
+    const dcConditions: string[] = [];
+
+    // Add LIKE conditions for city prefixes
+    for (const prefix of selectedPrefixes) {
+      dcConditions.push(`datacenter LIKE '${prefix}%'`);
+    }
+
+    // Add IN condition for specific datacenters
+    if (selectedSpecific.length > 0) {
+      dcConditions.push(
+        `datacenter IN (${selectedSpecific.map((d) => `'${d}'`).join(", ")})`,
+      );
+    }
+
+    if (dcConditions.length > 0) {
+      query
+        .append(SQL` AND (`)
+        .append(dcConditions.join(" OR "))
+        .append(SQL`)`);
+    }
   }
 
   const nvmeListLiteral = `[${sortedNvmeDrives.join(",")}]`;

@@ -52,9 +52,10 @@
 	$effect(() => {
 		const currentConfig = config; // Capture current value for the effect
 		const currentDb = $db; // Capture current value for the effect
+		const currentFilter = $filter; // Capture current value for the effect
 
-		// Ensure both config and $db are ready before fetching
-		if (currentConfig && currentDb) {
+		// Ensure config, db, and filter are ready before fetching
+		if (currentConfig && currentDb && currentFilter) {
 			loadingAuctions = true;
 			auctions = []; // Clear previous results
 			let cancelled = false;
@@ -63,11 +64,7 @@
 				try {
 					// Use withDbConnections to get a connection
 					await withDbConnections(currentDb, async (conn) => {
-						const result = await getAuctionsForConfiguration(
-							conn,
-							currentConfig,
-							$filter?.recentlySeen ?? false
-						);
+						const result = await getAuctionsForConfiguration(conn, currentConfig, currentFilter);
 						if (!cancelled) {
 							auctions = result;
 						}
