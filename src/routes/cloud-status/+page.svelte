@@ -276,20 +276,18 @@
 
 			data.statusData.locations.forEach((location) => {
 				const supportedTypes = data.statusData!.supported[location.id] || [];
-				const _availableTypes = data.statusData!.availability[location.id] || [];
+				const availableTypes = data.statusData!.availability[location.id] || [];
 
 				// Only count active (non-deprecated) types
 				const activeSupportedCount = supportedTypes.filter((id) =>
 					activeServerTypes.some((st) => st.id === id)
 				).length;
 				// Only count as available if it's active AND has been seen available at least once
-				// We need to check all active supported types, not just those in availableTypes
-				const activeAvailableCount = activeSupportedCount > 0
-					? supportedTypes.filter((id) =>
-							activeServerTypes.some((st) => st.id === id) &&
-							getLastSeenAvailable(location.id, id) !== null
-					  ).length
-					: 0;
+				// Check only the types that are marked as available by the API
+				const activeAvailableCount = availableTypes.filter((id) =>
+						activeServerTypes.some((st) => st.id === id) &&
+						getLastSeenAvailable(location.id, id) !== null
+				  ).length;
 
 				totalSupported += activeSupportedCount;
 				totalAvailable += activeAvailableCount;
