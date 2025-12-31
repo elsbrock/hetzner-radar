@@ -19,9 +19,15 @@
 
 	let showConfirmModal = $state(false);
 	let deleteForm: HTMLFormElement | null = $state(null);
-	let discordWebhookUrl = $state(data.user.discord_webhook_url || '');
-	let discordNotifications = $state(data.user.notification_preferences.discord);
+	let discordWebhookUrl = $state('');
+	let discordNotifications = $state(false);
 	let isTestingWebhook = $state(false);
+
+	// Initialize form state from props (only on mount, not reactive to data changes)
+	$effect(() => {
+		discordWebhookUrl = data.user.discord_webhook_url || '';
+		discordNotifications = data.user.notification_preferences.discord;
+	});
 
 	function handleDeleteClick() {
 		showConfirmModal = true;

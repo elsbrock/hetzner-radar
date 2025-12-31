@@ -16,12 +16,13 @@
 	let { data, children } = $props<
 		import('./$types').LayoutData & { children: import('svelte').Snippet }
 	>();
-	if (data.session) {
-		session.set(data.session);
-	} else {
-		// Optionally set a default/null state if the store requires it
-		// session.set(null); // Or some default session object
-	}
+
+	// Reactively update session when data changes
+	$effect(() => {
+		if (data.session) {
+			session.set(data.session);
+		}
+	});
 
 	let showScrollToTop = $state(false);
 

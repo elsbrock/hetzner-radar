@@ -192,8 +192,8 @@
 		return colors[id % colors.length];
 	}
 	
-	// Chart options for availability visualization
-	const chartOptions: ChartOptions<'line'> = {
+	// Chart options for availability visualization (reactive to granularity changes)
+	const chartOptions = $derived<ChartOptions<'line'>>({
 		scales: {
 			x: {
 				type: 'time',
@@ -249,9 +249,9 @@
 				position: 'bottom'
 			}
 		}
-	};
+	});
 
-	const chartOptionsForGeneric: Partial<ChartOptions<'line'>> = chartOptions;
+	const chartOptionsForGeneric = $derived<Partial<ChartOptions<'line'>>>(chartOptions);
 </script>
 
 <div class="w-full">
