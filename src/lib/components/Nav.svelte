@@ -24,6 +24,7 @@
 		NavUl
 	} from 'flowbite-svelte';
 	import Radar from './Radar.svelte';
+	import SettingsPopup from '$lib/components/SettingsPopup.svelte';
 
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
@@ -197,7 +198,9 @@
 			</Button>
 		{/if}
 
-		<div class="flex items-center">
+		<div class="flex items-center gap-2">
+			<!-- Settings popup -->
+			<SettingsPopup />
 			<!-- Use DarkMode component directly -->
 			<DarkMode />
 		</div>
@@ -341,8 +344,12 @@
 						<FontAwesomeIcon class="me-2 h-4 w-4" icon={faRightFromBracket} /> Sign Out
 					</Button>
 				</form>
-				<!-- Use DarkMode component directly -->
-				<DarkMode />
+				<div class="flex items-center gap-2">
+					<!-- Settings popup -->
+					<SettingsPopup />
+					<!-- Use DarkMode component directly -->
+					<DarkMode />
+				</div>
 			</div>
 		{:else}
 			<!-- Mobile only container for controls -->
@@ -357,8 +364,12 @@
 				>
 					<FontAwesomeIcon class="me-2 h-4 w-4" icon={faKey} /> Sign In
 				</Button>
-				<!-- Use DarkMode component directly -->
-				<DarkMode />
+				<div class="flex items-center gap-2">
+					<!-- Settings popup -->
+					<SettingsPopup />
+					<!-- Use DarkMode component directly -->
+					<DarkMode />
+				</div>
 			</div>
 		{/if}
 		<!-- Removed separate mobile DarkMode NavLi -->
