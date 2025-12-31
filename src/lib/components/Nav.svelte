@@ -124,7 +124,7 @@
 			<span class="self-center text-xl font-semibold whitespace-nowrap text-black dark:text-white">
 				Server Radar <Badge>beta</Badge>
 			</span>
-			<span class="text-xs text-gray-500 dark:text-gray-200"
+			<span class="block text-xs text-gray-500 dark:text-gray-200"
 				>The Hetzner Auction Price Tracker.</span
 			>
 		</div>
