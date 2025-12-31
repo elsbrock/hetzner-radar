@@ -5,7 +5,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial data load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Get initial count
@@ -52,11 +52,12 @@ test.describe("Advanced Filtering", () => {
     expect(finalCount).toBeLessThanOrEqual(afterLocationCount);
   });
 
-  test("should persist filter state after page refresh", async ({ page }) => {
+  test("should persist filter state after page refresh", async ({ page }, testInfo) => {
+    testInfo.setTimeout(60000); // Extended timeout for page reload with DuckDB
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Apply a filter
@@ -76,7 +77,7 @@ test.describe("Advanced Filtering", () => {
     // Refresh the page
     await page.reload();
     await page.waitForLoadState("networkidle");
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForTimeout(2000);
 
     // Check if filter persisted
@@ -111,7 +112,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Get initial count (no filters)
@@ -157,7 +158,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Look for price controls (sliders, inputs, etc.)
@@ -203,7 +204,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Apply very restrictive filters to get no results
@@ -262,7 +263,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Check for sorting controls

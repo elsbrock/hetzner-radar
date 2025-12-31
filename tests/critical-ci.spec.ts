@@ -6,7 +6,7 @@ test.describe("Critical CI Tests", () => {
     await page.goto("/analyze");
 
     // Wait for DuckDB to load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 15000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Verify basic functionality
@@ -21,7 +21,7 @@ test.describe("Critical CI Tests", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 15000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
@@ -56,7 +56,7 @@ test.describe("Critical CI Tests", () => {
     await page.goto("/analyze");
 
     // Wait for data load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 15000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Click first server card

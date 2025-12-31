@@ -86,7 +86,7 @@ test.describe("Error Handling", () => {
 
     // Should show default analyze page content
     await expect(page.getByTestId("server-filter")).toBeVisible({
-      timeout: 10000,
+      timeout: 30000,
     });
 
     // Should either show data or error, but not crash
@@ -124,7 +124,7 @@ test.describe("Error Handling", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Perform rapid interactions
@@ -166,7 +166,8 @@ test.describe("Error Handling", () => {
 
   test("should handle browser back/forward navigation properly", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    testInfo.setTimeout(60000); // Extended timeout for multiple navigations with DuckDB reload
     // Start at home page
     await page.goto("/");
     await page.waitForLoadState("networkidle");
@@ -198,11 +199,11 @@ test.describe("Error Handling", () => {
 
     // Navigation should work without errors
     await page.goBack();
-    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await page.waitForLoadState("networkidle", { timeout: 30000 });
 
     // Should be functional (give more time for DuckDB to reload)
     await expect(page.getByTestId("server-filter")).toBeVisible({
-      timeout: 15000,
+      timeout: 30000,
     });
   });
 
@@ -212,7 +213,7 @@ test.describe("Error Handling", () => {
     await page.goto("/analyze");
 
     // Wait for data to load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 10000 });
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Get initial count

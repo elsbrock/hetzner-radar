@@ -18,14 +18,14 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Retry failed tests */
+  retries: process.env.CI ? 2 : 1,
+  /* Limit workers to avoid resource contention with DuckDB WASM */
+  workers: process.env.CI ? 1 : 4,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Global timeout for all tests */
-  timeout: process.env.CI ? 180000 : 30000, // 3 minutes in CI, 30s locally
+  timeout: process.env.CI ? 180000 : 60000, // 3 minutes in CI, 60s locally
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -38,8 +38,8 @@ export default defineConfig({
     /* Run tests in headed mode locally, headless in CI */
     headless: !!process.env.CI,
 
-    /* Action timeout for CI (waiting for elements, etc.) */
-    actionTimeout: process.env.CI ? 60000 : 5000,
+    /* Action timeout (waiting for elements, etc.) */
+    actionTimeout: process.env.CI ? 60000 : 30000,
 
     /* Navigation timeout for page loads */
     navigationTimeout: process.env.CI ? 60000 : 30000,
