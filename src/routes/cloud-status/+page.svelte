@@ -282,11 +282,15 @@
 				const activeSupportedCount = supportedTypes.filter((id) =>
 					activeServerTypes.some((st) => st.id === id)
 				).length;
-				// Only count as available if it's active AND has been seen available at least once
-				// Check only the types that are marked as available by the API
-				const activeAvailableCount = availableTypes.filter(
+				// Only count as available if it's:
+				// 1. Supported at this location
+				// 2. Active (non-deprecated)
+				// 3. Currently available according to the API
+				// 4. Has been seen available at least once
+				const activeAvailableCount = supportedTypes.filter(
 					(id: number) =>
 						activeServerTypes.some((st) => st.id === id) &&
+						availableTypes.includes(id) &&
 						getLastSeenAvailable(location.id, id) !== null
 				).length;
 
@@ -299,7 +303,7 @@
 					available: activeAvailableCount,
 					percentage:
 						activeSupportedCount > 0
-							? Math.round((activeAvailableCount / activeSupportedCount) * 100)
+							? Math.min(100, Math.round((activeAvailableCount / activeSupportedCount) * 100))
 							: 0
 				});
 			});
@@ -330,7 +334,7 @@
 
 			return {
 				overallPercentage:
-					totalSupported > 0 ? Math.round((totalAvailable / totalSupported) * 100) : 0,
+					totalSupported > 0 ? Math.min(100, Math.round((totalAvailable / totalSupported) * 100)) : 0,
 				bestLocation: sortedLocations[0],
 				worstLocation: sortedLocations[sortedLocations.length - 1],
 				mostScarce: sortedServerTypes[0],
