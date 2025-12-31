@@ -3,6 +3,7 @@
 	import { addToast } from '$lib/stores/toast';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { Button, Modal, Label, Input, Checkbox, Spinner } from 'flowbite-svelte';
 	import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 	import {
@@ -359,7 +360,7 @@
 								message: 'Account deleted successfully.',
 								icon: 'success'
 							});
-							return goto('/');
+							return goto(resolve('/'));
 						}}
 					>
 						<!-- This form is submitted programmatically -->

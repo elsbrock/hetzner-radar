@@ -7,7 +7,6 @@ type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 	import {
 		decodeFilterString,
 		createDefaultFilter,
-		defaultFilter,
 		encodeFilter,
 		getFilterFromURL,
 		loadFilter,
@@ -128,7 +127,8 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 				newUrl.searchParams.delete('expanded');
 			}
 
-			replaceState(newUrl, window.history.state);
+			 
+			replaceState(newUrl.pathname + newUrl.search, window.history.state);
 		}
 	}
 

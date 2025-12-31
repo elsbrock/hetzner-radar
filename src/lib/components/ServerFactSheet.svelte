@@ -25,6 +25,7 @@
 
 	// Summarizes an array of numbers into counts of unique values.
 	function summarizeNumbers(numbers: number[]): NumberSummary[] {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Map is used for counting in a non-reactive function, not for reactivity
 		const counts = new Map<number, number>();
 		for (const num of numbers) {
 			counts.set(num, (counts.get(num) || 0) + 1);

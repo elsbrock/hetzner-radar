@@ -13,9 +13,11 @@ test.describe("Issue Reproduction", () => {
     const initialCount = await page.getByTestId("server-card").count();
     console.log("Initial server cards:", initialCount);
 
-    // Click Germany filter to toggle it (deselect)
-    const germanyLabel = page.locator('label:has-text("Germany")');
-    await germanyLabel.click();
+    // Click Germany filter toggle to deselect it
+    // The Germany label and toggle are siblings in a flex container
+    const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+    const germanyToggle = germanyRow.locator('input[type="checkbox"]');
+    await germanyToggle.click({ force: true });
     await page.waitForTimeout(1000);
 
     // Save the filter to generate URL
@@ -50,13 +52,14 @@ test.describe("Issue Reproduction", () => {
     console.log("Cards after URL load:", afterUrlCount);
 
     // Step 4: CRITICAL - Try to change the filter (this is where the freeze happens)
-    const finlandLabel = page.locator('label:has-text("Finland")');
+    const finlandRow = page.locator('div:has(> label:has-text("Finland"))');
+    const finlandToggle = finlandRow.locator('input[type="checkbox"]');
 
     // First verify Finland filter is visible and clickable
-    await expect(finlandLabel).toBeVisible();
+    await expect(finlandToggle).toBeVisible();
 
     try {
-      await finlandLabel.click({ timeout: 5000 });
+      await finlandToggle.click({ force: true, timeout: 5000 });
       console.log("Finland filter: CLICKABLE after URL load ✓");
 
       // Wait and verify the count changed
@@ -66,7 +69,7 @@ test.describe("Issue Reproduction", () => {
 
       // The filter should still be interactive
       expect(afterClickCount).not.toBe(afterUrlCount);
-    } catch (e) {
+    } catch {
       console.log("Finland filter: NOT CLICKABLE - FREEZE BUG! ✗");
       throw new Error("Filter freeze bug reproduced - UI became unclickable");
     }
@@ -145,9 +148,11 @@ test.describe("Issue Reproduction", () => {
     await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
-    // Check initial state
-    const germanyInput = page.locator('label:has-text("Germany") input');
-    const finlandInput = page.locator('label:has-text("Finland") input');
+    // Check initial state - the toggle inputs are siblings of the text labels
+    const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+    const finlandRow = page.locator('div:has(> label:has-text("Finland"))');
+    const germanyInput = germanyRow.locator('input[type="checkbox"]');
+    const finlandInput = finlandRow.locator('input[type="checkbox"]');
 
     const initialGermany = await germanyInput.isChecked();
     const initialFinland = await finlandInput.isChecked();
@@ -162,8 +167,7 @@ test.describe("Issue Reproduction", () => {
     console.log("Initial count:", initialCount);
 
     // Toggle Germany OFF (both are checked by default)
-    const germanyLabel = page.locator('label:has-text("Germany")');
-    await germanyLabel.click();
+    await germanyInput.click({ force: true });
     await page.waitForTimeout(1000);
 
     const afterClickGermany = await germanyInput.isChecked();

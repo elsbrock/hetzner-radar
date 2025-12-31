@@ -30,10 +30,12 @@
 				clearTimeout(timer);
 			}
 			if (remainingTime > 0) {
+				/* eslint-disable svelte/infinite-reactive-loop -- Timer and showElement updates are guarded by conditional checks */
 				timer = setTimeout(() => {
 					showElement = true;
 					timer = null;
 				}, remainingTime * 1000);
+				/* eslint-enable svelte/infinite-reactive-loop */
 			} else {
 				showElement = true;
 			}

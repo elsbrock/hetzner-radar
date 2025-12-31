@@ -9,6 +9,7 @@
 	import { DiscordSolid, GithubSolid } from 'flowbite-svelte-icons';
 	import ServerIcon from '$lib/components/ServerIcon.svelte';
 	import Radar from './Radar.svelte';
+	import { resolve } from '$app/paths';
 	const buildDate = import.meta.env.VITE_BUILD_STAMP;
 </script>
 
@@ -16,7 +17,7 @@
 	<div class="mx-auto max-w-7xl md:flex md:justify-between">
 		<div class="mb-6 ml-4 md:mb-0 md:max-w-xl">
 			<div class="flex flex-col">
-				<a href="/" class="flex items-center">
+				<a href={resolve('/')} class="flex items-center">
 					<div style="width: 18px; height: 18px" class="mr-3 flex-shrink-0">
 						<Radar />
 					</div>

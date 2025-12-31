@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { session } from '$lib/stores/session';
 	import { addToast } from '$lib/stores/toast.js';
 	import {
@@ -255,7 +256,7 @@
 								message: 'Signed in successfully.',
 								icon: 'success'
 							});
-							await goto('/analyze');
+							await goto(resolve('/analyze'));
 						} else if (result.type === 'failure') {
 							// Construct ActionData for failure case
 							form = {

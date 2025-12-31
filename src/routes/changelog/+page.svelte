@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page as _page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { Timeline, TimelineItem } from 'flowbite-svelte';
 </script>
 
@@ -107,7 +108,7 @@
 	<div class="mt-12 text-center">
 		<p class="text-sm text-gray-600 dark:text-gray-400">
 			Want to suggest a feature or report a bug?
-			<a href="/contact" class="text-blue-600 hover:underline dark:text-blue-400">Get in touch</a>
+			<a href={resolve('/contact')} class="text-blue-600 hover:underline dark:text-blue-400">Get in touch</a>
 		</p>
 	</div>
 </div>

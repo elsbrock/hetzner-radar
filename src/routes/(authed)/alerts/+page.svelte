@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance as _enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { browser as _browser } from '$app/environment';
 	import AlertModal from '$lib/components/AlertModal.svelte';
@@ -144,7 +145,8 @@
 
 					const url = new URL(window.location.href);
 					url.searchParams.delete('view');
-					goto(url.toString(), { replaceState: true, keepFocus: true });
+					 
+					goto(url.pathname + url.search, { replaceState: true, keepFocus: true });
 					return;
 				}
 
@@ -162,7 +164,8 @@
 
 				const url = new URL(window.location.href);
 				url.searchParams.delete('view');
-				goto(url.toString(), { replaceState: true, keepFocus: true });
+				 
+				goto(url.pathname + url.search, { replaceState: true, keepFocus: true });
 			}
 		}
 	});
@@ -355,7 +358,7 @@
 									continuously monitor the prices and notify you once the trigger price has been
 									reached. You can edit or delete them at any time. New alerts can be created from
 									existing search results (head over to <a
-										href="/analyze"
+										href={resolve('/analyze')}
 										class="text-orange-500 underline hover:text-orange-600">analyze</a
 									>).
 								</p>

@@ -27,6 +27,7 @@
 
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { session } from '$lib/stores/session';
 	import { settingsStore } from '$lib/stores/settings';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -156,7 +157,7 @@
 		{#if $session}
 			<!-- Desktop Settings Icon -->
 			<a
-				href="/settings"
+				href={resolve('/settings')}
 				data-testid="nav-settings-desktop"
 				class="mr-2 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
 				aria-label="Settings"
@@ -170,7 +171,7 @@
 				method="POST"
 				use:enhance={() => {
 					session.set(null);
-					return goto('/auth/logout');
+					return goto(resolve('/auth/logout'));
 				}}
 				class="mr-3"
 			>
@@ -327,7 +328,7 @@
 					method="POST"
 					use:enhance={() => {
 						session.set(null);
-						return goto('/auth/logout');
+						return goto(resolve('/auth/logout'));
 					}}
 					class="mr-2 flex-grow"
 				>

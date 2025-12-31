@@ -85,12 +85,13 @@
 	let selectedPatternLocationId = $state<number | undefined>();
 	let selectedPatternServerTypeId = $state<number | undefined>();
 	let patternDateRange = $state<'24h' | '7d' | '30d'>('7d');
-	let patternGranularity = $state<'hour' | 'day' | 'week'>('hour');
+	let _patternGranularity = $state<'hour' | 'day' | 'week'>('hour');
 
 	// Update URL when filters change
 	$effect(() => {
 		if (!browser) return;
-		
+
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const params = new URLSearchParams();
 		
 		// Only add parameters if they differ from defaults
@@ -106,6 +107,7 @@
 		
 		// Update the URL without triggering navigation
 		if ($page.url.search !== (params.toString() ? `?${params.toString()}` : '')) {
+			 
 			goto(newUrl, { replaceState: true, keepFocus: true, noScroll: true });
 		}
 	});
@@ -128,6 +130,7 @@
 	const categoryOptions = $derived(
 		(() => {
 			if (!data.statusData?.serverTypes) return [];
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const categories = new Set<string>();
 			data.statusData.serverTypes.forEach((st) => {
 				if (st.category) {
@@ -194,6 +197,7 @@
 
 	const groupedServerTypes = $derived(
 		(() => {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const groups = new Map<string, Map<string, ServerTypeInfo[]>>();
 			if (!data.statusData?.serverTypes) {
 				return groups;
@@ -261,7 +265,9 @@
 
 			let totalSupported = 0;
 			let totalAvailable = 0;
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const locationStats = new Map();
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const serverTypeAvailability = new Map();
 
 			// Calculate stats for non-deprecated server types only
@@ -270,7 +276,7 @@
 
 			data.statusData.locations.forEach((location) => {
 				const supportedTypes = data.statusData!.supported[location.id] || [];
-				const availableTypes = data.statusData!.availability[location.id] || [];
+				const _availableTypes = data.statusData!.availability[location.id] || [];
 
 				// Only count active (non-deprecated) types
 				const activeSupportedCount = supportedTypes.filter((id) =>
@@ -342,6 +348,7 @@
 		(() => {
 			if (!groupedServerTypes) return new Map();
 
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const filtered = new Map();
 
 			groupedServerTypes.forEach((cpuGroups, architecture) => {
@@ -350,6 +357,7 @@
 					return;
 				}
 
+				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const filteredCpuGroups = new Map();
 
 				cpuGroups.forEach((serverTypes, cpuType) => {
@@ -417,6 +425,7 @@
 		} else {
 			collapsedGroups.add(key);
 		}
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		collapsedGroups = new Set(collapsedGroups);
 	}
 
@@ -1036,7 +1045,7 @@
 										placeholder="Select a location"
 									>
 										<option value={undefined} disabled>Select a location</option>
-										{#each locationOptions as location}
+										{#each locationOptions as location (location.value)}
 											<option value={location.value}>{location.name}</option>
 										{/each}
 									</Select>
@@ -1048,7 +1057,7 @@
 										placeholder="Select a server type"
 									>
 										<option value={undefined} disabled>Select a server type</option>
-										{#each serverTypeOptions as serverType}
+										{#each serverTypeOptions as serverType (serverType.value)}
 											<option value={serverType.value}>{serverType.name}</option>
 										{/each}
 									</Select>

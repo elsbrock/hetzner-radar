@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { withDbConnections } from '$lib/api/frontend/dbapi';
-	import type { ServerConfiguration } from '$lib/api/frontend/filter';
+	import type { ServerConfiguration, ServerPriceStat } from '$lib/api/frontend/filter';
 	import { getPrices } from '$lib/api/frontend/filter';
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { convertServerConfigurationToFilter, getHetznerLink } from '$lib/filter';
@@ -130,7 +131,7 @@
 			: 120 // Default to green if no markup
 	);
 
-	let serverPrices = $state<any[]>([]);
+	let serverPrices = $state<ServerPriceStat[]>([]);
 	let loadingPrices = $state(true);
 
 	// Derived stats from serverPrices
@@ -228,7 +229,7 @@
 							const newFilter = convertServerConfigurationToFilter(currentConfig);
 							filter.set(newFilter);
 							if (window.location.pathname !== '/analyze') {
-								goto('/analyze');
+								goto(resolve('/analyze'));
 								return;
 							}
 							closeDrawer();

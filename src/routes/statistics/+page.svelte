@@ -28,7 +28,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { db } from '../../stores/db';
 
-	let loading = $state(true);
+	let _loading = $state(true);
 
 	let dailyPriceIndexStats = $state<TemporalStat[]>([]);
 	let ramWithECCPriceStats = $state<TemporalStat[]>([]);
@@ -36,7 +36,7 @@
 	let hddPriceStats = $state<TemporalStat[]>([]);
 	let nvmePriceStats = $state<TemporalStat[]>([]);
 	let sataPriceStats = $state<TemporalStat[]>([]);
-	let gpuPriceStats = $state<TemporalStat[]>([]);
+	let _gpuPriceStats = $state<TemporalStat[]>([]);
 	let cpuVendorAMDStats = $state<TemporalStat[]>([]);
 	let cpuVendorIntelStats = $state<TemporalStat[]>([]);
 	let volumeFinlandStats = $state<TemporalStat[]>([]);
@@ -143,7 +143,7 @@
 
 	async function fetchData(db: AsyncDuckDB) {
 		let queryTime = performance.now();
-		loading = true;
+		_loading = true;
 
 		await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
 			try {
@@ -178,7 +178,7 @@
 					hddPriceStats,
 					nvmePriceStats,
 					sataPriceStats,
-					gpuPriceStats,
+					_gpuPriceStats,
 					cpuVendorAMDStats,
 					cpuVendorIntelStats,
 					volumeFinlandStats,
@@ -218,7 +218,7 @@
 			} catch (error) {
 				console.error('Error fetching data:', error);
 			} finally {
-				loading = false;
+				_loading = false;
 			}
 		});
 	}

@@ -149,9 +149,10 @@
 					},
 					grid: {
 						color: gridColor,
+						// @ts-expect-error borderDash is valid for Chart.js grid config
 						borderDash: [5, 5], // Dashed grid lines
 						display: true // Show X-axis grid lines
-					} as any // Cast to any to allow borderDash
+					}
 				},
 				y: {
 					type: 'linear',
@@ -172,9 +173,10 @@
 					},
 					grid: {
 						color: gridColor,
+						// @ts-expect-error borderDash is valid for Chart.js grid config
 						borderDash: [5, 5], // Dashed grid lines
 						drawOnChartArea: true
-					} as any, // Cast to any to allow borderDash
+					},
 					beginAtZero: type === 'bar' ? true : false, // Start at zero for bar charts by default
 					stacked: type === 'bar' && data.length > 1 // Stack bars when multiple datasets
 				}
@@ -230,6 +232,7 @@
 			chartInstance = new Chart(ctx, config);
 		} else {
 			// If chart type has changed, destroy and recreate
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			if ((chartInstance as any).config.type !== type) {
 				chartInstance.destroy();
 				const config: ChartConfiguration<ChartType> = {

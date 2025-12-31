@@ -16,9 +16,10 @@ test.describe("Advanced Filtering", () => {
       initialResultsText?.match(/(\d+)/)?.[1] || "0",
     );
 
-    // Apply location filter (Germany)
-    const germanyFilter = page.locator('label:has-text("Germany")');
-    await germanyFilter.click();
+    // Apply location filter (Germany) - click the actual toggle input
+    const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+    const germanyToggle = germanyRow.locator('input[type="checkbox"]');
+    await germanyToggle.click({ force: true });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
@@ -62,9 +63,10 @@ test.describe("Advanced Filtering", () => {
     await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
-    // Apply a filter
-    const germanyFilter = page.locator('label:has-text("Germany")');
-    await germanyFilter.click();
+    // Apply a filter - click the actual toggle input
+    const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+    const germanyToggle = germanyRow.locator('input[type="checkbox"]');
+    await germanyToggle.click({ force: true });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
@@ -96,10 +98,11 @@ test.describe("Advanced Filtering", () => {
 
     // Germany filter should still be checked (but this might not work in all cases)
     // So we'll check if the count difference suggests filter persistence worked
-    const germanyInput = page.locator(
-      'label:has-text("Germany") input[type="checkbox"]',
+    const germanyRowAfter = page.locator(
+      'div:has(> label:has-text("Germany"))',
     );
-    const isChecked = await germanyInput.isChecked();
+    const germanyInputAfter = germanyRowAfter.locator('input[type="checkbox"]');
+    const isChecked = await germanyInputAfter.isChecked();
 
     // If not checked, the persistence might not be working, but the test can still pass
     // if the counts suggest filtering happened
@@ -110,7 +113,7 @@ test.describe("Advanced Filtering", () => {
     }
   });
 
-  test("should clear all filters when using clear button", async ({ page }) => {
+  test("should reset all filters when using reset button", async ({ page }) => {
     await page.goto("/analyze");
 
     // Wait for initial load
@@ -125,35 +128,39 @@ test.describe("Advanced Filtering", () => {
       initialResultsText?.match(/(\d+)/)?.[1] || "0",
     );
 
-    // Apply some filters
-    const germanyFilter = page.locator('label:has-text("Germany")');
-    await germanyFilter.click();
+    // Apply some filters - click the actual toggle input
+    const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+    const germanyToggle = germanyRow.locator('input[type="checkbox"]');
+    await germanyToggle.click({ force: true });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
-    // Save filter to make clear button appear
-    await page.getByTestId("filter-save").click();
-
-    // Verify filter clear button appears
-    await expect(page.getByTestId("filter-clear")).toBeVisible();
-
-    // Click clear filters
-    await page.getByTestId("filter-clear").click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(1000);
-
-    // Verify clear button is hidden again
-    await expect(page.getByTestId("filter-clear")).not.toBeVisible();
-
-    // Count should return close to initial
-    const clearedResultsText = await page
+    // Get the filtered count
+    const filteredResultsText = await page
       .getByTestId("total-configurations")
       .textContent();
-    const clearedCount = parseInt(
-      clearedResultsText?.match(/(\d+)/)?.[1] || "0",
+    const filteredCount = parseInt(
+      filteredResultsText?.match(/(\d+)/)?.[1] || "0",
     );
 
-    expect(Math.abs(clearedCount - initialCount)).toBeLessThanOrEqual(20);
+    // Verify filtering changed the count
+    expect(filteredCount).not.toEqual(initialCount);
+
+    // Click the reset button (rotate-left icon) to reset to defaults
+    const resetButton = page.getByRole("button", {
+      name: "Reset filter to defaults",
+    });
+    await resetButton.click();
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Count should return close to initial
+    const resetResultsText = await page
+      .getByTestId("total-configurations")
+      .textContent();
+    const resetCount = parseInt(resetResultsText?.match(/(\d+)/)?.[1] || "0");
+
+    expect(Math.abs(resetCount - initialCount)).toBeLessThanOrEqual(20);
   });
 
   test("should handle price range filtering", async ({ page }) => {
@@ -293,9 +300,10 @@ test.describe("Advanced Filtering", () => {
       }
     }
 
-    // Apply a filter
-    const germanyFilter = page.locator('label:has-text("Germany")');
-    await germanyFilter.click();
+    // Apply a filter - click the actual toggle input
+    const germanyRowSort = page.locator('div:has(> label:has-text("Germany"))');
+    const germanyToggleSort = germanyRowSort.locator('input[type="checkbox"]');
+    await germanyToggleSort.click({ force: true });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 

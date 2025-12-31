@@ -159,7 +159,8 @@ let isSmallScreen: boolean = $state(false);
 		const newUrlString = url.toString();
 		if (newUrlString !== lastViewStateUrl) {
 			lastViewStateUrl = newUrlString;
-			replaceState(url, window.history.state);
+			 
+			replaceState(url.pathname + url.search, window.history.state);
 		}
 	}
 
@@ -506,6 +507,7 @@ let isSmallScreen: boolean = $state(false);
 		// 3. Apply grouping
 		let groupedResult: GroupedServerList = [];
 		// Use a Map where the value holds the group name and the server list
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const groups = new Map<string, { groupName: string; servers: ServerConfiguration[] }>();
 		const unknownVendorKey = '__unknown_vendor__';
 		const unknownModelKey = '__unknown_model__';
@@ -632,9 +634,9 @@ let isSmallScreen: boolean = $state(false);
 
 	// Non-derived variables for QuickStats
 	let totalResultsValue = $state(0);
-	let lowestPriceValue = $state<number | null>(null);
-	let averagePriceValue = $state<number | null>(null);
-	let priceRangeValue = $state<number | null>(null);
+	let _lowestPriceValue = $state<number | null>(null);
+	let _averagePriceValue = $state<number | null>(null);
+	let _priceRangeValue = $state<number | null>(null);
 	let availableAuctionsValue = $state(0);
 	let popularityValue = $state<number | null>(1); // Default to 1 (neutral)
 	let lowestPriceFormatted = $state('N/A');
@@ -723,21 +725,21 @@ let isSmallScreen: boolean = $state(false);
 
 		// Update price statistics
 		if (lowestPriceVal !== null && Number.isFinite(lowestPriceVal)) {
-			lowestPriceValue = lowestPriceVal;
+			_lowestPriceValue = lowestPriceVal;
 			lowestPriceFormatted = formatPrice(lowestPriceVal);
 		} else {
 			lowestPriceFormatted = 'N/A';
 		}
 
 		if (averagePriceVal !== null && Number.isFinite(averagePriceVal)) {
-			averagePriceValue = averagePriceVal;
+			_averagePriceValue = averagePriceVal;
 			averagePriceFormatted = formatPrice(averagePriceVal);
 		} else {
 			averagePriceFormatted = 'N/A';
 		}
 
 		if (priceRangeVal !== null && Number.isFinite(priceRangeVal)) {
-			priceRangeValue = priceRangeVal;
+			_priceRangeValue = priceRangeVal;
 			priceRangeFormatted = formatPrice(priceRangeVal);
 		} else {
 			priceRangeFormatted = 'N/A';

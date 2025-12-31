@@ -6,6 +6,7 @@
 	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
 	import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
 
 	import Banner from '$lib/components/Banner.svelte';
 	import { session } from '$lib/stores/session';
@@ -118,7 +119,7 @@
 >
 	<div class="flex-grow">
 		<Banner version={4} id="cloud-availability-alerts">
-			<strong>New Feature:</strong> <a href="/cloud-status">Cloud Server Availability</a> Alerts ☁️
+			<strong>New Feature:</strong> <a href={resolve('/cloud-status')}>Cloud Server Availability</a> Alerts ☁️
 		</Banner>
 		<Nav />
 

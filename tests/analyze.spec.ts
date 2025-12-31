@@ -36,17 +36,14 @@ test("analyze: filter functionality works", async ({ page }) => {
     .textContent();
   const initialCount = parseInt(initialResultsText?.match(/(\d+)/)?.[1] || "0");
 
-  // Test location filter - click on the Germany toggle label instead of the hidden input
-  const germanyLabel = page.locator('label:has-text("Germany")');
-  await expect(germanyLabel).toBeVisible();
+  // Test location filter - click on the actual toggle input, not the text label
+  // The Germany label and toggle are siblings in a flex container
+  const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+  const germanyToggle = germanyRow.locator('input[type="checkbox"]');
+  await expect(germanyToggle).toBeVisible();
 
-  // Get the current state by checking the input
-  const germanyInput = page.locator(
-    'label:has-text("Germany") input[type="checkbox"]',
-  );
-
-  // Click the label to toggle Germany filter
-  await germanyLabel.click();
+  // Click the toggle to change Germany filter
+  await germanyToggle.click({ force: true });
 
   // Wait for filtering to take effect and UI to stabilize
   await page.waitForLoadState("networkidle");
@@ -64,7 +61,7 @@ test("analyze: filter functionality works", async ({ page }) => {
   expect(filteredCount).not.toEqual(initialCount);
 
   // Toggle Germany filter back to original state
-  await germanyLabel.click();
+  await germanyToggle.click({ force: true });
 
   // Wait for filtering to take effect and UI to stabilize
   await page.waitForLoadState("networkidle");

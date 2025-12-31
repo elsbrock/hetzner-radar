@@ -126,6 +126,7 @@ export async function getDiskPriceStats(
 		`,
     values: [],
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return getData<TemporalStat>(conn, query as any);
 }
 

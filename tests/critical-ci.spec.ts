@@ -33,9 +33,10 @@ test.describe("Critical CI Tests", () => {
       initialResultsText?.match(/(\d+)/)?.[1] || "0",
     );
 
-    // Apply Germany filter
-    const germanyLabel = page.locator('label:has-text("Germany")');
-    await germanyLabel.click();
+    // Apply Germany filter - click the actual toggle input
+    const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
+    const germanyToggle = germanyRow.locator('input[type="checkbox"]');
+    await germanyToggle.click({ force: true });
 
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);

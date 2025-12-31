@@ -20,11 +20,41 @@ export default [
     },
   },
   {
+    files: ["worker/**/*.ts", "workers/**/*.ts", "src/lib/api/backend/**/*.ts"],
+    languageOptions: {
+      globals: {
+        // Cloudflare Workers globals
+        DB: "readonly",
+        D1Database: "readonly",
+        D1PreparedStatement: "readonly",
+        DurableObjectState: "readonly",
+        DurableObjectStorage: "readonly",
+        DurableObjectNamespace: "readonly",
+        AnalyticsEngineDataset: "readonly",
+        AvailabilityChange: "readonly",
+        NodeJS: "readonly",
+      },
+    },
+  },
+  {
+    files: ["src/lib/**/*.ts"],
+    languageOptions: {
+      globals: {
+        // SvelteKit App namespace
+        App: "readonly",
+      },
+    },
+  },
+  {
     files: ["**/*.svelte"],
     languageOptions: {
       parserOptions: {
         parser: ts.parser,
       },
+    },
+    rules: {
+      // Disable this rule since the project doesn't use a base path
+      "svelte/no-navigation-without-resolve": "off",
     },
   },
   {
@@ -60,6 +90,7 @@ export default [
       ".svelte-kit/",
       "dist/",
       ".wrangler/",
+      "**/.wrangler/",
       "worker/coverage/",
       "fix-*.cjs",
     ],

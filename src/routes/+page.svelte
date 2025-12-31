@@ -8,6 +8,7 @@
 	import LiveMetrics from '$lib/components/landing/LiveMetrics.svelte';
 	import OpenSourceSection from '$lib/components/landing/OpenSourceSection.svelte';
 	import TestimonialsSection from '$lib/components/landing/TestimonialsSection.svelte';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 </script>
@@ -65,11 +66,11 @@
 			Server Radar is an independent project and is not affiliated with, endorsed, or sponsored by
 			Hetzner Online GmbH. "Hetzner" is a trademark of Hetzner Online GmbH. Data accuracy is not
 			guaranteed. Use at your own risk. See <a
-				href="/terms"
+				href={resolve('/terms')}
 				class="underline hover:text-orange-500 dark:hover:text-orange-400">Terms</a
 			>
 			and
-			<a href="/privacy" class="underline hover:text-orange-500 dark:hover:text-orange-400"
+			<a href={resolve('/privacy')} class="underline hover:text-orange-500 dark:hover:text-orange-400"
 				>Privacy Policy</a
 			>.
 		</p>

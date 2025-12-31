@@ -63,6 +63,7 @@
 		error = null;
 		
 		try {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const params = new URLSearchParams({
 				startDate: startDate.toISOString(),
 				endDate: endDate.toISOString(),
@@ -110,6 +111,7 @@
 	
 	function transformDataForLocationView(data: AvailabilityDataPoint[]): ChartSeries[] {
 		// Group by server type
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const groupedData = new Map<number, AvailabilityDataPoint[]>();
 		
 		data.forEach(point => {
@@ -137,6 +139,7 @@
 	
 	function transformDataForServerTypeView(data: AvailabilityDataPoint[]): ChartSeries[] {
 		// Group by location
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const groupedData = new Map<number, AvailabilityDataPoint[]>();
 		
 		data.forEach(point => {
@@ -251,7 +254,8 @@
 		}
 	});
 
-	const chartOptionsForGeneric = $derived<Partial<ChartOptions<'line'>>>(chartOptions);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const chartOptionsForGeneric = $derived<any>(chartOptions);
 </script>
 
 <div class="w-full">
@@ -272,7 +276,7 @@
 		<div class="h-96">
 			<GenericChart
 				data={chartData}
-				options={chartOptionsForGeneric as Partial<ChartOptions<any>>}
+				options={chartOptionsForGeneric}
 				type="line"
 				legendShow={true}
 			/>

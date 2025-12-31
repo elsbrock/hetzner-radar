@@ -84,7 +84,8 @@
 			const url = new URL(window.location.href);
 			if (url.searchParams.has('view')) {
 				url.searchParams.delete('view');
-				goto(url.toString(), { replaceState: true, keepFocus: true });
+				 
+				goto(url.pathname + url.search, { replaceState: true, keepFocus: true });
 			}
 		}
 	});
@@ -122,7 +123,8 @@
 					// Update URL to remove the view parameter
 					const url = new URL(window.location.href);
 					url.searchParams.delete('view');
-					goto(url.toString(), { replaceState: true, keepFocus: true });
+					 
+					goto(url.pathname, { replaceState: true, keepFocus: true });
 
 					// Close the drawer by dispatching an event
 					hidden = true;
@@ -150,7 +152,8 @@
 			// Update URL to remove the view parameter
 			const url = new URL(window.location.href);
 			url.searchParams.delete('view');
-			goto(url.toString(), { replaceState: true, keepFocus: true });
+			 
+			goto(url.pathname, { replaceState: true, keepFocus: true });
 
 			// Close the drawer
 			hidden = true;
@@ -165,7 +168,8 @@
 		// Update URL to remove the view parameter
 		const url = new URL(window.location.href);
 		url.searchParams.delete('view');
-		goto(url.toString(), { replaceState: true, keepFocus: true });
+		 
+		goto(url.pathname, { replaceState: true, keepFocus: true });
 	}
 
 	// Calculate price with VAT
@@ -190,7 +194,8 @@
 		const url = new URL(window.location.href);
 		if (url.searchParams.has('view')) {
 			url.searchParams.delete('view');
-			goto(url.toString(), { replaceState: true, keepFocus: true });
+			 
+			goto(url.pathname, { replaceState: true, keepFocus: true });
 		}
 	}}
 >
