@@ -47,25 +47,25 @@ export const defaultFilter: ServerFilter = {
   cpuIntel: true,
   cpuAMD: true,
 
-  ramInternalSize: [4, 6],
+  ramInternalSize: [4, 10],
 
-  ssdNvmeCount: [0, 0],
-  ssdNvmeInternalSize: [1, 12],
+  ssdNvmeCount: [0, 8],
+  ssdNvmeInternalSize: [0, 18],
 
-  ssdSataCount: [0, 0],
-  ssdSataInternalSize: [1, 4],
+  ssdSataCount: [0, 4],
+  ssdSataInternalSize: [0, 14],
 
-  hddCount: [0, 2],
-  hddInternalSize: [4, 16],
+  hddCount: [0, 15],
+  hddInternalSize: [4, 44],
 
   selectedDatacenters: [],
   selectedCpuModels: [],
 
   extrasECC: null,
   extrasINIC: null,
-  extrasHWR: false,
-  extrasGPU: false,
-  extrasRPS: false,
+  extrasHWR: null,
+  extrasGPU: null,
+  extrasRPS: null,
 };
 
 function cloneFilter(filter: ServerFilter): ServerFilter {

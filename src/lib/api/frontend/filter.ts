@@ -33,11 +33,32 @@ export function generateFilterQuery(
 
   // datacenter filtering
   if (withDatacenters && filter.selectedDatacenters.length > 0) {
-    console.log(filter.selectedDatacenters);
-    query
-      .append(SQL` and datacenter in (`)
-      .append(filter.selectedDatacenters.map((d) => `'${d}'`).join(", "))
-      .append(SQL` )`);
+    // Separate city prefixes from specific datacenters
+    const cityPrefixes = ["FSN", "NBG", "HEL"];
+    const selectedPrefixes = filter.selectedDatacenters.filter((d) =>
+      cityPrefixes.includes(d),
+    );
+    const selectedSpecific = filter.selectedDatacenters.filter(
+      (d) => !cityPrefixes.includes(d),
+    );
+
+    const conditions: string[] = [];
+
+    // Add LIKE conditions for city prefixes
+    for (const prefix of selectedPrefixes) {
+      conditions.push(`datacenter LIKE '${prefix}%'`);
+    }
+
+    // Add IN condition for specific datacenters
+    if (selectedSpecific.length > 0) {
+      conditions.push(
+        `datacenter in (${selectedSpecific.map((d) => `'${d}'`).join(", ")})`,
+      );
+    }
+
+    if (conditions.length > 0) {
+      query.append(SQL` and (`).append(conditions.join(" or ")).append(SQL`)`);
+    }
   }
 
   query.append(SQL` and (`);

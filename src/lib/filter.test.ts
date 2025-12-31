@@ -29,7 +29,7 @@ describe("filter helpers", () => {
     expect(parsed).not.toBeNull();
     expect(parsed?.cpuCount).toBe(4);
     expect(parsed?.selectedCpuModels).toEqual(["Intel Core i5-12500"]);
-    expect(parsed?.extrasHWR).toBe(false); // inherited from default
+    expect(parsed?.extrasHWR).toBe(null); // inherited from default
   });
 
   it("returns null when stored filter is missing or malformed", () => {

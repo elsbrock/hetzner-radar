@@ -18,11 +18,40 @@ export async function getDatacenters(
   filter: ServerFilter,
 ): Promise<NameValuePair[]> {
   const datacenter_filter_query = generateFilterQuery(filter, true, false);
-  const datacenters_query =
-    SQL`select distinct datacenter as name, datacenter as value from server where`
-      .append(datacenter_filter_query)
-      .append(SQL` order by datacenter`);
-  return getData<NameValuePair>(conn, datacenters_query);
+
+  // Query specific datacenters based on current filter
+  const datacenters_query = SQL`
+    SELECT DISTINCT datacenter as name, datacenter as value
+    FROM server WHERE`
+    .append(datacenter_filter_query)
+    .append(SQL` ORDER BY datacenter`);
+
+  // Query city prefixes from ALL historical data (ignoring recentlySeen filter)
+  // This ensures users can filter by city even if no servers are currently available
+  const prefixes_query = SQL`
+    SELECT DISTINCT
+      CASE
+        WHEN datacenter LIKE 'FSN%' THEN 'FSN'
+        WHEN datacenter LIKE 'NBG%' THEN 'NBG'
+        WHEN datacenter LIKE 'HEL%' THEN 'HEL'
+      END as name
+    FROM server
+    WHERE datacenter LIKE 'FSN%' OR datacenter LIKE 'NBG%' OR datacenter LIKE 'HEL%'`;
+
+  const [specificDatacenters, prefixes] = await Promise.all([
+    getData<NameValuePair>(conn, datacenters_query),
+    getData<{ name: string }>(conn, prefixes_query),
+  ]);
+
+  // Convert prefixes to NameValuePair format
+  const cityPrefixes: NameValuePair[] = prefixes
+    .filter((p) => p.name !== null)
+    .map((p) => ({ name: p.name, value: p.name }));
+
+  // Combine and sort
+  return [...cityPrefixes, ...specificDatacenters].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 }
 
 export async function getCPUModels(
