@@ -6,6 +6,7 @@
 	import { Spinner } from 'flowbite-svelte';
 	import { onDestroy } from 'svelte';
 	import { vatOptions } from './VatSelector.svelte';
+	import { convertPrice, formatCurrencyPrice, CURRENCY_CONFIG } from '$lib/currency';
 	// Import the adapter
 	import type { ChartData, ChartOptions, TooltipItem } from 'chart.js';
 
@@ -44,7 +45,9 @@
 		return 'NET';
 	}
 
-	// VAT related derived values
+	// Currency and VAT related derived values
+	let selectedCurrency = $derived($settingsStore?.currencySelection?.code ?? 'EUR');
+	let currencyConfig = $derived(CURRENCY_CONFIG[selectedCurrency as keyof typeof CURRENCY_CONFIG] ?? CURRENCY_CONFIG.EUR);
 	let validKey = $derived(
 		// Add optional chaining ?. to safely access countryCode
 		getValidVatKey($settingsStore.vatSelection?.countryCode)
@@ -61,14 +64,16 @@
 		decimalPlaces: number, // Made required
 		includeSuffix: boolean = false // Moved includeSuffix after decimalPlaces for clarity
 	): string {
+		// Convert price from EUR to selected currency
+		const convertedValue = convertPrice(value, 'EUR', selectedCurrency);
 		let basePrice: string;
 		if (unit === 'perHour') {
 			// Calculate hourly price first, then format
-			const hourlyValue = value / (30 * 24);
-			basePrice = hourlyValue.toFixed(decimalPlaces) + ' €/h';
+			const hourlyValue = convertedValue / (30 * 24);
+			basePrice = `${currencyConfig.symbol}${hourlyValue.toFixed(decimalPlaces)}/h`;
 		} else {
 			// Format monthly price directly
-			basePrice = value.toFixed(decimalPlaces) + ' €/mo';
+			basePrice = `${currencyConfig.symbol}${convertedValue.toFixed(decimalPlaces)}/mo`;
 		}
 		return includeSuffix ? `${basePrice} ${vatSuffix}` : basePrice;
 	}
@@ -228,7 +233,7 @@
 					display: legendShow, // Control visibility
 					title: {
 						display: legendShow,
-						text: 'Price (€)',
+						text: `Price (${currencyConfig.symbol})`,
 						color: tickColor // Use tickColor for both modes
 					},
 					ticks: {

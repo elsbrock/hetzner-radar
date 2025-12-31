@@ -27,6 +27,7 @@
 	import ServerFactSheet from './ServerFactSheet.svelte';
 	import ServerPriceChart from './ServerPriceChart.svelte';
 	import { vatOptions } from './VatSelector.svelte';
+	import { convertPrice, formatCurrencyPrice } from '$lib/currency';
 	// Runes ($state, $derived, etc.) are compiler features and don't need explicit imports.
 
 	// Props using Svelte 5 runes
@@ -102,7 +103,8 @@
 	type VatCountryCode = keyof typeof vatOptions;
 
 	// Derived values using Svelte 5 runes
-	// Add optional chaining ?. to safely access countryCode
+	// Currency and VAT related
+	let selectedCurrency = $derived($settingsStore?.currencySelection?.code ?? 'EUR');
 	let countryCode = $derived($settingsStore.vatSelection?.countryCode);
 	let validCountryCode = $derived(
 		countryCode && countryCode in vatOptions ? (countryCode as VatCountryCode) : 'NET'
@@ -111,7 +113,8 @@
 	let selectedOption = $derived(
 		config ? vatOptions[validCountryCode as VatCountryCode] : vatOptions['NET']
 	);
-	let displayPrice = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
+	let priceInEur = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
+	let displayPrice = $derived(convertPrice(priceInEur, 'EUR', selectedCurrency));
 	let vatSuffix = $derived(
 		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
 	);
@@ -227,7 +230,7 @@
 					/>
 				</div>
 				<span class="text-lg font-bold text-gray-900 dark:text-white">
-					{displayPrice.toFixed(2)} €
+					{selectedTimeUnit === 'perMonth' ? formatCurrencyPrice(displayPrice, selectedCurrency, 'mo') : formatCurrencyPrice(displayPrice / (30 * 24), selectedCurrency, 'hr')}
 				</span>
 				<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>
 				<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">

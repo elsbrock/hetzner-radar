@@ -7,6 +7,7 @@
 	import ServerDetailDrawer from './ServerDetailDrawer.svelte';
 	import ServerFactSheet from './ServerFactSheet.svelte';
 	import { vatOptions } from './VatSelector.svelte';
+	import { convertPrice, formatCurrencyPrice } from '$lib/currency';
 
 	dayjs.extend(relativeTime);
 
@@ -34,13 +35,15 @@
 	let drawerHidden = $state(true);
 	let selectedConfig = $state<ServerConfiguration | null>(null);
 
-	// VAT related derived state
+	// Currency and VAT related derived state
+	const selectedCurrency = $derived($settingsStore?.currencySelection?.code ?? 'EUR');
 	const countryCode = $derived($settingsStore?.vatSelection?.countryCode ?? 'NET'); // Default to 'NET' if undefined
 	const validCountryCode = $derived(
 		countryCode && countryCode in vatOptions ? (countryCode as VatCountryCode) : 'NET'
 	);
 	const selectedOption = $derived(vatOptions[validCountryCode]);
-	const displayPrice = $derived((config.price ?? 0) * (1 + selectedOption.rate));
+	const priceInEur = $derived((config.price ?? 0) * (1 + selectedOption.rate));
+	const displayPrice = $derived(convertPrice(priceInEur, 'EUR', selectedCurrency));
 	const vatSuffix = $derived(
 		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
 	);
@@ -103,9 +106,9 @@
 				<span>
 					<span class="text-xl font-bold text-gray-900 dark:text-white">
 						{#if timeUnitPrice === 'perMonth'}
-							{displayPrice.toFixed(2)} €
+							{formatCurrencyPrice(displayPrice, selectedCurrency, 'mo')}
 						{:else if timeUnitPrice === 'perHour'}
-							{(displayPrice / (30 * 24)).toFixed(4)} €
+							{formatCurrencyPrice(displayPrice / (30 * 24), selectedCurrency, 'hr')}
 						{/if}
 					</span>
 					<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>

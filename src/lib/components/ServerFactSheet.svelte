@@ -4,6 +4,8 @@
 	import { Badge } from 'flowbite-svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome'; // Use named import
 	import { faHardDrive, faMemory, faSdCard } from '@fortawesome/free-solid-svg-icons';
+	import { settingsStore } from '$lib/stores/settings';
+	import { formatCurrencyPrice } from '$lib/currency';
 
 	// --- Props ---
 
@@ -49,6 +51,9 @@
 	let totalSataTb = $derived(getTotalDiskTb(config.sata_drives));
 	let totalHddTb = $derived(getTotalDiskTb(config.hdd_drives));
 
+	// Currency
+	let selectedCurrency = $derived($settingsStore?.currencySelection?.code ?? 'EUR');
+
 	// --- Derived Unit Prices ---
 	let pricePerGbRam = $derived(config.ram_size > 0 ? displayPrice / config.ram_size : 0);
 	let pricePerTbNvme = $derived(totalNvmeTb > 0 ? displayPrice / totalNvmeTb : 0);
@@ -76,7 +81,7 @@
 			<!-- Col 4: Price -->
 			{#if showPricePerUnit && pricePerGbRam > 0}
 				<span class="text-xs text-gray-500 dark:text-gray-400"
-					>({pricePerGbRam.toFixed(2)} €/GB)</span
+					>({formatCurrencyPrice(pricePerGbRam, selectedCurrency, 'mo')}/GB)</span
 				>
 			{/if}
 		</div>
@@ -105,7 +110,7 @@
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbNvme > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
-						>({pricePerTbNvme.toFixed(2)} €/TB)</span
+						>({formatCurrencyPrice(pricePerTbNvme, selectedCurrency, 'mo')}/TB)</span
 					>
 				{/if}
 			</div>
@@ -135,7 +140,7 @@
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbSata > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
-						>({pricePerTbSata.toFixed(2)} €/TB)</span
+						>({formatCurrencyPrice(pricePerTbSata, selectedCurrency, 'mo')}/TB)</span
 					>
 				{/if}
 			</div>
@@ -165,7 +170,7 @@
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbHdd > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
-						>({pricePerTbHdd.toFixed(2)} €/TB)</span
+						>({formatCurrencyPrice(pricePerTbHdd, selectedCurrency, 'mo')}/TB)</span
 					>
 				{/if}
 			</div>

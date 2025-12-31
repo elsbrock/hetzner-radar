@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { settingsStore } from '$lib/stores/settings';
 	import VatSelector from '$lib/components/VatSelector.svelte';
+	import CurrencySelector from '$lib/components/CurrencySelector.svelte';
 	import { Button, ButtonGroup, Tooltip, InputAddon } from 'flowbite-svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faClock } from '@fortawesome/free-solid-svg-icons';
@@ -43,6 +44,7 @@
 		<Tooltip placement="left" class="z-50 flex-shrink-0">
 			Display prices per hour or per month.
 		</Tooltip>
+		<div class="flex-shrink-0"><CurrencySelector /></div>
 		<div class="flex-shrink-0"><VatSelector /></div>
 	</div>
 </div>

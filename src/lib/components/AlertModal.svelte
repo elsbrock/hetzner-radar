@@ -12,6 +12,8 @@
 	import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { createEventDispatcher } from 'svelte';
+	import { CURRENCY_CONFIG, convertPrice } from '$lib/currency';
+	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 
 	let {
 		alert = $bindable(null),
@@ -57,6 +59,11 @@
 			discordSelected = user.notification_preferences.discord && !!user.discord_webhook_url;
 		}
 	});
+
+	// Currency
+	const selectedCurrency = $derived($settingsStore?.currencySelection?.code ?? 'EUR');
+	const currencyConfig = $derived(CURRENCY_CONFIG[selectedCurrency as keyof typeof CURRENCY_CONFIG] ?? CURRENCY_CONFIG.EUR);
+	const ipv4CostInSelectedCurrency = $derived(convertPrice(HETZNER_IPV4_COST_CENTS / 100, 'EUR', selectedCurrency));
 
 	// Available notification methods based on user configuration
 	const availableNotificationMethods = $derived(
@@ -152,7 +159,7 @@
 
 			{#if !alert}
 				<p class="text-sm text-gray-600 dark:text-gray-300">
-					Get notified when the price of this configuration (including the standard €1.70 net IPv4
+					Get notified when the price of this configuration (including the standard {currencyConfig.symbol}{ipv4CostInSelectedCurrency.toFixed(2)} net IPv4
 					cost) drops below your desired monthly price.
 				</p>
 				<p class="text-sm text-gray-600 dark:text-gray-300">
@@ -193,7 +200,7 @@
 			<!-- Price Input -->
 			<Label class="flex flex-col space-y-1">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-					>Desired Monthly Price (EUR)</span
+					>Desired Monthly Price ({selectedCurrency})</span
 				>
 				<Input
 					type="tel"
