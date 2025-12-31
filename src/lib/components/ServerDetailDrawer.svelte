@@ -309,7 +309,7 @@
 									<input type="hidden" name="culture" value="en_GB" />
 									<input type="hidden" name="ip[1266]" value="1" />
 									<input type="hidden" name="country" value={validCountryCode.toLowerCase()} />
-									<input type="hidden" name="currency" value="EUR" />
+									<input type="hidden" name="currency" value={selectedCurrency} />
 									<Button type="submit" size="md" aria-label="Confirm Order" class="px-4">
 										<Fa icon={faShoppingCart} />
 									</Button>
