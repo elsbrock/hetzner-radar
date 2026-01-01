@@ -10,7 +10,7 @@
 		{
 			question: 'How often is the data updated?',
 			answer:
-				'Auction data is fetched hourly. Cloud availability is checked more frequently.'
+				'Auction and cloud availability data is updated every few minutes.'
 		},
 		{
 			question: 'How do alerts work?',
