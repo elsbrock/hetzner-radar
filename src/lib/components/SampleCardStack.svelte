@@ -2,30 +2,33 @@
 	import type { ServerConfiguration } from '$lib/api/frontend/filter';
 	import ServerCard from '$lib/components/ServerCard.svelte';
 
-	// Sample configuration data based on real examples
-	const sampleConfigs: ServerConfiguration[] = [
+	// Accept live data as prop, fallback to sample data if empty
+	let { configs = [] }: { configs?: ServerConfiguration[] } = $props();
+
+	// Fallback sample configuration data
+	const fallbackConfigs: ServerConfiguration[] = [
 		{
 			cpu: 'Intel Core i7-7700',
-			ram_size: 64, // GB
+			ram_size: 64,
 			is_ecc: false,
 			hdd_arr: ['2 x 2TB HDD'],
 			nvme_size: null,
 			nvme_drives: [],
 			sata_size: null,
 			sata_drives: [],
-			hdd_size: 4000, // 2 * 2TB
+			hdd_size: 4000,
 			hdd_drives: [2000, 2000],
-			price: 37.72, // Assuming net price for simplicity in sample
+			price: 37.72,
 			min_price: 37.72,
 			last_price: 37.72,
-			markup_percentage: 0, // Best price
-			last_seen: Math.floor(Date.now() / 1000) - 22 * 60, // Approx 22 mins ago
-			count: 1, // Placeholder count
-			with_hwr: false, // Assuming no hardware RAID
-			with_gpu: false, // Assuming no GPU
-			with_rps: false, // Assuming no redundant power supply
-			with_inic: true, // Has Intel NIC
-			ram: [] // Placeholder
+			markup_percentage: 0,
+			last_seen: Math.floor(Date.now() / 1000) - 22 * 60,
+			count: 1,
+			with_hwr: false,
+			with_gpu: false,
+			with_rps: false,
+			with_inic: true,
+			ram: []
 		},
 		{
 			cpu: 'AMD Ryzen 5 3600',
@@ -36,44 +39,47 @@
 			nvme_drives: [],
 			sata_size: null,
 			sata_drives: [],
-			hdd_size: 12000, // 2 * 6TB
+			hdd_size: 12000,
 			hdd_drives: [6000, 6000],
-			price: 44.86, // Assuming net price
+			price: 44.86,
 			min_price: 44.86,
 			last_price: 44.86,
-			markup_percentage: 0, // Best price
+			markup_percentage: 0,
 			last_seen: Math.floor(Date.now() / 1000) - 22 * 60,
 			count: 1,
 			with_hwr: false,
 			with_gpu: false,
 			with_rps: false,
-			with_inic: false, // Assuming no Intel NIC
+			with_inic: false,
 			ram: []
 		},
 		{
 			cpu: 'Intel Xeon E3-1275v6',
 			ram_size: 64,
-			is_ecc: true, // Has ECC
+			is_ecc: true,
 			hdd_arr: ['2 x 4TB HDD'],
 			nvme_size: null,
 			nvme_drives: [],
 			sata_size: null,
 			sata_drives: [],
-			hdd_size: 8000, // 2 * 4TB
+			hdd_size: 8000,
 			hdd_drives: [4000, 4000],
-			price: 48.43, // Assuming net price
-			min_price: 43.63, // Calculated approx best price (48.43 / 1.11)
+			price: 48.43,
+			min_price: 43.63,
 			last_price: 48.43,
-			markup_percentage: 11, // 11% higher than best
+			markup_percentage: 11,
 			last_seen: Math.floor(Date.now() / 1000) - 22 * 60,
 			count: 1,
 			with_hwr: false,
 			with_gpu: false,
 			with_rps: false,
-			with_inic: true, // Has Intel NIC
+			with_inic: true,
 			ram: []
 		}
 	];
+
+	// Use live data if available (at least 3 servers), otherwise fallback
+	const displayConfigs = $derived(configs.length >= 3 ? configs.slice(0, 3) : fallbackConfigs);
 
 	// Card Stack Animation Logic
 	const CYCLE_INTERVAL = 3000; // ms between card cycles
@@ -96,7 +102,7 @@
 	function startAnimation() {
 		if (!intervalId) {
 			intervalId = setInterval(() => {
-				activeCardIndex = (activeCardIndex + 1) % sampleConfigs.length;
+				activeCardIndex = (activeCardIndex + 1) % displayConfigs.length;
 			}, CYCLE_INTERVAL);
 		}
 	}
@@ -138,8 +144,8 @@
 	onmouseleave={handleMouseLeave}
 >
 	<!-- Container for the stack -->
-	{#each sampleConfigs as config, index (config.cpu + '-' + config.ram_size + '-' + config.hdd_size)}
-		{@const distance = (index - activeCardIndex + sampleConfigs.length) % sampleConfigs.length}
+	{#each displayConfigs as config, index (config.cpu + '-' + config.ram_size + '-' + config.hdd_size)}
+		{@const distance = (index - activeCardIndex + displayConfigs.length) % displayConfigs.length}
 		{@const isVisible = distance <= MAX_VISIBLE_DISTANCE}
 
 		{@const topRem = isVisible ? -distance * OFFSET_INCREMENT_REM : 0}

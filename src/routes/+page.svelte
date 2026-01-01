@@ -16,7 +16,7 @@
 </script>
 
 <main class="p-8">
-	<HeroSection />
+	<HeroSection featuredServers={data.featuredServers} />
 
 	<LiveMetrics {data} />
 

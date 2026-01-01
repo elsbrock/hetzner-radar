@@ -4,6 +4,9 @@
 	import { Button } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
 	import SampleCardStack from '$lib/components/SampleCardStack.svelte';
+	import type { ServerConfiguration } from '$lib/api/frontend/filter';
+
+	let { featuredServers = [] }: { featuredServers?: ServerConfiguration[] } = $props();
 </script>
 
 <section
@@ -58,7 +61,7 @@
 		</div>
 	</div>
 		<div class="my-8 mt-4 mr-8 md:col-span-2 md:mt-12">
-			<SampleCardStack />
+			<SampleCardStack configs={featuredServers} />
 		</div>
 	</div>
 </section>

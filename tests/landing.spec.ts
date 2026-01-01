@@ -21,16 +21,14 @@ test.describe("Landing Page Tests", () => {
 
   test("should display the main heading", async () => {
     // Target the h1 and check its text content
-    await expect(page.locator("h1")).toContainText(/Hetzner market data, visualized/i);
+    await expect(page.locator("h1")).toContainText(
+      /Hetzner market data, visualized/i,
+    );
   });
 
   test("should display key introductory text", async () => {
-    await expect(
-      page.getByText(/free, open-source tool/i),
-    ).toBeVisible();
-    await expect(
-      page.getByText(/check cloud availability/i),
-    ).toBeVisible();
+    await expect(page.getByText(/free, open-source tool/i)).toBeVisible();
+    await expect(page.getByText(/check cloud availability/i)).toBeVisible();
   });
 
   test("should display primary call-to-action buttons", async () => {
@@ -69,9 +67,7 @@ test.describe("Landing Page Tests", () => {
   });
 
   test("should display key feature sections", async () => {
-    await expect(
-      page.getByRole("heading", { name: "Features" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Features" })).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Dedicated Server Auctions" }),
     ).toBeVisible();
@@ -84,7 +80,9 @@ test.describe("Landing Page Tests", () => {
     // Check for feature details in the cards
     await expect(page.getByText(/Filter by CPU, RAM, storage/i)).toBeVisible();
     await expect(page.getByText(/Historical price charts/i)).toBeVisible();
-    await expect(page.getByText(/Price alerts via email or Discord/i)).toBeVisible();
+    await expect(
+      page.getByText(/Price alerts via email or Discord/i),
+    ).toBeVisible();
   });
 
   test("should display live metrics section", async () => {
@@ -125,7 +123,9 @@ test.describe("Landing Page Tests", () => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/");
       // Target the h1 and check its text content
-      await expect(page.locator("h1")).toContainText(/Hetzner market data, visualized/i);
+      await expect(page.locator("h1")).toContainText(
+        /Hetzner market data, visualized/i,
+      );
       // Check for the hamburger menu button using test ID
       await expect(page.getByTestId("nav-hamburger")).toBeVisible();
     });

@@ -4,7 +4,6 @@
 	import { withDbConnections } from '$lib/api/frontend/dbapi';
 	import type { ServerConfiguration, ServerPriceStat } from '$lib/api/frontend/filter';
 	import { getPrices } from '$lib/api/frontend/filter';
-	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { convertServerConfigurationToFilter, getHetznerLink } from '$lib/filter';
 	import { filter } from '$lib/stores/filter';
 	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
@@ -31,10 +30,10 @@
 	} from 'flowbite-svelte';
 	import { sineIn } from 'svelte/easing';
 	import { db } from '../../stores/db';
-	import { getAuctionsForConfiguration, type AuctionResult } from '../api/frontend/auctions';
 	import ServerFactSheet from './ServerFactSheet.svelte';
 	import ServerPriceChart from './ServerPriceChart.svelte';
 	import { vatOptions } from './VatSelector.svelte';
+	import type { LiveAuctionResult } from '../../routes/api/auctions/+server';
 	// Runes ($state, $derived, etc.) are compiler features and don't need explicit imports.
 
 	// Props using Svelte 5 runes
@@ -53,34 +52,49 @@
 	};
 
 	// State using Svelte 5 runes
-	let auctions = $state<AuctionResult[]>([]);
+	let auctions = $state<LiveAuctionResult[]>([]);
 	let loadingAuctions = $state(false);
 
-	// Fetch auctions when config changes or db is ready using $effect
+	// Fetch auctions from live D1 API when config changes
 	$effect(() => {
-		const currentConfig = config; // Capture current value for the effect
-		const currentDb = $db; // Capture current value for the effect
-		const currentFilter = $filter; // Capture current value for the effect
+		const currentConfig = config;
+		const currentFilter = $filter;
 
-		// Ensure config, db, and filter are ready before fetching
-		if (currentConfig && currentDb && currentFilter) {
+		if (currentConfig && currentFilter) {
 			loadingAuctions = true;
-			auctions = []; // Clear previous results
+			auctions = [];
 			let cancelled = false;
 
 			(async () => {
 				try {
-					// Use withDbConnections to get a connection
-					await withDbConnections(currentDb, async (conn) => {
-						const result = await getAuctionsForConfiguration(conn, currentConfig, currentFilter);
-						if (!cancelled) {
-							auctions = result;
-						}
+					const response = await fetch('/api/auctions', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							cpu: currentConfig.cpu,
+							ram_size: currentConfig.ram_size,
+							is_ecc: currentConfig.is_ecc,
+							nvme_drives: currentConfig.nvme_drives,
+							sata_drives: currentConfig.sata_drives,
+							hdd_drives: currentConfig.hdd_drives,
+							with_inic: currentConfig.with_inic,
+							with_gpu: currentConfig.with_gpu,
+							with_hwr: currentConfig.with_hwr,
+							with_rps: currentConfig.with_rps,
+							locationGermany: currentFilter.locationGermany,
+							locationFinland: currentFilter.locationFinland,
+							selectedDatacenters: currentFilter.selectedDatacenters
+						})
 					});
+
+					if (!cancelled && response.ok) {
+						const data = await response.json();
+						auctions = data.auctions ?? [];
+					}
 				} catch (error) {
 					console.error('Error fetching auctions:', error);
 					if (!cancelled) {
-						auctions = []; // Ensure auctions is empty on error
+						auctions = [];
 					}
 				} finally {
 					if (!cancelled) {
@@ -89,12 +103,10 @@
 				}
 			})();
 
-			// Cleanup function for the effect
 			return () => {
 				cancelled = true;
 			};
 		} else {
-			// Reset if config is null or db not ready
 			auctions = [];
 			loadingAuctions = false;
 		}
@@ -371,8 +383,7 @@
 							</TableBodyCell>
 							<TableBodyCell class="px-2 py-4 text-right"
 								>{convertPrice(
-									(auction.lastPrice + HETZNER_IPV4_COST_CENTS / 100) *
-									(1 + selectedOption.rate),
+									auction.lastPrice * (1 + selectedOption.rate),
 									'EUR',
 									$currentCurrency
 								).toFixed(2)} {$currencySymbol}</TableBodyCell
