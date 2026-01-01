@@ -92,6 +92,23 @@ function mapAuctionToFeaturedServer(row: CurrentAuctionRow): FeaturedServer {
   };
 }
 
+// Deduplicate by CPU, keeping the cheapest for each CPU model
+function dedupeByСpu(rows: CurrentAuctionRow[]): FeaturedServer[] {
+  const seen = new Set<string>();
+  const result: FeaturedServer[] = [];
+
+  // Already sorted by price from DB query
+  for (const row of rows) {
+    if (!seen.has(row.cpu)) {
+      seen.add(row.cpu);
+      result.push(mapAuctionToFeaturedServer(row));
+      if (result.length >= 4) break;
+    }
+  }
+
+  return result;
+}
+
 export const load: PageServerLoad = async ({ platform }) => {
   const db = platform?.env?.DB;
 
@@ -167,7 +184,7 @@ export const load: PageServerLoad = async ({ platform }) => {
         )
         .catch(() => 0),
 
-      // Fetch 4 cheapest servers for landing page hero
+      // Fetch cheapest servers for landing page hero (more than 4 to allow deduplication)
       db
         .prepare(
           `SELECT id, cpu, ram, ram_size, is_ecc, hdd_arr,
@@ -176,15 +193,15 @@ export const load: PageServerLoad = async ({ platform }) => {
                   with_gpu, with_rps, price, seen
            FROM current_auctions
            ORDER BY price ASC
-           LIMIT 4`,
+           LIMIT 50`,
         )
         .all<CurrentAuctionRow>()
         .then((result) => result.results ?? [])
         .catch(() => [] as CurrentAuctionRow[]),
     ]);
 
-    // Map raw auction rows to FeaturedServer format
-    const featuredServers = featuredServersRows.map(mapAuctionToFeaturedServer);
+    // Deduplicate by CPU to show variety (one per CPU model)
+    const featuredServers = dedupeByСpu(featuredServersRows);
 
     // Ensure we return actual numbers, not null or undefined
     return {
