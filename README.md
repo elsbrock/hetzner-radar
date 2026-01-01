@@ -45,17 +45,16 @@ statically built using SvelteKit. DuckDB is still used for querying the database
 on the client, while Cloudflare Workers handle session management, storing alerts
 and sending email notifications (using D1 for backend storage).
 
-We fetch the latest auction data from Hetzner once per hour and rebuild the
-database for the static website. Additionally, our Cloudflare Worker imports
-auction data every 5 minutes directly into the backend for real-time processing.
-The raw data is stored in the `data` branch, where we currently maintain
-three months of history. We may consider purging older data if the branch
-becomes too large.
+Auction data is fetched from Hetzner every 5 minutes via two parallel pipelines:
+- **Cloudflare Worker**: Imports directly into D1 for real-time alert processing
+- **GitHub Actions**: Incrementally updates the DuckDB database stored in R2 for client-side analytics
+
+The DuckDB database is updated incrementally - each run fetches the current snapshot
+from Hetzner, merges it with existing data (keeping one record per auction per day),
+and automatically purges data older than 90 days.
 
 The project is deployed on Cloudflare Pages. Looking ahead, we plan to transition
-to a backend-only architecture, eliminating client-side DuckDB and migrating the
-data ingestion process from Python scripts to Cloudflare Workers for a fully
-integrated solution.
+to a backend-only architecture, eliminating client-side DuckDB entirely.
 
 ### Auction Data Storage Strategy
 
@@ -144,15 +143,12 @@ duckdb -cmd "attach 'https://static.radar.iodev.org/sb.duckdb' (read_only); use 
 
 Inspect the schema using the `.schema` pragma.
 
-For a full development setup with data ingestion:
+To manually update the database with the latest data:
 
 ```sh
 cd scripts
-poetry shell
-# Add the `data` branch under /data
-git worktree add ../data data
-# Build the DuckDB database
-python import.py ../data ../static/sb.duckdb
+poetry install
+poetry run python update_incremental.py ../static/sb.duckdb
 ```
 
 ### 2. Setting Up the Worker
