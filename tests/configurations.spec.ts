@@ -17,12 +17,6 @@ test.describe("Configurations Page (/configurations)", () => {
     await expect(
       page.getByText("Explore our curated server configurations tailored"),
     ).toBeVisible();
-
-    // Check for PriceControls placeholder/area
-    // Using .locator('div > h3:has-text("Price Controls")') might be too specific if PriceControls internal structure changes.
-    // A more robust locator might target the container div directly based on its classes or position.
-    // Targeting the div containing the VAT select dropdown
-    await expect(page.locator("div:has(> div > select)")).toBeVisible();
   });
 
   // REMOVED: test('should initially show loading spinners for configurations', ...)

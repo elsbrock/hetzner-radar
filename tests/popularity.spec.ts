@@ -17,8 +17,8 @@ test.describe("Analyze Page Tests", () => {
         // If no server cards, that's okay for this test
       });
 
-    // Check if server filter controls are present
-    await expect(page.getByTestId("price-controls")).toBeVisible();
+    // Check if server filter controls are present (price inputs in the control bar)
+    await expect(page.getByTestId("price-min-input")).toBeVisible();
 
     // Check if the popularity stat loads (with generous timeout for DB init)
     const popularityStat = page.locator('[data-testid="popularity-stat"]');
