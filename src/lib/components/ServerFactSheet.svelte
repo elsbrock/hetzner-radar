@@ -12,10 +12,17 @@
 		config: ServerConfiguration;
 		displayPrice: number; // Final price including VAT and currency conversion (needed for unit price calculation)
 		showPricePerUnit?: boolean;
+		showBadges?: boolean;
 		class?: string;
 	}
 
-	let { config, displayPrice, showPricePerUnit = true, class: className = '' } = $props();
+	let {
+		config,
+		displayPrice,
+		showPricePerUnit = true,
+		showBadges = true,
+		class: className = ''
+	} = $props();
 
 	// --- Helper Functions & Types ---
 
@@ -51,6 +58,11 @@
 	let totalSataTb = $derived(getTotalDiskTb(config.sata_drives));
 	let totalHddTb = $derived(getTotalDiskTb(config.hdd_drives));
 
+	// Summarized disk arrays for display
+	let nvmeSummary = $derived(summarizeNumbers(config.nvme_drives));
+	let sataSummary = $derived(summarizeNumbers(config.sata_drives));
+	let hddSummary = $derived(summarizeNumbers(config.hdd_drives));
+
 	// --- Derived Unit Prices ---
 	let pricePerGbRam = $derived(config.ram_size > 0 ? displayPrice / config.ram_size : 0);
 	let pricePerTbNvme = $derived(totalNvmeTb > 0 ? displayPrice / totalNvmeTb : 0);
@@ -64,11 +76,11 @@
 		class="mb-3 grid grid-cols-[10px,40px,70px,80px] gap-x-3 gap-y-1 leading-tight font-normal text-gray-700 dark:text-gray-400"
 	>
 		<!-- RAM -->
-		<div class="flex items-center justify-center text-sm">
+		<div class="flex items-start justify-center text-sm">
 			<!-- Col 1: Icon -->
 			<FontAwesomeIcon icon={faMemory} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 		</div>
-		<div class="flex items-center text-sm">RAM</div>
+		<div class="flex items-start text-sm">RAM</div>
 		<!-- Col 2: Label -->
 		<div class="text-sm">
 			<!-- Col 3: Details -->
@@ -85,25 +97,25 @@
 
 		<!-- NVMe Drives -->
 		{#if config.nvme_drives.length > 0}
-			<div class="flex items-center justify-center text-sm">
+			<div class="flex items-start justify-center text-sm">
 				<!-- Col 1: Icon -->
 				<FontAwesomeIcon icon={faSdCard} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 			</div>
-			<div class="flex items-center text-sm">NVMe</div>
+			<div class="flex items-start text-sm">NVMe</div>
 			<!-- Col 2: Label -->
 			<div class="text-sm">
 				<!-- Col 3: Details -->
 				<span>
-					{#each summarizeNumbers(config.nvme_drives) as summary, i (summary.value)}
+					{#each nvmeSummary as summary, i (summary.value)}
 						<span class="whitespace-nowrap"
-							>{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(
-								summary.value
-							)}</span
-						>{i < summarizeNumbers(config.nvme_drives).length - 1 ? ', ' : ''}
+							>{nvmeSummary.length > 1 || summary.count > 1
+								? `${summary.count}x `
+								: ''}{getFormattedDiskSize(summary.value)}</span
+						>{i < nvmeSummary.length - 1 ? ', ' : ''}
 					{/each}
 				</span>
 			</div>
-			<div class="flex items-center justify-end text-right text-sm">
+			<div class="flex items-start justify-end text-right text-sm">
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbNvme > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
@@ -115,25 +127,25 @@
 
 		<!-- SATA Drives -->
 		{#if config.sata_drives.length > 0}
-			<div class="flex items-center justify-center text-sm">
+			<div class="flex items-start justify-center text-sm">
 				<!-- Col 1: Icon -->
 				<FontAwesomeIcon icon={faHardDrive} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 			</div>
-			<div class="flex items-center text-sm">SATA</div>
+			<div class="flex items-start text-sm">SATA</div>
 			<!-- Col 2: Label -->
 			<div class="text-sm">
 				<!-- Col 3: Details -->
 				<span>
-					{#each summarizeNumbers(config.sata_drives) as summary, i (summary.value)}
+					{#each sataSummary as summary, i (summary.value)}
 						<span class="whitespace-nowrap"
-							>{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(
-								summary.value
-							)}</span
-						>{i < summarizeNumbers(config.sata_drives).length - 1 ? ', ' : ''}
+							>{sataSummary.length > 1 || summary.count > 1
+								? `${summary.count}x `
+								: ''}{getFormattedDiskSize(summary.value)}</span
+						>{i < sataSummary.length - 1 ? ', ' : ''}
 					{/each}
 				</span>
 			</div>
-			<div class="flex items-center justify-end text-right text-sm">
+			<div class="flex items-start justify-end text-right text-sm">
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbSata > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
@@ -145,25 +157,25 @@
 
 		<!-- HDD Drives -->
 		{#if config.hdd_drives.length > 0}
-			<div class="flex items-center justify-center text-sm">
+			<div class="flex items-start justify-center text-sm">
 				<!-- Col 1: Icon -->
 				<FontAwesomeIcon icon={faHardDrive} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 			</div>
-			<div class="flex items-center text-sm">HDD</div>
+			<div class="flex items-start text-sm">HDD</div>
 			<!-- Col 2: Label -->
 			<div class="text-sm">
 				<!-- Col 3: Details -->
 				<span>
-					{#each summarizeNumbers(config.hdd_drives) as summary, i (summary.value)}
+					{#each hddSummary as summary, i (summary.value)}
 						<span class="whitespace-nowrap"
-							>{summary.count > 1 ? `${summary.count}x ` : ''}{getFormattedDiskSize(
-								summary.value
-							)}</span
-						>{i < summarizeNumbers(config.hdd_drives).length - 1 ? ', ' : ''}
+							>{hddSummary.length > 1 || summary.count > 1
+								? `${summary.count}x `
+								: ''}{getFormattedDiskSize(summary.value)}</span
+						>{i < hddSummary.length - 1 ? ', ' : ''}
 					{/each}
 				</span>
 			</div>
-			<div class="flex items-center justify-end text-right text-sm">
+			<div class="flex items-start justify-end text-right text-sm">
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbHdd > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
@@ -175,11 +187,13 @@
 	</div>
 
 	<!-- Badges -->
-	<div class="flex flex-wrap gap-2">
-		{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
-		{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
-		{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
-		{#if config.with_hwr}<span><Badge border>HWR</Badge></span>{/if}
-		{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
-	</div>
+	{#if showBadges}
+		<div class="flex flex-wrap gap-2">
+			{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
+			{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
+			{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
+			{#if config.with_hwr}<span><Badge border>HWR</Badge></span>{/if}
+			{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
+		</div>
+	{/if}
 </div>

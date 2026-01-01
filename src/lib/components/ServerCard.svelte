@@ -4,7 +4,7 @@
 	import { convertPrice } from '$lib/currency';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
-	import { Card, Indicator, Spinner } from 'flowbite-svelte';
+	import { Badge, Card, Indicator, Spinner } from 'flowbite-svelte';
 	import ServerDetailDrawer from './ServerDetailDrawer.svelte';
 	import ServerFactSheet from './ServerFactSheet.svelte';
 	import { vatOptions } from './VatSelector.svelte';
@@ -58,7 +58,7 @@
 	});
 
 	const baseClasses =
-		'relative group text-left flex flex-col justify-between min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
+		'relative group text-left flex flex-col min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
 	const clickableClasses = 'hover:cursor-pointer';
 </script>
 
@@ -79,8 +79,8 @@
 			<Spinner />
 		</div>
 	{:else}
-		<!-- Main Content -->
-		<div class="flex-grow">
+		<!-- Header -->
+		<div>
 			<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
 				{config.cpu}
 			</h5>
@@ -94,9 +94,21 @@
 					seen {config.last_seen ? dayjs.unix(config.last_seen).fromNow() : 'unknown'}
 				</span>
 			</div>
+		</div>
 
-			<!-- Server Fact Sheet -->
-			<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} />
+		<!-- Server Fact Sheet (storage only) -->
+		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} showBadges={false} />
+
+		<!-- Spacer - absorbs variable height so badges and footer stay at bottom -->
+		<div class="flex-grow"></div>
+
+		<!-- Badges -->
+		<div class="flex flex-wrap gap-2">
+			{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
+			{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
+			{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
+			{#if config.with_hwr}<span><Badge border>HWR</Badge></span>{/if}
+			{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
 		</div>
 
 		<!-- Footer -->
