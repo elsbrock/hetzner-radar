@@ -22,13 +22,15 @@ test.describe("Landing Page Tests", () => {
   test("should display the main heading", async () => {
     // Target the h1 and check its text content
     await expect(page.locator("h1")).toContainText(
-      /Hetzner market data, visualized/i,
+      /Helping you find the right Hetzner server/i,
     );
   });
 
   test("should display key introductory text", async () => {
     await expect(page.getByText(/free, open-source tool/i)).toBeVisible();
-    await expect(page.getByText(/check cloud availability/i)).toBeVisible();
+    await expect(
+      page.getByText(/check cloud server availability/i),
+    ).toBeVisible();
   });
 
   test("should display primary call-to-action buttons", async () => {
@@ -124,7 +126,7 @@ test.describe("Landing Page Tests", () => {
       await page.goto("/");
       // Target the h1 and check its text content
       await expect(page.locator("h1")).toContainText(
-        /Hetzner market data, visualized/i,
+        /Helping you find the right Hetzner server/i,
       );
       // Check for the hamburger menu button using test ID
       await expect(page.getByTestId("nav-hamburger")).toBeVisible();

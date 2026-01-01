@@ -28,14 +28,14 @@
 	<div class="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-8 lg:grid-cols-5">
 		<div class="justify-center text-left lg:col-span-3">
 		<h1
-			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:whitespace-nowrap md:text-5xl dark:text-gray-100"
+			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
 		>
-			Hetzner market data, visualized
+			Helping you find the right Hetzner server
 		</h1>
-		<p class="mb-6 text-lg font-medium text-orange-500">Free • Open source • No account required</p>
+		<p class="mb-6 text-lg font-medium text-orange-500">Open-source Hetzner market intelligence</p>
 		<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
 			Server Radar is a free, open-source tool to monitor the Hetzner server market. Track auction
-			prices, check cloud availability, and get notified when deals appear.
+			prices, check cloud server availability, and get notified when deals appear.
 		</p>
 		<div class="flex flex-col gap-4 sm:flex-row">
 			<Button
