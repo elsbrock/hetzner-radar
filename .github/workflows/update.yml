@@ -1,23 +1,22 @@
-name: Update Database and Push
+name: Update Database (Incremental)
 
 on:
+  schedule:
+    # Run hourly at minute 13
+    - cron: "13 * * * *"
   workflow_dispatch:
 
 jobs:
-  build_and_deploy_db:
+  update_db:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout data
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-        with:
-          ref: data
       - name: Checkout repo
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
-      - name: Set up Python 3.11
+      - name: Set up Python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
         with:
-          python-version: 3.14
+          python-version: "3.12"
 
       - name: Install Poetry
         run: pip install poetry
@@ -25,10 +24,16 @@ jobs:
       - name: Install dependencies
         run: cd scripts && poetry install
 
-      - name: Run import script
+      - name: Download existing database from R2
+        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        with:
+          command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        continue-on-error: true  # First run won't have existing DB
+
+      - name: Run incremental update
         run: |
-          git worktree add data data
-          cd scripts && poetry run python import.py ../data ../static/sb.duckdb.wasm
+          cd scripts && poetry run python update_incremental.py ../static/sb.duckdb.wasm 90
 
       - name: Deploy DB to R2
         uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
@@ -36,12 +41,16 @@ jobs:
           command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      # NOTE: Auction alert processing moved to worker (AuctionImportDO)
-      # Worker imports auction data automatically every 5 minutes from Hetzner API
-      # The /push endpoint has been removed as it's no longer needed
-      #
-      # Previous step (now deprecated):
-      # - name: Push new data to worker
-      #   run: cd scripts && poetry run python push.py ../static/sb.duckdb.wasm
-      #   env:
-      #     API_KEY: ${{ secrets.API_KEY }}
+  notify_failure:
+    runs-on: ubuntu-latest
+    needs: update_db
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Send ntfy.sh notification
+        run: |
+          curl \
+            -H "Title: Server Radar DB update failure" \
+            -H "Priority: urgent" \
+            -H "Tags: warning" \
+            -d "The incremental DB update failed." \
+            ntfy.sh/7vGYCNtEtfklA8Wx-wcrawl

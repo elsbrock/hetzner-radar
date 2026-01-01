@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+"""
+Incremental DuckDB Update Script
+
+Fetches current auction data from Hetzner API and incrementally updates the DuckDB database.
+This eliminates the need for the data branch by directly updating the database.
+
+Usage:
+    python update_incremental.py <database_path>
+
+Example:
+    python update_incremental.py ../static/sb.duckdb.wasm
+"""
+
+import sys
+import os
+import duckdb
+import multiprocessing
+import urllib.request
+import json
+import gzip
+from datetime import datetime
+
+HETZNER_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
+
+# Schema for the server table (same as import.py)
+create_table_query = """
+CREATE TABLE IF NOT EXISTS server (
+    id UBIGINT,
+    information VARCHAR[],
+
+    datacenter VARCHAR,
+    location VARCHAR,
+
+    cpu_vendor VARCHAR,
+    cpu VARCHAR,
+    cpu_count INTEGER,
+    is_highio BOOLEAN,
+
+    ram VARCHAR,
+    ram_size INTEGER,
+    is_ecc BOOLEAN,
+
+    hdd_arr VARCHAR[],
+
+    nvme_count INTEGER,
+    nvme_drives INTEGER[],
+    nvme_size INTEGER,
+
+    sata_count INTEGER,
+    sata_drives INTEGER[],
+    sata_size INTEGER,
+
+    hdd_count INTEGER,
+    hdd_drives INTEGER[],
+    hdd_size INTEGER,
+
+    with_inic BOOLEAN,
+    with_hwr BOOLEAN,
+    with_gpu BOOLEAN,
+    with_rps BOOLEAN,
+
+    traffic VARCHAR,
+    bandwidth INTEGER,
+
+    price INTEGER,
+    fixed_price BOOLEAN,
+
+    seen TIMESTAMP
+);
+"""
+
+# Temp table for incoming data
+create_temp_table_query = """
+CREATE TEMP TABLE server_incoming (
+    id UBIGINT,
+    information VARCHAR[],
+
+    datacenter VARCHAR,
+    location VARCHAR,
+
+    cpu_vendor VARCHAR,
+    cpu VARCHAR,
+    cpu_count INTEGER,
+    is_highio BOOLEAN,
+
+    ram VARCHAR,
+    ram_size INTEGER,
+    is_ecc BOOLEAN,
+
+    hdd_arr VARCHAR[],
+
+    nvme_count INTEGER,
+    nvme_drives INTEGER[],
+    nvme_size INTEGER,
+
+    sata_count INTEGER,
+    sata_drives INTEGER[],
+    sata_size INTEGER,
+
+    hdd_count INTEGER,
+    hdd_drives INTEGER[],
+    hdd_size INTEGER,
+
+    with_inic BOOLEAN,
+    with_hwr BOOLEAN,
+    with_gpu BOOLEAN,
+    with_rps BOOLEAN,
+
+    traffic VARCHAR,
+    bandwidth INTEGER,
+
+    price INTEGER,
+    fixed_price BOOLEAN,
+
+    seen TIMESTAMP
+);
+"""
+
+# Transform and insert from JSON (same as import.py)
+import_data_query = """
+INSERT INTO server_incoming
+SELECT
+    id,
+    information,
+
+    datacenter,
+    CASE WHEN datacenter LIKE 'NBG%%' OR datacenter LIKE 'FSN%%'
+        THEN 'Germany'
+        ELSE 'Finland'
+    END AS location,
+
+    LEFT(cpu, POSITION(' ' IN cpu) - 1) as cpu_vendor,
+    cpu,
+    cpu_count,
+    is_highio,
+
+    ram,
+    ram_size,
+    is_ecc,
+
+    hdd_arr,
+
+    array_length(serverDiskData.nvme) as nvme_count,
+    serverDiskData.nvme as nvme_drives,
+    list_aggregate(serverDiskData.nvme, 'sum') as nvme_size,
+
+    array_length(serverDiskData.sata) as sata_count,
+    serverDiskData.sata as sata_drives,
+    list_aggregate(serverDiskData.sata, 'sum') as sata_size,
+
+    array_length(serverDiskData.hdd) as hdd_count,
+    serverDiskData.hdd as hdd_drives,
+    list_aggregate(serverDiskData.hdd, 'sum') as hdd_size,
+
+    array_contains(specials, 'iNIC') as with_inic,
+    array_contains(specials, 'HWR') as with_hwr,
+    array_contains(specials, 'GPU') as with_gpu,
+    array_contains(specials, 'RPS') as with_rps,
+
+    traffic,
+    bandwidth,
+
+    price,
+    fixed_price,
+
+    TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen
+
+FROM read_json('%s', format = 'auto', columns = {
+    id: 'UBIGINT',
+    information: 'VARCHAR[]',
+    cpu: 'VARCHAR',
+    cpu_count: 'INTEGER',
+    is_highio: 'BOOLEAN',
+    traffic: 'VARCHAR',
+    bandwidth: 'INTEGER',
+    ram: 'VARCHAR',
+    ram_size: 'INTEGER',
+    price: 'INTEGER',
+    hdd_arr: 'VARCHAR[]',
+    serverDiskData: 'STRUCT(nvme INTEGER[], sata INTEGER[], hdd INTEGER[], general INTEGER[])',
+    is_ecc: 'BOOLEAN',
+    datacenter: 'VARCHAR',
+    specials: 'VARCHAR[]',
+    fixed_price: 'BOOLEAN',
+    next_reduce_timestamp: 'INTEGER',
+    next_reduce: 'INTEGER'
+})
+"""
+
+# Insert all incoming data (deduplication happens after)
+merge_query = """
+INSERT INTO server
+SELECT * FROM server_incoming
+"""
+
+# Deduplicate: keep only the latest record per auction per day
+deduplicate_query = """
+CREATE OR REPLACE TABLE server AS
+WITH CTE AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY id, date_trunc('d', seen) ORDER BY seen DESC) as row_num
+    FROM
+        server
+)
+SELECT * EXCLUDE row_num
+FROM CTE
+WHERE row_num = 1
+"""
+
+# Purge old data (keep N days)
+purge_query = """
+DELETE FROM server
+WHERE seen < NOW() - INTERVAL '%d days'
+"""
+
+
+def fetch_hetzner_data(output_path: str) -> str:
+    """Fetch current auction data from Hetzner API and save to temp file."""
+    print(f"Fetching data from Hetzner API...")
+
+    req = urllib.request.Request(
+        HETZNER_API_URL,
+        headers={'User-Agent': 'Mozilla/5.0 (compatible; HetznerRadar/1.0)'}
+    )
+
+    with urllib.request.urlopen(req, timeout=30) as response:
+        data = json.loads(response.read().decode('utf-8'))
+
+    # Extract server array
+    servers = data.get('server', data) if isinstance(data, dict) else data
+    print(f"Fetched {len(servers)} servers from API")
+
+    # Save to temp file for DuckDB to read
+    with open(output_path, 'w') as f:
+        json.dump(servers, f)
+
+    return output_path
+
+
+def update_database(db_path: str, json_path: str, retention_days: int = 90):
+    """Incrementally update the DuckDB database with new data."""
+    print(f"Opening database: {db_path}")
+
+    # Check if database exists
+    db_exists = os.path.exists(db_path)
+
+    conn = duckdb.connect(db_path, config={'threads': multiprocessing.cpu_count()})
+    conn.execute("PRAGMA force_compression='dictionary'")
+
+    try:
+        conn.execute("BEGIN TRANSACTION")
+
+        # Create main table if it doesn't exist
+        if not db_exists:
+            print("Creating new database...")
+        conn.execute(create_table_query)
+
+        # Get current record count
+        before_count = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
+        print(f"Existing records: {before_count}")
+
+        # Create temp table for incoming data
+        conn.execute(create_temp_table_query)
+
+        # Import new data into temp table
+        print("Importing new data...")
+        conn.execute(import_data_query % json_path)
+
+        incoming_count = conn.execute("SELECT COUNT(*) FROM server_incoming").fetchone()[0]
+        print(f"Incoming records: {incoming_count}")
+
+        # Merge new data (only insert if not already exists for this day)
+        print("Merging new data...")
+        conn.execute(merge_query)
+
+        after_merge = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
+        new_records = after_merge - before_count
+        print(f"New records added: {new_records}")
+
+        # Deduplicate (in case of overlapping timestamps)
+        print("Deduplicating...")
+        conn.execute(deduplicate_query)
+
+        after_dedup = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
+        print(f"Records after deduplication: {after_dedup}")
+
+        # Purge old data
+        if retention_days > 0:
+            print(f"Purging records older than {retention_days} days...")
+            conn.execute(purge_query % retention_days)
+
+            final_count = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
+            purged = after_dedup - final_count
+            if purged > 0:
+                print(f"Purged {purged} old records")
+
+        conn.execute("COMMIT")
+
+        # Final stats
+        final_count = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
+        date_range = conn.execute("""
+            SELECT
+                MIN(seen)::DATE as earliest,
+                MAX(seen)::DATE as latest,
+                COUNT(DISTINCT date_trunc('d', seen)) as days
+            FROM server
+        """).fetchone()
+
+        print(f"\nDatabase updated successfully!")
+        print(f"Total records: {final_count}")
+        print(f"Date range: {date_range[0]} to {date_range[1]} ({date_range[2]} days)")
+
+    except Exception as e:
+        conn.execute("ROLLBACK")
+        raise e
+    finally:
+        conn.close()
+
+
+def print_usage():
+    print("Usage: python update_incremental.py <database_path> [retention_days]")
+    print("")
+    print("Arguments:")
+    print("  database_path   Path to the DuckDB database file")
+    print("  retention_days  Number of days to keep (default: 90)")
+    print("")
+    print("Example:")
+    print("  python update_incremental.py ../static/sb.duckdb.wasm 90")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print_usage()
+        sys.exit(1)
+
+    db_path = sys.argv[1]
+    retention_days = int(sys.argv[2]) if len(sys.argv) > 2 else 90
+
+    # Create temp file for JSON data
+    temp_json = "/tmp/hetzner_auction_data.json"
+
+    try:
+        # Fetch fresh data from Hetzner
+        fetch_hetzner_data(temp_json)
+
+        # Update database incrementally
+        update_database(db_path, temp_json, retention_days)
+
+    finally:
+        # Cleanup temp file
+        if os.path.exists(temp_json):
+            os.remove(temp_json)
+
+
+if __name__ == "__main__":
+    main()
