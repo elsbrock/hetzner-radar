@@ -29,7 +29,7 @@ jobs:
         with:
           command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        continue-on-error: true  # First run won't have existing DB
+        continue-on-error: true # First run won't have existing DB
 
       - name: Run incremental update
         run: |

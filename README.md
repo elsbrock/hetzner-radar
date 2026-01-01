@@ -46,6 +46,7 @@ on the client, while Cloudflare Workers handle session management, storing alert
 and sending email notifications (using D1 for backend storage).
 
 Auction data is fetched from Hetzner every 5 minutes via two parallel pipelines:
+
 - **Cloudflare Worker**: Imports directly into D1 for real-time alert processing
 - **GitHub Actions**: Incrementally updates the DuckDB database stored in R2 for client-side analytics
 

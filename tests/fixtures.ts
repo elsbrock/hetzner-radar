@@ -42,7 +42,9 @@ export async function waitForAnalyzePageReady(
       await page.getByTestId("server-card").first().waitFor({ timeout: 15000 });
     } catch {
       // No server cards found - verify page is still loaded by checking for filter controls
-      await page.getByTestId("total-configurations").waitFor({ timeout: timeout - 15000 });
+      await page
+        .getByTestId("total-configurations")
+        .waitFor({ timeout: timeout - 15000 });
     }
   } else {
     // Just wait for the total configurations counter to confirm page is loaded
