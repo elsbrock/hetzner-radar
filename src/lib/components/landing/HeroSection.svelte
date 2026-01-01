@@ -25,10 +25,10 @@
 		<div class="radar-dot" style="top: 50%; left: 5%;"></div>
 	</div>
 
-	<div class="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-12 px-8 md:grid-cols-5">
-		<div class="justify-center text-left md:col-span-3">
+	<div class="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-8 lg:grid-cols-5">
+		<div class="justify-center text-left lg:col-span-3">
 		<h1
-			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
+			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:whitespace-nowrap md:text-5xl dark:text-gray-100"
 		>
 			Hetzner market data, visualized
 		</h1>
@@ -60,7 +60,7 @@
 			</Button>
 		</div>
 	</div>
-		<div class="my-8 mt-4 mr-8 md:col-span-2 md:mt-12">
+		<div class="my-8 mt-4 mr-8 lg:col-span-2 lg:mt-12">
 			<SampleCardStack configs={featuredServers} />
 		</div>
 	</div>
