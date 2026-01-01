@@ -26,48 +26,67 @@
 	import { Button } from 'flowbite-svelte';
 	import { db } from '../../stores/db';
 
-	let loading = $state(true);
-	let selectedTimeUnit = $derived((
-		$settingsStore.timeUnitPrice ?? 'perMonth'
-	) as 'perMonth' | 'perHour');
+	let { data } = $props();
 
-	let cheapestConfigurations: ServerConfiguration[] = $state([]);
-	let cheapDiskConfigurations: ServerConfiguration[] = $state([]);
-	let cheapRamConfigurations: ServerConfiguration[] = $state([]);
-	let cheapNvmeConfigurations: ServerConfiguration[] = $state([]);
-	let cheapSataConfigurations: ServerConfiguration[] = $state([]);
+	let selectedTimeUnit = $derived(
+		($settingsStore.timeUnitPrice ?? 'perMonth') as 'perMonth' | 'perHour'
+	);
 
-	async function fetchData(db: AsyncDuckDB) {
-		let queryTime = performance.now();
-		loading = true;
+	// Use server data if available, otherwise fall back to DuckDB
+	const hasServerData = $derived(data.cheapestConfigurations?.length > 0);
 
-		await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
+	// DuckDB fallback data (only used when no server data)
+	let duckDbCheapest: ServerConfiguration[] = $state([]);
+	let duckDbDisk: ServerConfiguration[] = $state([]);
+	let duckDbRam: ServerConfiguration[] = $state([]);
+	let duckDbNvme: ServerConfiguration[] = $state([]);
+	let duckDbSata: ServerConfiguration[] = $state([]);
+	let loadingDuckDb = $state(false);
+
+	// Derived: use server data if available, otherwise DuckDB data
+	const cheapestConfigurations = $derived(
+		hasServerData ? (data.cheapestConfigurations as ServerConfiguration[]) : duckDbCheapest
+	);
+	const cheapDiskConfigurations = $derived(
+		hasServerData ? (data.cheapDiskConfigurations as ServerConfiguration[]) : duckDbDisk
+	);
+	const cheapRamConfigurations = $derived(
+		hasServerData ? (data.cheapRamConfigurations as ServerConfiguration[]) : duckDbRam
+	);
+	const cheapNvmeConfigurations = $derived(
+		hasServerData ? (data.cheapNvmeConfigurations as ServerConfiguration[]) : duckDbNvme
+	);
+	const cheapSataConfigurations = $derived(
+		hasServerData ? (data.cheapSataConfigurations as ServerConfiguration[]) : duckDbSata
+	);
+
+	const loading = $derived(!hasServerData && (loadingDuckDb || !$db));
+
+	// Fallback to DuckDB if no server data (e.g., local dev without D1)
+	async function fetchFromDuckDB(database: AsyncDuckDB) {
+		loadingDuckDb = true;
+
+		await withDbConnections(database, async (conn1, conn2, conn3, conn4, conn5) => {
 			try {
-				[
-					cheapestConfigurations,
-					cheapDiskConfigurations,
-					cheapRamConfigurations,
-					cheapNvmeConfigurations,
-					cheapSataConfigurations
-				] = await Promise.all([
+				[duckDbCheapest, duckDbDisk, duckDbRam, duckDbNvme, duckDbSata] = await Promise.all([
 					getCheapestConfigurations(conn1),
 					getCheapestDiskConfigurations(conn2),
 					getCheapestRamConfigurations(conn3),
 					getCheapestNvmeConfigurations(conn4),
 					getCheapestSataConfigurations(conn5)
 				]);
-				queryTime = performance.now() - queryTime;
 			} catch (error) {
-				console.error('Error fetching data:', error);
+				console.error('Error fetching data from DuckDB:', error);
 			} finally {
-				loading = false;
+				loadingDuckDb = false;
 			}
 		});
 	}
 
 	$effect(() => {
-		if ($db) {
-			fetchData($db);
+		// Only fetch from DuckDB if we don't have server data
+		if (!hasServerData && $db) {
+			fetchFromDuckDB($db);
 		}
 	});
 </script>
