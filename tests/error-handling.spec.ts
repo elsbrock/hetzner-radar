@@ -1,4 +1,4 @@
-import test, { expect } from "./fixtures";
+import test, { expect, waitForAnalyzePageReady } from "./fixtures";
 
 test.describe("Error Handling", () => {
   test("should display 404 page for invalid routes", async ({ page }) => {
@@ -124,8 +124,7 @@ test.describe("Error Handling", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Perform rapid interactions
     const germanyFilter = page.locator('label:has-text("Germany")');
@@ -213,8 +212,7 @@ test.describe("Error Handling", () => {
     await page.goto("/analyze");
 
     // Wait for data to load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Get initial count
     const initialText = await page

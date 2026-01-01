@@ -1,12 +1,11 @@
-import test, { expect } from "./fixtures";
+import test, { expect, waitForAnalyzePageReady } from "./fixtures";
 
 test.describe("Advanced Filtering", () => {
   test("should combine multiple filters effectively", async ({ page }) => {
     await page.goto("/analyze");
 
     // Wait for initial data load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Get initial count
     const initialResultsText = await page
@@ -60,8 +59,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Apply a filter - click the actual toggle input to uncheck Germany
     const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
@@ -88,8 +86,7 @@ test.describe("Advanced Filtering", () => {
 
     // Refresh the page
     await page.reload();
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Check if filter persisted
     const afterReloadText = await page
@@ -116,8 +113,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Get initial checkbox states
     const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
@@ -156,8 +152,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Look for price controls (sliders, inputs, etc.)
     const priceControls = page
@@ -202,8 +197,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Apply very restrictive filters to get no results
     // Try to set a very low maximum price (like 1€) which should yield no results
@@ -261,8 +255,7 @@ test.describe("Advanced Filtering", () => {
     await page.goto("/analyze");
 
     // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Check for sorting controls
     const sortControls = page

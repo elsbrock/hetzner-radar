@@ -1,13 +1,12 @@
-import test, { expect } from "./fixtures";
+import test, { expect, waitForAnalyzePageReady } from "./fixtures";
 
 // Critical CI test suite - only the most essential tests for deployment confidence
 test.describe("Critical CI Tests", () => {
   test("analyze page loads with data", async ({ page }) => {
     await page.goto("/analyze");
 
-    // Wait for DuckDB to load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    // Wait for page to be fully ready
+    await waitForAnalyzePageReady(page);
 
     // Verify basic functionality
     await expect(page.getByTestId("server-filter")).toBeVisible();
@@ -20,10 +19,8 @@ test.describe("Critical CI Tests", () => {
   test("basic filtering works", async ({ page }) => {
     await page.goto("/analyze");
 
-    // Wait for initial load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    // Wait for page to be fully ready
+    await waitForAnalyzePageReady(page);
 
     // Get initial count
     const initialResultsText = await page
@@ -56,9 +53,8 @@ test.describe("Critical CI Tests", () => {
   test("server detail drawer opens", async ({ page }) => {
     await page.goto("/analyze");
 
-    // Wait for data load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    // Wait for page to be fully ready
+    await waitForAnalyzePageReady(page);
 
     // Click first server card
     await page.getByTestId("server-card").first().click();

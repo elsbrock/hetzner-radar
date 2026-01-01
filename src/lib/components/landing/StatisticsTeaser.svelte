@@ -1,11 +1,9 @@
 <script lang="ts">
 	import {
 		faChartLine,
-		faArrowRight,
 		faMemory,
 		faMicrochip,
-		faGlobe,
-		faHardDrive
+		faGlobe
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';

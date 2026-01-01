@@ -1,14 +1,14 @@
-import test, { expect } from "./fixtures";
+import test, { expect, waitForAnalyzePageReady } from "./fixtures";
 
 test("analyze: we have data", async ({ page }) => {
   await page.goto("/analyze");
 
-  // Wait for server-filter to be visible (it might be collapsed initially)
-  await page.getByTestId("server-filter").waitFor({ timeout: 30000 });
-  await expect(page.getByTestId("server-filter")).toBeVisible();
+  // Wait for page to be fully ready
+  await waitForAnalyzePageReady(page);
 
+  // Verify components are visible
+  await expect(page.getByTestId("server-filter")).toBeVisible();
   await expect(page.getByTestId("server-pricechart")).toBeVisible();
-  await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
   await expect(await page.getByTestId("server-card").count()).toBeGreaterThan(
     0,
   );
@@ -23,12 +23,8 @@ test("analyze: we have data", async ({ page }) => {
 test("analyze: filter functionality works", async ({ page }) => {
   await page.goto("/analyze");
 
-  // Wait for initial data load to complete
-  await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-
-  // Wait for the page to be fully loaded and stable
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(2000);
+  // Wait for page to be fully ready
+  await waitForAnalyzePageReady(page);
 
   // Get initial count of servers from the QuickStat component
   const initialResultsText = await page

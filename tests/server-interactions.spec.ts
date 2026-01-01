@@ -1,4 +1,4 @@
-import test, { expect } from "./fixtures";
+import test, { expect, waitForAnalyzePageReady } from "./fixtures";
 
 test.describe("Server Interactions", () => {
   test("should open server detail drawer when clicking server card", async ({
@@ -7,8 +7,7 @@ test.describe("Server Interactions", () => {
     await page.goto("/analyze");
 
     // Wait for initial data load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Verify server cards are visible
     const serverCards = page.getByTestId("server-card");
@@ -29,8 +28,7 @@ test.describe("Server Interactions", () => {
     await page.goto("/analyze");
 
     // Wait for data load and click first server
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
     await page.getByTestId("server-card").first().click();
 
     // Wait for drawer to open
@@ -55,8 +53,7 @@ test.describe("Server Interactions", () => {
     await page.goto("/analyze");
 
     // Open server detail drawer
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
     await page.getByTestId("server-card").first().click();
 
     // Wait for drawer to open
@@ -90,8 +87,7 @@ test.describe("Server Interactions", () => {
     await page.goto("/analyze");
 
     // Open drawer
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
     await page.getByTestId("server-card").first().click();
 
     // Wait for drawer to open
@@ -111,8 +107,7 @@ test.describe("Server Interactions", () => {
     await page.goto("/analyze");
 
     // Open drawer
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
     await page.getByTestId("server-card").first().click();
 
     // Wait for drawer to open
@@ -132,8 +127,7 @@ test.describe("Server Interactions", () => {
     await page.goto("/analyze");
 
     // Open drawer
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
     await page.getByTestId("server-card").first().click();
 
     // Wait for drawer to open

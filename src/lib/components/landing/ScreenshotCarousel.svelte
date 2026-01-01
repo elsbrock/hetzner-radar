@@ -145,7 +145,7 @@
 			<!-- Dots indicator -->
 			{#if screenshots.length > 1}
 				<div class="mt-4 flex justify-center gap-2">
-					{#each screenshots as _, i}
+					{#each screenshots as screenshot, i (screenshot.alt)}
 						<button
 							onclick={() => goTo(i)}
 							class="h-2 w-2 rounded-full transition-colors {i === currentIndex

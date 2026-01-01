@@ -104,15 +104,14 @@ test.describe("Authentication Flow", () => {
     // Check for login-related UI elements (use first to avoid strict mode violation)
     await expect(page.locator('a[href="/auth/login"]').first()).toBeVisible();
 
-    // Should not show authenticated-only links in main nav
-    const alertsLink = page.getByRole("link", { name: /alerts/i });
+    // Alerts nav link should NOT be visible for unauthenticated users
+    // (It's only shown when $session is truthy)
+    const alertsNavLink = page.getByTestId("nav-link-alerts");
+    await expect(alertsNavLink).not.toBeVisible();
 
-    // These might not be visible in main nav for unauth users
-    if (await alertsLink.isVisible()) {
-      // If visible, clicking should redirect to login
-      await alertsLink.click();
-      await expect(page).toHaveURL(/\/auth\/login/);
-    }
+    // Statistics link should be visible for unauthenticated users
+    const statisticsLink = page.getByTestId("nav-link-statistics");
+    await expect(statisticsLink).toBeVisible();
   });
 
   test("should handle session expiration gracefully", async ({ page }) => {

@@ -1,4 +1,4 @@
-import test, { expect } from "./fixtures";
+import test, { expect, waitForAnalyzePageReady } from "./fixtures";
 
 test.describe("Issue Reproduction", () => {
   test("Issue #237: Filter URL should apply and remain interactive", async ({
@@ -6,8 +6,7 @@ test.describe("Issue Reproduction", () => {
   }) => {
     // Step 1: Go to analyze page and apply a filter
     await page.goto("/analyze");
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Get initial count
     const initialCount = await page.getByTestId("server-card").count();
@@ -38,9 +37,8 @@ test.describe("Issue Reproduction", () => {
       consoleMessages.push({ type: msg.type(), text: msg.text() });
     });
 
-    // Wait for server cards to load (database needs to initialize)
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    // Wait for page to be fully ready
+    await waitForAnalyzePageReady(page);
 
     // Check for hydration errors
     const hydrationErrors = consoleMessages.filter(
@@ -74,7 +72,7 @@ test.describe("Issue Reproduction", () => {
       // The filter should have toggled - this proves the UI is interactive
       // We don't check count because with both datacenters unchecked, count will be 0
       expect(finlandChecked).toBe(false);
-    } catch (error) {
+    } catch {
       console.log("Finland filter: NOT CLICKABLE - FREEZE BUG! ✗");
       throw new Error("Filter freeze bug reproduced - UI became unclickable");
     }
@@ -83,8 +81,8 @@ test.describe("Issue Reproduction", () => {
   test("Issue #205: Filter for Intel Core i5-12500", async ({ page }) => {
     await page.goto("/analyze");
 
-    // Wait for data to load
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
+    // Wait for page to be fully ready
+    await waitForAnalyzePageReady(page);
 
     const initialCount = await page.getByTestId("server-card").count();
     console.log("Initial server cards:", initialCount);
@@ -150,8 +148,7 @@ test.describe("Issue Reproduction", () => {
   test("Filter serialization roundtrip works correctly", async ({ page }) => {
     // This tests the core of issues #237, #205, #240 - filter encode/decode
     await page.goto("/analyze");
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await waitForAnalyzePageReady(page);
 
     // Check initial state - the toggle inputs are siblings of the text labels
     const germanyRow = page.locator('div:has(> label:has-text("Germany"))');
@@ -204,9 +201,8 @@ test.describe("Issue Reproduction", () => {
     // Reload with the filter URL
     await page.goto(filterUrl);
 
-    // Wait for server cards to load after reload (database needs to initialize)
-    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    // Wait for page to be fully ready after reload
+    await waitForAnalyzePageReady(page);
 
     // Check checkbox states after reload
     const reloadGermany = await germanyInput.isChecked();
