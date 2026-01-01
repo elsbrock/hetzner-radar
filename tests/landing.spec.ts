@@ -20,18 +20,17 @@ test.describe("Landing Page Tests", () => {
   });
 
   test("should display the main heading", async () => {
-    // Target the h1 and check its text content, using \s to match any whitespace (incl. &nbsp;)
-    await expect(page.locator("h1")).toContainText(
-      /Stop\s+Overpaying\s+for\s+Hetzner\s+Auction\s+Servers/i,
-    );
+    // Target the h1 and check its text content
+    await expect(page.locator("h1")).toContainText(/Hetzner market data, visualized/i);
   });
 
   test("should display key introductory text", async () => {
     await expect(
-      page.getByText(/Stop.*Overpaying.*for Hetzner Auction Servers/),
+      page.getByText(/free, open-source tool/i),
     ).toBeVisible();
-    await expect(page.getByText(/instant notifications/i)).toBeVisible();
-    await expect(page.getByText(/free, open-source tool/i)).toBeVisible();
+    await expect(
+      page.getByText(/check cloud availability/i),
+    ).toBeVisible();
   });
 
   test("should display primary call-to-action buttons", async () => {
@@ -71,28 +70,21 @@ test.describe("Landing Page Tests", () => {
 
   test("should display key feature sections", async () => {
     await expect(
-      page.getByRole("heading", {
-        name: "Powerful Features for Smart Server Hunting",
-      }),
+      page.getByRole("heading", { name: "Features" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Historical Price Intelligence" }),
+      page.getByRole("heading", { name: "Dedicated Server Auctions" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Precision Filtering Engine" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Intelligent Alert System" }),
+      page.getByRole("heading", { name: "Cloud Server Availability" }),
     ).toBeVisible();
   });
 
-  test('should display "How It Works" section', async () => {
-    await expect(
-      page.getByRole("heading", { name: "Your Path to Server Success" }),
-    ).toBeVisible();
-    await expect(page.getByText("Filter & Discover")).toBeVisible();
-    await expect(page.getByText("Analyze Trends")).toBeVisible();
-    await expect(page.getByText("Set Smart Alerts")).toBeVisible();
+  test("should display feature details", async () => {
+    // Check for feature details in the cards
+    await expect(page.getByText(/Filter by CPU, RAM, storage/i)).toBeVisible();
+    await expect(page.getByText(/Historical price charts/i)).toBeVisible();
+    await expect(page.getByText(/Price alerts via email or Discord/i)).toBeVisible();
   });
 
   test("should display live metrics section", async () => {
@@ -132,8 +124,8 @@ test.describe("Landing Page Tests", () => {
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/");
-      // Target the h1 and check its text content, using \s to match any whitespace
-      await expect(page.locator("h1")).toContainText(/Stop\s+Overpaying/i);
+      // Target the h1 and check its text content
+      await expect(page.locator("h1")).toContainText(/Hetzner market data, visualized/i);
       // Check for the hamburger menu button using test ID
       await expect(page.getByTestId("nav-hamburger")).toBeVisible();
     });

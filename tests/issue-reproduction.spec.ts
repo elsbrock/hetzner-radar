@@ -31,7 +31,6 @@ test.describe("Issue Reproduction", () => {
 
     // Step 2: Open the same URL in fresh navigation (simulates sharing/bookmarking)
     await page.goto(filterUrl);
-    await page.waitForTimeout(3000);
 
     // Collect console messages for hydration errors
     const consoleMessages: { type: string; text: string }[] = [];
@@ -39,6 +38,8 @@ test.describe("Issue Reproduction", () => {
       consoleMessages.push({ type: msg.type(), text: msg.text() });
     });
 
+    // Wait for server cards to load (database needs to initialize)
+    await page.getByTestId("server-card").first().waitFor({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
 
     // Check for hydration errors
@@ -62,14 +63,18 @@ test.describe("Issue Reproduction", () => {
       await finlandToggle.click({ force: true, timeout: 5000 });
       console.log("Finland filter: CLICKABLE after URL load ✓");
 
-      // Wait and verify the count changed
+      // Wait for the filter change to take effect
+      await page.waitForLoadState("networkidle");
       await page.waitForTimeout(1000);
-      const afterClickCount = await page.getByTestId("server-card").count();
-      console.log("Cards after clicking Finland:", afterClickCount);
 
-      // The filter should still be interactive
-      expect(afterClickCount).not.toBe(afterUrlCount);
-    } catch {
+      // Verify the checkbox state changed (Finland should now be unchecked)
+      const finlandChecked = await finlandToggle.isChecked();
+      console.log("Finland checked after click:", finlandChecked);
+
+      // The filter should have toggled - this proves the UI is interactive
+      // We don't check count because with both datacenters unchecked, count will be 0
+      expect(finlandChecked).toBe(false);
+    } catch (error) {
       console.log("Finland filter: NOT CLICKABLE - FREEZE BUG! ✗");
       throw new Error("Filter freeze bug reproduced - UI became unclickable");
     }
