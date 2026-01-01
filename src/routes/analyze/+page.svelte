@@ -1071,7 +1071,7 @@ let isSmallScreen: boolean = $state(false);
 							<div class="relative">
 								{#if processingList}
 									<div class="pointer-events-none absolute inset-0 z-20 flex justify-center bg-white/60 pt-16 backdrop-blur-sm dark:bg-gray-900/60">
-										<div class="flex h-fit items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-white shadow-lg">
+										<div class="flex h-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
 											<Spinner size="4" />
 											<span class="text-sm">Updating...</span>
 										</div>
