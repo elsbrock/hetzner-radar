@@ -10,10 +10,8 @@
 	<div class="mx-auto max-w-4xl pb-8 text-gray-700 dark:text-gray-300">
 		<section class="mb-8">
 			<p>
-				Welcome to <strong>Server Radar</strong>! We value your privacy and are committed to
-				safeguarding your personal information. This Privacy Policy outlines how we collect, use,
-				and protect your data when you use our website. By accessing or using Server Radar, you
-				agree to the practices described in this policy.
+				This Privacy Policy outlines how <strong>Server Radar</strong> collects, uses, and protects
+				your data. By using Server Radar, you agree to the practices described in this policy.
 			</p>
 		</section>
 
@@ -266,10 +264,9 @@
 		</section>
 
 		<section class="mb-8">
-			<h2 class="mb-4 text-2xl font-semibold dark:text-gray-100">10. Contact Us</h2>
+			<h2 class="mb-4 text-2xl font-semibold dark:text-gray-100">10. Contact</h2>
 			<p>
-				If you have any questions, concerns, or suggestions about this Privacy Policy or our data
-				practices, we'd love to hear from you! Please reach out to us through our <A
+				For questions about this Privacy Policy or data practices, please use the <A
 					href="/contact"
 					class="text-blue-500 hover:underline dark:text-blue-400 dark:hover:underline"
 					>Contact Page</A

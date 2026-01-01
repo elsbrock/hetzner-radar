@@ -68,11 +68,10 @@
 
 <section id="how-it-works" class="mx-auto my-20 max-w-7xl">
 	<h2 class="mb-4 text-center text-4xl font-semibold text-gray-800 dark:text-gray-100">
-		Your Path to Server Success
+		How It Works
 	</h2>
 	<p class="mx-auto mb-12 text-center text-gray-600 md:w-2/3 dark:text-gray-400">
-		Finding the perfect Hetzner server at the best price has never been easier. Follow our proven
-		3-step process to become a smart server hunter.
+		Find servers matching your requirements, review historical pricing, and set up alerts.
 	</p>
 
 	<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -87,11 +86,11 @@
 					>
 						1
 					</div>
-					<h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Filter & Discover</h3>
+					<h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Filter</h3>
 				</div>
 				<p class="mb-4 text-gray-600 dark:text-gray-400">
-					Use our precision filtering engine to find exactly what you need. Specify CPU, RAM,
-					storage, and location requirements.
+					Specify your requirements: CPU type, RAM size, storage configuration, and datacenter
+					location.
 				</p>
 				<div
 					class="rounded border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800"
@@ -128,10 +127,10 @@
 					>
 						2
 					</div>
-					<h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Analyze Trends</h3>
+					<h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Compare</h3>
 				</div>
 				<p class="mb-4 text-gray-600 dark:text-gray-400">
-					Study historical price data and market patterns to identify the best buying opportunities.
+					Review price history to understand typical pricing for your desired configuration.
 				</p>
 				<div class="rounded border border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800">
 					<div class="h-28">
@@ -157,11 +156,11 @@
 					>
 						3
 					</div>
-					<h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Set Smart Alerts</h3>
+					<h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Set Alerts</h3>
 				</div>
 				<p class="mb-4 text-gray-600 dark:text-gray-400">
-					Configure auction price alerts and cloud availability notifications. We'll notify you
-					instantly when your conditions are met.
+					Create alerts for price thresholds or cloud availability. Get notified via email or
+					Discord.
 				</p>
 				<div class="space-y-3">
 					<div
@@ -196,7 +195,7 @@
 	<!-- Call to action -->
 	<div class="mt-12 text-center">
 		<Button href="/analyze" size="lg" color="primary">
-			Start Your Server Hunt
+			Browse Servers
 			<ArrowRightOutline class="ms-2 h-5 w-5" />
 		</Button>
 	</div>

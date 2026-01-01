@@ -49,16 +49,15 @@
 				your Discord server for auction and cloud availability updates.
 			</p>
 		</TimelineItem>
-		<TimelineItem title="Data Export & Statistics" date="Released on May 6th, 2025">
+		<TimelineItem title="Statistics & Sold Price Tracking" date="Released on May 6th, 2025">
 			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Export auction data and statistics for external analysis. Added sold auction price tracking
-				and enhanced statistics layout with quick stats overview.
+				Added sold auction price tracking and enhanced statistics page with quick stats overview,
+				price trends, and volume comparisons.
 			</p>
 		</TimelineItem>
-		<TimelineItem title="Enhanced Navigation & UI" date="Released on May 4th, 2025">
+		<TimelineItem title="Navigation & UI Improvements" date="Released on May 4th, 2025">
 			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Major navigation overhaul with fancy navbar design, loading indicators, and improved desktop
-				layout. Added server icon in footer for visual appeal.
+				Redesigned navigation with improved desktop layout and loading indicators.
 			</p>
 		</TimelineItem>
 		<TimelineItem title="Auction Alert Management" date="Released on May 2nd, 2025">
