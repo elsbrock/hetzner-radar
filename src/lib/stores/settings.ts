@@ -1,5 +1,11 @@
-import { writable } from "svelte/store";
-import { DEFAULT_CURRENCY, type CurrencyRate } from "$lib/currency";
+import { writable, derived } from "svelte/store";
+import {
+  DEFAULT_CURRENCY,
+  CURRENCY_CONFIG,
+  type CurrencyRate,
+  type CurrencyCode,
+  convertPrice,
+} from "$lib/currency";
 
 export type Settings = {
   vatSelection?: { countryCode: string };
@@ -78,3 +84,25 @@ export function createSettingsStore() {
 }
 
 export const settingsStore = createSettingsStore();
+
+// Derived store for current currency code
+export const currentCurrency = derived(settingsStore, ($settings) => {
+  return ($settings.currencySelection?.code ||
+    DEFAULT_CURRENCY) as CurrencyCode;
+});
+
+// Derived store for current currency symbol
+export const currencySymbol = derived(currentCurrency, ($currency) => {
+  return CURRENCY_CONFIG[$currency]?.symbol || "€";
+});
+
+// Helper function to format price with current currency
+export function formatPrice(
+  priceInEur: number,
+  currency: CurrencyCode,
+  decimals: number = 2,
+): string {
+  const symbol = CURRENCY_CONFIG[currency]?.symbol || "€";
+  const converted = convertPrice(priceInEur, "EUR", currency);
+  return `${converted.toFixed(decimals)} ${symbol}`;
+}

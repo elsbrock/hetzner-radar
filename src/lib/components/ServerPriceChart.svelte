@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ServerPriceStat } from '$lib/api/frontend/filter';
-	import { settingsStore } from '$lib/stores/settings';
+	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
 	import { Chart, registerables } from 'chart.js';
 	import 'chartjs-adapter-date-fns';
 	import { Spinner } from 'flowbite-svelte';
@@ -55,20 +56,22 @@
 	);
 
 	// Price formatting function for tooltips and axes
-	function formatPrice(
+	function formatChartPrice(
 		value: number,
 		unit: string,
 		decimalPlaces: number, // Made required
 		includeSuffix: boolean = false // Moved includeSuffix after decimalPlaces for clarity
 	): string {
+		const symbol = $currencySymbol;
+		const converted = convertPrice(value, 'EUR', $currentCurrency);
 		let basePrice: string;
 		if (unit === 'perHour') {
 			// Calculate hourly price first, then format
-			const hourlyValue = value / (30 * 24);
-			basePrice = hourlyValue.toFixed(decimalPlaces) + ' €/h';
+			const hourlyValue = converted / (30 * 24);
+			basePrice = hourlyValue.toFixed(decimalPlaces) + ` ${symbol}/h`;
 		} else {
 			// Format monthly price directly
-			basePrice = value.toFixed(decimalPlaces) + ' €/mo';
+			basePrice = converted.toFixed(decimalPlaces) + ` ${symbol}/mo`;
 		}
 		return includeSuffix ? `${basePrice} ${vatSuffix}` : basePrice;
 	}
@@ -228,7 +231,7 @@
 					display: legendShow, // Control visibility
 					title: {
 						display: legendShow,
-						text: 'Price (€)',
+						text: `Price (${$currencySymbol})`,
 						color: tickColor // Use tickColor for both modes
 					},
 					ticks: {
@@ -238,8 +241,8 @@
 						callback: function (value) {
 							// Determine decimal places based on timeUnitPrice for ticks
 							const tickDecimalPlaces = timeUnitPrice === 'perHour' ? 4 : 0;
-							// Use the formatPrice function without the VAT suffix for the axis
-							return formatPrice(Number(value), timeUnitPrice, tickDecimalPlaces, false);
+							// Use the formatChartPrice function without the VAT suffix for the axis
+							return formatChartPrice(Number(value), timeUnitPrice, tickDecimalPlaces, false);
 						},
 						color: tickColor // Set tick color based on theme
 					},
@@ -295,8 +298,8 @@
 								if (context.dataset.label === 'Price') {
 									// Determine decimal places based on timeUnitPrice for tooltips
 									const tooltipDecimalPlaces = timeUnitPrice === 'perHour' ? 4 : 2;
-									// Use formatPrice with VAT suffix for tooltip
-									label += formatPrice(value, timeUnitPrice, tooltipDecimalPlaces, true);
+									// Use formatChartPrice with VAT suffix for tooltip
+									label += formatChartPrice(value, timeUnitPrice, tooltipDecimalPlaces, true);
 								} else if (context.dataset.label === 'Volume') {
 									label += value.toFixed(0);
 								} else {

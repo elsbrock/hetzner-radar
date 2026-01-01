@@ -20,6 +20,8 @@
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 	import { addToast } from '$lib/stores/toast';
+	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
 
 	dayjs.extend(relativeTime);
 	dayjs.extend(utc);
@@ -172,9 +174,10 @@
 		goto(url.pathname, { replaceState: true, keepFocus: true });
 	}
 
-	// Calculate price with VAT
+	// Calculate price with VAT and currency conversion
 	let displayPrice = $derived((auction: AuctionMatch) => {
-		return ((auction.price + HETZNER_IPV4_COST_CENTS / 100) * (1 + vatRate / 100)).toFixed(2);
+		const priceWithVat = (auction.price + HETZNER_IPV4_COST_CENTS / 100) * (1 + vatRate / 100);
+		return convertPrice(priceWithVat, 'EUR', $currentCurrency).toFixed(2);
 	});
 </script>
 
@@ -251,7 +254,7 @@
 								</div>
 							</TableBodyCell>
 							<TableBodyCell class="px-2 py-4 text-right">
-								<div class="font-medium">{displayPrice(auction)} €</div>
+								<div class="font-medium">{displayPrice(auction)} {$currencySymbol}</div>
 								<div class="text-xs text-gray-500">
 									{auction.datacenter}, {auction.location}
 								</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ServerConfiguration } from '$lib/api/frontend/filter';
 	import { getFormattedDiskSize } from '$lib/disksize';
+	import { currencySymbol } from '$lib/stores/settings';
 	import { Badge } from 'flowbite-svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome'; // Use named import
 	import { faHardDrive, faMemory, faSdCard } from '@fortawesome/free-solid-svg-icons';
@@ -9,7 +10,7 @@
 
 	interface _$Props {
 		config: ServerConfiguration;
-		displayPrice: number; // Final price including VAT (needed for unit price calculation)
+		displayPrice: number; // Final price including VAT and currency conversion (needed for unit price calculation)
 		showPricePerUnit?: boolean;
 		class?: string;
 	}
@@ -77,7 +78,7 @@
 			<!-- Col 4: Price -->
 			{#if showPricePerUnit && pricePerGbRam > 0}
 				<span class="text-xs text-gray-500 dark:text-gray-400"
-					>({pricePerGbRam.toFixed(2)} €/GB)</span
+					>({pricePerGbRam.toFixed(2)} {$currencySymbol}/GB)</span
 				>
 			{/if}
 		</div>
@@ -106,7 +107,7 @@
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbNvme > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
-						>({pricePerTbNvme.toFixed(2)} €/TB)</span
+						>({pricePerTbNvme.toFixed(2)} {$currencySymbol}/TB)</span
 					>
 				{/if}
 			</div>
@@ -136,7 +137,7 @@
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbSata > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
-						>({pricePerTbSata.toFixed(2)} €/TB)</span
+						>({pricePerTbSata.toFixed(2)} {$currencySymbol}/TB)</span
 					>
 				{/if}
 			</div>
@@ -166,7 +167,7 @@
 				<!-- Col 4: Price -->
 				{#if showPricePerUnit && pricePerTbHdd > 0}
 					<span class="text-xs text-gray-500 dark:text-gray-400"
-						>({pricePerTbHdd.toFixed(2)} €/TB)</span
+						>({pricePerTbHdd.toFixed(2)} {$currencySymbol}/TB)</span
 					>
 				{/if}
 			</div>

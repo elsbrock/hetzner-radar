@@ -9,6 +9,7 @@ import {
 import { getUser } from "$lib/api/backend/user";
 import { getCloudAlertsForUser } from "$lib/api/backend/cloud-alerts";
 import { MAX_PRICE, MIN_PRICE } from "$lib/constants";
+import { convertPrice, type CurrencyCode } from "$lib/currency";
 import {
   error,
   fail,
@@ -103,11 +104,16 @@ export const actions: Actions = {
     const formData = await event.request.formData();
     const name = formData.get("name") as string;
     const filter = formData.get("filter") as string;
-    const price = formData.get("price") as string;
+    const priceInput = formData.get("price") as string;
+    const currency = (formData.get("currency") as CurrencyCode) || "EUR";
     const vatRateStr = formData.get("vatRate") as string;
     const emailNotifications = formData.get("emailNotifications") === "true";
     const discordNotifications =
       formData.get("discordNotifications") === "true";
+
+    // Convert price to EUR if entered in different currency
+    const priceInEur = convertPrice(Number(priceInput), currency, "EUR");
+    const price = Math.round(priceInEur).toString();
 
     // Validate that at least one notification method is selected
     if (!emailNotifications && !discordNotifications) {
@@ -171,11 +177,16 @@ export const actions: Actions = {
     }
     const formData = await event.request.formData();
     const name = formData.get("name") as string;
-    const price = formData.get("price") as string;
+    const priceInput = formData.get("price") as string;
+    const currency = (formData.get("currency") as CurrencyCode) || "EUR";
     const alertId = formData.get("alertId") as string;
     const emailNotifications = formData.get("emailNotifications") === "true";
     const discordNotifications =
       formData.get("discordNotifications") === "true";
+
+    // Convert price to EUR if entered in different currency
+    const priceInEur = convertPrice(Number(priceInput), currency, "EUR");
+    const price = Math.round(priceInEur).toString();
 
     // Validate that at least one notification method is selected
     if (!emailNotifications && !discordNotifications) {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type ServerConfiguration } from '$lib/api/frontend/filter';
-	import { settingsStore } from '$lib/stores/settings';
+	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import { Card, Indicator, Spinner } from 'flowbite-svelte';
@@ -40,7 +41,8 @@
 		countryCode && countryCode in vatOptions ? (countryCode as VatCountryCode) : 'NET'
 	);
 	const selectedOption = $derived(vatOptions[validCountryCode]);
-	const displayPrice = $derived((config.price ?? 0) * (1 + selectedOption.rate));
+	const priceWithVat = $derived((config.price ?? 0) * (1 + selectedOption.rate));
+	const displayPrice = $derived(convertPrice(priceWithVat, 'EUR', $currentCurrency));
 	const vatSuffix = $derived(
 		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
 	);
@@ -103,9 +105,9 @@
 				<span>
 					<span class="text-xl font-bold text-gray-900 dark:text-white">
 						{#if timeUnitPrice === 'perMonth'}
-							{displayPrice.toFixed(2)} €
+							{displayPrice.toFixed(2)} {$currencySymbol}
 						{:else if timeUnitPrice === 'perHour'}
-							{(displayPrice / (30 * 24)).toFixed(4)} €
+							{(displayPrice / (30 * 24)).toFixed(4)} {$currencySymbol}
 						{/if}
 					</span>
 					<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>

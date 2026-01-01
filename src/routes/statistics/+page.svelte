@@ -27,6 +27,8 @@
 		faServer
 	} from '@fortawesome/free-solid-svg-icons';
 	import { db } from '../../stores/db';
+	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
 
 	let _loading = $state(true);
 
@@ -270,7 +272,7 @@
 			<QuickStat
 				icon={faServer}
 				title="Lowest Price"
-				value={lowestServerPrice !== null ? `€${lowestServerPrice.toFixed(2)}` : null}
+				value={lowestServerPrice !== null ? `${$currencySymbol}${convertPrice(lowestServerPrice, 'EUR', $currentCurrency).toFixed(2)}` : null}
 				subtitle="Cheapest server available"
 			/>
 

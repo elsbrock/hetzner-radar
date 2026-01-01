@@ -15,6 +15,8 @@
 	import type { CloudAvailabilityAlert } from '$lib/api/backend/cloud-alerts';
 	import { page } from '$app/stores';
 	import type { PriceAlert } from '$lib/api/backend/alerts';
+	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
 
 	type CloudStatusSummary = {
 		serverTypes?: Array<{
@@ -397,7 +399,7 @@
 												>
 												<div>
 													<span class="text-lg font-semibold text-gray-900 dark:text-white">
-														€{alert.price.toFixed(2)}
+														{$currencySymbol}{convertPrice(alert.price, 'EUR', $currentCurrency).toFixed(2)}
 													</span>
 													<span class="block text-xs text-gray-500 dark:text-gray-400">
 														(incl. {alert.vat_rate}% VAT)
@@ -502,7 +504,7 @@
 													>Target</span
 												>
 												<span class="text-lg font-semibold text-gray-900 dark:text-white">
-													€{alert.price.toFixed(2)}
+													{$currencySymbol}{convertPrice(alert.price, 'EUR', $currentCurrency).toFixed(2)}
 												</span>
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
@@ -510,7 +512,7 @@
 													>Triggered At</span
 												>
 												<span class="text-lg font-semibold text-green-600 dark:text-green-400">
-													€{alert.trigger_price.toFixed(2)}
+													{$currencySymbol}{convertPrice(alert.trigger_price, 'EUR', $currentCurrency).toFixed(2)}
 												</span>
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">

@@ -6,7 +6,7 @@
 		faChartSimple,
 		faCircleInfo,
 		faCloud,
-		faCog,
+		faUser,
 		faHouse,
 		faKey,
 		faRightFromBracket,
@@ -16,7 +16,6 @@
 	import {
 		Badge,
 		Button,
-		DarkMode,
 		Navbar,
 		NavBrand,
 		NavHamburger,
@@ -160,10 +159,10 @@
 			<a
 				href={resolve('/settings')}
 				data-testid="nav-settings-desktop"
-				class="mr-2 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+				class="mr-2 flex aspect-square h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
 				aria-label="Settings"
 			>
-				<FontAwesomeIcon class="h-5 w-5" icon={faCog} />
+				<FontAwesomeIcon class="h-4 w-4" icon={faUser} />
 			</a>
 
 			<!-- Desktop Sign Out -->
@@ -198,12 +197,8 @@
 			</Button>
 		{/if}
 
-		<div class="flex items-center gap-2">
-			<!-- Settings popup -->
-			<SettingsPopup />
-			<!-- Use DarkMode component directly -->
-			<DarkMode />
-		</div>
+		<!-- Settings popup (includes dark mode) -->
+		<SettingsPopup />
 	</div>
 
 	<div class="flex md:order-2 lg:hidden">
@@ -315,7 +310,7 @@
 				data-testid="nav-link-settings"
 				class="flex items-center !bg-transparent md:hidden"
 			>
-				<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faCog} />
+				<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faUser} />
 				<span
 					class="text-base text-black dark:text-gray-300 {activeUrl === '/settings'
 						? 'border-primary-500 border-b-2'
@@ -344,12 +339,8 @@
 						<FontAwesomeIcon class="me-2 h-4 w-4" icon={faRightFromBracket} /> Sign Out
 					</Button>
 				</form>
-				<div class="flex items-center gap-2">
-					<!-- Settings popup -->
-					<SettingsPopup />
-					<!-- Use DarkMode component directly -->
-					<DarkMode />
-				</div>
+				<!-- Settings popup (includes dark mode) -->
+				<SettingsPopup />
 			</div>
 		{:else}
 			<!-- Mobile only container for controls -->
@@ -364,12 +355,8 @@
 				>
 					<FontAwesomeIcon class="me-2 h-4 w-4" icon={faKey} /> Sign In
 				</Button>
-				<div class="flex items-center gap-2">
-					<!-- Settings popup -->
-					<SettingsPopup />
-					<!-- Use DarkMode component directly -->
-					<DarkMode />
-				</div>
+				<!-- Settings popup (includes dark mode) -->
+				<SettingsPopup />
 			</div>
 		{/if}
 		<!-- Removed separate mobile DarkMode NavLi -->

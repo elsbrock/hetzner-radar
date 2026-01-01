@@ -6,7 +6,9 @@
 	import { filter } from '$lib/stores/filter';
 	import { session } from '$lib/stores/session';
 	import { addToast } from '$lib/stores/toast';
-	import { settingsStore } from '$lib/stores/settings';
+	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
+	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { A, Alert, Button, Input, Label, Modal, Spinner, Checkbox } from 'flowbite-svelte';
 	import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 	import { faDiscord } from '@fortawesome/free-brands-svg-icons';
@@ -152,7 +154,7 @@
 
 			{#if !alert}
 				<p class="text-sm text-gray-600 dark:text-gray-300">
-					Get notified when the price of this configuration (including the standard €1.70 net IPv4
+					Get notified when the price of this configuration (including the standard {$currencySymbol}{convertPrice(HETZNER_IPV4_COST_CENTS / 100, 'EUR', $currentCurrency).toFixed(2)} net IPv4
 					cost) drops below your desired monthly price.
 				</p>
 				<p class="text-sm text-gray-600 dark:text-gray-300">
@@ -171,6 +173,7 @@
 
 			<input type="hidden" name="alertId" value={alert?.id} />
 			<input type="hidden" name="filter" value={serializedFilter} />
+			<input type="hidden" name="currency" value={$currentCurrency} />
 			{#if !alert}
 				<input type="hidden" name="vatRate" value={$settingsStore.currentVatRate ?? 0} />
 			{/if}
@@ -193,7 +196,7 @@
 			<!-- Price Input -->
 			<Label class="flex flex-col space-y-1">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-					>Desired Monthly Price (EUR)</span
+					>Desired Monthly Price ({$currentCurrency})</span
 				>
 				<Input
 					type="tel"
@@ -202,7 +205,7 @@
 					required
 					min="20"
 					max="1000"
-					value={alert?.price}
+					value={alert?.price ? convertPrice(alert.price, 'EUR', $currentCurrency).toFixed(2) : ''}
 					class="rounded-md border px-3 py-2 focus:ring-1 focus:ring-orange-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 				/>
 			</Label>

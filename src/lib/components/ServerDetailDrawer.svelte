@@ -7,7 +7,8 @@
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { convertServerConfigurationToFilter, getHetznerLink } from '$lib/filter';
 	import { filter } from '$lib/stores/filter';
-	import { settingsStore } from '$lib/stores/settings';
+	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
+	import { convertPrice } from '$lib/currency';
 	import {
 		faArrowDown,
 		faChartLine,
@@ -115,7 +116,8 @@
 	let selectedOption = $derived(
 		config ? vatOptions[validCountryCode as VatCountryCode] : vatOptions['NET']
 	);
-	let displayPrice = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
+	let priceWithVat = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
+	let displayPrice = $derived(convertPrice(priceWithVat, 'EUR', $currentCurrency));
 	let vatSuffix = $derived(
 		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
 	);
@@ -253,7 +255,7 @@
 					/>
 				</div>
 				<span class="text-lg font-bold text-gray-900 dark:text-white">
-					{displayPrice.toFixed(2)} €
+					{displayPrice.toFixed(2)} {$currencySymbol}
 				</span>
 				<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>
 				<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
@@ -284,7 +286,7 @@
 						<div>
 							<div class="text-xs text-gray-500 dark:text-gray-400">Lowest Price</div>
 							<div class="font-semibold text-gray-900 dark:text-white">
-								{lowestPrice !== null ? `${(lowestPrice * (1 + selectedOption.rate)).toFixed(2)} €` : '—'}
+								{lowestPrice !== null ? `${convertPrice(lowestPrice * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(2)} ${$currencySymbol}` : '—'}
 							</div>
 							{#if lowestPriceDate}
 								<div class="text-xs text-gray-400 dark:text-gray-500">
@@ -368,10 +370,12 @@
 								</div>
 							</TableBodyCell>
 							<TableBodyCell class="px-2 py-4 text-right"
-								>{(
+								>{convertPrice(
 									(auction.lastPrice + HETZNER_IPV4_COST_CENTS / 100) *
-									(1 + selectedOption.rate)
-								).toFixed(2)} €</TableBodyCell
+									(1 + selectedOption.rate),
+									'EUR',
+									$currentCurrency
+								).toFixed(2)} {$currencySymbol}</TableBodyCell
 							>
 							<TableBodyCell class="px-2 py-4 text-right">
 								<form
