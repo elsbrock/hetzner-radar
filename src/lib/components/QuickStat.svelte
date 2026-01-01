@@ -9,6 +9,7 @@
 		subtitle?: string;
 		valueClass?: string;
 		size?: 'sm' | 'md' | 'lg';
+		loading?: boolean;
 		'data-testid'?: string;
 	}
 
@@ -19,6 +20,7 @@
 		subtitle = '',
 		valueClass = 'text-gray-900 dark:text-white',
 		size = 'md',
+		loading = false,
 		'data-testid': testId
 	} = $props();
 
@@ -50,7 +52,7 @@
 			{title}
 		</h3>
 	</div>
-	{#if value !== null}
+	{#if value !== null && !loading}
 		<p
 			class="{size === 'sm'
 				? 'text-lg'

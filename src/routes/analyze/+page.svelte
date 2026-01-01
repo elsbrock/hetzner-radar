@@ -959,6 +959,7 @@ let isSmallScreen: boolean = $state(false);
 							value={totalResultsValue}
 							subtitle="Available server configurations"
 							size="sm"
+							loading={processingList}
 						/>
 
 						<!-- Available Auctions -->
@@ -997,6 +998,7 @@ let isSmallScreen: boolean = $state(false);
 							subtitle="Most affordable option"
 							valueClass="text-green-600 dark:text-green-400"
 							size="sm"
+							loading={processingList}
 						/>
 
 						<!-- Average Price -->
@@ -1006,6 +1008,7 @@ let isSmallScreen: boolean = $state(false);
 							value={averagePriceFormatted}
 							subtitle="Across all configurations"
 							size="sm"
+							loading={processingList}
 						/>
 
 						<!-- Price Range -->
@@ -1015,6 +1018,7 @@ let isSmallScreen: boolean = $state(false);
 							value={priceRangeFormatted}
 							subtitle="Highest minus lowest price"
 							size="sm"
+							loading={processingList}
 						/>
 					</div>
 
