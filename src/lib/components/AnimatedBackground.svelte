@@ -8,11 +8,11 @@
 >
 	<!-- Subtle gradient overlay -->
 	<div
-		class="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-amber-50/30 dark:from-orange-950/20 dark:via-transparent dark:to-amber-950/10"
+		class="absolute inset-0 bg-linear-to-br from-orange-50/50 via-transparent to-amber-50/30 dark:from-orange-950/20 dark:via-transparent dark:to-amber-950/10"
 	></div>
 
 	<!-- Secondary accent gradient -->
 	<div
-		class="absolute inset-0 bg-gradient-to-tl from-transparent via-transparent to-orange-100/20 dark:to-orange-900/10"
+		class="absolute inset-0 bg-linear-to-tl from-transparent via-transparent to-orange-100/20 dark:to-orange-900/10"
 	></div>
 </div>

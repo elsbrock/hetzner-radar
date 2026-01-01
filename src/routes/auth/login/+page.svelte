@@ -158,7 +158,7 @@
 			{currentStep}
 			steps={stepValues}
 			size="h-1.5"
-			class="[&>li>div]:dark:bg-gray-700"
+			class="dark:[&>li>div]:bg-gray-700"
 		/>
 
 		{#if currentStep === 1}
@@ -293,7 +293,7 @@
 							class="block size-[40px] rounded-md border-gray-200 text-center text-lg caret-transparent shadow-inner focus:border-0
                                  focus:ring-1
                                  focus:ring-orange-500
-                                 focus:outline-none disabled:pointer-events-none disabled:opacity-50 md:text-3xl
+                                 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 md:text-3xl
                                  lg:size-[55px] dark:border-gray-600
                                  dark:bg-gray-700 dark:text-neutral-400 dark:placeholder-neutral-500
                                 dark:focus:ring-neutral-600 dark:focus:ring-orange-400

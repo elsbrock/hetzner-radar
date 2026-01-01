@@ -73,7 +73,7 @@
 <div class={className}>
 	<!-- Hardware Details Grid -->
 	<div
-		class="mb-3 grid grid-cols-[10px,40px,70px,80px] gap-x-3 gap-y-1 leading-tight font-normal text-gray-700 dark:text-gray-400"
+		class="mb-3 grid grid-cols-[10px_40px_70px_80px] gap-x-3 gap-y-1 leading-tight font-normal text-gray-700 dark:text-gray-400"
 	>
 		<!-- RAM -->
 		<div class="flex items-start justify-center text-sm">

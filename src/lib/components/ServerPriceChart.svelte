@@ -354,7 +354,7 @@
 
 <div class="relative h-full w-full" data-testid="server-pricechart">
 	<!-- Apply blur/pointer events based on loading or no results -->
-	<div class="h-full w-full {loading || noResults ? 'pointer-events-none blur-sm' : ''}">
+	<div class="h-full w-full {loading || noResults ? 'pointer-events-none blur-xs' : ''}">
 		<canvas bind:this={canvasElement}></canvas>
 	</div>
 

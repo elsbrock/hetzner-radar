@@ -1,6 +1,7 @@
 /**
  * Database mock fixtures and utilities
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import type { DatabaseStats } from '../../auction-db-service';
 

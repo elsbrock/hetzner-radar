@@ -89,7 +89,7 @@
 			<div class="space-y-6">
 				<!-- Account Information Card -->
 				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div class="mb-4 flex items-center">
 						<FontAwesomeIcon icon={faUser} class="mr-2 h-5 w-5 text-gray-500" />
@@ -109,7 +109,7 @@
 
 				<!-- Notification Preferences Card -->
 				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div class="mb-4 flex items-center">
 						<FontAwesomeIcon icon={faBell} class="mr-2 h-5 w-5 text-gray-500" />
@@ -169,9 +169,9 @@
 									icon={faEnvelope}
 									class="mr-2 h-4 w-4 text-gray-600 dark:text-gray-300"
 								/>
-								<Label class="!mb-0 font-medium">Email Notifications</Label>
+								<Label class="mb-0! font-medium">Email Notifications</Label>
 								<span
-									class="ml-2 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+									class="ml-2 rounded-sm bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
 								>
 									Always enabled
 								</span>
@@ -190,10 +190,10 @@
 							/>
 							<div class="flex items-center">
 								<FontAwesomeIcon icon={faDiscord} class="mr-2 h-4 w-4 text-indigo-500" />
-								<Label class="!mb-0 font-medium">Discord Notifications</Label>
+								<Label class="mb-0! font-medium">Discord Notifications</Label>
 								{#if !discordWebhookUrl}
 									<span
-										class="ml-2 rounded bg-amber-100 px-2 py-1 text-xs text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+										class="ml-2 rounded-sm bg-amber-100 px-2 py-1 text-xs text-amber-700 dark:bg-amber-900 dark:text-amber-300"
 									>
 										Setup required
 									</span>
@@ -212,7 +212,7 @@
 
 				<!-- Discord Configuration Card -->
 				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div class="mb-4 flex items-center">
 						<FontAwesomeIcon icon={faDiscord} class="mr-2 h-5 w-5 text-indigo-500" />
@@ -315,7 +315,7 @@
 
 				<!-- Data Export Card -->
 				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div class="mb-4 flex items-center">
 						<FontAwesomeIcon icon={faDownload} class="mr-2 h-5 w-5 text-blue-500" />
@@ -335,7 +335,7 @@
 
 				<!-- Danger Zone Card -->
 				<div
-					class="rounded-lg border border-red-200 bg-white p-6 shadow-sm dark:border-red-700 dark:bg-gray-800"
+					class="rounded-lg border border-red-200 bg-white p-6 shadow-xs dark:border-red-700 dark:bg-gray-800"
 				>
 					<div class="mb-4 flex items-center">
 						<FontAwesomeIcon icon={faTrash} class="mr-2 h-5 w-5 text-red-500" />

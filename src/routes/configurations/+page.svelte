@@ -374,7 +374,7 @@
 			Dive into our server configurations and find the perfect setup for your projects.
 		</p>
 		<div class="flex justify-center space-x-4">
-			<Button color="primary" href="/analyze" class="px-8 py-3 text-lg shadow-sm">Analyze</Button>
+			<Button color="primary" href="/analyze" class="px-8 py-3 text-lg shadow-xs">Analyze</Button>
 		</div>
 	</section>
 </main>

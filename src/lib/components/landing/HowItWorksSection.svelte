@@ -78,7 +78,7 @@
 		<!-- Step 1 -->
 		<div class="relative">
 			<div
-				class="h-full rounded-lg border border-gray-100 bg-gradient-to-br from-orange-50 to-orange-100 p-6 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
+				class="h-full rounded-lg border border-gray-100 bg-linear-to-br from-orange-50 to-orange-100 p-6 shadow-xs dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
 			>
 				<div class="mb-4 flex items-center">
 					<div
@@ -93,7 +93,7 @@
 					location.
 				</p>
 				<div
-					class="rounded border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800"
+					class="rounded-sm border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800"
 				>
 					<div class="flex flex-wrap gap-1.5">
 						<span
@@ -119,7 +119,7 @@
 		<!-- Step 2 -->
 		<div class="relative">
 			<div
-				class="h-full rounded-lg border border-gray-100 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
+				class="h-full rounded-lg border border-gray-100 bg-linear-to-br from-purple-50 to-purple-100 p-6 shadow-xs dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
 			>
 				<div class="mb-4 flex items-center">
 					<div
@@ -132,7 +132,7 @@
 				<p class="mb-4 text-gray-600 dark:text-gray-400">
 					Review price history to understand typical pricing for your desired configuration.
 				</p>
-				<div class="rounded border border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800">
+				<div class="rounded-sm border border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800">
 					<div class="h-28">
 						<ServerPriceChart
 							data={samplePriceData}
@@ -148,7 +148,7 @@
 		<!-- Step 3 -->
 		<div class="relative">
 			<div
-				class="h-full rounded-lg border border-gray-100 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
+				class="h-full rounded-lg border border-gray-100 bg-linear-to-br from-blue-50 to-blue-100 p-6 shadow-xs dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
 			>
 				<div class="mb-4 flex items-center">
 					<div
@@ -166,26 +166,26 @@
 					<div
 						class="flex items-center gap-2 rounded-lg border border-l-3 border-orange-200 border-l-orange-500 bg-orange-50 p-2 dark:border-orange-700 dark:bg-orange-900/20"
 					>
-						<FontAwesomeIcon icon={faGavel} class="h-3 w-3 flex-shrink-0 text-orange-500" />
+						<FontAwesomeIcon icon={faGavel} class="h-3 w-3 shrink-0 text-orange-500" />
 						<div class="min-w-0 flex-1">
 							<div class="truncate text-xs font-medium text-gray-800 dark:text-gray-200">
 								Auction Alert
 							</div>
 							<div class="truncate text-xs text-gray-600 dark:text-gray-400">Target: ≤ €25</div>
 						</div>
-						<div class="h-2 w-2 flex-shrink-0 rounded-full bg-green-500"></div>
+						<div class="h-2 w-2 shrink-0 rounded-full bg-green-500"></div>
 					</div>
 					<div
 						class="flex items-center gap-2 rounded-lg border border-l-3 border-blue-200 border-l-blue-500 bg-blue-50 p-2 dark:border-blue-700 dark:bg-blue-900/20"
 					>
-						<FontAwesomeIcon icon={faClock} class="h-3 w-3 flex-shrink-0 text-blue-500" />
+						<FontAwesomeIcon icon={faClock} class="h-3 w-3 shrink-0 text-blue-500" />
 						<div class="min-w-0 flex-1">
 							<div class="truncate text-xs font-medium text-gray-800 dark:text-gray-200">
 								Cloud Alert
 							</div>
 							<div class="truncate text-xs text-gray-600 dark:text-gray-400">CAX41 in FSN</div>
 						</div>
-						<div class="h-2 w-2 flex-shrink-0 rounded-full bg-yellow-500"></div>
+						<div class="h-2 w-2 shrink-0 rounded-full bg-yellow-500"></div>
 					</div>
 				</div>
 			</div>

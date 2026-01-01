@@ -316,7 +316,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<Button
 				color="alternative"
 				size="sm"
-				class="!p-2"
+				class="p-2!"
 				onclick={resetFilter}
 				aria-label="Reset filter to defaults"
 			>
@@ -325,18 +325,16 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<Button
 				color="alternative"
 				size="sm"
-				class="!p-2"
+				class="p-2!"
 				onclick={() => (isFilterCollapsed = !isFilterCollapsed)}
 				aria-label={isFilterCollapsed ? 'Expand filter' : 'Collapse filter'}
 			>
 				{#if isFilterCollapsed}
-					<FontAwesomeIcon class="block sm:hidden" icon={faChevronDown} />
-					<!-- Corrected: Down when collapsed -->
-					<FontAwesomeIcon class="hidden sm:block" icon={faChevronRight} />
+					<span class="block sm:hidden"><FontAwesomeIcon icon={faChevronDown} /></span>
+					<span class="hidden sm:block"><FontAwesomeIcon icon={faChevronRight} /></span>
 				{:else}
-					<FontAwesomeIcon class="block sm:hidden" icon={faChevronUp} />
-					<!-- Corrected: Up when expanded -->
-					<FontAwesomeIcon class="hidden sm:block" icon={faChevronLeft} />
+					<span class="block sm:hidden"><FontAwesomeIcon icon={faChevronUp} /></span>
+					<span class="hidden sm:block"><FontAwesomeIcon icon={faChevronLeft} /></span>
 				{/if}
 			</Button>
 		</div>
@@ -348,7 +346,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<Button
 				color="alternative"
 				size="sm"
-				class="mb-4 !p-2"
+				class="mb-4 p-2!"
 				onclick={() => (isFilterCollapsed = !isFilterCollapsed)}
 				aria-label="Expand filter"
 			>

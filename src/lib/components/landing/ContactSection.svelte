@@ -17,7 +17,7 @@
 	<div class="flex justify-center space-x-4">
 		<Button
 			href="/contact"
-			class="text-md flex items-center px-6 py-3 shadow-sm"
+			class="text-md flex items-center px-6 py-3 shadow-xs"
 			color="alternative"
 		>
 			<FontAwesomeIcon icon={faEnvelope} class="mr-2" />
@@ -25,7 +25,7 @@
 		</Button>
 		<Button
 			href="https://github.com/elsbrock/hetzner-radar/issues"
-			class="text-md flex items-center px-6 py-3 shadow-sm"
+			class="text-md flex items-center px-6 py-3 shadow-xs"
 			color="alternative"
 		>
 			<FontAwesomeIcon icon={faBug} class="mr-2" />

@@ -18,7 +18,7 @@
 		<div class="mb-6 ml-4 md:mb-0 md:max-w-xl">
 			<div class="flex flex-col">
 				<a href={resolve('/')} class="flex items-center">
-					<div style="width: 18px; height: 18px" class="mr-3 flex-shrink-0">
+					<div style="width: 18px; height: 18px" class="mr-3 shrink-0">
 						<Radar />
 					</div>
 					<span
@@ -124,7 +124,7 @@
 	</div>
 	<div class="mx-auto my-6 max-w-7xl lg:my-8">
 		<div
-			class="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700"
+			class="h-px bg-linear-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700"
 		></div>
 	</div>
 	<div class="relative mx-auto max-w-7xl sm:flex sm:items-center sm:justify-between">

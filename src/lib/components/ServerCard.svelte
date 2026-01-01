@@ -63,7 +63,7 @@
 </script>
 
 <Card
-	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 !border-l-green-700' : ''}`}
+	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700!' : ''}`}
 	data-testid="server-card"
 	style="padding: 15px"
 	onclick={() => {
@@ -100,7 +100,7 @@
 		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} showBadges={false} />
 
 		<!-- Spacer - absorbs variable height so badges and footer stay at bottom -->
-		<div class="flex-grow"></div>
+		<div class="grow"></div>
 
 		<!-- Badges -->
 		<div class="flex flex-wrap gap-2">

@@ -31,7 +31,7 @@
 </script>
 
 <div
-	class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 {size ===
+	class="rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800 {size ===
 	'sm'
 		? 'p-2'
 		: size === 'lg'

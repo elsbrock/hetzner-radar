@@ -4,9 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuctionService } from '../auction-service';
-import { HetznerAuctionClient } from '../hetzner-auction-client';
 import { AuctionDataTransformer } from '../auction-data-transformer';
-import { AuctionDatabaseService } from '../auction-db-service';
 import {
 	createMockD1Database,
 	createMockDurableObjectStorage,
@@ -15,17 +13,32 @@ import {
 } from './fixtures/database-mocks';
 import { mockHetznerAuctionServer, mockHetznerAuctionServerMinimal, mockRawServerData } from './fixtures/auction-data';
 
-// Mock the imported modules
-vi.mock('../hetzner-auction-client');
+// Mock instances for Vitest 4.x compatibility
+const mockAuctionClientInstance = {
+	fetchAuctionData: vi.fn(),
+};
+
+const mockDbServiceInstance = {
+	storeAuctionData: vi.fn(),
+};
+
+// Mock the imported modules with class syntax for Vitest 4.x
+vi.mock('../hetzner-auction-client', () => ({
+	HetznerAuctionClient: class MockHetznerAuctionClient {
+		fetchAuctionData = mockAuctionClientInstance.fetchAuctionData;
+	},
+}));
 vi.mock('../auction-data-transformer');
-vi.mock('../auction-db-service');
+vi.mock('../auction-db-service', () => ({
+	AuctionDatabaseService: class MockAuctionDatabaseService {
+		storeAuctionData = mockDbServiceInstance.storeAuctionData;
+	},
+}));
 
 describe('AuctionService', () => {
 	let service: AuctionService;
 	let mockDb: MockD1Database;
 	let mockStorage: MockDurableObjectStorage;
-	let mockAuctionClient: HetznerAuctionClient;
-	let mockDbService: AuctionDatabaseService;
 
 	const testApiUrl = 'https://api.example.com/auction-data';
 	const testDoId = 'test-do-id';
@@ -37,19 +50,6 @@ describe('AuctionService', () => {
 
 		// Reset all mocks
 		vi.clearAllMocks();
-
-		// Setup mock instances
-		mockAuctionClient = {
-			fetchAuctionData: vi.fn(),
-		} as HetznerAuctionClient;
-
-		mockDbService = {
-			storeAuctionData: vi.fn(),
-		} as AuctionDatabaseService;
-
-		// Mock constructors
-		vi.mocked(HetznerAuctionClient).mockImplementation(() => mockAuctionClient);
-		vi.mocked(AuctionDatabaseService).mockImplementation(() => mockDbService);
 	});
 
 	describe('fetchAndImportAuctions', () => {
@@ -64,23 +64,23 @@ describe('AuctionService', () => {
 			};
 
 			// Setup mocks
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
+			vi.mocked(mockDbServiceInstance.storeAuctionData).mockResolvedValue(mockStats);
 
 			// Spy on storage.put
 			const storagePutSpy = vi.spyOn(mockStorage, 'put');
 
 			const result = await service.fetchAndImportAuctions();
 
-			expect(mockAuctionClient.fetchAuctionData).toHaveBeenCalledTimes(1);
+			expect(mockAuctionClientInstance.fetchAuctionData).toHaveBeenCalledTimes(1);
 			expect(AuctionDataTransformer.transformServers).toHaveBeenCalledWith(mockServers);
 			expect(AuctionDataTransformer.validateTransformedData).toHaveBeenCalledWith(mockTransformed);
-			expect(mockDbService.storeAuctionData).toHaveBeenCalledWith(mockTransformed);
+			expect(mockDbServiceInstance.storeAuctionData).toHaveBeenCalledWith(mockTransformed);
 			expect(storagePutSpy).toHaveBeenCalledWith('lastAuctionImport', expect.any(String));
 
 			expect(result).toEqual(
@@ -102,7 +102,7 @@ describe('AuctionService', () => {
 		});
 
 		it('should handle API fetch errors', async () => {
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockRejectedValue(new Error('API Error'));
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockRejectedValue(new Error('API Error'));
 
 			await expect(service.fetchAndImportAuctions()).rejects.toEqual({
 				error: new Error('API Error'),
@@ -112,7 +112,7 @@ describe('AuctionService', () => {
 
 		it('should handle transformation errors', async () => {
 			const mockServers = [mockHetznerAuctionServer];
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockImplementation(() => {
 				throw new Error('Transformation failed');
 			});
@@ -127,13 +127,13 @@ describe('AuctionService', () => {
 			const mockServers = [mockHetznerAuctionServer];
 			const mockTransformed = [mockRawServerData];
 
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			vi.mocked(mockDbService.storeAuctionData).mockRejectedValue(new Error('Database error'));
+			vi.mocked(mockDbServiceInstance.storeAuctionData).mockRejectedValue(new Error('Database error'));
 
 			await expect(service.fetchAndImportAuctions()).rejects.toEqual({
 				error: new Error('Database error'),
@@ -142,7 +142,7 @@ describe('AuctionService', () => {
 		});
 
 		it('should handle empty API response', async () => {
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue([]);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue([]);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue([]);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: [],
@@ -158,7 +158,7 @@ describe('AuctionService', () => {
 				errors: 0,
 			});
 
-			expect(mockDbService.storeAuctionData).not.toHaveBeenCalled();
+			expect(mockDbServiceInstance.storeAuctionData).not.toHaveBeenCalled();
 		});
 
 		it('should handle invalid data filtering', async () => {
@@ -166,13 +166,13 @@ describe('AuctionService', () => {
 			const mockTransformed = [mockRawServerData, { ...mockRawServerData, id: 67890 }];
 			const mockValidated = [mockRawServerData]; // Only one valid
 
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockValidated,
 				invalid: 1,
 			});
-			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue({
+			vi.mocked(mockDbServiceInstance.storeAuctionData).mockResolvedValue({
 				processed: 1,
 				newAuctions: 1,
 				priceChanges: 0,
@@ -181,7 +181,7 @@ describe('AuctionService', () => {
 
 			const result = await service.fetchAndImportAuctions();
 
-			expect(mockDbService.storeAuctionData).toHaveBeenCalledWith(mockValidated);
+			expect(mockDbServiceInstance.storeAuctionData).toHaveBeenCalledWith(mockValidated);
 			expect(result).toEqual(
 				expect.objectContaining({
 					fetched: 2,
@@ -196,7 +196,7 @@ describe('AuctionService', () => {
 			const mockServers = [mockHetznerAuctionServer];
 			const mockTransformed = [mockRawServerData];
 
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: [],
@@ -212,7 +212,7 @@ describe('AuctionService', () => {
 				errors: 0,
 			});
 
-			expect(mockDbService.storeAuctionData).not.toHaveBeenCalled();
+			expect(mockDbServiceInstance.storeAuctionData).not.toHaveBeenCalled();
 		});
 
 		it('should update last import timestamp on success', async () => {
@@ -225,13 +225,13 @@ describe('AuctionService', () => {
 				errors: 0,
 			};
 
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
+			vi.mocked(mockDbServiceInstance.storeAuctionData).mockResolvedValue(mockStats);
 
 			// Spy on storage.put
 			const storagePutSpy = vi.spyOn(mockStorage, 'put');
@@ -251,13 +251,13 @@ describe('AuctionService', () => {
 				errors: 0,
 			};
 
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
+			vi.mocked(mockDbServiceInstance.storeAuctionData).mockResolvedValue(mockStats);
 
 			const result = await service.fetchAndImportAuctions();
 
@@ -277,13 +277,13 @@ describe('AuctionService', () => {
 				errors: 0,
 			};
 
-			vi.mocked(mockAuctionClient.fetchAuctionData).mockResolvedValue(mockServers);
+			vi.mocked(mockAuctionClientInstance.fetchAuctionData).mockResolvedValue(mockServers);
 			vi.spyOn(AuctionDataTransformer, 'transformServers').mockReturnValue(mockTransformed);
 			vi.spyOn(AuctionDataTransformer, 'validateTransformedData').mockReturnValue({
 				valid: mockTransformed,
 				invalid: 0,
 			});
-			vi.mocked(mockDbService.storeAuctionData).mockResolvedValue(mockStats);
+			vi.mocked(mockDbServiceInstance.storeAuctionData).mockResolvedValue(mockStats);
 
 			await service.fetchAndImportAuctions();
 

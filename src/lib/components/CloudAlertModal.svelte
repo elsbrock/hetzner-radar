@@ -224,7 +224,7 @@
 						/>
 					</div>
 					{#each filteredServerTypes as type (type.value)}
-						<li class="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
+						<li class="rounded-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
 							<Checkbox
 								checked={type.checked}
 								on:change={(event) =>
@@ -286,7 +286,7 @@
 			</Label>
 			<div class="space-y-2">
 				<Label
-					class="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-600"
+					class="flex items-center space-x-2 rounded-sm border border-gray-200 p-2 dark:border-gray-600"
 				>
 					<Toggle bind:checked={emailNotifications} class="text-orange-500 focus:ring-orange-500" />
 					<div class="flex flex-1 items-center space-x-2">
@@ -300,7 +300,7 @@
 					</div>
 				</Label>
 				<Label
-					class="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-600"
+					class="flex items-center space-x-2 rounded-sm border border-gray-200 p-2 dark:border-gray-600"
 				>
 					<Toggle
 						bind:checked={discordNotifications}
@@ -320,7 +320,7 @@
 
 			{#if !emailNotifications && !discordNotifications}
 				<div
-					class="rounded border border-red-200 bg-red-50 p-2 dark:border-red-700 dark:bg-red-900/20"
+					class="rounded-sm border border-red-200 bg-red-50 p-2 dark:border-red-700 dark:bg-red-900/20"
 				>
 					<p class="text-xs text-red-900 dark:text-red-100">
 						Please select at least one notification method.

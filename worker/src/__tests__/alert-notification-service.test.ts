@@ -20,13 +20,21 @@ const mockEmailChannel: NotificationChannel = {
 	send: vi.fn(),
 };
 
-// Mock the channel modules
+// Mock the channel modules using class syntax for Vitest 4.x compatibility
 vi.mock('../notifications/email-channel', () => ({
-	EmailChannel: vi.fn().mockImplementation(() => mockEmailChannel),
+	EmailChannel: class MockEmailChannel {
+		name = mockEmailChannel.name;
+		isEnabled = mockEmailChannel.isEnabled;
+		send = mockEmailChannel.send;
+	},
 }));
 
 vi.mock('../notifications/discord-channel', () => ({
-	DiscordChannel: vi.fn().mockImplementation(() => mockDiscordChannel),
+	DiscordChannel: class MockDiscordChannel {
+		name = mockDiscordChannel.name;
+		isEnabled = mockDiscordChannel.isEnabled;
+		send = mockDiscordChannel.send;
+	},
 }));
 
 describe('AlertNotificationService', () => {

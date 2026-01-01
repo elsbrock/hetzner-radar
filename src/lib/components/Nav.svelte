@@ -116,7 +116,7 @@
 	});
 </script>
 
-<Navbar class="relative h-15 w-full">
+<Navbar class="relative h-20 w-full">
 	<NavBrand href="/">
 		<div style="width: 32px; height: 32px">
 			<Radar />
@@ -159,7 +159,7 @@
 			<a
 				href={resolve('/settings')}
 				data-testid="nav-settings-desktop"
-				class="mr-2 flex aspect-square h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+				class="mr-2 flex aspect-square h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
 				aria-label="Settings"
 			>
 				<FontAwesomeIcon class="h-4 w-4" icon={faUser} />
@@ -215,7 +215,7 @@
 	</div>
 
 	<NavUl hidden={!isNavOpen} slideParams={{ duration: 250, delay: 0 }} class="order-1" {activeUrl}>
-		<NavLi href="/" data-testid="nav-link-home" class="flex items-center !bg-transparent">
+		<NavLi href="/" data-testid="nav-link-home" class="flex items-center bg-transparent!">
 			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faHouse} />
 			<span
 				class="text-base text-black dark:text-gray-200 {activeUrl === '/'
@@ -226,7 +226,7 @@
 		<NavLi
 			href="/configurations"
 			data-testid="nav-link-configurations"
-			class="flex items-center !bg-transparent"
+			class="flex items-center bg-transparent!"
 		>
 			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faServer} />
 			<span
@@ -235,7 +235,7 @@
 					: ''}">Configurations</span
 			>
 		</NavLi>
-		<NavLi href="/analyze" data-testid="nav-link-analyze" class="flex items-center !bg-transparent">
+		<NavLi href="/analyze" data-testid="nav-link-analyze" class="flex items-center bg-transparent!">
 			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faBinoculars} />
 			<span
 				class="text-base text-black dark:text-gray-200 {activeUrl === '/analyze'
@@ -246,7 +246,7 @@
 		<NavLi
 			href="/cloud-status"
 			data-testid="nav-link-cloud-status"
-			class="flex items-center !bg-transparent"
+			class="flex items-center bg-transparent!"
 		>
 			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faCloud} />
 			<span
@@ -259,7 +259,7 @@
 			<NavLi
 				href="/alerts"
 				data-testid="nav-link-alerts"
-				class="flex items-center !bg-transparent"
+				class="flex items-center bg-transparent!"
 				onmouseenter={() => (isHoveringAlerts = true)}
 				onmouseleave={() => (isHoveringAlerts = false)}
 			>
@@ -278,7 +278,7 @@
 			<NavLi
 				href="/statistics"
 				data-testid="nav-link-statistics"
-				class="flex items-center !bg-transparent"
+				class="flex items-center bg-transparent!"
 			>
 				<FontAwesomeIcon
 					class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300"
@@ -290,7 +290,7 @@
 						: ''}">Statistics</span
 				>
 			</NavLi>
-			<NavLi href="/about" data-testid="nav-link-about" class="flex items-center !bg-transparent">
+			<NavLi href="/about" data-testid="nav-link-about" class="flex items-center bg-transparent!">
 				<FontAwesomeIcon
 					class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300"
 					icon={faCircleInfo}
@@ -308,7 +308,7 @@
 			<NavLi
 				href="/settings"
 				data-testid="nav-link-settings"
-				class="flex items-center !bg-transparent md:hidden"
+				class="flex items-center bg-transparent! md:hidden"
 			>
 				<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faUser} />
 				<span
@@ -328,7 +328,7 @@
 						session.set(null);
 						return goto(resolve('/auth/logout'));
 					}}
-					class="mr-2 flex-grow"
+					class="mr-2 grow"
 				>
 					<Button
 						data-testid="nav-signout-mobile"
@@ -350,7 +350,7 @@
 				<Button
 					data-testid="nav-signin-mobile"
 					outline
-					class="mr-2 flex-grow bg-white dark:bg-inherit"
+					class="mr-2 grow bg-white dark:bg-inherit"
 					href="/auth/login"
 				>
 					<FontAwesomeIcon class="me-2 h-4 w-4" icon={faKey} /> Sign In
@@ -365,7 +365,7 @@
 	<div
 		class="{isVisible
 			? 'fade-out-gradient'
-			: 'fade-in-gradient'} absolute inset-x-0 bottom-0 h-[50px] translate-y-[0px] overflow-hidden"
+			: 'fade-in-gradient'} absolute inset-x-0 bottom-0 h-[50px] translate-y-0 overflow-hidden"
 		style="background: radial-gradient(ellipse 80% 50px at 50% 100%, rgba(249, 115, 22, 0.15), transparent 60%); pointer-events: none;"
 	></div>
 </Navbar>
@@ -374,13 +374,13 @@
 <div class="relative h-[2px] w-full overflow-hidden">
 	<!-- Static bar, visible when animated bar is not -->
 	<div
-		class="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
+		class="absolute inset-0 h-[2px] bg-linear-to-r from-transparent via-orange-500 to-transparent transition-opacity duration-300 {isVisible
 			? 'opacity-0'
 			: 'opacity-100'}"
 	></div>
 	<!-- Animated bar -->
 	<div
-		class="absolute inset-0 left-[-100%] h-[2px] w-[300%] bg-gradient-to-r from-transparent via-orange-500 to-transparent bg-[length:33.33%_100%] bg-repeat-x transition-opacity duration-300 {isVisible
+		class="absolute inset-0 -left-full h-[2px] w-[300%] bg-linear-to-r from-transparent via-orange-500 to-transparent bg-size-[33.33%_100%] bg-repeat-x transition-opacity duration-300 {isVisible
 			? 'opacity-100'
 			: 'opacity-0'} {isAnimating ? 'animate-loading-bar' : ''}"
 	></div>

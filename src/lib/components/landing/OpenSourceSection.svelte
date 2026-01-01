@@ -16,7 +16,7 @@
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<!-- Open Source Commitment -->
 		<div
-			class="rounded-lg border border-l-4 border-gray-100 !border-l-green-500 bg-gradient-to-br from-green-50 to-emerald-100 p-8 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
+			class="rounded-lg border border-l-4 border-gray-100 border-l-green-500! bg-linear-to-br from-green-50 to-emerald-100 p-8 shadow-xs dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
 		>
 			<div class="mb-6 flex items-center">
 				<div class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
@@ -80,7 +80,7 @@
 
 		<!-- Community Contribution -->
 		<div
-			class="rounded-lg border border-l-4 border-gray-100 !border-l-orange-500 bg-gradient-to-br from-orange-50 to-amber-100 p-8 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
+			class="rounded-lg border border-l-4 border-gray-100 border-l-orange-500! bg-linear-to-br from-orange-50 to-amber-100 p-8 shadow-xs dark:border-gray-700 dark:from-gray-800 dark:to-gray-700"
 		>
 			<div class="mb-6 flex items-center">
 				<div class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500">

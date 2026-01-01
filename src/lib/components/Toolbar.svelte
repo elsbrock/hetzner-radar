@@ -65,8 +65,8 @@
 			>
 				<FontAwesomeIcon icon={faFilter} />
 			</div>
-			<Button size="sm" color="alternative" class="shadow-sm" onclick={handleSave}>Save</Button>
-			<Button size="sm" color="alternative" class="shadow-sm" onclick={handleDelete}>Delete</Button>
+			<Button size="sm" color="alternative" class="shadow-xs" onclick={handleSave}>Save</Button>
+			<Button size="sm" color="alternative" class="shadow-xs" onclick={handleDelete}>Delete</Button>
 		</ButtonGroup>
 		<Tooltip placement="bottom" class="z-50 text-center">
 			Store current filter locally<br />

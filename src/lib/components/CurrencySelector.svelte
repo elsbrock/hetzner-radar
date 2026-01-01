@@ -41,6 +41,6 @@
 			name: formatOptionText(code, option.flag, option.symbol)
 		}))}
 		size="sm"
-		class="w-24 !rounded-s-none bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+		class="w-24 rounded-s-none! bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 	/>
 </ButtonGroup>

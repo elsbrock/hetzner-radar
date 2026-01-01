@@ -52,11 +52,11 @@
 		<!-- Links Section -->
 		<section class="text-center">
 			<div class="flex justify-center space-x-4">
-				<Button href="https://github.com/elsbrock/hetzner-radar" class="shadow-sm">
+				<Button href="https://github.com/elsbrock/hetzner-radar" class="shadow-xs">
 					<FontAwesomeIcon icon={faGithub} class="mr-2" />
 					GitHub
 				</Button>
-				<Button href="/contact" color="alternative" class="shadow-sm">
+				<Button href="/contact" color="alternative" class="shadow-xs">
 					<FontAwesomeIcon icon={faEnvelope} class="mr-2" />
 					Contact
 				</Button>

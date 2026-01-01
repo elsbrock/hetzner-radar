@@ -11,7 +11,7 @@
 			Join the Discord server to discuss server deals, get help with configuration questions, or
 			share feedback about the project.
 		</p>
-		<Button href="https://discord.gg/dcuGfURbdc" size="lg" class="shadow-sm" color="primary">
+		<Button href="https://discord.gg/dcuGfURbdc" size="lg" class="shadow-xs" color="primary">
 			<FontAwesomeIcon icon={faDiscord} class="mr-2" />
 			Join Discord
 		</Button>

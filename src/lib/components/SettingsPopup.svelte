@@ -54,7 +54,7 @@
 <!-- Settings button -->
 <button
 	id={instanceId}
-	class="flex aspect-square h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
+	class="flex aspect-square h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-hidden focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
 	aria-label="Settings"
 >
 	<FontAwesomeIcon icon={faGear} class="h-4 w-4" />
@@ -115,7 +115,7 @@
 				<select
 					value={selectedCurrency}
 					on:change={handleCurrencyChange}
-					class="rounded border border-gray-300 bg-gray-50 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					class="rounded-sm border border-gray-300 bg-gray-50 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 				>
 					{#each Object.entries(CURRENCY_CONFIG) as [code, config] (code)}
 						<option value={code}>{config.flag} {code}</option>
@@ -128,7 +128,7 @@
 					value={selectedVat}
 					on:change={handleVatChange}
 					disabled={selectedCurrency === 'USD'}
-					class="rounded border border-gray-300 bg-gray-50 px-2 py-1 text-xs disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					class="rounded-sm border border-gray-300 bg-gray-50 px-2 py-1 text-xs disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 				>
 					{#each Object.entries(vatOptions) as [code, option] (code)}
 						<option value={code}>

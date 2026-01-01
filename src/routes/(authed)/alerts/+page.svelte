@@ -367,12 +367,12 @@
 							</div>
 
 							{#if active.length === 0}
-								<div class="rounded-lg bg-white p-4 text-center shadow-sm dark:bg-gray-800">
+								<div class="rounded-lg bg-white p-4 text-center shadow-xs dark:bg-gray-800">
 									<p class="text-lg text-gray-700 dark:text-gray-300">
 										There are no active alerts.
 									</p>
 									<p class="mt-2">
-										<Button href="/analyze" color="primary" size="sm" class="shadow-sm">
+										<Button href="/analyze" color="primary" size="sm" class="shadow-xs">
 											Create Alert
 										</Button>
 									</p>
@@ -381,7 +381,7 @@
 								<div class="space-y-3">
 									{#each active as alert (alert.id)}
 										<div
-											class="flex flex-col rounded-lg border-l-4 border-l-gray-300 bg-white p-3 shadow-sm md:flex-row md:items-start dark:border-l-gray-700 dark:bg-gray-800"
+											class="flex flex-col rounded-lg border-l-4 border-l-gray-300 bg-white p-3 shadow-xs md:flex-row md:items-start dark:border-l-gray-700 dark:bg-gray-800"
 										>
 											<div class="mb-3 w-full md:mb-0 md:w-1/3">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
@@ -478,7 +478,7 @@
 							</div>
 
 							{#if triggered.length === 0}
-								<div class="rounded-lg bg-white p-4 text-center shadow-sm dark:bg-gray-800">
+								<div class="rounded-lg bg-white p-4 text-center shadow-xs dark:bg-gray-800">
 									<p class="text-lg text-gray-700 dark:text-gray-300">
 										No alerts have triggered yet.
 									</p>
@@ -487,7 +487,7 @@
 								<div class="space-y-3">
 									{#each triggered as alert (alert.id)}
 										<div
-											class="flex flex-col rounded-lg border-l-4 border-l-green-500 bg-white p-3 shadow-sm md:flex-row md:items-start dark:bg-gray-800"
+											class="flex flex-col rounded-lg border-l-4 border-l-green-500 bg-white p-3 shadow-xs md:flex-row md:items-start dark:bg-gray-800"
 										>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
@@ -619,7 +619,7 @@
 							</div>
 
 							{#if data.cloudAlerts.activeAlerts.length === 0}
-								<div class="rounded-lg bg-white p-4 text-center shadow-sm dark:bg-gray-800">
+								<div class="rounded-lg bg-white p-4 text-center shadow-xs dark:bg-gray-800">
 									<p class="text-lg text-gray-700 dark:text-gray-300">
 										There are no active cloud alerts.
 									</p>
@@ -628,7 +628,7 @@
 											on:click={openCreateCloudAlertModal}
 											color="primary"
 											size="sm"
-											class="shadow-sm"
+											class="shadow-xs"
 										>
 											Create Alert
 										</Button>
@@ -638,7 +638,7 @@
 								<div class="space-y-3">
 									{#each data.cloudAlerts.activeAlerts as alert (alert.id)}
 										<div
-											class="flex flex-col rounded-lg border-l-4 border-l-blue-500 bg-white p-3 shadow-sm md:flex-row md:items-start dark:bg-gray-800"
+											class="flex flex-col rounded-lg border-l-4 border-l-blue-500 bg-white p-3 shadow-xs md:flex-row md:items-start dark:bg-gray-800"
 										>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
@@ -765,7 +765,7 @@
 								<div class="space-y-3">
 									{#each data.cloudAlerts.triggeredAlerts.slice(0, 10) as trigger (trigger.id || `${trigger.server_type_name}-${trigger.location_name}-${trigger.triggered_at}`)}
 										<div
-											class="flex flex-col rounded-lg border-l-4 bg-white p-3 shadow-sm md:flex-row md:items-start dark:bg-gray-800 {trigger.event_type ===
+											class="flex flex-col rounded-lg border-l-4 bg-white p-3 shadow-xs md:flex-row md:items-start dark:bg-gray-800 {trigger.event_type ===
 											'available'
 												? 'border-l-green-500'
 												: 'border-l-red-500'}"

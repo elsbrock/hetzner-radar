@@ -137,7 +137,7 @@
 </script>
 
 <div
-	class="relative mx-auto min-h-[12rem] max-w-xs"
+	class="relative mx-auto min-h-48 max-w-xs"
 	role="region"
 	aria-label="Sample server configuration cards"
 	onmouseenter={handleMouseEnter}

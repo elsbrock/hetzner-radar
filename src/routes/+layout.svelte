@@ -117,7 +117,7 @@
 <div
 	class="flex min-h-screen flex-col"
 >
-	<div class="flex-grow">
+	<div class="grow">
 		<Banner version={4} id="cloud-availability-alerts">
 			<strong>New Feature:</strong> <a href={resolve('/cloud-status')}>Cloud Server Availability</a> Alerts ☁️
 		</Banner>

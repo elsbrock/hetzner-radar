@@ -94,12 +94,12 @@
 		<!-- Auctions Tracked -->
 		<div
 			data-testid="glance-auctions-tracked"
-			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#if loading}
 				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
-				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
 				<div
 					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
@@ -119,12 +119,12 @@
 		<!-- Auctions in Last Batch -->
 		<div
 			data-testid="glance-last-batch"
-			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#if loading}
 				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
-				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
 				<div
 					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
@@ -144,12 +144,12 @@
 		<!-- Active Users -->
 		<div
 			data-testid="glance-active-users"
-			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#if loading}
 				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
-				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
 				<div
 					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
@@ -169,12 +169,12 @@
 		<!-- Active Alerts -->
 		<div
 			data-testid="glance-active-alerts"
-			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#if loading}
 				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
-				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
 				<div
 					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
@@ -194,12 +194,12 @@
 		<!-- Notifications sent -->
 		<div
 			data-testid="glance-notifications-sent"
-			class="col-span-2 flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:col-span-3 lg:col-span-1 dark:border-gray-700 dark:bg-gray-800"
+			class="col-span-2 flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-xs sm:col-span-3 lg:col-span-1 dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#if loading}
 				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
-				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
 				<div
 					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"

@@ -10,7 +10,7 @@
 </script>
 
 <section
-	class="relative -mx-8 -mt-8 overflow-hidden border-b border-orange-200 bg-gradient-to-br from-orange-100 via-amber-100 to-orange-200 px-8 py-16 dark:border-orange-900/50 dark:from-orange-950/40 dark:via-gray-900 dark:to-orange-950/30"
+	class="relative -mx-8 -mt-8 overflow-hidden border-b border-orange-200 bg-linear-to-br from-orange-100 via-amber-100 to-orange-200 px-8 py-16 dark:border-orange-900/50 dark:from-orange-950/40 dark:via-gray-900 dark:to-orange-950/30"
 	style="width: calc(100% + 4rem);"
 >
 	<!-- Animated radar dots background -->
@@ -43,7 +43,7 @@
 				color="primary"
 				href="/analyze"
 				size="lg"
-				class="shadow-sm"
+				class="shadow-xs"
 			>
 				Browse Servers
 				<ArrowRightOutline class="ms-2 h-5 w-5" />
@@ -53,9 +53,9 @@
 				color="alternative"
 				href="https://github.com/elsbrock/hetzner-radar"
 				size="lg"
-				class="shadow-sm"
+				class="shadow-xs"
 			>
-				<FontAwesomeIcon icon={faGithub} class="mr-2" />
+				<FontAwesomeIcon icon={faGithub} class="mr-2 h-6! w-6!" />
 				View Source
 			</Button>
 		</div>

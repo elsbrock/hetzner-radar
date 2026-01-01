@@ -36,13 +36,21 @@ const mockCloudEmailChannel: CloudNotificationChannel = {
 	send: vi.fn(),
 };
 
-// Mock the channel modules
+// Mock the channel modules using class syntax for Vitest 4.x compatibility
 vi.mock('../cloud-notifications/cloud-email-channel', () => ({
-	CloudEmailChannel: vi.fn().mockImplementation(() => mockCloudEmailChannel),
+	CloudEmailChannel: class MockCloudEmailChannel {
+		name = mockCloudEmailChannel.name;
+		isEnabled = mockCloudEmailChannel.isEnabled;
+		send = mockCloudEmailChannel.send;
+	},
 }));
 
 vi.mock('../cloud-notifications/cloud-discord-channel', () => ({
-	CloudDiscordChannel: vi.fn().mockImplementation(() => mockCloudDiscordChannel),
+	CloudDiscordChannel: class MockCloudDiscordChannel {
+		name = mockCloudDiscordChannel.name;
+		isEnabled = mockCloudDiscordChannel.isEnabled;
+		send = mockCloudDiscordChannel.send;
+	},
 }));
 
 describe('CloudNotificationService', () => {

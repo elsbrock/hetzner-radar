@@ -775,7 +775,7 @@ let isSmallScreen: boolean = $state(false);
 	{:else}
 		<div
 			class="grid h-full grid-cols-1 sm:grid-cols-1 md:border-r-2
-        md:border-r-gray-100 lg:grid-cols-[auto,1fr] dark:border-r-gray-700"
+        md:border-r-gray-100 lg:grid-cols-[auto_1fr] dark:border-r-gray-700"
 		>
 			<!-- ID for Intersection Observer -->
 			<aside
@@ -785,7 +785,7 @@ let isSmallScreen: boolean = $state(false);
 				style="min-height: calc(100vh - var(--header-footer-height, 200px));"
 			>
 				<!-- ServerFilter Container - Grows and Scrolls -->
-				<div class="flex-grow overflow-y-auto px-6 py-4">
+				<div class="grow overflow-y-auto px-6 py-4">
 					<ServerFilter
 						{datacenters}
 						{cpuModels}
@@ -797,19 +797,19 @@ let isSmallScreen: boolean = $state(false);
 				</div>
 			</aside>
 
-			<main class="flex-grow overflow-y-auto bg-white dark:bg-gray-900">
+			<main class="grow overflow-y-auto bg-white dark:bg-gray-900">
 				<div class="w-full">
 					<div
 						class="mb-3 grid grid-cols-1 items-start gap-3 border-b border-gray-200 bg-white px-5 py-3 text-left text-lg font-semibold text-gray-900 sm:border-t md:grid-cols-2 md:border-t-0 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
 					>
 						<!-- Left-aligned controls: scrollable on mobile with fixed fade -->
 						<div
-							class="relative after:pointer-events-none after:absolute after:top-0 after:right-0 after:bottom-0 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent after:content-[''] md:col-span-1 md:after:hidden after:dark:from-gray-800"
+							class="relative after:pointer-events-none after:absolute after:top-0 after:right-0 after:bottom-0 after:w-8 after:bg-linear-to-l after:from-white after:to-transparent after:content-[''] md:col-span-1 md:after:hidden dark:after:from-gray-800"
 						>
 							<div
 								class="scrollbar-hide flex flex-nowrap items-start gap-3 overflow-x-auto text-xs text-gray-900 dark:text-gray-300"
 							>
-								<ButtonGroup class="flex-shrink-0">
+								<ButtonGroup class="shrink-0">
 									<InputAddon
 										size="sm"
 										class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -839,7 +839,7 @@ let isSmallScreen: boolean = $state(false);
 										onchange={handlePriceMaxChange}
 									/>
 								</ButtonGroup>
-								<ButtonGroup class="flex-shrink-0">
+								<ButtonGroup class="shrink-0">
 									<InputAddon
 										size="sm"
 										class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -849,7 +849,7 @@ let isSmallScreen: boolean = $state(false);
 									<Button
 										size="xs"
 										color="alternative"
-										class="shadow-sm"
+										class="shadow-xs"
 										data-testid="filter-save"
 										disabled={updateStoredFilterDisabled}
 										onclick={handleSaveFilter}
@@ -864,7 +864,7 @@ let isSmallScreen: boolean = $state(false);
 										<Button
 											size="xs"
 											color="alternative"
-											class="shadow-sm"
+											class="shadow-xs"
 											data-testid="filter-clear"
 											onclick={handleClearFilter}>Delete</Button
 										>
@@ -875,7 +875,7 @@ let isSmallScreen: boolean = $state(false);
 									on your computer.
 								</Tooltip>
 
-								<ButtonGroup class="flex-shrink-0">
+								<ButtonGroup class="shrink-0">
 									<InputAddon
 										size="sm"
 										class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -1070,7 +1070,7 @@ let isSmallScreen: boolean = $state(false);
 							<!-- Show Server List -->
 							<div class="relative">
 								{#if processingList}
-									<div class="pointer-events-none absolute inset-0 z-20 flex justify-center bg-white/60 pt-16 backdrop-blur-sm dark:bg-gray-900/60">
+									<div class="pointer-events-none absolute inset-0 z-20 flex justify-center bg-white/60 pt-16 backdrop-blur-xs dark:bg-gray-900/60">
 										<div class="flex h-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
 											<Spinner size="4" />
 											<span class="text-sm">Updating...</span>

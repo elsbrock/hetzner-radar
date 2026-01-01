@@ -15,7 +15,7 @@
 
 	<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 		<Card
-			class="flex flex-col justify-between border border-gray-100 shadow-sm dark:border-gray-700"
+			class="flex flex-col justify-between border border-gray-100 shadow-xs dark:border-gray-700"
 		>
 			<p class="mb-3 text-gray-600 italic dark:text-gray-400">
 				"As a startup founder, Server Radar helps me stretch our infrastructure budget. The
@@ -36,7 +36,7 @@
 		</Card>
 
 		<Card
-			class="flex flex-col justify-between border border-gray-100 shadow-sm dark:border-gray-700"
+			class="flex flex-col justify-between border border-gray-100 shadow-xs dark:border-gray-700"
 		>
 			<p class="mb-3 text-gray-600 italic dark:text-gray-400">
 				"The transparency of open source combined with the powerful filtering makes this my go-to
@@ -57,7 +57,7 @@
 		</Card>
 
 		<Card
-			class="flex flex-col justify-between border border-gray-100 shadow-sm dark:border-gray-700"
+			class="flex flex-col justify-between border border-gray-100 shadow-xs dark:border-gray-700"
 		>
 			<p class="mb-3 text-gray-600 italic dark:text-gray-400">
 				"I love that it's community-driven. Filed a feature request on GitHub and it was implemented

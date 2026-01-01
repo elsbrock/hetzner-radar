@@ -189,7 +189,7 @@
 					maxlength={MAX_NAME_LENGTH}
 					required
 					value={alert?.name}
-					class="rounded-md border px-3 py-2 focus:ring-1 focus:ring-orange-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					class="rounded-md border px-3 py-2 focus:ring-1 focus:ring-orange-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 				/>
 			</Label>
 
@@ -206,7 +206,7 @@
 					min="20"
 					max="1000"
 					value={alert?.price ? convertPrice(alert.price, 'EUR', $currentCurrency).toFixed(2) : ''}
-					class="rounded-md border px-3 py-2 focus:ring-1 focus:ring-orange-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					class="rounded-md border px-3 py-2 focus:ring-1 focus:ring-orange-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 				/>
 			</Label>
 

@@ -61,7 +61,7 @@
 		<Button
 			onclick={handleClick}
 			size="lg"
-			class="rounded-full !p-3 shadow-lg"
+			class="rounded-full p-3! shadow-lg"
 			aria-label={ariaLabel}
 			color="primary"
 		>
