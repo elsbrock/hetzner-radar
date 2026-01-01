@@ -189,6 +189,8 @@
 		};
 
 		// Define tooltip colors based on theme
+		const tooltipBackgroundColor = isDarkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.95)'; // gray-900 dark, white light
+		const tooltipBorderColor = isDarkMode ? 'rgba(55, 65, 81, 0.8)' : 'rgba(209, 213, 219, 0.8)'; // gray-700 dark, gray-300 light
 		const tooltipTitleColor = isDarkMode ? '#E5E7EB' : '#1F2937'; // gray-200 dark, gray-800 light
 		const tooltipBodyColor = isDarkMode ? '#D1D5DB' : '#4B5563'; // gray-300 dark, gray-600 light
 
@@ -284,8 +286,11 @@
 				},
 				tooltip: {
 					enabled: tooltipShow,
-					titleColor: tooltipTitleColor, // Set title color
-					bodyColor: tooltipBodyColor, // Set body color
+					backgroundColor: tooltipBackgroundColor,
+					borderColor: tooltipBorderColor,
+					borderWidth: 1,
+					titleColor: tooltipTitleColor,
+					bodyColor: tooltipBodyColor,
 					callbacks: {
 						// Custom tooltip label formatting
 						label: function (context: TooltipItem<any>) {
