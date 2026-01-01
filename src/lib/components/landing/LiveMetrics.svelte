@@ -89,137 +89,131 @@
 	});
 </script>
 
-<section class="mx-auto mb-16 max-w-7xl">
-	<div
-		class="mx-auto flex max-w-7xl flex-col flex-wrap items-center justify-around gap-x-4 gap-y-8 sm:flex-row"
-	>
+<section class="mx-auto mt-8 mb-20 max-w-6xl px-4">
+	<dl class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
 		<!-- Auctions Tracked -->
-		<div data-testid="glance-auctions-tracked" class="flex flex-col items-center px-4 text-center">
+		<div
+			data-testid="glance-auctions-tracked"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+		>
 			{#if loading}
-				<div class="mb-2 flex h-10 items-center justify-center gap-3">
-					<div class="h-6 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-					<div class="h-10 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				</div>
-				<div class="h-5 w-36 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
-				<div class="mb-2 flex items-center justify-center gap-3">
+				<div
+					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
+				>
 					<FontAwesomeIcon
 						icon={faGavel}
-						class="h-6 w-6 text-orange-500 {shakingIconIndex === 0 ? 'subtle-bounce-it' : ''}"
+						class="h-5 w-5 text-orange-500 {shakingIconIndex === 0 ? 'subtle-bounce-it' : ''}"
 					/>
-					<p
-						class="text-4xl leading-tight font-semibold tracking-tight text-gray-700 antialiased dark:text-gray-200"
-					>
-						{Math.round($auctionCounter).toLocaleString()}
-					</p>
 				</div>
-				<span class="text-base text-gray-500 antialiased dark:text-gray-400"
-					>Total Auctions Tracked</span
-				>
+				<dt class="text-2xl font-bold text-gray-900 dark:text-white">
+					{Math.round($auctionCounter).toLocaleString()}
+				</dt>
+				<dd class="text-sm text-gray-500 dark:text-gray-400">Auctions Tracked</dd>
 			{/if}
 		</div>
 
 		<!-- Auctions in Last Batch -->
-		<div data-testid="glance-last-batch" class="flex flex-col items-center px-4 text-center">
+		<div
+			data-testid="glance-last-batch"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+		>
 			{#if loading}
-				<div class="mb-2 flex h-10 items-center justify-center gap-3">
-					<div class="h-6 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-					<div class="h-10 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				</div>
-				<div class="h-5 w-40 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
-				<div class="mb-2 flex items-center justify-center gap-3">
+				<div
+					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
+				>
 					<FontAwesomeIcon
 						icon={faClock}
-						class="h-6 w-6 text-orange-500 {shakingIconIndex === 1 ? 'subtle-bounce-it' : ''}"
+						class="h-5 w-5 text-orange-500 {shakingIconIndex === 1 ? 'subtle-bounce-it' : ''}"
 					/>
-					<p
-						class="text-4xl leading-tight font-semibold tracking-tight text-gray-700 antialiased dark:text-gray-200"
-					>
-						{Math.round($latestBatchCounter).toLocaleString()}
-					</p>
 				</div>
-				<span class="text-base text-gray-500 antialiased dark:text-gray-400"
-					>Auctions in Last Batch</span
-				>
+				<dt class="text-2xl font-bold text-gray-900 dark:text-white">
+					{Math.round($latestBatchCounter).toLocaleString()}
+				</dt>
+				<dd class="text-sm text-gray-500 dark:text-gray-400">Last Batch</dd>
 			{/if}
 		</div>
 
 		<!-- Active Users -->
-		<div data-testid="glance-active-users" class="flex flex-col items-center px-4 text-center">
+		<div
+			data-testid="glance-active-users"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+		>
 			{#if loading}
-				<div class="mb-2 flex h-10 items-center justify-center gap-3">
-					<div class="h-6 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-					<div class="h-10 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				</div>
-				<div class="h-5 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
-				<div class="mb-2 flex items-center justify-center gap-3">
+				<div
+					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
+				>
 					<FontAwesomeIcon
 						icon={faUsers}
-						class="h-6 w-6 text-orange-500 {shakingIconIndex === 2 ? 'subtle-bounce-it' : ''}"
+						class="h-5 w-5 text-orange-500 {shakingIconIndex === 2 ? 'subtle-bounce-it' : ''}"
 					/>
-					<p
-						class="text-4xl leading-tight font-semibold tracking-tight text-gray-700 antialiased dark:text-gray-200"
-					>
-						{Math.round($userCounter).toLocaleString()}
-					</p>
 				</div>
-				<span class="text-base text-gray-500 antialiased dark:text-gray-400">Active Users</span>
+				<dt class="text-2xl font-bold text-gray-900 dark:text-white">
+					{Math.round($userCounter).toLocaleString()}
+				</dt>
+				<dd class="text-sm text-gray-500 dark:text-gray-400">Active Users</dd>
 			{/if}
 		</div>
 
 		<!-- Active Alerts -->
-		<div data-testid="glance-active-alerts" class="flex flex-col items-center px-4 text-center">
+		<div
+			data-testid="glance-active-alerts"
+			class="flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+		>
 			{#if loading}
-				<div class="mb-2 flex h-10 items-center justify-center gap-3">
-					<div class="h-6 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-					<div class="h-10 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				</div>
-				<div class="h-5 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
-				<div class="mb-2 flex items-center justify-center gap-3">
+				<div
+					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
+				>
 					<FontAwesomeIcon
 						icon={faBell}
-						class="h-6 w-6 text-orange-500 {shakingIconIndex === 3 ? 'subtle-bounce-it' : ''}"
+						class="h-5 w-5 text-orange-500 {shakingIconIndex === 3 ? 'subtle-bounce-it' : ''}"
 					/>
-					<p
-						class="text-4xl leading-tight font-semibold tracking-tight text-gray-700 antialiased dark:text-gray-200"
-					>
-						{Math.round($alertCounter).toLocaleString()}
-					</p>
 				</div>
-				<span class="text-base text-gray-500 antialiased dark:text-gray-400">Active Alerts</span>
+				<dt class="text-2xl font-bold text-gray-900 dark:text-white">
+					{Math.round($alertCounter).toLocaleString()}
+				</dt>
+				<dd class="text-sm text-gray-500 dark:text-gray-400">Active Alerts</dd>
 			{/if}
 		</div>
 
 		<!-- Notifications sent -->
 		<div
 			data-testid="glance-notifications-sent"
-			class="flex flex-col items-center px-4 text-center"
+			class="col-span-2 flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:col-span-3 lg:col-span-1 dark:border-gray-700 dark:bg-gray-800"
 		>
 			{#if loading}
-				<div class="mb-2 flex h-10 items-center justify-center gap-3">
-					<div class="h-6 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-					<div class="h-10 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-				</div>
-				<div class="h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-2 h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+				<div class="mb-1 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+				<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
 			{:else}
-				<div class="mb-2 flex items-center justify-center gap-3">
+				<div
+					class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30"
+				>
 					<FontAwesomeIcon
 						icon={faEnvelope}
-						class="h-6 w-6 text-orange-500 {shakingIconIndex === 4 ? 'subtle-bounce-it' : ''}"
+						class="h-5 w-5 text-orange-500 {shakingIconIndex === 4 ? 'subtle-bounce-it' : ''}"
 					/>
-					<p
-						class="text-4xl leading-tight font-semibold tracking-tight text-gray-700 antialiased dark:text-gray-200"
-					>
-						{Math.round($historyCounter).toLocaleString()}
-					</p>
 				</div>
-				<span class="text-base text-gray-500 antialiased dark:text-gray-400"
-					>Notifications Sent</span
-				>
+				<dt class="text-2xl font-bold text-gray-900 dark:text-white">
+					{Math.round($historyCounter).toLocaleString()}
+				</dt>
+				<dd class="text-sm text-gray-500 dark:text-gray-400">Notifications Sent</dd>
 			{/if}
 		</div>
-	</div>
+	</dl>
 </section>

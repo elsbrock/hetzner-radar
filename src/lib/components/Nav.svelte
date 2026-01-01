@@ -126,7 +126,7 @@
 				Server Radar <Badge>beta</Badge>
 			</span>
 			<span class="block text-xs text-gray-500 dark:text-gray-200"
-				>The Hetzner Auction Price Tracker.</span
+				>Prices. Availability. Alerts.</span
 			>
 		</div>
 	</NavBrand>
