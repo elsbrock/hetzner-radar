@@ -276,7 +276,7 @@ FROM read_json('%s', format = 'auto', columns = {
     price: 'FLOAT',
     "Bandwidth": 'INTEGER',
     traffic: 'VARCHAR',
-    datacenter: 'STRUCT(datacenter VARCHAR, name VARCHAR, shortname VARCHAR, country VARCHAR, country_shortcode VARCHAR)[]',
+    datacenter: 'STRUCT(datacenter VARCHAR, name VARCHAR, country VARCHAR, country_shortcode VARCHAR)[]',
     specials: 'VARCHAR[]'
 }) s, UNNEST(s.datacenter) as dc
 """
