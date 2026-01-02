@@ -261,7 +261,7 @@ SELECT
     s.traffic,
     s."Bandwidth" as bandwidth,
 
-    CAST(s.price * 100 AS INTEGER) as price,
+    CAST(s.price AS INTEGER) as price,
     true as fixed_price,
 
     NOW() as seen,
