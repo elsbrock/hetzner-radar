@@ -12,7 +12,8 @@
 		faArrowDown,
 		faChartLine,
 		faExternalLinkAlt,
-		faFilter
+		faFilter,
+		faShoppingCart
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
@@ -367,10 +368,38 @@
 				{:else if auctions.length > 0}
 					{#each auctions.slice(0, 5) as auction (auction.id)}
 						<TableBodyRow>
-							<TableBodyCell class="px-1 py-4">
-								<div>#{auction.id}</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">
-									{auction.datacenter}, {auction.location}
+							<TableBodyCell class="px-1 py-3" colspan={3}>
+								<div class="flex items-center justify-between gap-2">
+									<div class="flex items-center gap-3">
+										<div class="font-medium">#{auction.id}</div>
+										<div class="text-xs text-gray-500 dark:text-gray-400">
+											{auction.datacenter}, {auction.location}
+										</div>
+									</div>
+									<div class="flex items-center gap-3">
+										<div class="text-right">
+											<div>
+												{convertPrice(
+													auction.lastPrice * (1 + selectedOption.rate),
+													'EUR',
+													$currentCurrency
+												).toFixed(2)} {$currencySymbol}
+											</div>
+											<div class="text-xs text-gray-500 dark:text-gray-400">
+												{vatSuffix}
+											</div>
+										</div>
+										<Button
+											href={`https://www.hetzner.com/sb/#search=${auction.id}`}
+											target="_blank"
+											rel="noopener noreferrer"
+											size="md"
+											aria-label="View on Hetzner"
+											class="px-4"
+										>
+											<Fa icon={faShoppingCart} />
+										</Button>
+									</div>
 								</div>
 								<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
 									<span class="inline-flex items-center">
@@ -382,30 +411,6 @@
 										seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
 									</span>
 								</div>
-							</TableBodyCell>
-							<TableBodyCell class="px-2 py-4 text-right">
-								<div>
-									{convertPrice(
-										auction.lastPrice * (1 + selectedOption.rate),
-										'EUR',
-										$currentCurrency
-									).toFixed(2)} {$currencySymbol}
-								</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">
-									{vatSuffix}
-								</div>
-							</TableBodyCell>
-							<TableBodyCell class="px-2 py-4 text-right">
-								<Button
-									href={`https://www.hetzner.com/sb/#search=${auction.id}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									size="md"
-									aria-label="View on Hetzner"
-									class="px-4"
-								>
-									<Fa icon={faExternalLinkAlt} />
-								</Button>
 							</TableBodyCell>
 						</TableBodyRow>
 					{/each}
@@ -427,7 +432,7 @@
 		<hr class="my-4 border-gray-200 dark:border-gray-600" />
 		<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
 			<p>
-				Clicking the <Fa icon={faExternalLinkAlt} class="mx-1 inline" /> button opens the auction
+				Clicking the <Fa icon={faShoppingCart} class="mx-1 inline" /> button opens the auction
 				on Hetzner's server auction page.
 			</p>
 			<p>

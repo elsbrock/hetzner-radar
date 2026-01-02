@@ -18,7 +18,7 @@
 	import { sineIn } from 'svelte/easing';
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
-	import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
+	import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 	import { addToast } from '$lib/stores/toast';
 	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
 	import { convertPrice } from '$lib/currency';
@@ -268,7 +268,7 @@
 									aria-label="View on Hetzner"
 									class="px-4"
 								>
-									<Fa icon={faExternalLinkAlt} />
+									<Fa icon={faShoppingCart} />
 								</Button>
 							</TableBodyCell>
 						</TableBodyRow>
@@ -292,7 +292,7 @@
 		<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
 			<p>
 				These are the auctions that matched your alert criteria when it was triggered. Click the <Fa
-					icon={faExternalLinkAlt}
+					icon={faShoppingCart}
 					class="mx-1 inline"
 				/> button to see the auction on Hetzner's website.
 			</p>
