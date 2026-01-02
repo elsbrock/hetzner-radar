@@ -224,7 +224,7 @@ SELECT
     hash(s.id || '-' || dc.datacenter) as id,  -- Hash string ID + datacenter for uniqueness
     [] as information,
 
-    dc.datacenter as datacenter,
+    LEFT(dc.datacenter, 3) as datacenter,  -- Just city prefix (FSN, NBG, HEL)
     CASE WHEN dc.datacenter LIKE 'NBG%%' OR dc.datacenter LIKE 'FSN%%'
         THEN 'Germany'
         ELSE 'Finland'

@@ -389,7 +389,7 @@
 					This is a standard dedicated server from Hetzner's regular lineup with fixed pricing.
 				</p>
 				<Button
-					href="https://www.hetzner.com/dedicated-rootserver"
+					href={`https://www.hetzner.com/dedicated-rootserver#search=${encodeURIComponent(config.cpu)}`}
 					target="_blank"
 					rel="noopener noreferrer"
 					color="blue"
