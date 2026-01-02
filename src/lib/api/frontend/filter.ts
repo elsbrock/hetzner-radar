@@ -210,6 +210,7 @@ export async function getPrices(
 
 export type ServerConfiguration = {
   server_type?: "auction" | "standard"; // Optional for backward compat with old DBs
+  information?: string[]; // Product ID for standard servers, special info for auctions
   with_hwr: null | boolean;
   with_gpu: null | boolean;
   with_rps: null | boolean;
@@ -276,6 +277,7 @@ export async function getConfigurations(
     FROM (
         SELECT
             `.append(serverTypeSelect).append(SQL`
+            ANY_VALUE(information)::JSON AS information,
             cpu,
             ram_size,
             is_ecc,
@@ -344,6 +346,9 @@ export async function getConfigurations(
     d.nvme_drives = JSON.parse(d.nvme_drives as unknown as string);
     d.sata_drives = JSON.parse(d.sata_drives as unknown as string);
     d.hdd_drives = JSON.parse(d.hdd_drives as unknown as string);
+    if (d.information) {
+      d.information = JSON.parse(d.information as unknown as string);
+    }
     return d;
   });
 }
