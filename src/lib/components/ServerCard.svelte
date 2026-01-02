@@ -4,7 +4,9 @@
 	import { convertPrice } from '$lib/currency';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
-	import { Badge, Card, Indicator, Spinner } from 'flowbite-svelte';
+	import { Card, Indicator, Spinner, Tooltip } from 'flowbite-svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faFire } from '@fortawesome/free-solid-svg-icons';
 	import ServerDetailDrawer from './ServerDetailDrawer.svelte';
 	import ServerFactSheet from './ServerFactSheet.svelte';
 	import { vatOptions } from './VatSelector.svelte';
@@ -79,6 +81,14 @@
 			<Spinner />
 		</div>
 	{:else}
+		<!-- DEAL indicator -->
+		{#if (config.markup_percentage ?? 0) <= 0}
+			<div class="absolute top-5 right-3 text-orange-500">
+				<FontAwesomeIcon icon={faFire} size="lg" />
+			</div>
+			<Tooltip placement="left">Best price</Tooltip>
+		{/if}
+
 		<!-- Header -->
 		<div>
 			<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
@@ -96,25 +106,16 @@
 			</div>
 		</div>
 
-		<!-- Server Fact Sheet (storage only) -->
-		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} showBadges={false} />
+		<!-- Server Fact Sheet -->
+		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} showBadges={true} />
 
-		<!-- Spacer - absorbs variable height so badges and footer stay at bottom -->
+		<!-- Spacer - absorbs variable height so footer stays at bottom -->
 		<div class="grow"></div>
-
-		<!-- Badges -->
-		<div class="flex flex-wrap gap-2">
-			{#if config.is_ecc}<span><Badge border>ECC</Badge></span>{/if}
-			{#if config.with_inic}<span><Badge border>iNIC</Badge></span>{/if}
-			{#if config.with_gpu}<span><Badge border>GPU</Badge></span>{/if}
-			{#if config.with_hwr}<span><Badge border>HWR</Badge></span>{/if}
-			{#if config.with_rps}<span><Badge border>RPS</Badge></span>{/if}
-		</div>
 
 		<!-- Footer -->
 		<div class="mt-4 flex items-center justify-between">
 			<div>
-				<span>
+				<div>
 					<span class="text-xl font-bold text-gray-900 dark:text-white">
 						{#if timeUnitPrice === 'perMonth'}
 							{displayPrice.toFixed(2)} {$currencySymbol}
@@ -122,7 +123,6 @@
 							{(displayPrice / (30 * 24)).toFixed(4)} {$currencySymbol}
 						{/if}
 					</span>
-					<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>
 					<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
 						{#if timeUnitPrice === 'perMonth'}
 							monthly
@@ -130,19 +130,17 @@
 							hourly
 						{/if}
 					</span>
-					{#if config.markup_percentage !== null}
-						<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-							{#if config.markup_percentage > 0}
-								<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}
-									>{(config.markup_percentage ?? 0).toFixed(0)}%</span
-								>
-								higher than best
-							{:else}
-								best price
-							{/if}
-						</div>
+				</div>
+				<div class="text-xs text-gray-500 dark:text-gray-400">
+					{vatSuffix}
+					{#if config.markup_percentage !== null && config.markup_percentage > 0}
+						<span class="ml-1">·</span>
+						<span class="ml-1" style={`color: hsl(${markupColorHue()}, 100%, 40%)`}
+							>{(config.markup_percentage ?? 0).toFixed(0)}%</span
+						>
+						higher than best
 					{/if}
-				</span>
+				</div>
 			</div>
 			{#if buttons}{@render buttons()}{/if}
 		</div>

@@ -12,8 +12,7 @@
 		faArrowDown,
 		faChartLine,
 		faExternalLinkAlt,
-		faFilter,
-		faShoppingCart
+		faFilter
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
@@ -341,7 +340,7 @@
 		</div>
 
 		<!-- Server Hardware Details -->
-		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} class="mb-3" />
+		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} layout="horizontal" class="mb-3" />
 		<div class="mb-1 flex items-center justify-between">
 			<h6 class="text-lg font-medium text-gray-900 dark:text-white">Auctions</h6>
 			{#if config}
@@ -357,7 +356,7 @@
 				<Tooltip placement="bottom" class="z-50">Search on Hetzner with this configuration</Tooltip>
 			{/if}
 		</div>
-		<Table hoverable={true} striped={true}>
+		<Table hoverable={false} striped={true}>
 			<TableBody class="divide-y">
 				{#if loadingAuctions}
 					<TableBodyRow>
@@ -370,6 +369,9 @@
 						<TableBodyRow>
 							<TableBodyCell class="px-1 py-4">
 								<div>#{auction.id}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">
+									{auction.datacenter}, {auction.location}
+								</div>
 								<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
 									<span class="inline-flex items-center">
 										{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
@@ -381,29 +383,29 @@
 									</span>
 								</div>
 							</TableBodyCell>
-							<TableBodyCell class="px-2 py-4 text-right"
-								>{convertPrice(
-									auction.lastPrice * (1 + selectedOption.rate),
-									'EUR',
-									$currentCurrency
-								).toFixed(2)} {$currencySymbol}</TableBodyCell
-							>
 							<TableBodyCell class="px-2 py-4 text-right">
-								<form
-									action="https://robot.hetzner.com/order/marketConfirm"
-									method="POST"
+								<div>
+									{convertPrice(
+										auction.lastPrice * (1 + selectedOption.rate),
+										'EUR',
+										$currentCurrency
+									).toFixed(2)} {$currencySymbol}
+								</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">
+									{vatSuffix}
+								</div>
+							</TableBodyCell>
+							<TableBodyCell class="px-2 py-4 text-right">
+								<Button
+									href={`https://www.hetzner.com/sb/#search=${auction.id}`}
 									target="_blank"
+									rel="noopener noreferrer"
+									size="md"
+									aria-label="View on Hetzner"
+									class="px-4"
 								>
-									<input type="hidden" name="id" value={auction.id} />
-									<input type="hidden" name="server_id" value={auction.id} />
-									<input type="hidden" name="culture" value="en_GB" />
-									<input type="hidden" name="ip[1266]" value="1" />
-									<input type="hidden" name="country" value={validCountryCode.toLowerCase()} />
-									<input type="hidden" name="currency" value="EUR" />
-									<Button type="submit" size="md" aria-label="Confirm Order" class="px-4">
-										<Fa icon={faShoppingCart} />
-									</Button>
-								</form>
+									<Fa icon={faExternalLinkAlt} />
+								</Button>
 							</TableBodyCell>
 						</TableBodyRow>
 					{/each}
@@ -425,9 +427,8 @@
 		<hr class="my-4 border-gray-200 dark:border-gray-600" />
 		<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
 			<p>
-				Clicking the <Fa icon={faShoppingCart} class="mx-1 inline" /> button redirects you to Hetzner
-				to confirm the order. Clicking the <Fa icon={faExternalLinkAlt} class="mx-1 inline" /> button
-				opens a preconfigured Hetzner search.
+				Clicking the <Fa icon={faExternalLinkAlt} class="mx-1 inline" /> button opens the auction
+				on Hetzner's server auction page.
 			</p>
 			<p>
 				Please note: Hetzner search results depend on availability and may differ. Ensure server

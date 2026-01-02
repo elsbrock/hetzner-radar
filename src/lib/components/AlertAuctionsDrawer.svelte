@@ -18,7 +18,7 @@
 	import { sineIn } from 'svelte/easing';
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
-	import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
+	import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 	import { addToast } from '$lib/stores/toast';
 	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
 	import { convertPrice } from '$lib/currency';
@@ -260,19 +260,16 @@
 								</div>
 							</TableBodyCell>
 							<TableBodyCell class="px-2 py-4 text-right">
-								<form
-									action="https://robot.hetzner.com/order/marketConfirm"
-									method="POST"
+								<Button
+									href={`https://www.hetzner.com/sb/#search=${auction.auction_id}`}
 									target="_blank"
+									rel="noopener noreferrer"
+									size="md"
+									aria-label="View on Hetzner"
+									class="px-4"
 								>
-									<input type="hidden" name="id" value={auction.auction_id} />
-									<input type="hidden" name="server_id" value={auction.auction_id} />
-									<input type="hidden" name="culture" value="en_GB" />
-									<input type="hidden" name="ip[1266]" value="1" />
-									<Button type="submit" size="md" aria-label="View on Hetzner" class="px-4">
-										<Fa icon={faShoppingCart} />
-									</Button>
-								</form>
+									<Fa icon={faExternalLinkAlt} />
+								</Button>
 							</TableBodyCell>
 						</TableBodyRow>
 					{/each}
@@ -295,7 +292,7 @@
 		<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
 			<p>
 				These are the auctions that matched your alert criteria when it was triggered. Click the <Fa
-					icon={faShoppingCart}
+					icon={faExternalLinkAlt}
 					class="mx-1 inline"
 				/> button to see the auction on Hetzner's website.
 			</p>

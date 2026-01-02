@@ -114,7 +114,7 @@
 		<div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
 			<h4 class="mb-1 font-medium text-gray-800 dark:text-gray-100">Multi-Currency</h4>
 			<p class="text-sm text-gray-600 dark:text-gray-400">
-				View prices in EUR, USD, GBP with VAT options
+				View prices in EUR or USD with VAT options
 			</p>
 		</div>
 
