@@ -214,7 +214,7 @@
 							>{nvmeSummary.length > 1 || summary.count > 1
 								? `${summary.count}x `
 								: ''}{getFormattedDiskSize(summary.value)}</span
-						>{' '}
+						>
 					{/each}
 				</div>
 				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
@@ -236,7 +236,7 @@
 							>{sataSummary.length > 1 || summary.count > 1
 								? `${summary.count}x `
 								: ''}{getFormattedDiskSize(summary.value)}</span
-						>{' '}
+						>
 					{/each}
 				</div>
 				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
@@ -258,7 +258,7 @@
 							>{hddSummary.length > 1 || summary.count > 1
 								? `${summary.count}x `
 								: ''}{getFormattedDiskSize(summary.value)}</span
-						>{' '}
+						>
 					{/each}
 				</div>
 				<div class="text-right text-xs text-gray-500 dark:text-gray-400">

@@ -81,8 +81,8 @@
 			<Spinner />
 		</div>
 	{:else}
-		<!-- DEAL indicator -->
-		{#if (config.markup_percentage ?? 0) <= 0}
+		<!-- DEAL indicator (only for auctions - standard servers have fixed prices) -->
+		{#if config.server_type !== 'standard' && (config.markup_percentage ?? 0) <= 0}
 			<div class="absolute top-5 right-3 text-orange-500">
 				<FontAwesomeIcon icon={faFire} size="lg" />
 			</div>
@@ -142,7 +142,7 @@
 				</div>
 				<div class="text-xs text-gray-500 dark:text-gray-400">
 					{vatSuffix}
-					{#if config.markup_percentage !== null && config.markup_percentage > 0}
+					{#if config.server_type !== 'standard' && config.markup_percentage !== null && config.markup_percentage > 0}
 						<span class="ml-1">·</span>
 						<span class="ml-1" style={`color: hsl(${markupColorHue()}, 100%, 40%)`}
 							>{(config.markup_percentage ?? 0).toFixed(0)}%</span

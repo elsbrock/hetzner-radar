@@ -222,7 +222,7 @@ import_standard_query = """
 INSERT INTO server
 SELECT
     hash(s.id || '-' || dc.datacenter) as id,  -- Hash string ID + datacenter for uniqueness
-    [s.id] as information,  -- Store original product ID for linking
+    [s.name] as information,  -- Store product name (e.g. "AX41-NVMe") for linking
 
     LEFT(dc.datacenter, 3) as datacenter,  -- Just city prefix (FSN, NBG, HEL)
     CASE WHEN dc.datacenter LIKE 'NBG%%' OR dc.datacenter LIKE 'FSN%%'
@@ -270,6 +270,7 @@ SELECT
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'VARCHAR',
+    name: 'VARCHAR',
     cpu: 'VARCHAR',
     cores: 'INTEGER',
     ram: 'INTEGER',

@@ -52,7 +52,7 @@ export const defaultFilter: ServerFilter = {
   locationFinland: true,
 
   showAuction: true,
-  showStandard: true,
+  showStandard: false, // Default false for backwards compat with existing alerts
 
   cpuCount: 1,
   cpuIntel: true,
@@ -239,7 +239,7 @@ export function convertServerConfigurationToFilter(
   base.locationFinland = true;
   base.selectedDatacenters = [];
   base.showAuction = true;
-  base.showStandard = true;
+  base.showStandard = false; // Only match auctions for server config filters
 
   return base;
 }
