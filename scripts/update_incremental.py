@@ -221,7 +221,7 @@ WHERE row_num = 1
 import_standard_query = """
 INSERT INTO server
 SELECT
-    CAST(s.id AS UBIGINT) as id,
+    hash(s.id || '-' || dc.datacenter) as id,  -- Hash string ID + datacenter for uniqueness
     [] as information,
 
     dc.datacenter as datacenter,
