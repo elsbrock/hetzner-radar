@@ -224,8 +224,8 @@ SELECT
     CAST(s.id AS UBIGINT) as id,
     [] as information,
 
-    dc_datacenter as datacenter,
-    CASE WHEN dc_datacenter LIKE 'NBG%%' OR dc_datacenter LIKE 'FSN%%'
+    dc.datacenter as datacenter,
+    CASE WHEN dc.datacenter LIKE 'NBG%%' OR dc.datacenter LIKE 'FSN%%'
         THEN 'Germany'
         ELSE 'Finland'
     END AS location,
@@ -282,7 +282,7 @@ FROM read_json('%s', format = 'auto', columns = {
     traffic: 'VARCHAR',
     datacenter: 'STRUCT(datacenter VARCHAR, name VARCHAR, country VARCHAR, country_shortcode VARCHAR)[]',
     specials: 'VARCHAR[]'
-}) s, UNNEST(s.datacenter) as dc(dc_datacenter, dc_name, dc_country, dc_country_shortcode)
+}) s, LATERAL (SELECT UNNEST(s.datacenter) as dc) t
 """
 
 
