@@ -5,8 +5,9 @@ import multiprocessing
 create_table_query = """
 CREATE TEMP TABLE server_raw (
     id UBIGINT,
+    server_type VARCHAR,
     information VARCHAR[],
-    
+
     datacenter VARCHAR,
     location VARCHAR,
     
@@ -52,6 +53,7 @@ import_data_query = """
 insert into server_raw
   select
     id,
+    'auction' as server_type,
     information,
 
     datacenter,

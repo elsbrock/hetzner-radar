@@ -13,7 +13,9 @@
 		faChartLine,
 		faExternalLinkAlt,
 		faFilter,
-		faShoppingCart
+		faGavel,
+		faShoppingCart,
+		faStore
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
@@ -55,10 +57,17 @@
 	let auctions = $state<LiveAuctionResult[]>([]);
 	let loadingAuctions = $state(false);
 
-	// Fetch auctions from live D1 API when config changes
+	// Fetch auctions from live D1 API when config changes (only for auction servers)
 	$effect(() => {
 		const currentConfig = config;
 		const currentFilter = $filter;
+
+		// Skip fetching for standard servers - they don't have auction listings
+		if (currentConfig?.server_type === 'standard') {
+			auctions = [];
+			loadingAuctions = false;
+			return;
+		}
 
 		if (currentConfig && currentFilter) {
 			loadingAuctions = true;
@@ -342,109 +351,154 @@
 
 		<!-- Server Hardware Details -->
 		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} layout="horizontal" class="mb-3" />
-		<div class="mb-1 flex items-center justify-between">
-			<h6 class="text-lg font-medium text-gray-900 dark:text-white">Auctions</h6>
-			{#if config}
-				<Button
-					href={getHetznerLink(config)}
-					target="_blank"
-					rel="noopener noreferrer"
-					size="xs"
-					color="alternative"
-				>
-					<Fa icon={faExternalLinkAlt} />
-				</Button>
-				<Tooltip placement="bottom" class="z-50">Search on Hetzner with this configuration</Tooltip>
-			{/if}
-		</div>
-		<Table hoverable={false} striped={true}>
-			<TableBody class="divide-y">
-				{#if loadingAuctions}
-					<TableBodyRow>
-						<TableBodyCell colspan={3} class="py-4 text-center">
-							<p class="text-gray-700 dark:text-gray-400">Loading auctions...</p>
-						</TableBodyCell>
-					</TableBodyRow>
-				{:else if auctions.length > 0}
-					{#each auctions.slice(0, 5) as auction (auction.id)}
-						<TableBodyRow>
-							<TableBodyCell class="px-1 py-3" colspan={3}>
-								<div class="flex items-center justify-between gap-2">
-									<div class="flex items-center gap-3">
-										<div class="font-medium">#{auction.id}</div>
-										<div class="text-xs text-gray-500 dark:text-gray-400">
-											{auction.datacenter}, {auction.location}
-										</div>
-									</div>
-									<div class="flex items-center gap-3">
-										<div class="text-right">
-											<div>
-												{convertPrice(
-													auction.lastPrice * (1 + selectedOption.rate),
-													'EUR',
-													$currentCurrency
-												).toFixed(2)} {$currencySymbol}
-											</div>
-											<div class="text-xs text-gray-500 dark:text-gray-400">
-												{vatSuffix}
-											</div>
-										</div>
-										<Button
-											href={`https://www.hetzner.com/sb/#search=${auction.id}`}
-											target="_blank"
-											rel="noopener noreferrer"
-											size="md"
-											aria-label="View on Hetzner"
-											class="px-4"
-										>
-											<Fa icon={faShoppingCart} />
-										</Button>
-									</div>
-								</div>
-								<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-									<span class="inline-flex items-center">
-										{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
-											<Indicator color="green" class="mr-1.5 animate-pulse" size="xs" />
-										{:else}
-											<Indicator color="red" class="mr-1.5" size="xs" />
-										{/if}
-										seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
-									</span>
-								</div>
-							</TableBodyCell>
-						</TableBodyRow>
-					{/each}
-				{:else}
-					<TableBodyRow>
-						<TableBodyCell colspan={3} class="py-4 text-center">
-							<p class="text-gray-700 dark:text-gray-400">No matching auctions found.</p>
-						</TableBodyCell>
-					</TableBodyRow>
+
+		{#if config?.server_type === 'standard'}
+			<!-- Standard server - direct order link -->
+			<div class="mb-1 flex items-center justify-between">
+				<h6 class="flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-white">
+					<Fa icon={faStore} class="text-blue-500" />
+					Standard Server
+				</h6>
+			</div>
+		{:else}
+			<!-- Auction server - show available auctions -->
+			<div class="mb-1 flex items-center justify-between">
+				<h6 class="flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-white">
+					<Fa icon={faGavel} class="text-orange-500" />
+					Auctions
+				</h6>
+				{#if config}
+					<Button
+						href={getHetznerLink(config)}
+						target="_blank"
+						rel="noopener noreferrer"
+						size="xs"
+						color="alternative"
+					>
+						<Fa icon={faExternalLinkAlt} />
+					</Button>
+					<Tooltip placement="bottom" class="z-50">Search on Hetzner with this configuration</Tooltip>
 				{/if}
-			</TableBody>
-		</Table>
-		{#if auctions.length > 5}
-			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-				Showing the 5 most recently seen auctions. More may be available.
-			</p>
+			</div>
 		{/if}
 
-		<hr class="my-4 border-gray-200 dark:border-gray-600" />
-		<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
-			<p>
-				Clicking the <Fa icon={faShoppingCart} class="mx-1 inline" /> button opens the auction
-				on Hetzner's server auction page.
-			</p>
-			<p>
-				Please note: Hetzner search results depend on availability and may differ. Ensure server
-				specs meet your needs. Prices shown here include VAT based on your selection, but Hetzner's
-				final price may vary.
-			</p>
-			<p>
-				This service is provided "as is" without warranty. The author assumes no responsibility for
-				issues or discrepancies on the Hetzner platform.
-			</p>
-		</div>
+		{#if config?.server_type === 'standard'}
+			<!-- Standard server - show order button -->
+			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+				<p class="mb-3 text-sm text-gray-700 dark:text-gray-300">
+					This is a standard dedicated server from Hetzner's regular lineup with fixed pricing.
+				</p>
+				<Button
+					href="https://www.hetzner.com/dedicated-rootserver"
+					target="_blank"
+					rel="noopener noreferrer"
+					color="blue"
+					class="w-full"
+				>
+					<Fa icon={faShoppingCart} class="mr-2" />
+					Order from Hetzner
+				</Button>
+			</div>
+			<hr class="my-4 border-gray-200 dark:border-gray-600" />
+			<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+				<p>
+					Standard servers have fixed pricing and are always available for order directly from Hetzner.
+				</p>
+				<p>
+					Prices shown include VAT based on your selection. Hetzner's final price may vary based on configuration options.
+				</p>
+			</div>
+		{:else}
+			<!-- Auction server - show available auctions -->
+			<Table hoverable={false} striped={true}>
+				<TableBody class="divide-y">
+					{#if loadingAuctions}
+						<TableBodyRow>
+							<TableBodyCell colspan={3} class="py-4 text-center">
+								<p class="text-gray-700 dark:text-gray-400">Loading auctions...</p>
+							</TableBodyCell>
+						</TableBodyRow>
+					{:else if auctions.length > 0}
+						{#each auctions.slice(0, 5) as auction (auction.id)}
+							<TableBodyRow>
+								<TableBodyCell class="px-1 py-3" colspan={3}>
+									<div class="flex items-center justify-between gap-2">
+										<div class="flex items-center gap-3">
+											<div class="font-medium">#{auction.id}</div>
+											<div class="text-xs text-gray-500 dark:text-gray-400">
+												{auction.datacenter}, {auction.location}
+											</div>
+										</div>
+										<div class="flex items-center gap-3">
+											<div class="text-right">
+												<div>
+													{convertPrice(
+														auction.lastPrice * (1 + selectedOption.rate),
+														'EUR',
+														$currentCurrency
+													).toFixed(2)} {$currencySymbol}
+												</div>
+												<div class="text-xs text-gray-500 dark:text-gray-400">
+													{vatSuffix}
+												</div>
+											</div>
+											<Button
+												href={`https://www.hetzner.com/sb/#search=${auction.id}`}
+												target="_blank"
+												rel="noopener noreferrer"
+												size="md"
+												aria-label="View on Hetzner"
+												class="px-4"
+											>
+												<Fa icon={faShoppingCart} />
+											</Button>
+										</div>
+									</div>
+									<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+										<span class="inline-flex items-center">
+											{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
+												<Indicator color="green" class="mr-1.5 animate-pulse" size="xs" />
+											{:else}
+												<Indicator color="red" class="mr-1.5" size="xs" />
+											{/if}
+											seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
+										</span>
+									</div>
+								</TableBodyCell>
+							</TableBodyRow>
+						{/each}
+					{:else}
+						<TableBodyRow>
+							<TableBodyCell colspan={3} class="py-4 text-center">
+								<p class="text-gray-700 dark:text-gray-400">No matching auctions found.</p>
+							</TableBodyCell>
+						</TableBodyRow>
+					{/if}
+				</TableBody>
+			</Table>
+			{#if auctions.length > 5}
+				<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+					Showing the 5 most recently seen auctions. More may be available.
+				</p>
+			{/if}
+
+			<hr class="my-4 border-gray-200 dark:border-gray-600" />
+			<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+				<p>
+					Clicking the <Fa icon={faShoppingCart} class="mx-1 inline" /> button opens the auction
+					on Hetzner's server auction page.
+				</p>
+				<p>
+					Please note: Hetzner search results depend on availability and may differ. Ensure server
+					specs meet your needs. Prices shown here include VAT based on your selection, but Hetzner's
+					final price may vary.
+				</p>
+				<p>
+					This service is provided "as is" without warranty. The author assumes no responsibility for
+					issues or discrepancies on the Hetzner platform.
+				</p>
+			</div>
+		{/if}
 	{:else}
 		<p class="text-gray-500 dark:text-gray-400">No server selected.</p>
 	{/if}

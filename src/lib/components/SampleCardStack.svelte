@@ -8,6 +8,7 @@
 	// Fallback sample configuration data
 	const fallbackConfigs: ServerConfiguration[] = [
 		{
+			server_type: 'auction',
 			cpu: 'Intel Core i7-7700',
 			ram_size: 64,
 			is_ecc: false,
@@ -31,6 +32,7 @@
 			ram: []
 		},
 		{
+			server_type: 'auction',
 			cpu: 'AMD Ryzen 5 3600',
 			ram_size: 64,
 			is_ecc: true,
@@ -54,6 +56,7 @@
 			ram: []
 		},
 		{
+			server_type: 'standard',
 			cpu: 'Intel Xeon E3-1275v6',
 			ram_size: 64,
 			is_ecc: true,

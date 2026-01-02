@@ -34,8 +34,8 @@
 		</h1>
 		<p class="mb-6 text-lg font-medium text-orange-500">Open-source Hetzner market intelligence</p>
 		<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
-			Server Radar is a free, open-source tool to monitor the Hetzner server market. Track auction
-			prices, check cloud server availability, and get notified when deals appear.
+			Server Radar is a free, open-source tool to monitor the Hetzner server market. Compare auction
+			and standard dedicated servers, check cloud availability, and get notified when deals appear.
 		</p>
 		<div class="flex flex-col gap-4 sm:flex-row">
 			<Button

@@ -22,17 +22,17 @@
 
 	<!-- Two main product areas -->
 	<div class="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-2">
-		<!-- Auction Tracking -->
+		<!-- Dedicated Servers -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
 			<div class="mb-4 flex items-center gap-3">
 				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
 					<FontAwesomeIcon icon={faServer} class="h-5 w-5 text-orange-500" />
 				</div>
-				<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Dedicated Server Auctions</h3>
+				<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Dedicated Servers</h3>
 			</div>
 			<p class="mb-4 text-gray-600 dark:text-gray-400">
-				Browse Hetzner's server auction with advanced filtering. View 3 months of price history to
-				find the right time to buy.
+				Compare auction and standard dedicated servers side by side. View 3 months of auction price
+				history to find the best deals.
 			</p>
 			<ul class="mb-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
 				<li class="flex items-center gap-2">
@@ -53,7 +53,7 @@
 				</li>
 			</ul>
 			<Button href="/analyze" size="sm" color="light">
-				Browse Auctions
+				Browse Servers
 				<ArrowRightOutline class="ms-2 h-4 w-4" />
 			</Button>
 		</div>

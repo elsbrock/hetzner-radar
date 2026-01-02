@@ -21,12 +21,14 @@ import json
 import gzip
 from datetime import datetime
 
-HETZNER_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
+HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
+HETZNER_LIVE_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_en_EUR.json"
 
 # Schema for the server table (same as import.py)
 create_table_query = """
 CREATE TABLE IF NOT EXISTS server (
     id UBIGINT,
+    server_type VARCHAR,
     information VARCHAR[],
 
     datacenter VARCHAR,
@@ -74,6 +76,7 @@ CREATE TABLE IF NOT EXISTS server (
 create_temp_table_query = """
 CREATE TEMP TABLE server_incoming (
     id UBIGINT,
+    server_type VARCHAR,
     information VARCHAR[],
 
     datacenter VARCHAR,
@@ -117,11 +120,12 @@ CREATE TEMP TABLE server_incoming (
 );
 """
 
-# Transform and insert from JSON (same as import.py)
-import_data_query = """
+# Transform and insert auction data from JSON
+import_auction_query = """
 INSERT INTO server_incoming
 SELECT
     id,
+    'auction' as server_type,
     information,
 
     datacenter,
@@ -209,19 +213,81 @@ FROM CTE
 WHERE row_num = 1
 """
 
-# Purge old data (keep N days)
-purge_query = """
-DELETE FROM server
-WHERE seen < NOW() - INTERVAL '%d days'
+# Transform and insert standard (non-auction) server data
+# UNNEST creates one row per datacenter for each product
+import_standard_query = """
+INSERT INTO server_incoming
+SELECT
+    CAST(s.id AS UBIGINT) as id,
+    'standard' as server_type,
+    [] as information,
+
+    dc.datacenter as datacenter,
+    CASE WHEN dc.datacenter LIKE 'NBG%%' OR dc.datacenter LIKE 'FSN%%'
+        THEN 'Germany'
+        ELSE 'Finland'
+    END AS location,
+
+    LEFT(s.cpu, POSITION(' ' IN s.cpu || ' ') - 1) as cpu_vendor,
+    s.cpu,
+    s.cores as cpu_count,
+    false as is_highio,
+
+    s.ram_hr as ram,
+    s.ram as ram_size,
+    s.is_ecc,
+
+    s.hdd_arr,
+
+    array_length(s.serverDiskData.nvme) as nvme_count,
+    s.serverDiskData.nvme as nvme_drives,
+    list_aggregate(s.serverDiskData.nvme, 'sum') as nvme_size,
+
+    array_length(s.serverDiskData.sata) as sata_count,
+    s.serverDiskData.sata as sata_drives,
+    list_aggregate(s.serverDiskData.sata, 'sum') as sata_size,
+
+    array_length(s.serverDiskData.hdd) as hdd_count,
+    s.serverDiskData.hdd as hdd_drives,
+    list_aggregate(s.serverDiskData.hdd, 'sum') as hdd_size,
+
+    array_contains(s.specials, 'iNIC') as with_inic,
+    array_contains(s.specials, 'HWR') as with_hwr,
+    array_contains(s.specials, 'GPU') as with_gpu,
+    array_contains(s.specials, 'RPS') as with_rps,
+
+    s.traffic,
+    s."Bandwidth" as bandwidth,
+
+    CAST(s.price * 100 AS INTEGER) as price,
+    true as fixed_price,
+
+    NOW() as seen
+
+FROM read_json('%s', format = 'auto', columns = {
+    id: 'VARCHAR',
+    cpu: 'VARCHAR',
+    cores: 'INTEGER',
+    ram: 'INTEGER',
+    ram_hr: 'VARCHAR',
+    is_ecc: 'BOOLEAN',
+    hdd_arr: 'VARCHAR[]',
+    serverDiskData: 'STRUCT(nvme INTEGER[], sata INTEGER[], hdd INTEGER[], general INTEGER[])',
+    price: 'FLOAT',
+    "Bandwidth": 'INTEGER',
+    traffic: 'VARCHAR',
+    datacenter: 'STRUCT(datacenter VARCHAR, name VARCHAR, shortname VARCHAR, country VARCHAR, country_shortcode VARCHAR)[]',
+    specials: 'VARCHAR[]'
+}) s, UNNEST(s.datacenter) as dc
 """
 
 
-def fetch_hetzner_data(output_path: str) -> str:
-    """Fetch current auction data from Hetzner API and save to temp file."""
-    print(f"Fetching data from Hetzner API...")
+def fetch_hetzner_data(url: str, output_path: str, label: str = "servers") -> str:
+    """Fetch data from Hetzner API and save to temp file."""
+    print(f"Fetching {label} from Hetzner API...")
 
     req = urllib.request.Request(
-        HETZNER_API_URL,
+        url,
         headers={'User-Agent': 'Mozilla/5.0 (compatible; HetznerRadar/1.0)'}
     )
 
@@ -230,7 +296,7 @@ def fetch_hetzner_data(output_path: str) -> str:
 
     # Extract server array
     servers = data.get('server', data) if isinstance(data, dict) else data
-    print(f"Fetched {len(servers)} servers from API")
+    print(f"Fetched {len(servers)} {label} from API")
 
     # Save to temp file for DuckDB to read
     with open(output_path, 'w') as f:
@@ -239,7 +305,7 @@ def fetch_hetzner_data(output_path: str) -> str:
     return output_path
 
 
-def update_database(db_path: str, json_path: str, retention_days: int = 90):
+def update_database(db_path: str, auction_json_path: str, standard_json_path: str = None, retention_days: int = 90):
     """Incrementally update the DuckDB database with new data."""
     print(f"Opening database: {db_path}")
 
@@ -264,9 +330,9 @@ def update_database(db_path: str, json_path: str, retention_days: int = 90):
         # Create temp table for incoming data
         conn.execute(create_temp_table_query)
 
-        # Import new data into temp table
-        print("Importing new data...")
-        conn.execute(import_data_query % json_path)
+        # Import new auction data into temp table
+        print("Importing new auction data...")
+        conn.execute(import_auction_query % auction_json_path)
 
         incoming_count = conn.execute("SELECT COUNT(*) FROM server_incoming").fetchone()[0]
         print(f"Incoming records: {incoming_count}")
@@ -286,31 +352,51 @@ def update_database(db_path: str, json_path: str, retention_days: int = 90):
         after_dedup = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
         print(f"Records after deduplication: {after_dedup}")
 
-        # Purge old data
+        # Purge old auction data (standard servers don't have history)
         if retention_days > 0:
-            print(f"Purging records older than {retention_days} days...")
-            conn.execute(purge_query % retention_days)
+            print(f"Purging auction records older than {retention_days} days...")
+            conn.execute(f"""
+                DELETE FROM server
+                WHERE server_type = 'auction' AND seen < NOW() - INTERVAL '{retention_days} days'
+            """)
 
             final_count = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
             purged = after_dedup - final_count
             if purged > 0:
                 print(f"Purged {purged} old records")
 
+        # Update standard servers if path provided (fresh snapshot each time)
+        if standard_json_path:
+            print("\n--- Updating standard servers ---")
+            # Delete existing standard servers (snapshot replacement)
+            conn.execute("DELETE FROM server WHERE server_type = 'standard'")
+
+            # Import fresh standard server data
+            print("Importing standard server data...")
+            conn.execute(import_standard_query % standard_json_path)
+
+            standard_count = conn.execute("SELECT COUNT(*) FROM server WHERE server_type = 'standard'").fetchone()[0]
+            print(f"Standard servers imported: {standard_count}")
+
         conn.execute("COMMIT")
 
         # Final stats
         final_count = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
+        auction_count = conn.execute("SELECT COUNT(*) FROM server WHERE server_type = 'auction'").fetchone()[0]
+        standard_count = conn.execute("SELECT COUNT(*) FROM server WHERE server_type = 'standard'").fetchone()[0]
         date_range = conn.execute("""
             SELECT
                 MIN(seen)::DATE as earliest,
                 MAX(seen)::DATE as latest,
                 COUNT(DISTINCT date_trunc('d', seen)) as days
             FROM server
+            WHERE server_type = 'auction'
         """).fetchone()
 
         print(f"\nDatabase updated successfully!")
-        print(f"Total records: {final_count}")
-        print(f"Date range: {date_range[0]} to {date_range[1]} ({date_range[2]} days)")
+        print(f"Total records: {final_count} (auctions: {auction_count}, standard: {standard_count})")
+        if date_range[0]:
+            print(f"Auction date range: {date_range[0]} to {date_range[1]} ({date_range[2]} days)")
 
     except Exception as e:
         conn.execute("ROLLBACK")
@@ -338,20 +424,23 @@ def main():
     db_path = sys.argv[1]
     retention_days = int(sys.argv[2]) if len(sys.argv) > 2 else 90
 
-    # Create temp file for JSON data
-    temp_json = "/tmp/hetzner_auction_data.json"
+    # Create temp files for JSON data
+    temp_auction_json = "/tmp/hetzner_auction_data.json"
+    temp_standard_json = "/tmp/hetzner_standard_data.json"
 
     try:
         # Fetch fresh data from Hetzner
-        fetch_hetzner_data(temp_json)
+        fetch_hetzner_data(HETZNER_AUCTION_API_URL, temp_auction_json, "auction servers")
+        fetch_hetzner_data(HETZNER_LIVE_API_URL, temp_standard_json, "standard servers")
 
         # Update database incrementally
-        update_database(db_path, temp_json, retention_days)
+        update_database(db_path, temp_auction_json, temp_standard_json, retention_days)
 
     finally:
-        # Cleanup temp file
-        if os.path.exists(temp_json):
-            os.remove(temp_json)
+        # Cleanup temp files
+        for temp_file in [temp_auction_json, temp_standard_json]:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
 
 
 if __name__ == "__main__":

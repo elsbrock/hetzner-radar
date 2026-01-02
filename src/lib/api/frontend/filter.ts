@@ -13,8 +13,27 @@ export function generateFilterQuery(
   withCPU: boolean,
   withDatacenters: boolean,
   recentlySeen: boolean = true,
+  hasServerTypeColumn: boolean = true,
 ): SQLStatement {
-  const query = SQL` cpu_count >= ${filter.cpuCount} and (`;
+  const query = SQL` cpu_count >= ${filter.cpuCount}`;
+
+  // server type filtering - only filter when column exists AND user disabled one type
+  if (hasServerTypeColumn && (!filter.showAuction || !filter.showStandard)) {
+    query.append(SQL` and (`);
+    if (filter.showAuction) {
+      query.append(SQL` server_type = 'auction'`);
+    } else {
+      query.append(SQL` 1=2`);
+    }
+    if (filter.showStandard) {
+      query.append(SQL` or server_type = 'standard'`);
+    } else {
+      query.append(SQL` or 1=2`);
+    }
+    query.append(SQL` )`);
+  }
+
+  query.append(SQL` and (`);
 
   // location filtering
   if (filter.locationGermany) {
@@ -190,6 +209,7 @@ export async function getPrices(
 }
 
 export type ServerConfiguration = {
+  server_type?: "auction" | "standard"; // Optional for backward compat with old DBs
   with_hwr: null | boolean;
   with_gpu: null | boolean;
   with_rps: null | boolean;
@@ -213,22 +233,49 @@ export type ServerConfiguration = {
   count: number | null;
 };
 
+// Check if server_type column exists in the database
+async function hasServerTypeColumn(
+  conn: AsyncDuckDBConnection,
+): Promise<boolean> {
+  try {
+    const result = await getData<{ count: number }>(
+      conn,
+      SQL`SELECT count(*) as count FROM duckdb_columns() WHERE table_name='server' AND column_name='server_type'`,
+    );
+    return result.length > 0 && result[0].count > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function getConfigurations(
   conn: AsyncDuckDBConnection,
   filter: ServerFilter,
 ): Promise<ServerConfiguration[]> {
+  // Check if server_type column exists for backward compatibility
+  const hasServerType = await hasServerTypeColumn(conn);
+
   const configurations_filter_query = generateFilterQuery(
     filter,
     true,
     true,
     false,
+    hasServerType,
   );
+
+  // Build SELECT and GROUP BY dynamically based on column existence
+  const serverTypeSelect = hasServerType
+    ? "server_type,"
+    : "'auction' as server_type,";
+  const serverTypeGroupBy = hasServerType ? "server_type," : "";
+
   const configurations_query = SQL`
     SELECT
         * exclude(last_seen),
         extract('epoch' from last_seen) as last_seen
     FROM (
         SELECT
+            `.append(serverTypeSelect).append(SQL`
             cpu,
             ram_size,
             is_ecc,
@@ -255,10 +302,15 @@ export async function getConfigurations(
                 ELSE 0 -- Avoid division by zero, assume 0% markup if min price is 0
             END AS markup_percentage -- Calculate percentage markup
         from server
-        WHERE `;
+        WHERE `);
   configurations_query.append(configurations_filter_query);
-  configurations_query.append(`
+  configurations_query
+    .append(
+      `
         GROUP BY
+            `,
+    )
+    .append(serverTypeGroupBy).append(`
             cpu,
             ram_size,
             is_ecc,

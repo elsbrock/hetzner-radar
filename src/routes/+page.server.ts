@@ -30,6 +30,7 @@ interface CurrentAuctionRow {
 
 // ServerConfiguration type for the frontend
 export interface FeaturedServer {
+  server_type: "auction" | "standard";
   cpu: string;
   ram: string[];
   ram_size: number;
@@ -66,6 +67,7 @@ function parseJsonArray<T>(value: string | null): T[] {
 function mapAuctionToFeaturedServer(row: CurrentAuctionRow): FeaturedServer {
   const priceWithIpv4 = row.price + HETZNER_IPV4_COST_CENTS / 100;
   return {
+    server_type: "auction",
     cpu: row.cpu,
     ram: parseJsonArray<string>(row.ram),
     ram_size: row.ram_size,

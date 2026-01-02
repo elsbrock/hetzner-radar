@@ -10,6 +10,9 @@ export type ServerFilter = {
   locationGermany: boolean;
   locationFinland: boolean;
 
+  showAuction: boolean;
+  showStandard: boolean;
+
   cpuCount: number;
   cpuIntel: boolean;
   cpuAMD: boolean;
@@ -47,6 +50,9 @@ export const defaultFilter: ServerFilter = {
 
   locationGermany: true,
   locationFinland: true,
+
+  showAuction: true,
+  showStandard: true,
 
   cpuCount: 1,
   cpuIntel: true,
@@ -232,6 +238,8 @@ export function convertServerConfigurationToFilter(
   base.locationGermany = true;
   base.locationFinland = true;
   base.selectedDatacenters = [];
+  base.showAuction = true;
+  base.showStandard = true;
 
   return base;
 }

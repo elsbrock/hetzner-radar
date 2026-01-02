@@ -22,11 +22,13 @@ type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 		faChevronRight,
 		faChevronUp,
 		faClockRotateLeft,
+		faGavel,
 		faGlobe,
 		faHardDrive,
 		faMemory,
 		faMicrochip,
 		faRotateLeft,
+		faStore,
 		faStopwatch,
 		faTags
 	} from '@fortawesome/free-solid-svg-icons';
@@ -388,6 +390,45 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					onchange={(e: Event) => {
 						const target = e.target as HTMLInputElement;
 						filter = { ...filter, locationFinland: target.checked };
+					}}
+				/>
+			</div>
+		</li>
+
+		<!-- Server Type Filters -->
+		<li class="flex items-center justify-between">
+			<h2 class="flex items-center text-base font-semibold dark:text-white">
+				<FontAwesomeIcon class="me-1 h-4 w-4" icon={faTags} /> Server Type
+			</h2>
+		</li>
+		<li>
+			<div class="flex items-center justify-between">
+				<Label class="flex items-center gap-1.5 text-sm">
+					<FontAwesomeIcon class="h-3 w-3 text-orange-500" icon={faGavel} />
+					Auction
+				</Label>
+				<Toggle
+					size="small"
+					checked={filter.showAuction}
+					onchange={(e: Event) => {
+						const target = e.target as HTMLInputElement;
+						filter = { ...filter, showAuction: target.checked };
+					}}
+				/>
+			</div>
+		</li>
+		<li>
+			<div class="flex items-center justify-between">
+				<Label class="flex items-center gap-1.5 text-sm">
+					<FontAwesomeIcon class="h-3 w-3 text-blue-500" icon={faStore} />
+					Standard
+				</Label>
+				<Toggle
+					size="small"
+					checked={filter.showStandard}
+					onchange={(e: Event) => {
+						const target = e.target as HTMLInputElement;
+						filter = { ...filter, showStandard: target.checked };
 					}}
 				/>
 			</div>
