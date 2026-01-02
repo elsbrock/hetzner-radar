@@ -22,13 +22,11 @@ type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 		faChevronRight,
 		faChevronUp,
 		faClockRotateLeft,
-		faGavel,
 		faGlobe,
 		faHardDrive,
 		faMemory,
 		faMicrochip,
 		faRotateLeft,
-		faStore,
 		faStopwatch,
 		faTags
 	} from '@fortawesome/free-solid-svg-icons';
@@ -403,10 +401,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 		</li>
 		<li>
 			<div class="flex items-center justify-between">
-				<Label class="flex items-center gap-1.5 text-sm">
-					<FontAwesomeIcon class="h-3 w-3 text-orange-500" icon={faGavel} />
-					Auction
-				</Label>
+				<Label class="text-sm">Auction</Label>
 				<Toggle
 					size="small"
 					checked={filter.showAuction}
@@ -419,10 +414,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 		</li>
 		<li>
 			<div class="flex items-center justify-between">
-				<Label class="flex items-center gap-1.5 text-sm">
-					<FontAwesomeIcon class="h-3 w-3 text-blue-500" icon={faStore} />
-					Standard
-				</Label>
+				<Label class="text-sm">Standard</Label>
 				<Toggle
 					size="small"
 					checked={filter.showStandard}

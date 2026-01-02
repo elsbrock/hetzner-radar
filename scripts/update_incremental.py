@@ -24,11 +24,10 @@ from datetime import datetime
 HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
 HETZNER_LIVE_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_en_EUR.json"
 
-# Schema for the server table (same as import.py)
+# Schema for the server table (server_type at end to match ALTER TABLE ADD order)
 create_table_query = """
 CREATE TABLE IF NOT EXISTS server (
     id UBIGINT,
-    server_type VARCHAR,
     information VARCHAR[],
 
     datacenter VARCHAR,
@@ -68,15 +67,16 @@ CREATE TABLE IF NOT EXISTS server (
     price INTEGER,
     fixed_price BOOLEAN,
 
-    seen TIMESTAMP
+    seen TIMESTAMP,
+
+    server_type VARCHAR
 );
 """
 
-# Temp table for incoming data
+# Temp table for incoming data (server_type at end to match ALTER TABLE ADD order)
 create_temp_table_query = """
 CREATE TEMP TABLE server_incoming (
     id UBIGINT,
-    server_type VARCHAR,
     information VARCHAR[],
 
     datacenter VARCHAR,
@@ -116,16 +116,17 @@ CREATE TEMP TABLE server_incoming (
     price INTEGER,
     fixed_price BOOLEAN,
 
-    seen TIMESTAMP
+    seen TIMESTAMP,
+
+    server_type VARCHAR
 );
 """
 
-# Transform and insert auction data from JSON
+# Transform and insert auction data from JSON (server_type at end)
 import_auction_query = """
 INSERT INTO server_incoming
 SELECT
     id,
-    'auction' as server_type,
     information,
 
     datacenter,
@@ -168,7 +169,9 @@ SELECT
     price,
     fixed_price,
 
-    TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen
+    TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen,
+
+    'auction' as server_type
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'UBIGINT',
@@ -219,7 +222,6 @@ import_standard_query = """
 INSERT INTO server
 SELECT
     CAST(s.id AS UBIGINT) as id,
-    'standard' as server_type,
     [] as information,
 
     dc.datacenter as datacenter,
@@ -262,7 +264,9 @@ SELECT
     CAST(s.price * 100 AS INTEGER) as price,
     true as fixed_price,
 
-    NOW() as seen
+    NOW() as seen,
+
+    'standard' as server_type
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'VARCHAR',

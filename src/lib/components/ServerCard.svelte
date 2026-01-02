@@ -6,7 +6,7 @@
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import { Card, Indicator, Spinner, Tooltip } from 'flowbite-svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faFire, faGavel, faStore } from '@fortawesome/free-solid-svg-icons';
+	import { faFire } from '@fortawesome/free-solid-svg-icons';
 	import ServerDetailDrawer from './ServerDetailDrawer.svelte';
 	import ServerFactSheet from './ServerFactSheet.svelte';
 	import { vatOptions } from './VatSelector.svelte';
@@ -94,7 +94,7 @@
 			<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
 				{config.cpu}
 			</h5>
-			<div class="mb-3 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+			<div class="mb-3 flex flex-col gap-1 text-xs text-gray-400 dark:text-gray-500">
 				<span class="inline-flex items-center">
 					{#if dayjs.unix(config.last_seen ?? 0) > dayjs().subtract(80, 'minutes')}
 						<Indicator color="green" class="mr-2 animate-pulse" size="xs" />
@@ -104,13 +104,11 @@
 					seen {config.last_seen ? dayjs.unix(config.last_seen).fromNow() : 'unknown'}
 				</span>
 				{#if config.server_type === 'standard'}
-					<span class="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-						<FontAwesomeIcon icon={faStore} class="h-2.5 w-2.5" />
+					<span class="inline-flex w-fit items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
 						Standard
 					</span>
 				{:else}
-					<span class="inline-flex items-center gap-1 rounded bg-orange-100 px-1.5 py-0.5 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
-						<FontAwesomeIcon icon={faGavel} class="h-2.5 w-2.5" />
+					<span class="inline-flex w-fit items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
 						Auction
 					</span>
 				{/if}
