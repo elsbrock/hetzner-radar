@@ -323,6 +323,13 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
             print("Creating new database...")
         conn.execute(create_table_query)
 
+        # Migration: Add server_type column if it doesn't exist (for existing databases)
+        existing_columns = [row[0] for row in conn.execute("SELECT column_name FROM duckdb_columns() WHERE table_name = 'server'").fetchall()]
+        if 'server_type' not in existing_columns:
+            print("Migrating: Adding server_type column...")
+            conn.execute("ALTER TABLE server ADD COLUMN server_type VARCHAR DEFAULT 'auction'")
+            print("Migration complete.")
+
         # Get current record count
         before_count = conn.execute("SELECT COUNT(*) FROM server").fetchone()[0]
         print(f"Existing records: {before_count}")
