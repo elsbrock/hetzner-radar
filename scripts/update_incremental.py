@@ -213,10 +213,10 @@ FROM CTE
 WHERE row_num = 1
 """
 
-# Transform and insert standard (non-auction) server data
+# Transform and insert standard (non-auction) server data directly into server table
 # UNNEST creates one row per datacenter for each product
 import_standard_query = """
-INSERT INTO server_incoming
+INSERT INTO server
 SELECT
     CAST(s.id AS UBIGINT) as id,
     'standard' as server_type,
