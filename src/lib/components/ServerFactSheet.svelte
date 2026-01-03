@@ -208,7 +208,7 @@
 					<FontAwesomeIcon icon={faSdCard} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 				</div>
 				<div>NVMe</div>
-				<div class="font-medium text-gray-900 dark:text-white">
+				<div class="flex flex-wrap gap-x-2 font-medium text-gray-900 dark:text-white">
 					{#each nvmeSummary as summary (summary.value)}
 						<span class="whitespace-nowrap"
 							>{nvmeSummary.length > 1 || summary.count > 1
@@ -230,7 +230,7 @@
 					<FontAwesomeIcon icon={faHardDrive} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 				</div>
 				<div>SATA</div>
-				<div class="font-medium text-gray-900 dark:text-white">
+				<div class="flex flex-wrap gap-x-2 font-medium text-gray-900 dark:text-white">
 					{#each sataSummary as summary (summary.value)}
 						<span class="whitespace-nowrap"
 							>{sataSummary.length > 1 || summary.count > 1
@@ -252,7 +252,7 @@
 					<FontAwesomeIcon icon={faHardDrive} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 				</div>
 				<div>HDD</div>
-				<div class="font-medium text-gray-900 dark:text-white">
+				<div class="flex flex-wrap gap-x-2 font-medium text-gray-900 dark:text-white">
 					{#each hddSummary as summary (summary.value)}
 						<span class="whitespace-nowrap"
 							>{hddSummary.length > 1 || summary.count > 1
