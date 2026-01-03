@@ -19,17 +19,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
-	import {
-		Button,
-		CloseButton,
-		Drawer,
-		Indicator,
-		Table,
-		TableBody,
-		TableBodyCell,
-		TableBodyRow,
-		Tooltip
-	} from 'flowbite-svelte';
+	import { Button, CloseButton, Drawer, Indicator, Tooltip } from 'flowbite-svelte';
 	import { sineIn } from 'svelte/easing';
 	import { db } from '../../stores/db';
 	import ServerFactSheet from './ServerFactSheet.svelte';
@@ -442,72 +432,65 @@
 			</div>
 		{:else}
 			<!-- Auction server - show available auctions -->
-			<Table hoverable={false} striped={true}>
-				<TableBody class="divide-y">
-					{#if loadingAuctions}
-						<TableBodyRow>
-							<TableBodyCell colspan={3} class="py-4 text-center">
-								<p class="text-gray-700 dark:text-gray-400">Loading auctions...</p>
-							</TableBodyCell>
-						</TableBodyRow>
-					{:else if auctions.length > 0}
-						{#each auctions.slice(0, 5) as auction (auction.id)}
-							<TableBodyRow>
-								<TableBodyCell class="px-1 py-3" colspan={3}>
-									<div class="flex items-center justify-between gap-2">
-										<div class="flex items-center gap-3">
-											<div class="font-medium">#{auction.id}</div>
-											<div class="text-xs text-gray-500 dark:text-gray-400">
-												{auction.datacenter}, {auction.location}
-											</div>
-										</div>
-										<div class="flex items-center gap-3">
-											<div class="text-right">
-												<div>
-													{convertPrice(
-														auction.lastPrice * (1 + selectedOption.rate),
-														'EUR',
-														$currentCurrency
-													).toFixed(2)} {$currencySymbol}
-												</div>
-												<div class="text-xs text-gray-500 dark:text-gray-400">
-													{vatSuffix}
-												</div>
-											</div>
-											<Button
-												href={`https://www.hetzner.com/sb/#search=${auction.id}`}
-												target="_blank"
-												rel="noopener noreferrer"
-												size="md"
-												aria-label="View on Hetzner"
-												class="px-4"
-											>
-												<Fa icon={faShoppingCart} />
-											</Button>
-										</div>
-									</div>
-									<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+			<div class="space-y-2">
+				{#if loadingAuctions}
+					<div class="py-4 text-center">
+						<p class="text-gray-700 dark:text-gray-400">Loading auctions...</p>
+					</div>
+				{:else if auctions.length > 0}
+					{#each auctions.slice(0, 5) as auction (auction.id)}
+						<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+							<div class="flex items-start justify-between gap-2">
+								<div class="min-w-0 flex-1">
+									<div class="flex items-center gap-2">
+										<span class="font-mono text-sm font-medium text-gray-900 dark:text-white">#{auction.id}</span>
 										<span class="inline-flex items-center">
 											{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
-												<Indicator color="green" class="mr-1.5 animate-pulse" size="xs" />
+												<Indicator color="green" class="animate-pulse" size="xs" />
 											{:else}
-												<Indicator color="red" class="mr-1.5" size="xs" />
+												<Indicator color="red" size="xs" />
 											{/if}
-											seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
 										</span>
 									</div>
-								</TableBodyCell>
-							</TableBodyRow>
-						{/each}
-					{:else}
-						<TableBodyRow>
-							<TableBodyCell colspan={3} class="py-4 text-center">
-								<p class="text-gray-700 dark:text-gray-400">No matching auctions found.</p>
-							</TableBodyCell>
-						</TableBodyRow>
-					{/if}
-				</TableBody>
-			</Table>
+									<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+										{auction.datacenter}
+									</div>
+									<div class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+										seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
+									</div>
+								</div>
+								<div class="flex items-center gap-2">
+									<div class="text-right">
+										<div class="font-medium text-gray-900 dark:text-white">
+											{convertPrice(
+												auction.lastPrice * (1 + selectedOption.rate),
+												'EUR',
+												$currentCurrency
+											).toFixed(2)} {$currencySymbol}
+										</div>
+										<div class="text-xs text-gray-500 dark:text-gray-400">
+											{vatSuffix}
+										</div>
+									</div>
+									<Button
+										href={`https://www.hetzner.com/sb/#search=${auction.id}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										size="sm"
+										aria-label="View on Hetzner"
+									>
+										<Fa icon={faShoppingCart} />
+									</Button>
+								</div>
+							</div>
+						</div>
+					{/each}
+				{:else}
+					<div class="py-4 text-center">
+						<p class="text-gray-700 dark:text-gray-400">No matching auctions found.</p>
+					</div>
+				{/if}
+			</div>
 			{#if auctions.length > 5}
 				<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
 					Showing the 5 most recently seen auctions. More may be available.
