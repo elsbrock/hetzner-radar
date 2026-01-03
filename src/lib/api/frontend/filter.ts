@@ -298,17 +298,6 @@ export async function getConfigurations(
             NULL AS cpu_threads,
             NULL AS cpu_generation,`;
 
-  // For standard servers, IPv4 cost is already included in price
-  // For auction servers (or old DBs without server_type), add IPv4 cost
-  const ipv4Cost = HETZNER_IPV4_COST_CENTS / 100;
-
-  // Build price expression based on server_type column existence
-  // Standard servers: price as-is (IPv4 included)
-  // Auction servers: price + IPv4 cost
-  const priceExpr = hasServerType
-    ? `CASE WHEN server_type = 'standard' THEN price ELSE price + ${ipv4Cost} END`
-    : `price + ${ipv4Cost}`;
-
   const configurations_query = SQL`
     SELECT
         * exclude(last_seen),
@@ -317,7 +306,7 @@ export async function getConfigurations(
         SELECT
             `
     .append(serverTypeSelect)
-    .append(newColumnsSelect).append(`
+    .append(newColumnsSelect).append(SQL`
             ANY_VALUE(information)::JSON AS information,
             cpu,
             ram_size,
@@ -337,11 +326,11 @@ export async function getConfigurations(
             sata_count,
             hdd_count,
             MAX(seen) AS last_seen,
-            MIN(${priceExpr}) AS min_price,
-            MAX_BY(${priceExpr}, seen) AS price,
+            MIN(price + ${HETZNER_IPV4_COST_CENTS / 100}) AS min_price,
+            MAX_BY(price + ${HETZNER_IPV4_COST_CENTS / 100}, seen) AS price,
             CASE
-                WHEN MIN(${priceExpr}) > 0 THEN
-                    ((MAX_BY(${priceExpr}, seen) - MIN(${priceExpr})) / MIN(${priceExpr})) * 100
+                WHEN MIN(price + ${HETZNER_IPV4_COST_CENTS / 100}) > 0 THEN
+                    ((MAX_BY(price + ${HETZNER_IPV4_COST_CENTS / 100}, seen) - MIN(price + ${HETZNER_IPV4_COST_CENTS / 100})) / MIN(price + ${HETZNER_IPV4_COST_CENTS / 100})) * 100
                 ELSE 0
             END AS markup_percentage
         from server
