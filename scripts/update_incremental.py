@@ -24,7 +24,7 @@ from datetime import datetime
 HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
 HETZNER_LIVE_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_en_EUR.json"
 
-# Schema for the server table (server_type at end to match ALTER TABLE ADD order)
+# Schema for the server table (new columns at end for backwards compat)
 create_table_query = """
 CREATE TABLE IF NOT EXISTS server (
     id UBIGINT,
@@ -69,11 +69,17 @@ CREATE TABLE IF NOT EXISTS server (
 
     seen TIMESTAMP,
 
-    server_type VARCHAR
+    server_type VARCHAR,
+
+    -- New columns (added for standard server support)
+    setup_price INTEGER DEFAULT 0,
+    cpu_cores INTEGER,
+    cpu_threads INTEGER,
+    cpu_generation VARCHAR
 );
 """
 
-# Temp table for incoming data (server_type at end to match ALTER TABLE ADD order)
+# Temp table for incoming data (matches main table schema)
 create_temp_table_query = """
 CREATE TEMP TABLE server_incoming (
     id UBIGINT,
@@ -118,11 +124,16 @@ CREATE TEMP TABLE server_incoming (
 
     seen TIMESTAMP,
 
-    server_type VARCHAR
+    server_type VARCHAR,
+
+    setup_price INTEGER DEFAULT 0,
+    cpu_cores INTEGER,
+    cpu_threads INTEGER,
+    cpu_generation VARCHAR
 );
 """
 
-# Transform and insert auction data from JSON (server_type at end)
+# Transform and insert auction data from JSON
 import_auction_query = """
 INSERT INTO server_incoming
 SELECT
@@ -171,7 +182,13 @@ SELECT
 
     TO_TIMESTAMP(next_reduce_timestamp - next_reduce)::timestamp as seen,
 
-    'auction' as server_type
+    'auction' as server_type,
+
+    -- New columns (auctions have no setup fee, no detailed CPU info)
+    0 as setup_price,
+    NULL as cpu_cores,
+    NULL as cpu_threads,
+    NULL as cpu_generation
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'UBIGINT',
@@ -224,7 +241,7 @@ SELECT
     hash(s.id || '-' || dc.datacenter) as id,  -- Hash string ID + datacenter for uniqueness
     [s.name] as information,  -- Store product name (e.g. "AX41-NVMe") for linking
 
-    LEFT(dc.datacenter, 3) as datacenter,  -- Just city prefix (FSN, NBG, HEL)
+    dc.datacenter as datacenter,  -- Full datacenter (e.g. "HEL1", "FSN1", "NBG1")
     CASE WHEN dc.datacenter LIKE 'NBG%%' OR dc.datacenter LIKE 'FSN%%'
         THEN 'Germany'
         ELSE 'Finland'
@@ -266,19 +283,28 @@ SELECT
 
     NOW() as seen,
 
-    'standard' as server_type
+    'standard' as server_type,
+
+    -- New columns for standard servers
+    s.setup_price,
+    s.cores as cpu_cores,
+    s.threads as cpu_threads,
+    s.cpu_generation
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'VARCHAR',
     name: 'VARCHAR',
     cpu: 'VARCHAR',
     cores: 'INTEGER',
+    threads: 'INTEGER',
+    cpu_generation: 'VARCHAR',
     ram: 'INTEGER',
     ram_hr: 'VARCHAR',
     is_ecc: 'BOOLEAN',
     hdd_arr: 'VARCHAR[]',
     serverDiskData: 'STRUCT(nvme INTEGER[], sata INTEGER[], hdd INTEGER[], general INTEGER[])',
     price: 'FLOAT',
+    setup_price: 'INTEGER',
     "Bandwidth": 'INTEGER',
     traffic: 'VARCHAR',
     datacenter: 'STRUCT(datacenter VARCHAR, name VARCHAR, country VARCHAR, country_shortcode VARCHAR)[]',
@@ -328,11 +354,23 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
             print("Creating new database...")
         conn.execute(create_table_query)
 
-        # Migration: Add server_type column if it doesn't exist (for existing databases)
+        # Migration: Add new columns if they don't exist (for existing databases)
         existing_columns = [row[0] for row in conn.execute("SELECT column_name FROM duckdb_columns() WHERE table_name = 'server'").fetchall()]
-        if 'server_type' not in existing_columns:
-            print("Migrating: Adding server_type column...")
-            conn.execute("ALTER TABLE server ADD COLUMN server_type VARCHAR DEFAULT 'auction'")
+
+        migrations = [
+            ('server_type', "ALTER TABLE server ADD COLUMN server_type VARCHAR DEFAULT 'auction'"),
+            ('setup_price', "ALTER TABLE server ADD COLUMN setup_price INTEGER DEFAULT 0"),
+            ('cpu_cores', "ALTER TABLE server ADD COLUMN cpu_cores INTEGER"),
+            ('cpu_threads', "ALTER TABLE server ADD COLUMN cpu_threads INTEGER"),
+            ('cpu_generation', "ALTER TABLE server ADD COLUMN cpu_generation VARCHAR"),
+        ]
+
+        for col_name, sql in migrations:
+            if col_name not in existing_columns:
+                print(f"Migrating: Adding {col_name} column...")
+                conn.execute(sql)
+
+        if any(col not in existing_columns for col, _ in migrations):
             print("Migration complete.")
 
         # Get current record count

@@ -210,7 +210,8 @@ export async function getPrices(
 
 export type ServerConfiguration = {
   server_type?: "auction" | "standard"; // Optional for backward compat with old DBs
-  information?: string[]; // Product ID for standard servers, special info for auctions
+  information?: string[]; // Product name for standard servers, special info for auctions
+  datacenter?: string; // Full datacenter code (e.g. "FSN1-DC14", "HEL1")
   with_hwr: null | boolean;
   with_gpu: null | boolean;
   with_rps: null | boolean;
@@ -232,16 +233,22 @@ export type ServerConfiguration = {
   markup_percentage: number | null;
   last_seen: number | null;
   count: number | null;
+  // New fields for standard servers
+  setup_price?: number | null;
+  cpu_cores?: number | null;
+  cpu_threads?: number | null;
+  cpu_generation?: string | null;
 };
 
-// Check if server_type column exists in the database
-async function hasServerTypeColumn(
+// Check if a column exists in the database
+async function hasColumn(
   conn: AsyncDuckDBConnection,
+  columnName: string,
 ): Promise<boolean> {
   try {
     const result = await getData<{ count: number }>(
       conn,
-      SQL`SELECT count(*) as count FROM duckdb_columns() WHERE table_name='server' AND column_name='server_type'`,
+      SQL`SELECT count(*) as count FROM duckdb_columns() WHERE table_name='server' AND column_name='${columnName}'`,
     );
     return result.length > 0 && result[0].count > 0;
   } catch {
@@ -249,12 +256,20 @@ async function hasServerTypeColumn(
   }
 }
 
+// Check if server_type column exists in the database (backwards compat helper)
+async function hasServerTypeColumn(
+  conn: AsyncDuckDBConnection,
+): Promise<boolean> {
+  return hasColumn(conn, "server_type");
+}
+
 export async function getConfigurations(
   conn: AsyncDuckDBConnection,
   filter: ServerFilter,
 ): Promise<ServerConfiguration[]> {
-  // Check if server_type column exists for backward compatibility
+  // Check if columns exist for backward compatibility
   const hasServerType = await hasServerTypeColumn(conn);
+  const hasNewColumns = await hasColumn(conn, "setup_price");
 
   const configurations_filter_query = generateFilterQuery(
     filter,
@@ -270,13 +285,28 @@ export async function getConfigurations(
     : "'auction' as server_type,";
   const serverTypeGroupBy = hasServerType ? "server_type," : "";
 
+  // New columns for standard servers (optional for backwards compat)
+  const newColumnsSelect = hasNewColumns
+    ? `ANY_VALUE(datacenter) AS datacenter,
+            ANY_VALUE(setup_price) AS setup_price,
+            ANY_VALUE(cpu_cores) AS cpu_cores,
+            ANY_VALUE(cpu_threads) AS cpu_threads,
+            ANY_VALUE(cpu_generation) AS cpu_generation,`
+    : `NULL AS datacenter,
+            0 AS setup_price,
+            NULL AS cpu_cores,
+            NULL AS cpu_threads,
+            NULL AS cpu_generation,`;
+
   const configurations_query = SQL`
     SELECT
         * exclude(last_seen),
         extract('epoch' from last_seen) as last_seen
     FROM (
         SELECT
-            `.append(serverTypeSelect).append(SQL`
+            `
+    .append(serverTypeSelect)
+    .append(newColumnsSelect).append(SQL`
             ANY_VALUE(information)::JSON AS information,
             cpu,
             ram_size,

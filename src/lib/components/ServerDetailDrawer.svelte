@@ -383,6 +383,38 @@
 		{/if}
 
 		{#if config?.server_type === 'standard'}
+			<!-- Standard server details -->
+			<div class="mb-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800">
+				{#if config.datacenter}
+					<div class="flex justify-between">
+						<span class="text-gray-500 dark:text-gray-400">Datacenter</span>
+						<span class="font-medium text-gray-900 dark:text-white">{config.datacenter}</span>
+					</div>
+				{/if}
+				{#if config.cpu_cores || config.cpu_threads}
+					<div class="flex justify-between">
+						<span class="text-gray-500 dark:text-gray-400">CPU Cores/Threads</span>
+						<span class="font-medium text-gray-900 dark:text-white">
+							{config.cpu_cores ?? '?'} / {config.cpu_threads ?? '?'}
+						</span>
+					</div>
+				{/if}
+				{#if config.cpu_generation}
+					<div class="flex justify-between">
+						<span class="text-gray-500 dark:text-gray-400">CPU Generation</span>
+						<span class="font-medium text-gray-900 dark:text-white">{config.cpu_generation}</span>
+					</div>
+				{/if}
+				{#if config.setup_price && config.setup_price > 0}
+					<div class="flex justify-between">
+						<span class="text-gray-500 dark:text-gray-400">Setup Fee</span>
+						<span class="font-medium text-gray-900 dark:text-white">
+							{convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(2)} {$currencySymbol}
+						</span>
+					</div>
+				{/if}
+			</div>
+
 			<!-- Standard server - show order button -->
 			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
 				<p class="mb-3 text-sm text-gray-700 dark:text-gray-300">
