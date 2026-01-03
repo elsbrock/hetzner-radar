@@ -255,16 +255,18 @@
 			</div>
 			<!-- Price with VAT -->
 			<div class="mb-3 max-w-full overflow-hidden">
-				<!-- Removed negative top/bottom margins (-mt-5, -mb-4) to prevent cropping -->
-				<div class="-mx-3 h-20">
-					<ServerPriceChart
-						data={serverPrices}
-						loading={loadingPrices}
-						toolbarShow={false}
-						legendShow={false}
-						timeUnitPrice={selectedTimeUnit}
-					/>
-				</div>
+				<!-- Price chart - only show for auction servers -->
+				{#if config.server_type !== 'standard'}
+					<div class="-mx-3 h-20">
+						<ServerPriceChart
+							data={serverPrices}
+							loading={loadingPrices}
+							toolbarShow={false}
+							legendShow={false}
+							timeUnitPrice={selectedTimeUnit}
+						/>
+					</div>
+				{/if}
 				<span class="text-lg font-bold text-gray-900 dark:text-white">
 					{displayPrice.toFixed(2)} {$currencySymbol}
 				</span>
@@ -272,8 +274,14 @@
 				<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
 					{selectedTimeUnit === 'perMonth' ? 'monthly' : 'hourly'}
 				</span>
-				<!-- Markup Percentage Display -->
-				{#if config.markup_percentage !== null}
+				<!-- Setup fee for standard servers -->
+				{#if config.server_type === 'standard' && config.setup_price && config.setup_price > 0}
+					<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+						+ {convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(0)} {$currencySymbol} setup fee
+					</div>
+				{/if}
+				<!-- Markup Percentage Display - only for auctions -->
+				{#if config.server_type !== 'standard' && config.markup_percentage !== null}
 					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
 						{#if config.markup_percentage > 0}
 							<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}>
@@ -286,56 +294,58 @@
 				{/if}
 			</div>
 
-			<!-- Auction Stats -->
-			{#if !loadingPrices && serverPrices.length > 0}
-				<div
-					class="mb-3 grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
-				>
-					<!-- Lowest Price -->
-					<div class="flex items-start gap-2">
-						<Fa icon={faArrowDown} class="mt-0.5 text-green-500" size="sm" />
-						<div>
-							<div class="text-xs text-gray-500 dark:text-gray-400">Lowest Price</div>
-							<div class="font-semibold text-gray-900 dark:text-white">
-								{lowestPrice !== null ? `${convertPrice(lowestPrice * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(2)} ${$currencySymbol}` : '—'}
-							</div>
-							{#if lowestPriceDate}
-								<div class="text-xs text-gray-400 dark:text-gray-500">
-									{lowestPriceDate.format('MMM D, YYYY')}
+			<!-- Auction Stats - only for auctions -->
+			{#if config.server_type !== 'standard'}
+				{#if !loadingPrices && serverPrices.length > 0}
+					<div
+						class="mb-3 grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
+					>
+						<!-- Lowest Price -->
+						<div class="flex items-start gap-2">
+							<Fa icon={faArrowDown} class="mt-0.5 text-green-500" size="sm" />
+							<div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">Lowest Price</div>
+								<div class="font-semibold text-gray-900 dark:text-white">
+									{lowestPrice !== null ? `${convertPrice(lowestPrice * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(2)} ${$currencySymbol}` : '—'}
 								</div>
-							{/if}
+								{#if lowestPriceDate}
+									<div class="text-xs text-gray-400 dark:text-gray-500">
+										{lowestPriceDate.format('MMM D, YYYY')}
+									</div>
+								{/if}
+							</div>
 						</div>
-					</div>
 
-					<!-- Average Supply -->
-					<div class="flex items-start gap-2">
-						<Fa icon={faChartLine} class="mt-0.5 text-blue-500" size="sm" />
-						<div>
-							<div class="text-xs text-gray-500 dark:text-gray-400">Avg. Supply</div>
-							<div class="font-semibold text-gray-900 dark:text-white">
-								{averageSupply !== null ? `${averageSupply}/day` : '—'}
-							</div>
-							{#if supplyTrend !== null}
-								<div class="text-xs">
-									{#if supplyTrend > 0}
-										<span class="text-green-600 dark:text-green-400">+{supplyTrend}%</span>
-									{:else if supplyTrend < 0}
-										<span class="text-red-600 dark:text-red-400">{supplyTrend}%</span>
-									{:else}
-										<span class="text-gray-400 dark:text-gray-500">stable</span>
-									{/if}
-									<span class="text-gray-400 dark:text-gray-500">now</span>
+						<!-- Average Supply -->
+						<div class="flex items-start gap-2">
+							<Fa icon={faChartLine} class="mt-0.5 text-blue-500" size="sm" />
+							<div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">Avg. Supply</div>
+								<div class="font-semibold text-gray-900 dark:text-white">
+									{averageSupply !== null ? `${averageSupply}/day` : '—'}
 								</div>
-							{/if}
+								{#if supplyTrend !== null}
+									<div class="text-xs">
+										{#if supplyTrend > 0}
+											<span class="text-green-600 dark:text-green-400">+{supplyTrend}%</span>
+										{:else if supplyTrend < 0}
+											<span class="text-red-600 dark:text-red-400">{supplyTrend}%</span>
+										{:else}
+											<span class="text-gray-400 dark:text-gray-500">stable</span>
+										{/if}
+										<span class="text-gray-400 dark:text-gray-500">now</span>
+									</div>
+								{/if}
+							</div>
 						</div>
 					</div>
-				</div>
-			{:else if loadingPrices}
-				<div
-					class="mb-3 animate-pulse rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
-				>
-					<div class="h-12"></div>
-				</div>
+				{:else if loadingPrices}
+					<div
+						class="mb-3 animate-pulse rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
+					>
+						<div class="h-12"></div>
+					</div>
+				{/if}
 			{/if}
 		</div>
 

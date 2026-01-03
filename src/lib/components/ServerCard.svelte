@@ -65,7 +65,7 @@
 </script>
 
 <Card
-	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${(config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700!' : ''}`}
+	class={`${baseClasses} ${clickable ? clickableClasses : ''} ${config.server_type !== 'standard' && (config.markup_percentage ?? 0) <= 0 ? 'border-l-4 border-l-green-700!' : ''}`}
 	data-testid="server-card"
 	style="padding: 15px"
 	onclick={() => {
@@ -142,7 +142,10 @@
 				</div>
 				<div class="text-xs text-gray-500 dark:text-gray-400">
 					{vatSuffix}
-					{#if config.server_type !== 'standard' && config.markup_percentage !== null && config.markup_percentage > 0}
+					{#if config.server_type === 'standard' && config.setup_price && config.setup_price > 0}
+						<span class="ml-1">·</span>
+						<span class="ml-1">{convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(0)} {$currencySymbol} setup</span>
+					{:else if config.server_type !== 'standard' && config.markup_percentage !== null && config.markup_percentage > 0}
 						<span class="ml-1">·</span>
 						<span class="ml-1" style={`color: hsl(${markupColorHue()}, 100%, 40%)`}
 							>{(config.markup_percentage ?? 0).toFixed(0)}%</span

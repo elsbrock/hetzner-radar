@@ -878,6 +878,7 @@ let isSmallScreen: boolean = $state(false);
 									on your computer.
 								</Tooltip>
 
+								{#if !showOnlyStandard}
 								<ButtonGroup class="shrink-0">
 									<InputAddon
 										size="sm"
@@ -945,6 +946,7 @@ let isSmallScreen: boolean = $state(false);
 										{/if}
 									{/await}
 								</ButtonGroup>
+							{/if}
 							</div>
 						</div>
 

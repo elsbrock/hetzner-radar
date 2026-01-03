@@ -48,7 +48,7 @@
 						<Badge color="dark" rounded class="text-xs">{group.servers.length}</Badge>
 					</h2>
 					<div
-						class="grid w-full grid-cols-[repeat(auto-fill,minmax(240px,auto))] justify-items-start gap-4"
+						class="grid w-full grid-cols-[repeat(auto-fill,minmax(240px,1fr))] items-stretch gap-4"
 					>
 						{#each group.servers.slice(0, 100) as config, index (getConfigKey(config, index))}
 							<ServerCard
