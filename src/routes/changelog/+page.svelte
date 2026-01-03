@@ -16,6 +16,17 @@
 	</div>
 
 	<Timeline>
+		<TimelineItem title="Standard Dedicated Server Support" date="Released on January 3rd, 2026">
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				Browse Hetzner's standard dedicated servers alongside auction servers in a unified view:
+			</p>
+			<ul class="ml-4 list-inside list-disc space-y-1 text-gray-500 dark:text-gray-400">
+				<li>Filter between auction and standard servers with new toggle options</li>
+				<li>Visual badges distinguish server types at a glance</li>
+				<li>Direct links to Hetzner's product pages for standard servers</li>
+				<li>Backwards compatible with existing auction alerts</li>
+			</ul>
+		</TimelineItem>
 		<TimelineItem title="Enhanced Cloud Status Visualization" date="Released on November 6th, 2025">
 			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
 				Completely redesigned cloud status page with improved data visualization and user
