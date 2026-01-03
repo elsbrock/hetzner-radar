@@ -248,7 +248,7 @@ async function hasColumn(
   try {
     const result = await getData<{ count: number }>(
       conn,
-      SQL`SELECT count(*) as count FROM duckdb_columns() WHERE table_name='server' AND column_name='${columnName}'`,
+      SQL`SELECT count(*) as count FROM duckdb_columns() WHERE table_name='server' AND column_name=${columnName}`,
     );
     return result.length > 0 && result[0].count > 0;
   } catch {

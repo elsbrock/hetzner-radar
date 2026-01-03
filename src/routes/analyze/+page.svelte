@@ -649,6 +649,9 @@ let isSmallScreen: boolean = $state(false);
 	let hasFilter = $derived(storedFilter !== null);
 	let updateStoredFilterDisabled = $derived(isIdenticalFilter($filter, storedFilter));
 
+	// Hide chart when only showing standard servers (no historical price data for them)
+	let showOnlyStandard = $derived($filter?.showStandard && !$filter?.showAuction);
+
 	// Helper function to get filtered prices
 	function getFilteredPrices(): number[] {
 		return groupedDisplayList
@@ -1022,9 +1025,11 @@ let isSmallScreen: boolean = $state(false);
 						/>
 					</div>
 
-					<div class="h-[320px] pt-5">
-			<ServerPriceChart data={serverPrices} {loading} timeUnitPrice={selectedTimeUnit} />
-					</div>
+					{#if !showOnlyStandard}
+						<div class="h-[320px] pt-5">
+							<ServerPriceChart data={serverPrices} {loading} timeUnitPrice={selectedTimeUnit} />
+						</div>
+					{/if}
 				</div>
 
 				{#if browser && mounted}
