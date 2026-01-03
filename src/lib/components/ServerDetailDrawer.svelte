@@ -346,7 +346,7 @@
 			<!-- Standard server - direct order link -->
 			<div class="mb-1 flex items-center justify-between">
 				<h6 class="flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-white">
-					<Fa icon={faStore} class="text-blue-500" />
+					<Fa icon={faStore} />
 					Standard Server
 				</h6>
 			</div>
@@ -354,7 +354,7 @@
 			<!-- Auction server - show available auctions -->
 			<div class="mb-1 flex items-center justify-between">
 				<h6 class="flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-white">
-					<Fa icon={faGavel} class="text-orange-500" />
+					<Fa icon={faGavel} />
 					Auctions
 				</h6>
 				{#if config}
