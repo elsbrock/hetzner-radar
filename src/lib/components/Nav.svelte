@@ -3,14 +3,9 @@
 	import {
 		faBell,
 		faBinoculars,
-		faChartSimple,
-		faCircleInfo,
-		faCloud,
 		faUser,
-		faHouse,
 		faKey,
-		faRightFromBracket,
-		faServer
+		faRightFromBracket
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -215,106 +210,84 @@
 	</div>
 
 	<NavUl hidden={!isNavOpen} slideParams={{ duration: 250, delay: 0 }} class="order-1" {activeUrl}>
-		<NavLi href="/" data-testid="nav-link-home" class="flex items-center bg-transparent!">
-			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faHouse} />
+		<NavLi href="/" data-testid="nav-link-home" class="bg-transparent!">
 			<span
-				class="text-base text-black dark:text-gray-200 {activeUrl === '/'
-					? 'border-primary-500 border-b-2'
-					: ''}">Home</span
+				class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/'
+					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				>Home</span
 			>
 		</NavLi>
-		<NavLi
-			href="/configurations"
-			data-testid="nav-link-configurations"
-			class="flex items-center bg-transparent!"
-		>
-			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faServer} />
+		<NavLi href="/configurations" data-testid="nav-link-configurations" class="bg-transparent!">
 			<span
-				class="text-base text-black dark:text-gray-200 {activeUrl === '/configurations'
-					? 'border-primary-500 border-b-2'
-					: ''}">Configurations</span
+				class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/configurations'
+					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				>Configurations</span
 			>
 		</NavLi>
-		<NavLi href="/analyze" data-testid="nav-link-analyze" class="flex items-center bg-transparent!">
-			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faBinoculars} />
+		<NavLi href="/analyze" data-testid="nav-link-analyze" class="bg-transparent!">
 			<span
-				class="text-base text-black dark:text-gray-200 {activeUrl === '/analyze'
-					? 'border-primary-500 border-b-2'
-					: ''}">Auctions</span
+				class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/analyze'
+					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				>Auctions</span
 			>
 		</NavLi>
-		<NavLi
-			href="/cloud-status"
-			data-testid="nav-link-cloud-status"
-			class="flex items-center bg-transparent!"
-		>
-			<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faCloud} />
+		<NavLi href="/cloud-status" data-testid="nav-link-cloud-status" class="bg-transparent!">
 			<span
-				class="text-base text-black dark:text-gray-200 {activeUrl === '/cloud-status'
-					? 'border-primary-500 border-b-2'
-					: ''}">Cloud</span
+				class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/cloud-status'
+					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				>Cloud</span
 			>
 		</NavLi>
 		{#if $session}
 			<NavLi
 				href="/alerts"
 				data-testid="nav-link-alerts"
-				class="flex items-center bg-transparent!"
+				class="bg-transparent!"
 				onmouseenter={() => (isHoveringAlerts = true)}
 				onmouseleave={() => (isHoveringAlerts = false)}
 			>
-				{#if isHoveringAlerts}
-					<FontAwesomeIcon class="me-2 h-4 w-4 text-orange-500" icon={faBell} shake />
-				{:else}
-					<FontAwesomeIcon class="me-2 h-4 w-4 text-orange-500" icon={faBell} />
-				{/if}
 				<span
-					class="text-base text-black dark:text-gray-200 {activeUrl === '/alerts'
-						? 'border-primary-500 border-b-2'
-						: ''}">Alerts</span
+					class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/alerts'
+						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				><FontAwesomeIcon
+						class="mr-1.5 inline h-4 w-4 align-[-0.125em] text-orange-500"
+						icon={faBell}
+						shake={isHoveringAlerts}
+					/>Alerts</span
 				>
 			</NavLi>
 		{:else}
-			<NavLi
-				href="/statistics"
-				data-testid="nav-link-statistics"
-				class="flex items-center bg-transparent!"
-			>
-				<FontAwesomeIcon
-					class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300"
-					icon={faChartSimple}
-				/>
+			<NavLi href="/statistics" data-testid="nav-link-statistics" class="bg-transparent!">
 				<span
-					class="text-base text-black dark:text-gray-200 {activeUrl === '/statistics'
-						? 'border-primary-500 border-b-2'
-						: ''}">Statistics</span
+					class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/statistics'
+						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+					>Statistics</span
 				>
 			</NavLi>
-			<NavLi href="/about" data-testid="nav-link-about" class="flex items-center bg-transparent!">
-				<FontAwesomeIcon
-					class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300"
-					icon={faCircleInfo}
-				/>
+			<NavLi href="/about" data-testid="nav-link-about" class="bg-transparent!">
 				<span
-					class="text-base text-black dark:text-gray-200 {activeUrl === '/about'
-						? 'border-primary-500 border-b-2'
-						: ''}">About</span
+					class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/about'
+						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+					>About</span
 				>
 			</NavLi>
 		{/if}
 
 		{#if $session}
 			<!-- Settings only shown on mobile in navbar -->
-			<NavLi
-				href="/settings"
-				data-testid="nav-link-settings"
-				class="flex items-center bg-transparent! md:hidden"
-			>
-				<FontAwesomeIcon class="me-2 h-4 w-4 text-gray-700 dark:text-gray-300" icon={faUser} />
+			<NavLi href="/settings" data-testid="nav-link-settings" class="bg-transparent! md:hidden">
 				<span
-					class="text-base text-black dark:text-gray-300 {activeUrl === '/settings'
-						? 'border-primary-500 border-b-2'
-						: ''}">Settings</span
+					class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/settings'
+						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+					>Settings</span
 				>
 			</NavLi>
 			<!-- Mobile only container for controls -->
