@@ -301,7 +301,11 @@ export async function getConfigurations(
   // For standard servers, IPv4 cost is already included in price
   // For auction servers (or old DBs without server_type), add IPv4 cost
   const ipv4Cost = HETZNER_IPV4_COST_CENTS / 100;
-  const priceWithIpv4 = hasServerType
+
+  // Build price expression based on server_type column existence
+  // Standard servers: price as-is (IPv4 included)
+  // Auction servers: price + IPv4 cost
+  const priceExpr = hasServerType
     ? `CASE WHEN server_type = 'standard' THEN price ELSE price + ${ipv4Cost} END`
     : `price + ${ipv4Cost}`;
 
@@ -313,7 +317,7 @@ export async function getConfigurations(
         SELECT
             `
     .append(serverTypeSelect)
-    .append(newColumnsSelect).append(SQL`
+    .append(newColumnsSelect).append(`
             ANY_VALUE(information)::JSON AS information,
             cpu,
             ram_size,
@@ -333,23 +337,11 @@ export async function getConfigurations(
             sata_count,
             hdd_count,
             MAX(seen) AS last_seen,
-            MIN(`)
-    .append(priceWithIpv4)
-    .append(SQL`) AS min_price,
-            MAX_BY(`)
-    .append(priceWithIpv4)
-    .append(SQL`, seen) AS price,
+            MIN(${priceExpr}) AS min_price,
+            MAX_BY(${priceExpr}, seen) AS price,
             CASE
-                WHEN MIN(`)
-    .append(priceWithIpv4)
-    .append(SQL`) > 0 THEN
-                    ((MAX_BY(`)
-    .append(priceWithIpv4)
-    .append(SQL`, seen) - MIN(`)
-    .append(priceWithIpv4)
-    .append(SQL`)) / MIN(`)
-    .append(priceWithIpv4)
-    .append(SQL`)) * 100
+                WHEN MIN(${priceExpr}) > 0 THEN
+                    ((MAX_BY(${priceExpr}, seen) - MIN(${priceExpr})) / MIN(${priceExpr})) * 100
                 ELSE 0
             END AS markup_percentage
         from server
