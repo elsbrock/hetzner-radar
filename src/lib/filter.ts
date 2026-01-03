@@ -320,5 +320,5 @@ export function getHetznerLink(device: ServerConfiguration) {
     filterQ.push(`additional=${encodeURIComponent(specials.join("+"))}`);
   }
 
-  return `https://www.hetzner.com/sb/#${filterQ.join("&")}`;
+  return `https://www.hetzner.com/sb/?utm_source=server-radar&utm_medium=referral&utm_campaign=server-browser#${filterQ.join("&")}`;
 }

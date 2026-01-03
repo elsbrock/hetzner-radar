@@ -261,7 +261,7 @@
 							</TableBodyCell>
 							<TableBodyCell class="px-2 py-4 text-right">
 								<Button
-									href={`https://www.hetzner.com/sb/#search=${auction.auction_id}`}
+									href={`https://www.hetzner.com/sb/?utm_source=server-radar&utm_medium=referral&utm_campaign=alert#search=${auction.auction_id}`}
 									target="_blank"
 									rel="noopener noreferrer"
 									size="md"

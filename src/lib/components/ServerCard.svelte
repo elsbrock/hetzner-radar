@@ -60,7 +60,7 @@
 	});
 
 	const baseClasses =
-		'relative group text-left flex flex-col min-h-[210px] sm:min-h-[210px] md:min-h-[210px] lg:min-h-[210px] bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
+		'relative group text-left flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300';
 	const clickableClasses = 'hover:cursor-pointer';
 </script>
 

@@ -411,7 +411,7 @@
 					This is a standard dedicated server from Hetzner's regular lineup with fixed pricing.
 				</p>
 				<Button
-					href={`https://www.hetzner.com/dedicated-rootserver#search=${config.information?.[0] ?? ''}`}
+					href={`https://www.hetzner.com/dedicated-rootserver?utm_source=server-radar&utm_medium=referral&utm_campaign=standard-server#search=${config.information?.[0] ?? ''}`}
 					target="_blank"
 					rel="noopener noreferrer"
 					color="blue"
@@ -473,7 +473,7 @@
 										</div>
 									</div>
 									<Button
-										href={`https://www.hetzner.com/sb/#search=${auction.id}`}
+										href={`https://www.hetzner.com/sb/?utm_source=server-radar&utm_medium=referral&utm_campaign=auction#search=${auction.id}`}
 										target="_blank"
 										rel="noopener noreferrer"
 										size="sm"
