@@ -993,17 +993,12 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 
 <style>
 	:root {
-		--tw-primary-600: theme('colors.primary.600');
-		--tw-primary-400: theme('colors.primary.400');
-	}
-
-	:root {
-		--range-handle: var(--tw-primary-600);
-		--range-range: var(--tw-primary-600);
-		--range-range-inactive: var(--tw-primary-400);
+		--range-handle: var(--color-primary-600);
+		--range-range: var(--color-primary-600);
+		--range-range-inactive: var(--color-primary-400);
 		--range-slider: rgb(237, 237, 237); /* Default light mode: light gray */
-		--range-handle-inactive: var(--tw-primary-600);
-		--range-handle-focus: var(--tw-primary-600);
+		--range-handle-inactive: var(--color-primary-600);
+		--range-handle-focus: var(--color-primary-600);
 	}
 
 	:root.dark {
