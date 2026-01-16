@@ -25,6 +25,7 @@ jobs:
         run: cd scripts && poetry install
 
       - name: Download existing database from R2
+        id: download
         uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
         with:
           command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
@@ -32,10 +33,22 @@ jobs:
         continue-on-error: true # First run won't have existing DB
 
       - name: Run incremental update
+        id: update
         run: |
           cd scripts && poetry run python update_incremental.py ../static/sb.duckdb.wasm 90
+          # Script exits with code 2 if validation fails - this will fail the step
+
+      - name: Backup current DB before upload
+        if: success()
+        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        with:
+          # Keep a rolling backup - overwrites previous backup each time
+          command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        continue-on-error: true # Don't fail if backup fails
 
       - name: Deploy DB to R2
+        if: success()
         uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
         with:
           command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu

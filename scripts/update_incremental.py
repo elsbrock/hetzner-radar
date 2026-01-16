@@ -24,6 +24,11 @@ from datetime import datetime
 HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
 HETZNER_LIVE_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_en_EUR.json"
 
+# Minimum expected records to prevent uploading a corrupted/empty database
+# This should be set to a reasonable minimum based on typical data volume
+MIN_AUCTION_RECORDS = 50000  # ~50k auction records expected for 90 days
+MIN_DAYS_OF_DATA = 30  # At least 30 days of data expected
+
 # Schema for the server table (new columns at end for backwards compat)
 create_table_query = """
 CREATE TABLE IF NOT EXISTS server (
@@ -336,6 +341,90 @@ def fetch_hetzner_data(url: str, output_path: str, label: str = "servers") -> st
     return output_path
 
 
+def validate_database(db_path: str) -> tuple[bool, str, dict]:
+    """
+    Validate that a database file is readable and contains expected data.
+
+    Returns:
+        tuple: (is_valid, error_message, stats_dict)
+    """
+    if not os.path.exists(db_path):
+        return False, f"Database file does not exist: {db_path}", {}
+
+    file_size = os.path.getsize(db_path)
+    if file_size < 1000:  # Less than 1KB is definitely corrupt
+        return False, f"Database file too small ({file_size} bytes), likely corrupted", {}
+
+    try:
+        conn = duckdb.connect(db_path, read_only=True)
+
+        # Check if server table exists
+        tables = [row[0] for row in conn.execute("SHOW TABLES").fetchall()]
+        if 'server' not in tables:
+            conn.close()
+            return False, "Database missing 'server' table", {}
+
+        # Get record counts and date range
+        stats = conn.execute("""
+            SELECT
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE server_type = 'auction') as auctions,
+                COUNT(*) FILTER (WHERE server_type = 'standard') as standard,
+                MIN(seen) FILTER (WHERE server_type = 'auction') as earliest,
+                MAX(seen) FILTER (WHERE server_type = 'auction') as latest,
+                COUNT(DISTINCT date_trunc('d', seen)) FILTER (WHERE server_type = 'auction') as days
+            FROM server
+        """).fetchone()
+
+        conn.close()
+
+        stats_dict = {
+            'total': stats[0],
+            'auctions': stats[1],
+            'standard': stats[2],
+            'earliest': stats[3],
+            'latest': stats[4],
+            'days': stats[5]
+        }
+
+        return True, "", stats_dict
+
+    except Exception as e:
+        return False, f"Failed to read database: {str(e)}", {}
+
+
+def check_data_integrity(stats: dict, skip_threshold_check: bool = False) -> tuple[bool, str]:
+    """
+    Check if database has minimum expected data to prevent uploading empty/corrupt DB.
+
+    Args:
+        stats: Dictionary with database statistics
+        skip_threshold_check: If True, skip minimum record/days checks (for initial setup)
+
+    Returns:
+        tuple: (passes_check, warning_message)
+    """
+    if skip_threshold_check:
+        return True, ""
+
+    warnings = []
+
+    if stats.get('auctions', 0) < MIN_AUCTION_RECORDS:
+        warnings.append(
+            f"Auction records ({stats.get('auctions', 0)}) below minimum threshold ({MIN_AUCTION_RECORDS})"
+        )
+
+    if stats.get('days', 0) < MIN_DAYS_OF_DATA:
+        warnings.append(
+            f"Days of data ({stats.get('days', 0)}) below minimum threshold ({MIN_DAYS_OF_DATA})"
+        )
+
+    if warnings:
+        return False, "; ".join(warnings)
+
+    return True, ""
+
+
 def update_database(db_path: str, auction_json_path: str, standard_json_path: str = None, retention_days: int = 90):
     """Incrementally update the DuckDB database with new data."""
     print(f"Opening database: {db_path}")
@@ -456,11 +545,12 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
 
 
 def print_usage():
-    print("Usage: python update_incremental.py <database_path> [retention_days]")
+    print("Usage: python update_incremental.py <database_path> [retention_days] [--skip-threshold-check]")
     print("")
     print("Arguments:")
-    print("  database_path   Path to the DuckDB database file")
-    print("  retention_days  Number of days to keep (default: 90)")
+    print("  database_path          Path to the DuckDB database file")
+    print("  retention_days         Number of days to keep (default: 90)")
+    print("  --skip-threshold-check Skip minimum data checks (for initial setup)")
     print("")
     print("Example:")
     print("  python update_incremental.py ../static/sb.duckdb.wasm 90")
@@ -472,19 +562,54 @@ def main():
         sys.exit(1)
 
     db_path = sys.argv[1]
-    retention_days = int(sys.argv[2]) if len(sys.argv) > 2 else 90
+    retention_days = int(sys.argv[2]) if len(sys.argv) > 2 and not sys.argv[2].startswith('--') else 90
+    skip_threshold_check = '--skip-threshold-check' in sys.argv
 
     # Create temp files for JSON data
     temp_auction_json = "/tmp/hetzner_auction_data.json"
     temp_standard_json = "/tmp/hetzner_standard_data.json"
 
     try:
+        # Pre-flight validation: check if existing database is readable
+        if os.path.exists(db_path):
+            print("\n=== Pre-flight database validation ===")
+            is_valid, error_msg, stats = validate_database(db_path)
+
+            if not is_valid:
+                print(f"WARNING: Existing database failed validation: {error_msg}")
+                print("This may indicate a corrupted download. Proceeding with caution...")
+                # Don't exit - we'll create/update and validate after
+            else:
+                print(f"Existing database OK: {stats['auctions']} auctions, {stats['days']} days of data")
+        else:
+            print(f"No existing database at {db_path}, will create new one")
+
         # Fetch fresh data from Hetzner
         fetch_hetzner_data(HETZNER_AUCTION_API_URL, temp_auction_json, "auction servers")
         fetch_hetzner_data(HETZNER_LIVE_API_URL, temp_standard_json, "standard servers")
 
         # Update database incrementally
         update_database(db_path, temp_auction_json, temp_standard_json, retention_days)
+
+        # Post-update validation: verify database integrity before upload
+        print("\n=== Post-update validation ===")
+        is_valid, error_msg, stats = validate_database(db_path)
+
+        if not is_valid:
+            print(f"CRITICAL: Database validation failed after update: {error_msg}")
+            print("Database may be corrupted. DO NOT UPLOAD.")
+            sys.exit(2)  # Exit code 2 = validation failure
+
+        passes_check, warning = check_data_integrity(stats, skip_threshold_check)
+
+        if not passes_check:
+            print(f"CRITICAL: Data integrity check failed: {warning}")
+            print("Database has insufficient data. DO NOT UPLOAD.")
+            print("Use --skip-threshold-check to override (for initial setup only)")
+            sys.exit(2)  # Exit code 2 = validation failure
+
+        print(f"Validation PASSED: {stats['auctions']} auctions, {stats['days']} days")
+        print("Database is safe to upload.")
 
     finally:
         # Cleanup temp files
