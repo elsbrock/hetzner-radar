@@ -109,10 +109,17 @@ export function generateFilterQuery(
 
   // CPU cores/threads filtering (only when not at default full range)
   if (filter.cpuCores && (filter.cpuCores[0] > 0 || filter.cpuCores[1] < 128)) {
-    query.append(SQL` and cpu_cores >= ${filter.cpuCores[0]} and cpu_cores <= ${filter.cpuCores[1]}`);
+    query.append(
+      SQL` and cpu_cores >= ${filter.cpuCores[0]} and cpu_cores <= ${filter.cpuCores[1]}`,
+    );
   }
-  if (filter.cpuThreads && (filter.cpuThreads[0] > 0 || filter.cpuThreads[1] < 256)) {
-    query.append(SQL` and cpu_threads >= ${filter.cpuThreads[0]} and cpu_threads <= ${filter.cpuThreads[1]}`);
+  if (
+    filter.cpuThreads &&
+    (filter.cpuThreads[0] > 0 || filter.cpuThreads[1] < 256)
+  ) {
+    query.append(
+      SQL` and cpu_threads >= ${filter.cpuThreads[0]} and cpu_threads <= ${filter.cpuThreads[1]}`,
+    );
   }
 
   // RAM settings

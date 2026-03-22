@@ -6,7 +6,7 @@
  */
 
 import type { HetznerAuctionServer } from './hetzner-auction-client';
-import cpuSpecs from '../data/cpu-specs.json';
+import cpuSpecs from './cpu-specs.json';
 
 export interface CpuSpecEntry {
 	cores: number;
