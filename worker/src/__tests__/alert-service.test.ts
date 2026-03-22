@@ -324,6 +324,42 @@ describe('AlertService', () => {
 		});
 	});
 
+	describe('SQL query null handling', () => {
+		it('should use json_extract IS NULL (not json_type = null) for optional filter fields', async () => {
+			const mockQueryStatement = {
+				bind: vi.fn().mockReturnThis(),
+				all: vi.fn().mockResolvedValue({ results: [] }),
+				run: vi.fn().mockResolvedValue({ results: [] }),
+				first: vi.fn().mockResolvedValue(null),
+			};
+
+			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
+
+			await service.processAlerts();
+
+			const sqlQuery = mockDb.prepare.mock.calls[0][0];
+
+			// These fields must use json_extract IS NULL to handle both missing keys
+			// and explicit JSON null values. json_type = 'null' only handles the latter.
+			const optionalFields = [
+				'extrasECC',
+				'extrasINIC',
+				'extrasHWR',
+				'extrasGPU',
+				'extrasRPS',
+				'cpuCores',
+				'cpuThreads',
+				'selectedDatacenters',
+				'selectedCpuModels',
+			];
+
+			for (const field of optionalFields) {
+				expect(sqlQuery).toContain(`json_extract(pa.filter, '$.${field}') IS NULL`);
+				expect(sqlQuery).not.toContain(`json_type(pa.filter, '$.${field}') = 'null'`);
+			}
+		});
+	});
+
 	describe('SQL query construction', () => {
 		it('should use correct IPv4 cost constant', async () => {
 			const mockQueryStatement = {
