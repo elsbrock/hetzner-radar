@@ -3,6 +3,8 @@
 .svelte-kit
 node_modules
 data
+!data/cpu-specs.json
+!data/hetzner-cpus.json
 build
 *.wasm
 /test-results/
