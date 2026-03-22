@@ -23,7 +23,7 @@
     "@fortawesome/svelte-fontawesome": "0.2.4",
     "@oslojs/crypto": "1.0.1",
     "@oslojs/encoding": "1.1.0",
-    "@playwright/test": "1.57.0",
+    "@playwright/test": "1.56.1",
     "@sveltejs/adapter-cloudflare": "7.2.4",
     "@sveltejs/kit": "2.49.2",
     "@sveltejs/vite-plugin-svelte": "6.2.1",

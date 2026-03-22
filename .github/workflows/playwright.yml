@@ -18,7 +18,7 @@ jobs:
           node-version: lts/*
       - name: Fetch a recent database dump
         run: |
-          curl -o static/sb.duckdb.wasm https://radar.iodev.org/sb.duckdb.wasm
+          curl -o static/sb.duckdb.wasm https://static.radar.iodev.org/sb.duckdb
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
