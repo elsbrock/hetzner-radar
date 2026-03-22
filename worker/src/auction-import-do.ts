@@ -153,20 +153,17 @@ export class AuctionImportDO extends DurableObject {
 			auctionImportResult = await this.auctionService.fetchAndImportAuctions();
 			console.log(`[AuctionImportDO ${this.ctx.id}] Auction import completed:`, auctionImportResult);
 
-			// Process alerts if auction import was successful
-			if (auctionImportResult && (auctionImportResult.newAuctions > 0 || auctionImportResult.priceChanges > 0)) {
-				console.log(`[AuctionImportDO ${this.ctx.id}] Processing alerts after auction changes...`);
-				alertProcessingResult = await this.alertService.processAlerts();
+			// Always process alerts against the current snapshot — new alerts
+			// need to be evaluated even when auction data hasn't changed
+			console.log(`[AuctionImportDO ${this.ctx.id}] Processing alerts against current snapshot...`);
+			alertProcessingResult = await this.alertService.processAlerts();
 
-				const successfulAlerts = alertProcessingResult.filter((a) => a.success).length;
-				const totalNotifications = alertProcessingResult.reduce((sum, a) => sum + a.notifications, 0);
+			const successfulAlerts = alertProcessingResult.filter((a) => a.success).length;
+			const totalNotifications = alertProcessingResult.reduce((sum, a) => sum + a.notifications, 0);
 
-				console.log(
-					`[AuctionImportDO ${this.ctx.id}] Alert processing completed: ${successfulAlerts}/${alertProcessingResult.length} alerts processed, ${totalNotifications} notifications sent`,
-				);
-			} else {
-				console.log(`[AuctionImportDO ${this.ctx.id}] No auction changes detected, skipping alert processing`);
-			}
+			console.log(
+				`[AuctionImportDO ${this.ctx.id}] Alert processing completed: ${successfulAlerts}/${alertProcessingResult.length} alerts processed, ${totalNotifications} notifications sent`,
+			);
 		} catch (error: unknown) {
 			console.error(`[AuctionImportDO ${this.ctx.id}] Failed during auction import/alert processing:`, error);
 			throw error;

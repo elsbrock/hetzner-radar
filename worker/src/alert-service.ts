@@ -181,7 +181,7 @@ export class AlertService {
 
 			-- Selected Datacenters
 			AND (
-				json_type(pa.filter, '$.selectedDatacenters') = 'null'
+				json_extract(pa.filter, '$.selectedDatacenters') IS NULL
 				OR json_array_length(json_extract(pa.filter, '$.selectedDatacenters')) = 0
 				OR c.datacenter IN (
 					SELECT value FROM json_each(pa.filter, '$.selectedDatacenters')
@@ -190,7 +190,7 @@ export class AlertService {
 
 			-- Selected CPU Models
 			AND (
-				json_type(pa.filter, '$.selectedCpuModels') = 'null'
+				json_extract(pa.filter, '$.selectedCpuModels') IS NULL
 				OR json_array_length(json_extract(pa.filter, '$.selectedCpuModels')) = 0
 				OR c.cpu IN (
 					SELECT value FROM json_each(pa.filter, '$.selectedCpuModels')
@@ -199,37 +199,37 @@ export class AlertService {
 
 			-- Extras: ECC
 			AND (
-				json_type(pa.filter, '$.extrasECC') = 'null'
+				json_extract(pa.filter, '$.extrasECC') IS NULL
 				OR json_extract(pa.filter, '$.extrasECC') = c.is_ecc
 			)
 
 			-- Extras: INIC
 			AND (
-				json_type(pa.filter, '$.extrasINIC') = 'null'
+				json_extract(pa.filter, '$.extrasINIC') IS NULL
 				OR json_extract(pa.filter, '$.extrasINIC') = c.with_inic
 			)
 
 			-- Extras: HWR
 			AND (
-				json_type(pa.filter, '$.extrasHWR') = 'null'
+				json_extract(pa.filter, '$.extrasHWR') IS NULL
 				OR json_extract(pa.filter, '$.extrasHWR') = c.with_hwr
 			)
 
 			-- Extras: GPU
 			AND (
-				json_type(pa.filter, '$.extrasGPU') = 'null'
+				json_extract(pa.filter, '$.extrasGPU') IS NULL
 				OR json_extract(pa.filter, '$.extrasGPU') = c.with_gpu
 			)
 
 			-- Extras: RPS
 			AND (
-				json_type(pa.filter, '$.extrasRPS') = 'null'
+				json_extract(pa.filter, '$.extrasRPS') IS NULL
 				OR json_extract(pa.filter, '$.extrasRPS') = c.with_rps
 			)
 
 			-- CPU Cores
 			AND (
-				json_type(pa.filter, '$.cpuCores') = 'null'
+				json_extract(pa.filter, '$.cpuCores') IS NULL
 				OR c.cpu_cores IS NULL
 				OR (
 					c.cpu_cores >= json_extract(pa.filter, '$.cpuCores[0]')
@@ -239,7 +239,7 @@ export class AlertService {
 
 			-- CPU Threads
 			AND (
-				json_type(pa.filter, '$.cpuThreads') = 'null'
+				json_extract(pa.filter, '$.cpuThreads') IS NULL
 				OR c.cpu_threads IS NULL
 				OR (
 					c.cpu_threads >= json_extract(pa.filter, '$.cpuThreads[0]')
