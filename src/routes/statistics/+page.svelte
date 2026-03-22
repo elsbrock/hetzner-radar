@@ -4,7 +4,6 @@
 		getCPUVendorPriceStats,
 		getDatacenterList,
 		getDiskPriceStats,
-		getGPUPriceStats,
 		getPriceIndexStats,
 		getRamPriceStats,
 		getVolumeByCPUModelStats,
@@ -38,7 +37,6 @@
 	let hddPriceStats = $state<TemporalStat[]>([]);
 	let nvmePriceStats = $state<TemporalStat[]>([]);
 	let sataPriceStats = $state<TemporalStat[]>([]);
-	let _gpuPriceStats = $state<TemporalStat[]>([]);
 	let cpuVendorAMDStats = $state<TemporalStat[]>([]);
 	let cpuVendorIntelStats = $state<TemporalStat[]>([]);
 	let volumeFinlandStats = $state<TemporalStat[]>([]);
@@ -71,14 +69,19 @@
 	);
 
 	let priceIndexTrend = $derived(
-		dailyPriceIndexStats.length >= 30
+		dailyPriceIndexStats.length >= 2
 			? (() => {
-					const currentIndex = dailyPriceIndexStats[dailyPriceIndexStats.length - 1].y;
-					const thirtyDaysAgoIndex = dailyPriceIndexStats[dailyPriceIndexStats.length - 30].y;
-
-					return thirtyDaysAgoIndex === 0
+					const current = dailyPriceIndexStats[dailyPriceIndexStats.length - 1];
+					const thirtyDaysAgoTs = current.x - 30 * 86400;
+					// Find the data point closest to 30 days ago
+					const closest = dailyPriceIndexStats.reduce((prev, curr) =>
+						Math.abs(curr.x - thirtyDaysAgoTs) < Math.abs(prev.x - thirtyDaysAgoTs) ? curr : prev
+					);
+					// Only use if within 3 days of target
+					if (Math.abs(closest.x - thirtyDaysAgoTs) > 3 * 86400) return null;
+					return closest.y === 0
 						? null
-						: ((currentIndex - thirtyDaysAgoIndex) / thirtyDaysAgoIndex) * 100;
+						: ((current.y - closest.y) / closest.y) * 100;
 				})()
 			: null
 	);
@@ -91,8 +94,8 @@
 	let lowestServerPrice = $derived(
 		cpuVendorAMDStats.length > 0 && cpuVendorIntelStats.length > 0
 			? Math.min(
-					cpuVendorAMDStats[cpuVendorAMDStats.length - 1]?.y || Infinity,
-					cpuVendorIntelStats[cpuVendorIntelStats.length - 1]?.y || Infinity
+					cpuVendorAMDStats[cpuVendorAMDStats.length - 1]?.y ?? Infinity,
+					cpuVendorIntelStats[cpuVendorIntelStats.length - 1]?.y ?? Infinity
 				)
 			: null
 	);
@@ -180,7 +183,6 @@
 					hddPriceStats,
 					nvmePriceStats,
 					sataPriceStats,
-					_gpuPriceStats,
 					cpuVendorAMDStats,
 					cpuVendorIntelStats,
 					volumeFinlandStats,
@@ -195,7 +197,6 @@
 					getDiskPriceStats(conn4, 'hdd'),
 					getDiskPriceStats(conn5, 'nvme'),
 					getDiskPriceStats(conn1, 'sata'),
-					getGPUPriceStats(conn1),
 					getCPUVendorPriceStats(conn2, 'AMD'),
 					getCPUVendorPriceStats(conn2, 'Intel'),
 					getVolumeStats(conn3, 'Finland'),
@@ -265,7 +266,9 @@
 					? `${isPriceRising ? '+' : ''}${priceIndexTrend.toFixed(2)}%`
 					: null}
 				valueClass={isPriceRising ? 'text-red-500' : 'text-green-500'}
-				subtitle={`Prices ${isPriceRising ? 'rising' : 'falling'} vs 30 days ago`}
+				subtitle={priceIndexTrend !== null
+					? `Prices ${isPriceRising ? 'rising' : 'falling'} vs 30 days ago`
+					: 'Comparing price index over 30 days'}
 			/>
 
 			<!-- Lowest Server Price -->
@@ -273,7 +276,7 @@
 				icon={faServer}
 				title="Lowest Price"
 				value={lowestServerPrice !== null ? `${$currencySymbol}${convertPrice(lowestServerPrice, 'EUR', $currentCurrency).toFixed(2)}` : null}
-				subtitle="Cheapest server available"
+				subtitle="Cheapest server on last recorded day"
 			/>
 
 			<!-- AMD vs Intel Price -->
@@ -281,7 +284,9 @@
 				icon={faMicrochip}
 				title="AMD vs Intel"
 				value={amdVsIntelPrice !== null ? `${amdVsIntelPrice.difference}%` : null}
-				subtitle={`AMD ${amdVsIntelPrice !== null && parseFloat(amdVsIntelPrice.difference) < 0 ? 'cheaper' : 'pricier'} than Intel`}
+				subtitle={amdVsIntelPrice !== null
+					? `Cheapest AMD ${parseFloat(amdVsIntelPrice.difference) < 0 ? 'cheaper' : 'pricier'} than cheapest Intel`
+					: 'Comparing cheapest AMD vs Intel server'}
 			/>
 
 			<!-- RAM Price Comparison -->
@@ -289,9 +294,9 @@
 				icon={faMemory}
 				title="ECC Premium"
 				value={ramPriceComparison !== null
-					? `${parseFloat(ramPriceComparison.difference) * -1}%`
+					? `${parseFloat(ramPriceComparison.difference) > 0 ? '+' : ''}${ramPriceComparison.difference}%`
 					: null}
-				subtitle="ECC RAM cost markup per GB"
+				subtitle="ECC vs non-ECC server price per GB"
 			/>
 
 			<!-- Storage Price Comparison -->
@@ -299,7 +304,7 @@
 				icon={faHdd}
 				title="NVMe vs HDD"
 				value={storagePriceComparison !== null ? `${storagePriceComparison.ratio}x` : null}
-				subtitle="NVMe premium per TB"
+				subtitle="Min server price per TB: NVMe / HDD"
 			/>
 		</div>
 	</section>
@@ -313,14 +318,15 @@
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					The Overall Price Index represents the relative trend of server prices over time,
 					calculated using the lowest auction price for each configuration category on a daily
-					basis. It compares daily prices to a 90-day median baseline for similar configurations,
-					providing insight into whether the market is currently cheap, average, or expensive.
+					basis. Each day's prices are compared to a rolling 90-day median baseline for similar
+					configurations, providing insight into whether the market is cheap, average, or
+					expensive relative to the recent past.
 				</p>
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					An index value close to 1.0 indicates median market prices. Values above 1.0 suggest that
-					servers are currently more expensive than the median, while values below 1.0 indicate
-					lower-than-median prices. This index can both increase and decrease based on actual market
-					conditions, allowing you to identify the best times to purchase servers.
+					servers are more expensive than the surrounding 90-day median, while values below 1.0
+					indicate lower-than-median prices. Because the baseline rolls with each day, historical
+					index values remain stable over time.
 				</p>
 			</div>
 			<div class="h-80 w-full">
@@ -355,10 +361,12 @@
 				<!-- RAM Price Over Time -->
 				<div class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800">
 					<div class="p-6">
-						<h3 class="text-xl font-bold text-gray-900 dark:text-white">RAM Price Over Time</h3>
+						<h3 class="text-xl font-bold text-gray-900 dark:text-white">
+							Server Price per GB RAM Over Time
+						</h3>
 						<p class="mt-2 text-base text-gray-600 dark:text-gray-400">
-							Track the price trends for RAM over time. Use this to gauge when it's most
-							cost-effective to invest in memory-intensive servers.
+							Track the minimum server price per GB of RAM over time. Use this to gauge when it's
+							most cost-effective to invest in memory-intensive servers.
 						</p>
 					</div>
 					<div class="h-80 w-full">
@@ -377,8 +385,9 @@
 					<div class="p-6">
 						<h3 class="text-xl font-bold text-gray-900 dark:text-white">Disk Price Over Time</h3>
 						<p class="mt-2 text-base text-gray-600 dark:text-gray-400">
-							Explore how the price of one GB HDD storage has fluctuated over time. This data can
-							help you determine the best time to purchase storage-heavy configurations.
+							Explore how the minimum server price per TB of HDD storage has fluctuated over time.
+							This data can help you determine the best time to purchase storage-heavy
+							configurations.
 						</p>
 					</div>
 					<div class="h-80 w-full">
@@ -391,8 +400,9 @@
 					<div class="p-6">
 						<h3 class="text-xl font-bold text-gray-900 dark:text-white">SSD Price Over Time</h3>
 						<p class="mt-2 text-base text-gray-600 dark:text-gray-400">
-							See how one GB of SSD storage have changed over time, allowing you to plan your
-							purchases for configurations that rely on fast storage solutions.
+							See how the minimum server price per TB of SSD storage has changed over time,
+							allowing you to plan your purchases for configurations that rely on fast storage
+							solutions.
 						</p>
 					</div>
 					<div class="h-80 w-full">
@@ -413,9 +423,9 @@
 							Average Sold Auction Price (Daily)
 						</h3>
 						<p class="mt-2 text-base text-gray-600 dark:text-gray-400">
-							Tracks the average daily price of server auctions that have been sold (latest price
-							entry, excluding fixed-price offers). This helps understand actual market transaction
-							values.
+							Tracks the average daily last-observed price of auction servers no longer listed
+							(excluding fixed-price offers). This approximates market transaction values, though
+							servers may leave the auction for reasons other than being sold.
 						</p>
 					</div>
 					<div class="h-80 w-full">

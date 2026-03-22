@@ -90,7 +90,7 @@ export async function getRamPriceStats(
       query.append(SQL` and is_ecc = ${withECC}`);
     }
     if (country) {
-      query.append(SQL` and country = ${country}`);
+      query.append(SQL` and location = ${country}`);
     }
   }
   query.append(SQL`
@@ -359,50 +359,29 @@ export async function getPriceIndexStats(
 						with_gpu, with_inic, with_hwr, with_rps,
 						date_trunc('d', seen)
 		),
-		-- Calculate a baseline reference price for each configuration
-		config_baseline AS (
+		-- Per-day rolling 90-day median baseline for each configuration
+		config_with_baseline AS (
 				SELECT
-						cpu, ram_size, is_ecc, hdd_arr,
-						nvme_size, nvme_drives,
-						sata_size, sata_drives,
-						hdd_size, hdd_drives,
-						with_gpu, with_inic, with_hwr, with_rps,
-						-- Use median price over the last 90 days as the baseline
-						percentile_cont(0.5) WITHIN GROUP (ORDER BY daily_min_price) AS baseline_price
+						date,
+						daily_min_price,
+						server_count,
+						MEDIAN(daily_min_price) OVER (
+								PARTITION BY cpu, ram_size, is_ecc, hdd_arr,
+										nvme_size, nvme_drives,
+										sata_size, sata_drives,
+										hdd_size, hdd_drives,
+										with_gpu, with_inic, with_hwr, with_rps
+								ORDER BY date
+								RANGE BETWEEN INTERVAL '90' DAY PRECEDING AND CURRENT ROW
+						) AS baseline_price
 				FROM config_daily_prices
-				WHERE date >= current_date - INTERVAL '90 days'
-				GROUP BY
-						cpu, ram_size, is_ecc, hdd_arr,
-						nvme_size, nvme_drives,
-						sata_size, sata_drives,
-						hdd_size, hdd_drives,
-						with_gpu, with_inic, with_hwr, with_rps
 		),
-		-- Calculate the price index by comparing daily prices to the baseline
 		config_price_index AS (
 				SELECT
-						cdp.date,
-						cdp.daily_min_price,
-						cdp.server_count,
-						cb.baseline_price,
-						-- Calculate ratio of current price to baseline
-						cdp.daily_min_price / NULLIF(cb.baseline_price, 0) AS price_ratio
-				FROM config_daily_prices cdp
-				JOIN config_baseline cb ON
-						cdp.cpu = cb.cpu AND
-						cdp.ram_size = cb.ram_size AND
-						cdp.is_ecc = cb.is_ecc AND
-						cdp.hdd_arr = cb.hdd_arr AND
-						cdp.nvme_size = cb.nvme_size AND
-						cdp.nvme_drives = cb.nvme_drives AND
-						cdp.sata_size = cb.sata_size AND
-						cdp.sata_drives = cb.sata_drives AND
-						cdp.hdd_size = cb.hdd_size AND
-						cdp.hdd_drives = cb.hdd_drives AND
-						cdp.with_gpu = cb.with_gpu AND
-						cdp.with_inic = cb.with_inic AND
-						cdp.with_hwr = cb.with_hwr AND
-						cdp.with_rps = cb.with_rps
+						date,
+						server_count,
+						daily_min_price / NULLIF(baseline_price, 0) AS price_ratio
+				FROM config_with_baseline
 		),
 		daily_price_index AS (
 				-- Consolidate to a single price index per day
