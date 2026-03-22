@@ -54,6 +54,33 @@ export async function waitForAnalyzePageReady(
   await page.waitForLoadState("networkidle");
 }
 
+/**
+ * Helper to wait for configurations count to update after a filter change.
+ * Polls the total-configurations element until the count stabilizes
+ * (stays the same for 2 consecutive reads 500ms apart).
+ */
+export async function waitForFilterUpdate(
+  page: Page,
+  timeout = 10000,
+): Promise<void> {
+  const deadline = Date.now() + timeout;
+  let lastCount = -1;
+  let stableReads = 0;
+
+  while (Date.now() < deadline) {
+    const text = await page.getByTestId("total-configurations").textContent();
+    const count = parseInt(text?.match(/(\d+)/)?.[1] || "-1");
+    if (count === lastCount) {
+      stableReads++;
+      if (stableReads >= 2) return;
+    } else {
+      stableReads = 0;
+      lastCount = count;
+    }
+    await page.waitForTimeout(500);
+  }
+}
+
 // Extend the base test with custom fixtures
 const test = base.extend<ErrorTracking>({
   consoleErrors: async ({ page }, use) => {
