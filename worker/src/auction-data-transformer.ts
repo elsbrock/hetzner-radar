@@ -6,6 +6,15 @@
  */
 
 import type { HetznerAuctionServer } from './hetzner-auction-client';
+import cpuSpecs from './cpu-specs.json';
+
+export interface CpuSpecEntry {
+	cores: number;
+	threads: number;
+	score: number;
+	multicore_score: number;
+	family: string;
+}
 
 export interface RawServerData {
 	id: number;
@@ -38,9 +47,16 @@ export interface RawServerData {
 	price: number;
 	fixed_price: boolean;
 	seen: string;
+	cpu_cores: number | null;
+	cpu_threads: number | null;
+	cpu_generation: string | null;
+	cpu_score: number | null;
+	cpu_multicore_score: number | null;
 }
 
 export class AuctionDataTransformer {
+	private static cpuSpecsMap: Record<string, CpuSpecEntry> = cpuSpecs as Record<string, CpuSpecEntry>;
+
 	/**
 	 * Transforms raw Hetzner auction data to database format
 	 * @param servers Array of raw server data from Hetzner API
@@ -64,6 +80,54 @@ export class AuctionDataTransformer {
 	}
 
 	/**
+	 * Normalizes a Hetzner CPU name for lookup in cpu-specs.json
+	 */
+	static normalizeCpuName(name: string): string {
+		return name
+			.replace(/^\d+x\s+/, '') // Remove '2x ' prefix
+			.replace(/[®™]/g, '') // Remove trademark symbols
+			.replace(/Prozessor\s/g, '') // Remove German 'Prozessor'
+			.replace(/\s+/g, ' ') // Collapse whitespace
+			.trim();
+	}
+
+	/**
+	 * Gets the socket count from a raw CPU name (e.g. '2x Intel...' -> 2)
+	 */
+	static getSocketCount(name: string): number {
+		const match = name.match(/^(\d+)x\s+/);
+		return match ? parseInt(match[1], 10) : 1;
+	}
+
+	/**
+	 * Looks up CPU specs for a given raw CPU name
+	 */
+	static lookupCpuSpecs(rawCpuName: string): {
+		cores: number | null;
+		threads: number | null;
+		generation: string | null;
+		score: number | null;
+		multicore_score: number | null;
+	} {
+		const normalized = this.normalizeCpuName(rawCpuName);
+		const specs = this.cpuSpecsMap[normalized];
+
+		if (!specs) {
+			return { cores: null, threads: null, generation: null, score: null, multicore_score: null };
+		}
+
+		const socketCount = this.getSocketCount(rawCpuName);
+
+		return {
+			cores: specs.cores * socketCount,
+			threads: specs.threads * socketCount,
+			generation: specs.family || null,
+			score: specs.score,
+			multicore_score: specs.multicore_score * socketCount,
+		};
+	}
+
+	/**
 	 * Transforms a single server record
 	 */
 	private static transformServer(server: HetznerAuctionServer): RawServerData {
@@ -78,6 +142,9 @@ export class AuctionDataTransformer {
 
 		// Process drive arrays
 		const driveData = this.processDriveData(server.serverDiskData);
+
+		// Look up CPU specs
+		const cpuInfo = this.lookupCpuSpecs(server.cpu);
 
 		return {
 			id: server.id,
@@ -110,6 +177,11 @@ export class AuctionDataTransformer {
 			price: server.price,
 			fixed_price: server.fixed_price,
 			seen: seenTimestamp,
+			cpu_cores: cpuInfo.cores,
+			cpu_threads: cpuInfo.threads,
+			cpu_generation: cpuInfo.generation,
+			cpu_score: cpuInfo.score,
+			cpu_multicore_score: cpuInfo.multicore_score,
 		};
 	}
 

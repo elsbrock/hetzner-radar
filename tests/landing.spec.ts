@@ -28,9 +28,7 @@ test.describe("Landing Page Tests", () => {
 
   test("should display key introductory text", async () => {
     await expect(page.getByText(/free, open-source tool/i)).toBeVisible();
-    await expect(
-      page.getByText(/check cloud server availability/i),
-    ).toBeVisible();
+    await expect(page.getByText(/check cloud availability/i)).toBeVisible();
   });
 
   test("should display primary call-to-action buttons", async () => {
@@ -71,7 +69,7 @@ test.describe("Landing Page Tests", () => {
   test("should display key feature sections", async () => {
     await expect(page.getByRole("heading", { name: "Features" })).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Dedicated Server Auctions" }),
+      page.getByRole("heading", { name: "Dedicated Servers" }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Cloud Server Availability" }),

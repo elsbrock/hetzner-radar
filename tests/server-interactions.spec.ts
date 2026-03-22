@@ -65,16 +65,17 @@ test.describe("Server Interactions", () => {
       drawer.getByRole("heading", { name: "Auctions", exact: true }),
     ).toBeVisible();
 
-    // Wait for auctions to load (could show loading or actual data)
-    // Either "Loading auctions..." or auction rows should appear
-    const auctionTable = drawer.locator("table");
+    // Wait for auctions to load — either auction cards or "No matching auctions" message
+    // The loading state shows "Loading auctions..." text
+    const loadingText = drawer.getByText("Loading auctions...");
+    try {
+      await loadingText.waitFor({ state: "visible", timeout: 3000 });
+      await loadingText.waitFor({ state: "hidden", timeout: 15000 });
+    } catch {
+      // Loading was too fast or already complete
+    }
 
-    await expect(auctionTable).toBeVisible();
-
-    // Wait for either loading to finish or no auctions message
-    await page.waitForTimeout(3000);
-
-    // Should show either actual auctions or "No matching auctions found"
+    // Should show either actual auctions (with #ID format) or "No matching auctions found"
     const hasAuctions = await drawer.getByText(/^#\d+/).first().isVisible();
     const noAuctions = await drawer
       .getByText("No matching auctions found")

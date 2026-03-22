@@ -64,7 +64,7 @@
 	import { browser } from '$app/environment';
 	import { db, dbInitProgress } from '../../stores/db';
 
-	type SortField = 'price' | 'ram' | 'storage';
+	type SortField = 'price' | 'ram' | 'storage' | 'cpu_score';
 	type GroupByField = 'none' | 'cpu_vendor' | 'cpu_model' | 'best_price'; // Updated type
 	type GroupedServerList = Array<{
 		groupName: string;
@@ -121,7 +121,7 @@ let isSmallScreen: boolean = $state(false);
 
 	// Valid values for URL params
 	const validGroupByFields: GroupByField[] = ['none', 'cpu_vendor', 'cpu_model', 'best_price'];
-	const validSortFields: SortField[] = ['price', 'ram', 'storage'];
+	const validSortFields: SortField[] = ['price', 'ram', 'storage', 'cpu_score'];
 	const validSortDirections: ('asc' | 'desc')[] = ['asc', 'desc'];
 
 	// Track last URL state to avoid unnecessary updates
@@ -504,14 +504,18 @@ let isSmallScreen: boolean = $state(false);
 						valA = totalStorageA;
 						valB = totalStorageB;
 						break;
+					case 'cpu_score':
+						valA = a.cpu_multicore_score ?? 0;
+						valB = b.cpu_multicore_score ?? 0;
+						break;
 				}
 
 				// Handle nulls consistently based on sort direction
 				if (valA === Infinity && valB !== Infinity) return currentSortDirection === 'asc' ? 1 : -1;
 				if (valA !== Infinity && valB === Infinity) return currentSortDirection === 'asc' ? -1 : 1;
-				if (valA === 0 && valB !== 0 && (currentSortField === 'ram' || currentSortField === 'storage'))
+				if (valA === 0 && valB !== 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score'))
 					return currentSortDirection === 'asc' ? -1 : 1;
-				if (valA !== 0 && valB === 0 && (currentSortField === 'ram' || currentSortField === 'storage'))
+				if (valA !== 0 && valB === 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score'))
 					return currentSortDirection === 'asc' ? 1 : -1;
 				if (valA === valB) return 0;
 

@@ -226,6 +226,26 @@ export class AlertService {
 				json_type(pa.filter, '$.extrasRPS') = 'null'
 				OR json_extract(pa.filter, '$.extrasRPS') = c.with_rps
 			)
+
+			-- CPU Cores
+			AND (
+				json_type(pa.filter, '$.cpuCores') = 'null'
+				OR c.cpu_cores IS NULL
+				OR (
+					c.cpu_cores >= json_extract(pa.filter, '$.cpuCores[0]')
+					AND c.cpu_cores <= json_extract(pa.filter, '$.cpuCores[1]')
+				)
+			)
+
+			-- CPU Threads
+			AND (
+				json_type(pa.filter, '$.cpuThreads') = 'null'
+				OR c.cpu_threads IS NULL
+				OR (
+					c.cpu_threads >= json_extract(pa.filter, '$.cpuThreads[0]')
+					AND c.cpu_threads <= json_extract(pa.filter, '$.cpuThreads[1]')
+				)
+			)
 	`;
 
 	private readonly ALERT_HISTORY_INSERT_SQL = `

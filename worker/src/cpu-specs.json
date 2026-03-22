@@ -1,0 +1,254 @@
+{
+	"AMD EPYC 7401P": {
+		"cores": 24,
+		"threads": 48,
+		"score": 787,
+		"multicore_score": 4666,
+		"family": "Naples"
+	},
+	"AMD EPYC 7502": {
+		"cores": 32,
+		"threads": 64,
+		"score": 1168,
+		"multicore_score": 18500,
+		"family": "Zen 2"
+	},
+	"AMD EPYC 7502P": {
+		"cores": 32,
+		"threads": 64,
+		"score": 1168,
+		"multicore_score": 10375,
+		"family": "Zen 2"
+	},
+	"AMD EPYC 9454P": {
+		"cores": 48,
+		"threads": 96,
+		"score": 1923,
+		"multicore_score": 18576,
+		"family": "Zen 4"
+	},
+	"AMD Ryzen 5 3600": {
+		"cores": 6,
+		"threads": 12,
+		"score": 1613,
+		"multicore_score": 6896,
+		"family": "Matisse"
+	},
+	"AMD Ryzen 7 1700X": {
+		"cores": 8,
+		"threads": 16,
+		"score": 1099,
+		"multicore_score": 5563,
+		"family": "Summit Ridge"
+	},
+	"AMD Ryzen 7 3700X": {
+		"cores": 8,
+		"threads": 16,
+		"score": 1673,
+		"multicore_score": 8087,
+		"family": "Matisse"
+	},
+	"AMD Ryzen 7 7700": {
+		"cores": 8,
+		"threads": 16,
+		"score": 2877,
+		"multicore_score": 14810,
+		"family": "Raphael"
+	},
+	"AMD Ryzen 7 PRO 1700X": {
+		"cores": 8,
+		"threads": 16,
+		"score": 1079,
+		"multicore_score": 5354,
+		"family": "Summit Ridge"
+	},
+	"AMD Ryzen 7 PRO 8700GE": {
+		"cores": 8,
+		"threads": 16,
+		"score": 2700,
+		"multicore_score": 12500,
+		"family": "Zen 4"
+	},
+	"AMD Ryzen 9 3900": {
+		"cores": 12,
+		"threads": 24,
+		"score": 1666,
+		"multicore_score": 9483,
+		"family": "Matisse"
+	},
+	"AMD Ryzen 9 5950X": {
+		"cores": 16,
+		"threads": 32,
+		"score": 2207,
+		"multicore_score": 12011,
+		"family": "Vermeer"
+	},
+	"AMD Ryzen 9 7950X3D": {
+		"cores": 16,
+		"threads": 32,
+		"score": 2927,
+		"multicore_score": 19647,
+		"family": "Raphael"
+	},
+	"AMD Ryzen Threadripper 2950X": {
+		"cores": 16,
+		"threads": 32,
+		"score": 1258,
+		"multicore_score": 8504,
+		"family": "Colfax"
+	},
+	"Intel Core Ultra 7 265": {
+		"cores": 20,
+		"threads": 20,
+		"score": 2900,
+		"multicore_score": 17000,
+		"family": "Arrow Lake"
+	},
+	"Intel Core i5-12500": {
+		"cores": 6,
+		"threads": 12,
+		"score": 2317,
+		"multicore_score": 9024,
+		"family": "Alder Lake"
+	},
+	"Intel Core i5-13500": {
+		"cores": 14,
+		"threads": 20,
+		"score": 2418,
+		"multicore_score": 12136,
+		"family": "Raptor Lake"
+	},
+	"Intel Core i7-6700": {
+		"cores": 4,
+		"threads": 8,
+		"score": 1321,
+		"multicore_score": 4204,
+		"family": "Skylake"
+	},
+	"Intel Core i7-7700": {
+		"cores": 4,
+		"threads": 8,
+		"score": 1406,
+		"multicore_score": 4485,
+		"family": "Kaby Lake"
+	},
+	"Intel Core i7-8700": {
+		"cores": 6,
+		"threads": 12,
+		"score": 1536,
+		"multicore_score": 5956,
+		"family": "Coffee Lake"
+	},
+	"Intel Core i9-12900K": {
+		"cores": 16,
+		"threads": 24,
+		"score": 2593,
+		"multicore_score": 15213,
+		"family": "Alder Lake"
+	},
+	"Intel Core i9-13900": {
+		"cores": 24,
+		"threads": 32,
+		"score": 2748,
+		"multicore_score": 16341,
+		"family": "Raptor Lake"
+	},
+	"Intel Core i9-9900K": {
+		"cores": 8,
+		"threads": 16,
+		"score": 1704,
+		"multicore_score": 8063,
+		"family": "Coffee Lake"
+	},
+	"Intel XEON E-2176G": {
+		"cores": 6,
+		"threads": 12,
+		"score": 1551,
+		"multicore_score": 6255,
+		"family": "Coffee Lake"
+	},
+	"Intel XEON E-2276G": {
+		"cores": 6,
+		"threads": 12,
+		"score": 1593,
+		"multicore_score": 6382,
+		"family": "Coffee Lake"
+	},
+	"Intel Xeon E3-1270V3": {
+		"cores": 4,
+		"threads": 8,
+		"score": 1223,
+		"multicore_score": 3885,
+		"family": "Haswell"
+	},
+	"Intel Xeon E3-1271V3": {
+		"cores": 4,
+		"threads": 8,
+		"score": 1217,
+		"multicore_score": 3871,
+		"family": "Haswell, Haswell-WS"
+	},
+	"Intel Xeon E3-1275V6": {
+		"cores": 4,
+		"threads": 8,
+		"score": 1470,
+		"multicore_score": 4882,
+		"family": "Kaby Lake"
+	},
+	"Intel Xeon E3-1275v5": {
+		"cores": 4,
+		"threads": 8,
+		"score": 1336,
+		"multicore_score": 4372,
+		"family": "Skylake"
+	},
+	"Intel Xeon E5-1650V3": {
+		"cores": 6,
+		"threads": 12,
+		"score": 1203,
+		"multicore_score": 5487,
+		"family": "Haswell"
+	},
+	"Intel Xeon Gold 5412U": {
+		"cores": 24,
+		"threads": 48,
+		"score": 1500,
+		"multicore_score": 22000,
+		"family": "Sapphire Rapids"
+	},
+	"Intel Xeon Gold 6438Y+": {
+		"cores": 64,
+		"threads": 128,
+		"score": 1358,
+		"multicore_score": 24136,
+		"family": "Sapphire Rapids"
+	},
+	"Intel Xeon Silver 4410Y": {
+		"cores": 24,
+		"threads": 48,
+		"score": 1531,
+		"multicore_score": 19288,
+		"family": "Sapphire Rapids"
+	},
+	"Intel Xeon W-2145": {
+		"cores": 8,
+		"threads": 16,
+		"score": 1404,
+		"multicore_score": 7827,
+		"family": "Skylake"
+	},
+	"Intel Xeon W-2245": {
+		"cores": 8,
+		"threads": 16,
+		"score": 1570,
+		"multicore_score": 8387,
+		"family": "Cascade Lake"
+	},
+	"Intel Xeon W-2295": {
+		"cores": 18,
+		"threads": 36,
+		"score": 1510,
+		"multicore_score": 11099,
+		"family": "Cascade Lake"
+	}
+}

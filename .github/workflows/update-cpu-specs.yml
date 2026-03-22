@@ -1,0 +1,64 @@
+name: Update CPU Specs
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Weekly, Sunday 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-cpu-specs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Generate CPU specs
+        run: |
+          python scripts/generate_cpu_specs.py
+          cp data/cpu-specs.json worker/src/cpu-specs.json
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet data/cpu-specs.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="chore/update-cpu-specs-$(date +%Y-%m-%d)"
+          git checkout -b "$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cpu-specs.json worker/src/cpu-specs.json
+          git commit -m "chore: update CPU specs from Geekbench"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "chore: update CPU specs from Geekbench" \
+            --body "$(cat <<'EOF'
+          ## Summary
+          - Weekly automated update of `data/cpu-specs.json` from Geekbench data
+          - Changes may include new CPU models, updated scores, or new architecture families
+
+          ```diff
+          $(git diff HEAD~1 -- data/cpu-specs.json | head -100)
+          ```
+          EOF
+          )"
+
+      - name: Check for unmatched CPUs
+        run: python scripts/generate_cpu_specs.py --check

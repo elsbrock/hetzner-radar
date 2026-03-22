@@ -3,7 +3,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowUp, faArrowDown, faSort } from '@fortawesome/free-solid-svg-icons';
 
-	type SortField = 'price' | 'ram' | 'storage';
+	type SortField = 'price' | 'ram' | 'storage' | 'cpu_score';
 
 	let { sortField = $bindable('price'), sortDirection = $bindable('asc') } = $props<{
 		sortField?: SortField;
@@ -13,7 +13,8 @@
 	const sortFields: { value: SortField; name: string }[] = [
 		{ value: 'price', name: 'Price' },
 		{ value: 'ram', name: 'RAM' },
-		{ value: 'storage', name: 'Storage' }
+		{ value: 'storage', name: 'Storage' },
+		{ value: 'cpu_score', name: 'CPU Score' }
 	];
 </script>
 

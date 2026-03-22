@@ -4,7 +4,7 @@
 	import { currencySymbol } from '$lib/stores/settings';
 	import { Badge } from 'flowbite-svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome'; // Use named import
-	import { faHardDrive, faMemory, faSdCard, faTags } from '@fortawesome/free-solid-svg-icons';
+	import { faHardDrive, faMemory, faMicrochip, faSdCard, faTags } from '@fortawesome/free-solid-svg-icons';
 
 	// --- Props ---
 
@@ -76,6 +76,24 @@
 	{#if layout === 'horizontal'}
 		<!-- Horizontal Layout (columns) -->
 		<div class="mb-3 flex flex-wrap gap-8 text-gray-700 dark:text-gray-400">
+			<!-- CPU Column -->
+			{#if config.cpu_cores || config.cpu_threads}
+				<div class="flex flex-col items-start">
+					<div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+						<FontAwesomeIcon icon={faMicrochip} class="h-3 w-3" />
+						<span>CPU</span>
+					</div>
+					<div class="text-sm font-medium text-gray-900 dark:text-white">
+						{config.cpu_cores ?? '?'}C / {config.cpu_threads ?? '?'}T
+					</div>
+					{#if config.cpu_generation}
+						<div class="text-xs text-gray-500 dark:text-gray-400">
+							{config.cpu_generation}
+						</div>
+					{/if}
+				</div>
+			{/if}
+
 			<!-- RAM Column -->
 			<div class="flex flex-col items-start">
 				<div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
@@ -190,6 +208,24 @@
 		<div
 			class="mb-3 grid grid-cols-[16px_50px_1fr_auto] gap-x-3 gap-y-1 leading-tight text-sm text-gray-700 dark:text-gray-400"
 		>
+			<!-- CPU -->
+			{#if config.cpu_cores || config.cpu_threads}
+				<div class="flex items-start justify-center pt-0.5">
+					<FontAwesomeIcon icon={faMicrochip} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+				</div>
+				<div>CPU</div>
+				<div class="font-medium text-gray-900 dark:text-white">
+					{config.cpu_cores ?? '?'}C / {config.cpu_threads ?? '?'}T{#if config.cpu_generation}
+						<span class="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">{config.cpu_generation}</span>
+					{/if}
+				</div>
+				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
+					{#if config.cpu_score}
+						GB6 {config.cpu_score.toLocaleString()}
+					{/if}
+				</div>
+			{/if}
+
 			<!-- RAM -->
 			<div class="flex items-start justify-center pt-0.5">
 				<FontAwesomeIcon icon={faMemory} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
