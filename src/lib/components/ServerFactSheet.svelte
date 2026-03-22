@@ -214,9 +214,12 @@
 					<FontAwesomeIcon icon={faMicrochip} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
 				</div>
 				<div>CPU</div>
-				<div class="font-medium text-gray-900 dark:text-white">
-					{config.cpu_cores ?? '?'}C / {config.cpu_threads ?? '?'}T{#if config.cpu_generation}
-						<span class="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">{config.cpu_generation}</span>
+				<div>
+					<div class="font-medium text-gray-900 dark:text-white">
+						{config.cpu_cores ?? '?'}C / {config.cpu_threads ?? '?'}T
+					</div>
+					{#if config.cpu_generation}
+						<div class="text-xs text-gray-500 dark:text-gray-400">{config.cpu_generation}</div>
 					{/if}
 				</div>
 				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
