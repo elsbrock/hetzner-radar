@@ -2,18 +2,22 @@
   "extends": ["config:best-practices", ":separateMultipleMajorReleases"],
   "packageRules": [
     {
+      "description": "Group all GitHub Actions digest updates",
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "pin", "minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge minor and patch updates",
       "groupName": "all-minor-patch",
-      "groupSlug": "all-minor-patch",
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "auto",
-      "automergeComment": "Merging this PR automatically because all checks are green.",
       "matchPackageNames": ["*"]
     },
     {
+      "description": "Major updates need manual review",
       "groupName": "major",
-      "groupSlug": "major",
       "matchUpdateTypes": ["major"],
       "assignees": ["elsbrock"],
       "matchPackageNames": ["*"]
