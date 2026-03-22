@@ -107,6 +107,14 @@ export function generateFilterQuery(
       .append(SQL` )`);
   }
 
+  // CPU cores/threads filtering (only when not at default full range)
+  if (filter.cpuCores && (filter.cpuCores[0] > 0 || filter.cpuCores[1] < 128)) {
+    query.append(SQL` and cpu_cores >= ${filter.cpuCores[0]} and cpu_cores <= ${filter.cpuCores[1]}`);
+  }
+  if (filter.cpuThreads && (filter.cpuThreads[0] > 0 || filter.cpuThreads[1] < 256)) {
+    query.append(SQL` and cpu_threads >= ${filter.cpuThreads[0]} and cpu_threads <= ${filter.cpuThreads[1]}`);
+  }
+
   // RAM settings
   if (filter.extrasECC !== null) {
     query.append(SQL` and is_ecc = ${filter.extrasECC}`);
@@ -238,6 +246,8 @@ export type ServerConfiguration = {
   cpu_cores?: number | null;
   cpu_threads?: number | null;
   cpu_generation?: string | null;
+  cpu_score?: number | null;
+  cpu_multicore_score?: number | null;
 };
 
 // Check if a column exists in the database
@@ -270,6 +280,7 @@ export async function getConfigurations(
   // Check if columns exist for backward compatibility
   const hasServerType = await hasServerTypeColumn(conn);
   const hasNewColumns = await hasColumn(conn, "setup_price");
+  const hasCpuScoreColumns = await hasColumn(conn, "cpu_score");
 
   const configurations_filter_query = generateFilterQuery(
     filter,
@@ -286,17 +297,26 @@ export async function getConfigurations(
   const serverTypeGroupBy = hasServerType ? "server_type," : "";
 
   // New columns for standard servers (optional for backwards compat)
+  const cpuScoreSelect = hasCpuScoreColumns
+    ? `ANY_VALUE(cpu_score) AS cpu_score,
+            ANY_VALUE(cpu_multicore_score) AS cpu_multicore_score,`
+    : `NULL AS cpu_score,
+            NULL AS cpu_multicore_score,`;
+
   const newColumnsSelect = hasNewColumns
     ? `ANY_VALUE(datacenter) AS datacenter,
             ANY_VALUE(setup_price) AS setup_price,
             ANY_VALUE(cpu_cores) AS cpu_cores,
             ANY_VALUE(cpu_threads) AS cpu_threads,
-            ANY_VALUE(cpu_generation) AS cpu_generation,`
+            ANY_VALUE(cpu_generation) AS cpu_generation,
+            ${cpuScoreSelect}`
     : `NULL AS datacenter,
             0 AS setup_price,
             NULL AS cpu_cores,
             NULL AS cpu_threads,
-            NULL AS cpu_generation,`;
+            NULL AS cpu_generation,
+            NULL AS cpu_score,
+            NULL AS cpu_multicore_score,`;
 
   const configurations_query = SQL`
     SELECT

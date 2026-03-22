@@ -17,6 +17,9 @@ export type ServerFilter = {
   cpuIntel: boolean;
   cpuAMD: boolean;
 
+  cpuCores: [number, number];
+  cpuThreads: [number, number];
+
   ramInternalSize: [number, number];
 
   ssdNvmeCount: [number, number];
@@ -57,6 +60,9 @@ export const defaultFilter: ServerFilter = {
   cpuCount: 1,
   cpuIntel: true,
   cpuAMD: true,
+
+  cpuCores: [0, 128],
+  cpuThreads: [0, 256],
 
   ramInternalSize: [4, 10],
 

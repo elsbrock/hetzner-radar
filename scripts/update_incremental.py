@@ -80,7 +80,11 @@ CREATE TABLE IF NOT EXISTS server (
     setup_price INTEGER DEFAULT 0,
     cpu_cores INTEGER,
     cpu_threads INTEGER,
-    cpu_generation VARCHAR
+    cpu_generation VARCHAR,
+
+    -- CPU benchmark data (from Geekbench via cpu-specs.json)
+    cpu_score INTEGER,
+    cpu_multicore_score INTEGER
 );
 """
 
@@ -134,7 +138,10 @@ CREATE TEMP TABLE server_incoming (
     setup_price INTEGER DEFAULT 0,
     cpu_cores INTEGER,
     cpu_threads INTEGER,
-    cpu_generation VARCHAR
+    cpu_generation VARCHAR,
+
+    cpu_score INTEGER,
+    cpu_multicore_score INTEGER
 );
 """
 
@@ -189,11 +196,13 @@ SELECT
 
     'auction' as server_type,
 
-    -- New columns (auctions have no setup fee, no detailed CPU info)
+    -- New columns (auctions have no setup fee, CPU info filled by enrichment step)
     0 as setup_price,
     NULL as cpu_cores,
     NULL as cpu_threads,
-    NULL as cpu_generation
+    NULL as cpu_generation,
+    NULL as cpu_score,
+    NULL as cpu_multicore_score
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'UBIGINT',
@@ -290,11 +299,13 @@ SELECT
 
     'standard' as server_type,
 
-    -- New columns for standard servers
+    -- New columns for standard servers (scores filled by enrichment step)
     s.setup_price,
     s.cores as cpu_cores,
     s.threads as cpu_threads,
-    s.cpu_generation
+    s.cpu_generation,
+    NULL as cpu_score,
+    NULL as cpu_multicore_score
 
 FROM read_json('%s', format = 'auto', columns = {
     id: 'VARCHAR',
@@ -316,6 +327,91 @@ FROM read_json('%s', format = 'auto', columns = {
     specials: 'VARCHAR[]'
 }) s, LATERAL (SELECT UNNEST(s.datacenter) as dc) t
 """
+
+
+def load_cpu_specs() -> dict:
+    """Load CPU specs from data/cpu-specs.json."""
+    specs_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'cpu-specs.json')
+    if not os.path.exists(specs_path):
+        print(f"WARNING: CPU specs file not found at {specs_path}")
+        return {}
+    with open(specs_path) as f:
+        return json.load(f)
+
+
+def normalize_cpu_name(name: str) -> str:
+    """Normalize a Hetzner CPU name for matching against cpu-specs.json keys."""
+    import re
+    # Remove '2x ' or '4x ' prefix (multi-socket)
+    name = re.sub(r'^\d+x\s+', '', name)
+    # Remove trademark symbols
+    name = name.replace('®', '').replace('™', '')
+    # Remove 'Prozessor' (German for processor)
+    name = name.replace('Prozessor ', '')
+    # Collapse whitespace and strip
+    name = re.sub(r'\s+', ' ', name).strip()
+    return name
+
+
+def get_socket_count(raw_name: str) -> int:
+    """Extract socket/CPU count from raw name (e.g. '2x Intel...' -> 2)."""
+    import re
+    match = re.match(r'^(\d+)x\s+', raw_name)
+    return int(match.group(1)) if match else 1
+
+
+def enrich_cpu_data(conn, cpu_specs: dict):
+    """Enrich server records with CPU cores, threads, generation, and scores from cpu-specs.json."""
+    if not cpu_specs:
+        print("Skipping CPU enrichment (no specs available)")
+        return
+
+    # Get distinct CPU names that need enrichment
+    rows = conn.execute("""
+        SELECT DISTINCT cpu FROM server WHERE cpu_score IS NULL AND cpu IS NOT NULL
+    """).fetchall()
+
+    if not rows:
+        print("No servers need CPU enrichment")
+        return
+
+    enriched = 0
+    for (cpu_name,) in rows:
+        normalized = normalize_cpu_name(cpu_name)
+        specs = cpu_specs.get(normalized)
+        if not specs:
+            continue
+
+        socket_count = get_socket_count(cpu_name)
+
+        cores = specs['cores']
+        threads = specs['threads']
+        # For multi-socket, specs already has per-socket values multiplied
+        # if the generator saw '2x' prefix. But if the raw name has '2x' and
+        # the specs key is the normalized (non-2x) name, we need to multiply.
+        # The generator stores already-multiplied values for 2x entries,
+        # but here we match by normalized name (without 2x), so we multiply.
+        if socket_count > 1:
+            cores = specs['cores'] * socket_count
+            threads = specs['threads'] * socket_count
+            multicore_score = specs['multicore_score'] * socket_count
+        else:
+            cores = specs['cores']
+            threads = specs['threads']
+            multicore_score = specs['multicore_score']
+
+        conn.execute("""
+            UPDATE server SET
+                cpu_cores = COALESCE(cpu_cores, ?),
+                cpu_threads = COALESCE(cpu_threads, ?),
+                cpu_generation = COALESCE(cpu_generation, ?),
+                cpu_score = ?,
+                cpu_multicore_score = ?
+            WHERE cpu = ? AND cpu_score IS NULL
+        """, [cores, threads, specs.get('family', ''), specs['score'], multicore_score, cpu_name])
+        enriched += 1
+
+    print(f"CPU enrichment: updated {enriched} distinct CPU models")
 
 
 def fetch_hetzner_data(url: str, output_path: str, label: str = "servers") -> str:
@@ -452,6 +548,8 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
             ('cpu_cores', "ALTER TABLE server ADD COLUMN cpu_cores INTEGER"),
             ('cpu_threads', "ALTER TABLE server ADD COLUMN cpu_threads INTEGER"),
             ('cpu_generation', "ALTER TABLE server ADD COLUMN cpu_generation VARCHAR"),
+            ('cpu_score', "ALTER TABLE server ADD COLUMN cpu_score INTEGER"),
+            ('cpu_multicore_score', "ALTER TABLE server ADD COLUMN cpu_multicore_score INTEGER"),
         ]
 
         for col_name, sql in migrations:
@@ -516,6 +614,11 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
 
             standard_count = conn.execute("SELECT COUNT(*) FROM server WHERE server_type = 'standard'").fetchone()[0]
             print(f"Standard servers imported: {standard_count}")
+
+        # Enrich all servers with CPU specs (cores, threads, generation, scores)
+        print("\n--- Enriching CPU data ---")
+        cpu_specs = load_cpu_specs()
+        enrich_cpu_data(conn, cpu_specs)
 
         conn.execute("COMMIT")
 

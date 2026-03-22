@@ -482,6 +482,56 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 				size="sm"
 			/>
 		</li>
+		<li class="flex justify-between">
+			<Label class="text-sm">Cores</Label>
+			<span class="ml-2 text-right dark:text-gray-400">
+				{#if filter.cpuCores[0] === filter.cpuCores[1]}
+					{filter.cpuCores[0]}
+				{:else}
+					{filter.cpuCores[0]} – {filter.cpuCores[1]}
+				{/if}
+			</span>
+		</li>
+		<li>
+			<RangeSlider
+				bind:values={filter.cpuCores}
+				min={0}
+				max={128}
+				step={2}
+				hoverable={false}
+				{springValues}
+				range
+				pushy
+				on:change={() => {
+					filter = { ...filter };
+				}}
+			/>
+		</li>
+		<li class="flex justify-between">
+			<Label class="text-sm">Threads</Label>
+			<span class="ml-2 text-right dark:text-gray-400">
+				{#if filter.cpuThreads[0] === filter.cpuThreads[1]}
+					{filter.cpuThreads[0]}
+				{:else}
+					{filter.cpuThreads[0]} – {filter.cpuThreads[1]}
+				{/if}
+			</span>
+		</li>
+		<li>
+			<RangeSlider
+				bind:values={filter.cpuThreads}
+				min={0}
+				max={256}
+				step={2}
+				hoverable={false}
+				{springValues}
+				range
+				pushy
+				on:change={() => {
+					filter = { ...filter };
+				}}
+			/>
+		</li>
 
 		<!-- Memory Filters -->
 		<li>

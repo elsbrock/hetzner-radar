@@ -129,8 +129,9 @@ export class AuctionDatabaseService {
 				ram, ram_size, is_ecc, hdd_arr, nvme_count, nvme_drives, nvme_size,
 				sata_count, sata_drives, sata_size, hdd_count, hdd_drives, hdd_size,
 				with_inic, with_hwr, with_gpu, with_rps, traffic, bandwidth, price,
-				fixed_price, seen
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				fixed_price, seen,
+				cpu_cores, cpu_threads, cpu_generation, cpu_score, cpu_multicore_score
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		const currentAuctionInsertSql = `
@@ -139,8 +140,9 @@ export class AuctionDatabaseService {
 				ram, ram_size, is_ecc, hdd_arr, nvme_count, nvme_drives, nvme_size,
 				sata_count, sata_drives, sata_size, hdd_count, hdd_drives, hdd_size,
 				with_inic, with_hwr, with_gpu, with_rps, traffic, bandwidth, price,
-				fixed_price, seen, last_changed, created_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+				fixed_price, seen, last_changed, created_at,
+				cpu_cores, cpu_threads, cpu_generation, cpu_score, cpu_multicore_score
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?)
 		`;
 
 		for (const config of configs) {
@@ -188,6 +190,11 @@ export class AuctionDatabaseService {
 						config.price,
 						config.fixed_price,
 						config.seen,
+						config.cpu_cores,
+						config.cpu_threads,
+						config.cpu_generation,
+						config.cpu_score,
+						config.cpu_multicore_score,
 					),
 				);
 			}
@@ -230,6 +237,11 @@ export class AuctionDatabaseService {
 					config.fixed_price,
 					config.seen,
 					lastChanged,
+					config.cpu_cores,
+					config.cpu_threads,
+					config.cpu_generation,
+					config.cpu_score,
+					config.cpu_multicore_score,
 				),
 			);
 		}

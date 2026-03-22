@@ -382,18 +382,12 @@
 			</div>
 		{/if}
 
-		{#if config?.server_type === 'standard'}
-			<!-- Standard server details -->
+		{#if config?.cpu_cores || config?.cpu_threads || config?.cpu_generation || config?.cpu_score}
+			<!-- CPU details (all server types) -->
 			<div class="mb-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800">
-				{#if config.datacenter}
-					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">Datacenter</span>
-						<span class="font-medium text-gray-900 dark:text-white">{config.datacenter}</span>
-					</div>
-				{/if}
 				{#if config.cpu_cores || config.cpu_threads}
 					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">CPU Cores/Threads</span>
+						<span class="text-gray-500 dark:text-gray-400">Cores / Threads</span>
 						<span class="font-medium text-gray-900 dark:text-white">
 							{config.cpu_cores ?? '?'} / {config.cpu_threads ?? '?'}
 						</span>
@@ -401,8 +395,28 @@
 				{/if}
 				{#if config.cpu_generation}
 					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">CPU Generation</span>
+						<span class="text-gray-500 dark:text-gray-400">Architecture</span>
 						<span class="font-medium text-gray-900 dark:text-white">{config.cpu_generation}</span>
+					</div>
+				{/if}
+				{#if config.cpu_score}
+					<div class="flex justify-between">
+						<span class="text-gray-500 dark:text-gray-400">Geekbench 6</span>
+						<span class="font-medium text-gray-900 dark:text-white">
+							{config.cpu_score.toLocaleString()} / {config.cpu_multicore_score?.toLocaleString() ?? '?'}
+						</span>
+					</div>
+				{/if}
+			</div>
+		{/if}
+
+		{#if config?.server_type === 'standard'}
+			<!-- Standard server details -->
+			<div class="mb-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800">
+				{#if config.datacenter}
+					<div class="flex justify-between">
+						<span class="text-gray-500 dark:text-gray-400">Datacenter</span>
+						<span class="font-medium text-gray-900 dark:text-white">{config.datacenter}</span>
 					</div>
 				{/if}
 				{#if config.setup_price && config.setup_price > 0}
