@@ -19,11 +19,11 @@
 		"vitest": "4.0.16",
 		"@cloudflare/workers-types": "^4.20250705.0",
 		"@vitest/coverage-v8": "4.0.16",
-		"eslint": "^9.31.0",
+		"eslint": "^10.0.0",
 		"eslint-config-prettier": "^10.1.5",
 		"typescript-eslint": "^8.36.0",
 		"prettier": "^3.6.2",
-		"@eslint/js": "^9.31.0",
+		"@eslint/js": "^10.0.0",
 		"globals": "^16.2.0"
 	}
 }
