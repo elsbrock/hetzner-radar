@@ -1,4 +1,5 @@
 import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
 import removeConsole from "vite-plugin-remove-console";
 import { defineConfig } from "vitest/config";
 
@@ -14,6 +15,7 @@ const formattedDate = date.toLocaleDateString("de-DE", {
 
 export default defineConfig(({ mode }) => ({
   plugins: [
+    tailwindcss(),
     sveltekit(),
     process.env.NODE_ENV === "production"
       ? removeConsole({
