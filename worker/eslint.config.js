@@ -14,6 +14,9 @@ export default [
 				...globals.node,
 				...globals.es2021,
 			},
+			parserOptions: {
+				tsconfigRootDir: import.meta.dirname,
+			},
 		},
 	},
 	{

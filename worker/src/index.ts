@@ -105,7 +105,7 @@ Combined:
 			return await (stub as { getStatus(): Promise<unknown> }).getStatus();
 		} catch (e: unknown) {
 			console.error('Error in Worker getStatus RPC:', e);
-			throw new Error(`Error calling getStatus on DO: ${e instanceof Error ? e.message : String(e)}`);
+			throw new Error(`Error calling getStatus on DO: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
 		}
 	}
 
@@ -132,7 +132,7 @@ Combined:
 			).getHistoricalAvailability(options);
 		} catch (e: unknown) {
 			console.error('Error in Worker getHistoricalAvailability RPC:', e);
-			throw new Error(`Error calling getHistoricalAvailability on DO: ${e instanceof Error ? e.message : String(e)}`);
+			throw new Error(`Error calling getHistoricalAvailability on DO: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
 		}
 	}
 
@@ -143,7 +143,7 @@ Combined:
 			return await (stub as { getAuctionStats(): Promise<unknown> }).getAuctionStats();
 		} catch (e: unknown) {
 			console.error('Error in Worker getAuctionStats RPC:', e);
-			throw new Error(`Error calling getAuctionStats on DO: ${e instanceof Error ? e.message : String(e)}`);
+			throw new Error(`Error calling getAuctionStats on DO: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
 		}
 	}
 
