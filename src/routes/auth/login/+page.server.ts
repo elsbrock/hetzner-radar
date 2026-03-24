@@ -89,8 +89,7 @@ https://radar.iodev.org/`,
       } catch (mailError) {
         console.error("Failed to send verification email:", mailError);
         return fail(500, {
-          error:
-            "Unable to send verification email. Please try again later.",
+          error: "Unable to send verification email. Please try again later.",
         });
       }
 
