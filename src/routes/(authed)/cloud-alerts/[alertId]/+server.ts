@@ -4,6 +4,7 @@ import {
   getCloudAlertById,
   updateCloudAlert,
   deleteCloudAlert,
+  rearmCloudAlert,
   MAX_NAME_LENGTH,
 } from "$lib/api/backend/cloud-alerts";
 
@@ -125,6 +126,19 @@ export const PATCH: RequestHandler = async ({
 
     if (updates.discordNotifications !== undefined) {
       validUpdates.discordNotifications = Boolean(updates.discordNotifications);
+    }
+
+    // Handle re-arm request
+    if (updates.isArmed === true) {
+      await rearmCloudAlert(
+        platform.env.DB,
+        locals.user.id.toString(),
+        params.alertId,
+      );
+      // If only re-arming, return early unless there are other updates
+      if (Object.keys(validUpdates).length === 0) {
+        return json({ success: true });
+      }
     }
 
     await updateCloudAlert(

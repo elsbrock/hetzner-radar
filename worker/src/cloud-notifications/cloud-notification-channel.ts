@@ -29,6 +29,7 @@ export interface CloudAlert {
 	alert_on: 'available' | 'unavailable' | 'both';
 	email_notifications: boolean;
 	discord_notifications: boolean;
+	is_armed: boolean;
 	created_at: string;
 }
 
