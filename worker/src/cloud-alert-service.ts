@@ -29,7 +29,11 @@ export class CloudAlertService {
 
 	// SQL queries
 	private readonly GET_ACTIVE_ALERTS_SQL = `
-		SELECT * FROM cloud_availability_alert ORDER BY created_at
+		SELECT * FROM cloud_availability_alert WHERE is_armed = 1 ORDER BY created_at
+	`;
+
+	private readonly DISARM_ALERT_SQL = `
+		UPDATE cloud_availability_alert SET is_armed = 0 WHERE id = ?
 	`;
 
 	private readonly GET_USER_SQL = `
@@ -143,11 +147,13 @@ export class CloudAlertService {
 	}
 
 	/**
-	 * Record alert triggers in history
+	 * Record alert triggers in history and disarm matched alerts
 	 */
 	private async recordAlertTriggers(changes: AvailabilityChange[], alerts: CloudAlert[]): Promise<void> {
 		const statements: D1PreparedStatement[] = [];
 		const historyStmt = this.db.prepare(this.INSERT_ALERT_HISTORY_SQL);
+		const disarmStmt = this.db.prepare(this.DISARM_ALERT_SQL);
+		const disarmedAlertIds = new Set<string>();
 
 		for (const change of changes) {
 			for (const alert of alerts) {
@@ -170,12 +176,18 @@ export class CloudAlertService {
 							change.eventType,
 						),
 					);
+
+					// Auto-disarm the alert after it fires (once per alert)
+					if (!disarmedAlertIds.has(alert.id)) {
+						disarmedAlertIds.add(alert.id);
+						statements.push(disarmStmt.bind(alert.id));
+					}
 				}
 			}
 		}
 
 		if (statements.length > 0) {
-			console.log(`[CloudAlertService ${this.doId}] Recording ${statements.length} alert triggers in history`);
+			console.log(`[CloudAlertService ${this.doId}] Recording alert triggers and disarming ${disarmedAlertIds.size} alerts`);
 			await this.db.batch(statements);
 		}
 	}
@@ -183,17 +195,18 @@ export class CloudAlertService {
 	/**
 	 * Parse raw cloud alert from database
 	 */
-	private parseCloudAlert(raw: unknown): CloudAlert {
+	private parseCloudAlert(raw: Record<string, unknown>): CloudAlert {
 		return {
-			id: raw.id,
-			user_id: raw.user_id,
-			name: raw.name,
-			server_type_ids: JSON.parse(raw.server_type_ids),
-			location_ids: JSON.parse(raw.location_ids),
-			alert_on: raw.alert_on,
+			id: raw.id as string,
+			user_id: raw.user_id as string,
+			name: raw.name as string,
+			server_type_ids: JSON.parse(raw.server_type_ids as string),
+			location_ids: JSON.parse(raw.location_ids as string),
+			alert_on: raw.alert_on as CloudAlert['alert_on'],
 			email_notifications: Boolean(raw.email_notifications),
 			discord_notifications: Boolean(raw.discord_notifications),
-			created_at: raw.created_at,
+			is_armed: Boolean(raw.is_armed),
+			created_at: raw.created_at as string,
 		};
 	}
 }

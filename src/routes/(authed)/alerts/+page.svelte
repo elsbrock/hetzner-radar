@@ -77,7 +77,8 @@
 		faMagnifyingGlass,
 		faPenToSquare,
 		faTrash,
-		faBoxOpen
+		faBoxOpen,
+		faRotateRight
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
@@ -250,6 +251,36 @@
 
 		showDeleteModal = false;
 		deleteConfirmation.isDeleting = false;
+	}
+
+	async function rearmCloudAlert(alertId: string) {
+		try {
+			const response = await fetch(`/cloud-alerts/${alertId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ isArmed: true })
+			});
+
+			if (response.ok) {
+				addToast({
+					message: 'Alert re-armed successfully',
+					type: 'success',
+					dismissible: true,
+					timeout: 3000
+				});
+				await invalidateAll();
+			} else {
+				const result = await response.json();
+				throw new Error(result.error || 'Failed to re-arm alert');
+			}
+		} catch (error) {
+			addToast({
+				message: error instanceof Error ? error.message : 'Failed to re-arm alert',
+				type: 'error',
+				dismissible: true,
+				timeout: 5000
+			});
+		}
 	}
 
 	function openCreateCloudAlertModal() {
@@ -613,8 +644,8 @@
 								<p class="mb-4 text-base text-gray-600 dark:text-gray-400">
 									Monitor cloud server availability changes in real-time. Server Radar will notify
 									you when your selected server types become available or unavailable in your chosen
-									locations. You can set up alerts for specific combinations and choose your
-									preferred notification methods.
+									locations. Alerts automatically disarm after firing to prevent continuous
+									notifications. You can re-arm them at any time.
 								</p>
 							</div>
 
@@ -638,7 +669,7 @@
 								<div class="space-y-3">
 									{#each data.cloudAlerts.activeAlerts as alert (alert.id)}
 										<div
-											class="flex flex-col rounded-lg border-l-4 border-l-blue-500 bg-white p-3 shadow-xs md:flex-row md:items-start dark:bg-gray-800"
+											class="flex flex-col rounded-lg border-l-4 bg-white p-3 shadow-xs md:flex-row md:items-start dark:bg-gray-800 {alert.is_armed ? 'border-l-blue-500' : 'border-l-gray-300 dark:border-l-gray-600'}"
 										>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
@@ -649,6 +680,9 @@
 												>
 													{alert.name}
 												</span>
+												{#if !alert.is_armed}
+													<Badge color="dark" class="mt-1 text-xs">Disarmed</Badge>
+												{/if}
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
@@ -730,6 +764,16 @@
 											</div>
 											<div class="mt-3 self-center md:mt-0">
 												<ButtonGroup>
+													{#if !alert.is_armed}
+														<Button
+															size="xs"
+															color="green"
+															on:click={() => rearmCloudAlert(alert.id)}
+															title="Re-arm alert"
+														>
+															<FontAwesomeIcon icon={faRotateRight} class="h-4 w-4" />
+														</Button>
+													{/if}
 													<Button size="xs" on:click={() => openEditCloudAlertModal(alert)}>
 														<PenSolid class="h-4 w-4" />
 													</Button>
@@ -757,8 +801,8 @@
 									</h3>
 									<p class="mb-4 text-base text-gray-600 dark:text-gray-400">
 										Cloud availability changes that have triggered your alerts are shown here.
-										Unlike price alerts, cloud alerts remain active and will continue to notify you
-										of future availability changes. We show the most recent triggers.
+										Alerts are automatically disarmed after firing. You can re-arm them from the
+										active alerts list above. We show the most recent triggers.
 									</p>
 								</div>
 

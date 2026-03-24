@@ -236,6 +236,7 @@ describe('CloudAlertService', () => {
 						alert_on: 'available',
 						email_notifications: true,
 						discord_notifications: true,
+						is_armed: true,
 						created_at: '2024-01-01T00:00:00Z',
 					},
 				],
@@ -503,7 +504,9 @@ describe('CloudAlertService', () => {
 
 			await service.processAvailabilityChanges(mockSingleAvailabilityChange);
 
-			expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('SELECT * FROM cloud_availability_alert ORDER BY created_at'));
+			expect(mockDb.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('SELECT * FROM cloud_availability_alert WHERE is_armed = 1 ORDER BY created_at'),
+			);
 		});
 
 		it('should use correct SQL for getting users', async () => {

@@ -61,6 +61,7 @@ export const mockCloudAlerts: CloudAlert[] = [
 		alert_on: 'available',
 		email_notifications: true,
 		discord_notifications: true,
+		is_armed: true,
 		created_at: '2024-01-01T00:00:00Z',
 	},
 	{
@@ -72,6 +73,7 @@ export const mockCloudAlerts: CloudAlert[] = [
 		alert_on: 'both',
 		email_notifications: true,
 		discord_notifications: false,
+		is_armed: true,
 		created_at: '2024-01-01T01:00:00Z',
 	},
 	{
@@ -83,6 +85,7 @@ export const mockCloudAlerts: CloudAlert[] = [
 		alert_on: 'unavailable',
 		email_notifications: false,
 		discord_notifications: true,
+		is_armed: true,
 		created_at: '2024-01-01T02:00:00Z',
 	},
 ];
@@ -97,6 +100,7 @@ export const mockSingleCloudAlert: CloudAlert = {
 	alert_on: 'available',
 	email_notifications: true,
 	discord_notifications: true,
+	is_armed: true,
 	created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -130,6 +134,7 @@ export const mockRawCloudAlertRecords = [
 		alert_on: 'available',
 		email_notifications: 1,
 		discord_notifications: 1,
+		is_armed: 1,
 		created_at: '2024-01-01T00:00:00Z',
 	},
 	{
@@ -141,6 +146,7 @@ export const mockRawCloudAlertRecords = [
 		alert_on: 'both',
 		email_notifications: 1,
 		discord_notifications: 0,
+		is_armed: 1,
 		created_at: '2024-01-01T01:00:00Z',
 	},
 	{
@@ -152,6 +158,7 @@ export const mockRawCloudAlertRecords = [
 		alert_on: 'unavailable',
 		email_notifications: 0,
 		discord_notifications: 1,
+		is_armed: 1,
 		created_at: '2024-01-01T02:00:00Z',
 	},
 ];

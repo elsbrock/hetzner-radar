@@ -10,6 +10,7 @@ export interface CloudAvailabilityAlert {
   alert_on: "available" | "unavailable" | "both";
   email_notifications: boolean;
   discord_notifications: boolean;
+  is_armed: boolean;
   created_at: Date;
 }
 
@@ -39,6 +40,7 @@ type CloudAlertRow = {
   alert_on: "available" | "unavailable" | "both";
   email_notifications: number | boolean;
   discord_notifications: number | boolean;
+  is_armed: number | boolean;
   created_at: string;
 };
 
@@ -61,6 +63,7 @@ function parseCloudAlert(raw: CloudAlertRow): CloudAvailabilityAlert {
     location_ids: JSON.parse(raw.location_ids),
     email_notifications: Boolean(raw.email_notifications),
     discord_notifications: Boolean(raw.discord_notifications),
+    is_armed: Boolean(raw.is_armed),
     created_at: new Date(raw.created_at),
   };
 }
@@ -269,8 +272,30 @@ export async function getActiveCloudAlertsForMatching(
   db: DB,
 ): Promise<CloudAvailabilityAlert[]> {
   const results = await db
-    .prepare("SELECT * FROM cloud_availability_alert ORDER BY created_at")
+    .prepare(
+      "SELECT * FROM cloud_availability_alert WHERE is_armed = 1 ORDER BY created_at",
+    )
     .all<CloudAlertRow>();
 
   return results.results.map(parseCloudAlert);
+}
+
+export async function disarmCloudAlert(db: DB, alertId: string): Promise<void> {
+  await db
+    .prepare("UPDATE cloud_availability_alert SET is_armed = 0 WHERE id = ?")
+    .bind(alertId)
+    .run();
+}
+
+export async function rearmCloudAlert(
+  db: DB,
+  userId: string,
+  alertId: string,
+): Promise<void> {
+  await db
+    .prepare(
+      "UPDATE cloud_availability_alert SET is_armed = 1 WHERE id = ? AND user_id = ?",
+    )
+    .bind(alertId, userId)
+    .run();
 }
