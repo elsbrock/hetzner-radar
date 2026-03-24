@@ -169,7 +169,9 @@ export async function createAlert(
       .run();
   } catch (error) {
     console.error(`Failed to create alert for user ${userId}:`, error);
-    throw new Error("Could not create alert. Please try again later.");
+    throw new Error("Could not create alert. Please try again later.", {
+      cause: error,
+    });
   }
 }
 
@@ -214,7 +216,9 @@ export async function updateAlert(
       `Failed to update alert ${alertId} for user ${userId}:`,
       error,
     );
-    throw new Error("Could not update alert. Please try again later.");
+    throw new Error("Could not update alert. Please try again later.", {
+      cause: error,
+    });
   }
 }
 
@@ -233,6 +237,8 @@ export async function deleteAlert(
       `Failed to delete alert ${alertId} for user ${userId}:`,
       error,
     );
-    throw new Error("Could not delete alert. Please try again later.");
+    throw new Error("Could not delete alert. Please try again later.", {
+      cause: error,
+    });
   }
 }

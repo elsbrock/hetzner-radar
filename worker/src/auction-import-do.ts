@@ -145,18 +145,15 @@ export class AuctionImportDO extends DurableObject {
 	}
 
 	private async fetchAuctions(): Promise<void> {
-		let auctionImportResult: unknown = null;
-		let alertProcessingResult: unknown[] = [];
-
 		try {
 			// Import auction data
-			auctionImportResult = await this.auctionService.fetchAndImportAuctions();
+			const auctionImportResult = await this.auctionService.fetchAndImportAuctions();
 			console.log(`[AuctionImportDO ${this.ctx.id}] Auction import completed:`, auctionImportResult);
 
 			// Always process alerts against the current snapshot — new alerts
 			// need to be evaluated even when auction data hasn't changed
 			console.log(`[AuctionImportDO ${this.ctx.id}] Processing alerts against current snapshot...`);
-			alertProcessingResult = await this.alertService.processAlerts();
+			const alertProcessingResult = await this.alertService.processAlerts();
 
 			const successfulAlerts = alertProcessingResult.filter((a) => a.success).length;
 			const totalNotifications = alertProcessingResult.reduce((sum, a) => sum + a.notifications, 0);

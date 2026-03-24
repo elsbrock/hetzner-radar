@@ -17,6 +17,9 @@ export default [
         ...globals.browser,
         ...globals.node,
       },
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   {
@@ -91,7 +94,7 @@ export default [
       "dist/",
       ".wrangler/",
       "**/.wrangler/",
-      "worker/coverage/",
+      "worker/",
       "fix-*.cjs",
     ],
   },

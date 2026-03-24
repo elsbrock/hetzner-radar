@@ -76,7 +76,7 @@ export class AnalyticsQueryService {
 				result = JSON.parse(responseText);
 			} catch (parseError) {
 				console.error('[AnalyticsQueryService] Failed to parse response:', responseText);
-				throw new Error(`Failed to parse Analytics Engine response: ${parseError}`);
+				throw new Error(`Failed to parse Analytics Engine response: ${parseError}`, { cause: parseError });
 			}
 
 			// The response format may vary, let's handle different cases
