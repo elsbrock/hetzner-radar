@@ -28,6 +28,9 @@ export async function sendMail(
     console.warn(
       "FORWARDEMAIL_API_KEY is not configured; skipping email send.",
     );
+    if (!dev) {
+      throw new Error("Email service is not configured.");
+    }
     return;
   }
   const { from, to, subject, text } = mailOptions;
@@ -58,10 +61,8 @@ export async function sendMail(
   });
 
   if (!response.ok) {
-    console.error(
-      "Failed to send email:",
-      response.status,
-      await response.text(),
-    );
+    const errorText = await response.text();
+    console.error("Failed to send email:", response.status, errorText);
+    throw new Error(`Failed to send email: ${response.status}`);
   }
 }

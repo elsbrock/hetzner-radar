@@ -30,11 +30,6 @@ export const actions: Actions = {
         });
       }
       const formData = await event.request.formData();
-      if (!db) {
-        return fail(500, {
-          error: "Database connection error.",
-        });
-      }
 
       let email = formData.get("email") as string;
       const tosAgree = formData.get("tosagree") as string;
@@ -69,14 +64,15 @@ export const actions: Actions = {
       const verificationCode = await generateEmailVerificationCode(db, email);
       console.log("verification code", verificationCode);
 
-      await sendMail(env, {
-        from: {
-          name: "Server Radar",
-          email: "no-reply@radar.iodev.org",
-        },
-        to: email,
-        subject: "Your Magic Sign-In Code",
-        text: `Greetings!
+      try {
+        await sendMail(env, {
+          from: {
+            name: "Server Radar",
+            email: "no-reply@radar.iodev.org",
+          },
+          to: email,
+          subject: "Your Magic Sign-In Code",
+          text: `Greetings!
 
 You've requested to sign in to Server Radar. Here's your magic code:
 
@@ -89,7 +85,13 @@ Cheers,
 Server Radar
 --
 https://radar.iodev.org/`,
-      });
+        });
+      } catch (mailError) {
+        console.error("Failed to send verification email:", mailError);
+        return fail(500, {
+          error: "Unable to send verification email. Please try again later.",
+        });
+      }
 
       return { success: true };
     } catch (error) {
