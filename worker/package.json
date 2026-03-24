@@ -17,9 +17,9 @@
 	"devDependencies": {
 		"typescript": "5.9.3",
 		"wrangler": "4.54.0",
-		"vitest": "4.0.16",
+		"vitest": "4.1.1",
 		"@cloudflare/workers-types": "^4.20250705.0",
-		"@vitest/coverage-v8": "4.0.16",
+		"@vitest/coverage-v8": "4.1.1",
 		"eslint": "^10.0.0",
 		"eslint-config-prettier": "^10.1.5",
 		"typescript-eslint": "^8.57.2",
