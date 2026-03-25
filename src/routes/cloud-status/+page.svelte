@@ -58,8 +58,7 @@
 	const initialCategoryFilter = params.get('category') || 'all';
 	const initialSearchQuery = params.get('search') || '';
 	
-	// Feature flag from URL
-	const enableAvailabilityPatterns = params.get('timeline') === 'true';
+	const enableAvailabilityPatterns = true;
 
 	const CATEGORY_LABELS: Record<string, string> = {
 		regular_purpose: 'Regular Purpose',
