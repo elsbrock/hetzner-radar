@@ -51,7 +51,7 @@
 
 	// Calculate color hue based on markup percentage (0% = green, 100% = red)
 	// Hue range: 120 (green) down to 0 (red)
-	const markupColorHue = $derived(() => {
+	const markupColorHue = $derived.by(() => {
 		const percentage = config.markup_percentage ?? 0;
 		// Clamp percentage between 0 and 100 for hue calculation
 		const clampedPercentage = Math.max(0, Math.min(100, percentage));
@@ -147,7 +147,7 @@
 						<span class="ml-1">{convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(0)} {$currencySymbol} setup</span>
 					{:else if config.server_type !== 'standard' && config.markup_percentage !== null && config.markup_percentage > 0}
 						<span class="ml-1">·</span>
-						<span class="ml-1" style={`color: hsl(${markupColorHue()}, 100%, 40%)`}
+						<span class="ml-1" style={`color: hsl(${markupColorHue}, 100%, 40%)`}
 							>{(config.markup_percentage ?? 0).toFixed(0)}%</span
 						>
 						higher than best
