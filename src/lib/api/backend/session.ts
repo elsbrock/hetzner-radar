@@ -42,8 +42,6 @@ export async function createSession(
   userId: string,
   email: string,
 ): Promise<Session> {
-  console.log("create session", token, userId);
-
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
   // Set expiration to 30 days from now in UTC
@@ -55,8 +53,6 @@ export async function createSession(
     email,
     expiresAt,
   };
-
-  console.log("create session", session);
 
   // Store expiresAt as ISO string in UTC
   await db
@@ -73,22 +69,17 @@ export async function validateSessionToken(
 ): Promise<SessionValidationResult> {
   // Probabilistic cleanup: Run on ~1% of requests
   if (Math.random() < 0.01) {
-    // Adjust probability as needed (0.01 = 1%)
-    console.log("Attempting probabilistic cleanup of expired sessions...");
     try {
-      // Use 'await' as DB operations are async
-      const cleanupResult = await db
+      await db
         .prepare("DELETE FROM session WHERE expires_at < ?")
-        .bind(new Date().toISOString()) // Compare against current time
+        .bind(new Date().toISOString())
         .run();
-      console.log(`Cleaned up ${cleanupResult.changes ?? 0} expired sessions.`);
     } catch (error) {
-      // Log error but allow validation to continue
       console.error("Error during probabilistic session cleanup:", error);
     }
   }
+
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-  console.log("Validating session ID:", sessionId);
 
   interface SessionRow {
     id: string;
@@ -107,10 +98,7 @@ export async function validateSessionToken(
     .bind(sessionId)
     .first<SessionRow>();
 
-  console.log("validate session token", row);
-
   if (row === null) {
-    console.log("Session not found");
     return { session: null, user: null };
   }
 
@@ -132,17 +120,14 @@ export async function validateSessionToken(
   const now = new Date();
 
   if (now >= session.expiresAt) {
-    console.log("Session expired");
     await db.prepare("DELETE FROM session WHERE id = ?").bind(session.id).run();
     return { session: null, user: null };
   }
 
   // Define renewal threshold (e.g., 15 days before expiration)
-  const renewalThreshold = SESSION_RENEWAL_THRESHOLD; // 15 days in milliseconds
+  const renewalThreshold = SESSION_RENEWAL_THRESHOLD;
 
   if (session.expiresAt.getTime() - now.getTime() <= renewalThreshold) {
-    console.log("Session nearing expiration, renewing");
-
     // Renew the session by extending it by another 30 days from now
     const newExpiresAt = new Date(Date.now() + SESSION_EXPIRY);
     session.expiresAt = newExpiresAt;
