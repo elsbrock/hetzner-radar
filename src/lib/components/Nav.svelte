@@ -117,7 +117,7 @@
 	});
 </script>
 
-<Navbar class="relative h-20 w-full">
+<Navbar class="relative h-[4.25rem] w-full">
 	<NavBrand href="/">
 		<div style="width: 32px; height: 32px">
 			<Radar />
@@ -136,29 +136,20 @@
 	<div class="mx-4 hidden h-8 w-px bg-gray-300 xl:block dark:bg-gray-600"></div>
 
 	<div class="hidden items-center md:order-2 xl:flex">
-		<Button
-			size="sm"
-			color="alternative"
-			href="https://github.com/elsbrock/hetzner-radar"
-			class="
-            border-gray-400 bg-gray-50
-            p-1.5 px-3
-            text-gray-800
-            ring-2
-            ring-orange-100
-            hover:border-orange-400 hover:text-gray-800
-            hover:ring-orange-200 dark:border-gray-500
-            dark:bg-gray-700 dark:text-gray-200
-            dark:ring-orange-900/50 dark:hover:border-orange-500
-            dark:hover:text-gray-100 dark:hover:ring-orange-800/50
-        "
-		>
-			<FontAwesomeIcon class="me-2 h-5 w-5" icon={faGithub} />
-			Star
-		</Button>
-		<div class="mx-3 h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-
 		{#if $session}
+			<!-- Alerts button for logged-in users -->
+			<Button
+				size="sm"
+				href="/alerts"
+				class="p-1.5 px-3"
+				onmouseenter={() => (isHoveringAlerts = true)}
+				onmouseleave={() => (isHoveringAlerts = false)}
+			>
+				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faBell} shake={isHoveringAlerts} />
+				Alerts
+			</Button>
+			<div class="mx-3 h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+
 			<!-- Desktop Settings Icon -->
 			<a
 				href={resolve('/settings')}
@@ -258,43 +249,22 @@
 				><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faCloud} />Cloud</span
 			>
 		</NavLi>
-		{#if $session}
-			<NavLi
-				href="/alerts"
-				data-testid="nav-link-alerts"
-				class="bg-transparent!"
-				onmouseenter={() => (isHoveringAlerts = true)}
-				onmouseleave={() => (isHoveringAlerts = false)}
+		<NavLi href="/statistics" data-testid="nav-link-statistics" class="bg-transparent!">
+			<span
+				class="rounded-full px-3 py-1.5 text-sm transition-all {activeUrl === '/statistics'
+					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faChartLine} />Statistics</span
 			>
-				<span
-					class="rounded-full px-3 py-1.5 text-sm transition-all {activeUrl === '/alerts'
-						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
-						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
-				><FontAwesomeIcon
-						class="mr-1.5 inline h-4 w-4 align-[-0.125em] text-orange-500"
-						icon={faBell}
-						shake={isHoveringAlerts}
-					/>Alerts</span
-				>
-			</NavLi>
-		{:else}
-			<NavLi href="/statistics" data-testid="nav-link-statistics" class="bg-transparent!">
-				<span
-					class="rounded-full px-3 py-1.5 text-sm transition-all {activeUrl === '/statistics'
-						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
-						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
-					><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faChartLine} />Statistics</span
-				>
-			</NavLi>
-			<NavLi href="/about" data-testid="nav-link-about" class="bg-transparent!">
-				<span
-					class="rounded-full px-3 py-1.5 text-sm transition-all {activeUrl === '/about'
-						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
-						: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
-					><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faCircleInfo} />About</span
-				>
-			</NavLi>
-		{/if}
+		</NavLi>
+		<NavLi href="/about" data-testid="nav-link-about" class="bg-transparent!">
+			<span
+				class="rounded-full px-3 py-1.5 text-sm transition-all {activeUrl === '/about'
+					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
+					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
+				><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faCircleInfo} />About</span
+			>
+		</NavLi>
 
 		{#if $session}
 			<!-- Settings only shown on mobile in navbar -->
