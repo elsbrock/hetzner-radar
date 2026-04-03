@@ -160,14 +160,9 @@
 	function formatTimestamp(ts: string): string {
 		const d = new Date(ts);
 		if (granularity === 'hour') {
-			return d.toLocaleString(undefined, {
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit'
-			});
+			return d.toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
 		}
-		return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+		return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
 	}
 
 	function getCellColor(available: boolean): string {
