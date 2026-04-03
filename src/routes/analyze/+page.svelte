@@ -505,8 +505,8 @@ let isSmallScreen: boolean = $state(false);
 						valB = totalStorageB;
 						break;
 					case 'cpu_score':
-						valA = a.cpu_multicore_score ?? 0;
-						valB = b.cpu_multicore_score ?? 0;
+						valA = a.cpu_score ?? 0;
+						valB = b.cpu_score ?? 0;
 						break;
 				}
 
