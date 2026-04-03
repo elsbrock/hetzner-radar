@@ -201,7 +201,7 @@
 				<!-- Time axis labels (vertical) -->
 				<div class="flex gap-px">
 					<div class="w-24 shrink-0"></div>
-					<div class="flex flex-1 gap-px" style="height: 5rem;">
+					<div class="flex flex-1 gap-px">
 						{#each heatmapData[0].cells as _, colIdx}
 							{@const showLabel =
 								colIdx === 0 ||
@@ -209,11 +209,11 @@
 								colIdx %
 									Math.max(1, Math.floor(heatmapData[0].cells.length / 10)) ===
 									0}
-							<div class="relative flex-1">
+							<div class="flex flex-1 justify-center">
 								{#if showLabel}
 									<span
-										class="absolute bottom-0 left-1/2 origin-bottom-left -translate-x-1/2 text-[10px] whitespace-nowrap text-gray-500 dark:text-gray-400"
-										style="writing-mode: vertical-rl; transform: translateX(50%) rotate(180deg);"
+										class="text-[10px] whitespace-nowrap text-gray-500 dark:text-gray-400"
+										style="writing-mode: vertical-rl; transform: rotate(180deg);"
 										>{timeLabels[colIdx]}</span
 									>
 								{/if}
