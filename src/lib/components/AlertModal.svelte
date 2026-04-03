@@ -86,7 +86,7 @@
 	const hasValidNotificationSelection = $derived(emailSelected || discordSelected);
 
 	const action = $derived(alert ? '/alerts?/edit' : '/alerts?/add');
-	const serializedFilter = $derived(() => {
+	const serializedFilter = $derived.by(() => {
 		if (alert && typeof alert.filter === 'string') {
 			return alert.filter;
 		}
