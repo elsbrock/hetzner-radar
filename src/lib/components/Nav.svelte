@@ -111,7 +111,7 @@
 	});
 </script>
 
-<Navbar class="relative h-20 w-full">
+<Navbar class="relative h-16 w-full">
 	<NavBrand href="/">
 		<div style="width: 32px; height: 32px">
 			<Radar />
@@ -126,16 +126,16 @@
 		</div>
 	</NavBrand>
 
-	<div class="hidden items-center md:order-2 lg:flex">
+	<div class="hidden items-center md:order-2 xl:flex">
 		<Button
-			size="md"
+			size="sm"
 			color="alternative"
 			href="https://github.com/elsbrock/hetzner-radar"
 			class="
             border-gray-400 bg-gray-50
-            p-2 px-4
+            p-1.5 px-3
             text-gray-800
-            ring-4
+            ring-2
             ring-orange-100
             hover:border-orange-400 hover:text-gray-800
             hover:ring-orange-200 dark:border-gray-500
@@ -196,7 +196,7 @@
 		<SettingsPopup />
 	</div>
 
-	<div class="flex md:order-2 lg:hidden">
+	<div class="flex md:order-2 xl:hidden">
 		<Button href="/analyze" aria-label="Auctions" size="xs">
 			<FontAwesomeIcon class="h-5 w-5" icon={faBinoculars} /><span class="ml-2 hidden md:inline">
 				Auctions</span
@@ -204,12 +204,19 @@
 		</Button>
 		<NavHamburger
 			data-testid="nav-hamburger"
-			class="md:flex"
+			class="md:block! xl:hidden!"
 			onclick={() => (isNavOpen = !isNavOpen)}
 		/>
 	</div>
 
-	<NavUl hidden={!isNavOpen} slideParams={{ duration: 250, delay: 0 }} class="order-1" {activeUrl}>
+	<NavUl
+		hidden={!isNavOpen}
+		slideParams={{ duration: 250, delay: 0 }}
+		class="order-1"
+		divClass="w-full xl:block xl:w-auto"
+		ulClass="flex flex-col p-4 mt-4 xl:flex-row xl:space-x-8 rtl:space-x-reverse xl:mt-0 xl:text-sm xl:font-medium"
+		{activeUrl}
+	>
 		<NavLi href="/" data-testid="nav-link-home" class="bg-transparent!">
 			<span
 				class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/'
@@ -282,7 +289,7 @@
 
 		{#if $session}
 			<!-- Settings only shown on mobile in navbar -->
-			<NavLi href="/settings" data-testid="nav-link-settings" class="bg-transparent! md:hidden">
+			<NavLi href="/settings" data-testid="nav-link-settings" class="bg-transparent! xl:hidden">
 				<span
 					class="rounded-full px-4 py-1.5 text-base transition-all {activeUrl === '/settings'
 						? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
@@ -292,7 +299,7 @@
 			</NavLi>
 			<!-- Mobile only container for controls -->
 			<div
-				class="mt-2 flex items-center justify-between border-t p-2 md:hidden dark:border-gray-700"
+				class="mt-2 flex items-center justify-between border-t p-2 xl:hidden dark:border-gray-700"
 			>
 				<form
 					action="/auth/logout"
@@ -318,7 +325,7 @@
 		{:else}
 			<!-- Mobile only container for controls -->
 			<div
-				class="mt-2 flex items-center justify-between border-t p-2 md:hidden dark:border-gray-700"
+				class="mt-2 flex items-center justify-between border-t p-2 xl:hidden dark:border-gray-700"
 			>
 				<Button
 					data-testid="nav-signin-mobile"
