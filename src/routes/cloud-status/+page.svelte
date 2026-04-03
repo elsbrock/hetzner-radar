@@ -296,8 +296,8 @@
 					supported: activeSupportedCount,
 					available: activeAvailableCount,
 					percentage:
-						activeSupportedCount > 0
-							? Math.round((activeAvailableCount / activeSupportedCount) * 100)
+						totalActiveTypes > 0
+							? Math.round((activeAvailableCount / totalActiveTypes) * 100)
 							: 0
 				});
 			});
@@ -328,7 +328,9 @@
 
 			return {
 				overallPercentage:
-					totalSupported > 0 ? Math.round((totalAvailable / totalSupported) * 100) : 0,
+					totalActiveTypes > 0 && data.statusData.locations.length > 0
+						? Math.round((totalAvailable / (totalActiveTypes * data.statusData.locations.length)) * 100)
+						: 0,
 				bestLocation: sortedLocations[0],
 				worstLocation: sortedLocations[sortedLocations.length - 1],
 				mostScarce: sortedServerTypes[0],
