@@ -199,8 +199,8 @@
 		<div class="overflow-x-auto">
 			<div class="inline-flex min-w-full flex-col gap-px">
 				<!-- Time axis labels (vertical) -->
-				<div class="flex gap-px">
-					<div class="w-24 shrink-0"></div>
+				<div class="mb-2 flex gap-px">
+					<div class="w-16 shrink-0 md:w-24"></div>
 					<div class="flex flex-1 gap-px">
 						{#each heatmapData[0].cells as _, colIdx}
 							{@const showLabel =
@@ -226,7 +226,7 @@
 				{#each heatmapData as row, rowIdx (row.id)}
 					<div class="flex items-center gap-px">
 						<div
-							class="w-24 shrink-0 truncate pr-2 text-right text-xs text-gray-700 dark:text-gray-300"
+							class="w-16 shrink-0 truncate pr-2 text-right text-xs text-gray-700 dark:text-gray-300 md:w-24"
 							title={row.label}
 						>
 							{row.label}
@@ -257,7 +257,7 @@
 
 				<!-- Legend -->
 				<div
-					class="mt-2 flex items-center gap-4 pl-24 text-xs text-gray-600 dark:text-gray-400"
+					class="mt-2 flex items-center gap-4 pl-16 text-xs text-gray-600 dark:text-gray-400 md:pl-24"
 				>
 					<div class="flex items-center gap-1">
 						<div class="h-3 w-3 rounded-sm bg-green-500 dark:bg-green-600"></div>
