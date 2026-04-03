@@ -131,7 +131,7 @@ export class AnalyticsQueryService {
 
 		// Build the SQL query
 		// Use the dataset name as configured in wrangler.jsonc
-		const sql = `SELECT ${timeFormat} as time_bucket, blob1 as serverTypeId, blob2 as locationId, blob4 as serverTypeName, blob5 as locationName, MAX(double1) as availability FROM cloud_availability_v2 WHERE ${whereConditions.join(' AND ')} GROUP BY time_bucket, blob1, blob2, blob4, blob5 ORDER BY time_bucket DESC, blob1, blob2`;
+		const sql = `SELECT ${timeFormat} as time_bucket, blob1, blob2, blob4, blob5, MAX(double1) as availability FROM cloud_availability_v2 WHERE ${whereConditions.join(' AND ')} GROUP BY time_bucket, blob1, blob2, blob4, blob5 ORDER BY time_bucket DESC, blob1, blob2`;
 
 		return sql.trim();
 	}
@@ -154,18 +154,18 @@ export class AnalyticsQueryService {
 		return rawData.map((row) => {
 			const typedRow = row as {
 				time_bucket: string;
-				serverTypeId: string;
-				locationId: string;
-				serverTypeName?: string;
-				locationName?: string;
+				blob1: string;
+				blob2: string;
+				blob4?: string;
+				blob5?: string;
 				availability: number;
 			};
 			return {
 				timestamp: typedRow.time_bucket,
-				serverTypeId: parseInt(typedRow.serverTypeId),
-				locationId: parseInt(typedRow.locationId),
-				serverTypeName: typedRow.serverTypeName || `Server ${typedRow.serverTypeId}`,
-				locationName: typedRow.locationName || `Location ${typedRow.locationId}`,
+				serverTypeId: parseInt(typedRow.blob1),
+				locationId: parseInt(typedRow.blob2),
+				serverTypeName: typedRow.blob4 || `Server ${typedRow.blob1}`,
+				locationName: typedRow.blob5 || `Location ${typedRow.blob2}`,
 				available: typedRow.availability === 1,
 				availabilityRate: typedRow.availability,
 			};
@@ -198,8 +198,8 @@ export class AnalyticsQueryService {
 		const formattedEnd = this.formatDateForAE(endDate);
 		const sql = `
 			SELECT
-				blob1 as serverTypeId,
-				blob2 as locationId,
+				blob1,
+				blob2,
 				COUNT(*) as totalDataPoints,
 				SUM(double1) as availableDataPoints
 			FROM cloud_availability_v2
@@ -232,14 +232,14 @@ export class AnalyticsQueryService {
 
 			return result.data.map((row: unknown) => {
 				const typedRow = row as {
-					serverTypeId: string;
-					locationId: string;
+					blob1: string;
+					blob2: string;
 					availableDataPoints: number;
 					totalDataPoints: number;
 				};
 				return {
-					serverTypeId: parseInt(typedRow.serverTypeId),
-					locationId: parseInt(typedRow.locationId),
+					serverTypeId: parseInt(typedRow.blob1),
+					locationId: parseInt(typedRow.blob2),
 					availabilityPercentage: (typedRow.availableDataPoints / typedRow.totalDataPoints) * 100,
 					totalHours: typedRow.totalDataPoints,
 					availableHours: typedRow.availableDataPoints,
