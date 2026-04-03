@@ -115,10 +115,7 @@ export class AnalyticsQueryService {
 		const timeFormat = this.getTimeFormat(granularity);
 		const formattedStart = this.formatDateForAE(startDate);
 		const formattedEnd = this.formatDateForAE(endDate);
-		const whereConditions: string[] = [
-			`timestamp >= toDateTime('${formattedStart}')`,
-			`timestamp <= toDateTime('${formattedEnd}')`,
-		];
+		const whereConditions: string[] = [`timestamp >= toDateTime('${formattedStart}')`, `timestamp <= toDateTime('${formattedEnd}')`];
 
 		if (serverTypeId !== undefined) {
 			whereConditions.push(`blob1 = '${serverTypeId}'`);
