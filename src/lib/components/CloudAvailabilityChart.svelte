@@ -139,11 +139,15 @@
 			);
 		});
 
-		// Build rows with forward-fill: gaps carry forward the last known state
+		// Build rows with forward-fill: gaps carry forward the last known state.
+		// Infer initial state from the first event: if the first event is a
+		// transition to "unavailable", the server must have been available before
+		// the time range (and vice versa).
 		heatmapData = Array.from(groups.entries())
 			.sort(([, a], [, b]) => a.label.localeCompare(b.label))
 			.map(([id, group]) => {
-				let lastKnown = false;
+				const firstEvent = sortedTimestamps.find((ts) => group.cells.has(ts));
+				let lastKnown = firstEvent ? !group.cells.get(firstEvent)! : false;
 				const cells: HeatmapCell[] = sortedTimestamps.map((ts) => {
 					if (group.cells.has(ts)) {
 						lastKnown = group.cells.get(ts)!;
