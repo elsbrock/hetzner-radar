@@ -118,8 +118,8 @@
 	class="flex min-h-screen flex-col"
 >
 	<div class="grow">
-		<Banner version={5} id="standard-servers">
-			<strong>New:</strong> Browse <a href={resolve('/analyze')}>Standard Dedicated Servers</a> alongside auctions 🖥️
+		<Banner version={6} id="standard-servers">
+			<strong>New:</strong> <a href={resolve('/cloud-status?timeline=true')}>Availability Timeline</a> — see when Cloud servers come and go across locations 📊
 		</Banner>
 		<Nav />
 
