@@ -118,7 +118,6 @@ export class AnalyticsQueryService {
 		const whereConditions: string[] = [
 			`timestamp >= toDateTime('${formattedStart}')`,
 			`timestamp <= toDateTime('${formattedEnd}')`,
-			`blob3 = 'available'`, // eventType = 'available'
 		];
 
 		if (serverTypeId !== undefined) {
@@ -205,7 +204,6 @@ export class AnalyticsQueryService {
 			FROM cloud_availability_v2
 			WHERE timestamp >= toDateTime('${formattedStart}')
 				AND timestamp <= toDateTime('${formattedEnd}')
-				AND blob3 = 'available'
 			GROUP BY blob1, blob2
 		`;
 
