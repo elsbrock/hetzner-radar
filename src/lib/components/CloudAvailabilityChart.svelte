@@ -55,6 +55,13 @@
 	let timeLabels = $state<string[]>([]);
 	let hoveredCell = $state<{ row: number; col: number } | null>(null);
 
+	// Width for labels column based on longest label (in ch units + padding)
+	const labelWidth = $derived(
+		heatmapData.length > 0
+			? `${Math.max(...heatmapData.map((r) => r.label.length)) + 1}ch`
+			: '4ch'
+	);
+
 	// Fetch data when parameters change
 	$effect(() => {
 		if (viewMode === 'location' && !selectedLocationId) return;
@@ -200,7 +207,7 @@
 			<div class="inline-flex min-w-full flex-col gap-px">
 				<!-- Time axis labels (vertical) -->
 				<div class="mb-2 flex gap-px">
-					<div class="shrink-0"></div>
+					<div class="shrink-0" style="width: {labelWidth};"></div>
 					<div class="flex flex-1 gap-px">
 						{#each heatmapData[0].cells as _, colIdx}
 							{@const showLabel =
@@ -227,6 +234,7 @@
 					<div class="flex items-center gap-px">
 						<div
 							class="shrink-0 truncate pr-2 text-right text-xs text-gray-700 dark:text-gray-300"
+							style="width: {labelWidth};"
 							title={row.label}
 						>
 							{row.label}
@@ -258,6 +266,7 @@
 				<!-- Legend -->
 				<div
 					class="mt-2 flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400"
+				style="padding-left: {labelWidth};"
 				>
 					<div class="flex items-center gap-1">
 						<div class="h-3 w-3 rounded-sm bg-green-500 dark:bg-green-600"></div>
