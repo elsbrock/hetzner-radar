@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Spinner, Alert } from 'flowbite-svelte';
+	import { Spinner, Alert, Tooltip } from 'flowbite-svelte';
 
 	interface AvailabilityDataPoint {
 		timestamp: string;
@@ -40,10 +40,15 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
+	interface HeatmapCell {
+		timestamp: string;
+		available: boolean;
+	}
+
 	interface HeatmapRow {
 		label: string;
 		id: number;
-		cells: { timestamp: string; available: boolean | null }[];
+		cells: HeatmapCell[];
 	}
 
 	let heatmapData = $state<HeatmapRow[]>([]);
@@ -107,58 +112,46 @@
 		const timestampSet = new Set<string>();
 		data.forEach((p) => timestampSet.add(p.timestamp));
 		const sortedTimestamps = Array.from(timestampSet).sort();
-		const timestampIndex = new Map(sortedTimestamps.map((t, i) => [t, i]));
 
 		// Group by entity (server type or location)
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const groups = new Map<number, { label: string; cells: Map<string, boolean> }>();
 
 		data.forEach((point) => {
-			if (viewMode === 'location') {
-				// Rows = server types
-				if (!groups.has(point.serverTypeId)) {
+			const key = viewMode === 'location' ? point.serverTypeId : point.locationId;
+			if (!groups.has(key)) {
+				let label: string;
+				if (viewMode === 'location') {
 					const st = serverTypes.find((s) => s.id === point.serverTypeId);
-					groups.set(point.serverTypeId, {
-						label: st?.name || point.serverTypeName || `Server ${point.serverTypeId}`,
-						cells: new Map()
-					});
-				}
-				const group = groups.get(point.serverTypeId)!;
-				// MAX: if any data point in this bucket is available, mark as available
-				const existing = group.cells.get(point.timestamp);
-				group.cells.set(
-					point.timestamp,
-					existing === true ? true : point.available || (point.availabilityRate ?? 0) > 0
-				);
-			} else {
-				// Rows = locations
-				if (!groups.has(point.locationId)) {
+					label = st?.name || point.serverTypeName || `Server ${point.serverTypeId}`;
+				} else {
 					const loc = locations.find((l) => l.id === point.locationId);
-					groups.set(point.locationId, {
-						label: loc?.city || point.locationName || `Location ${point.locationId}`,
-						cells: new Map()
-					});
+					label = loc?.city || point.locationName || `Location ${point.locationId}`;
 				}
-				const group = groups.get(point.locationId)!;
-				const existing = group.cells.get(point.timestamp);
-				group.cells.set(
-					point.timestamp,
-					existing === true ? true : point.available || (point.availabilityRate ?? 0) > 0
-				);
+				groups.set(key, { label, cells: new Map() });
 			}
+			const group = groups.get(key)!;
+			// If any event in this bucket shows available, mark available
+			const existing = group.cells.get(point.timestamp);
+			group.cells.set(
+				point.timestamp,
+				existing === true ? true : point.available || (point.availabilityRate ?? 0) > 0
+			);
 		});
 
-		// Build rows
+		// Build rows with forward-fill: gaps carry forward the last known state
 		heatmapData = Array.from(groups.entries())
 			.sort(([, a], [, b]) => a.label.localeCompare(b.label))
-			.map(([id, group]) => ({
-				label: group.label,
-				id,
-				cells: sortedTimestamps.map((ts) => ({
-					timestamp: ts,
-					available: group.cells.has(ts) ? group.cells.get(ts)! : null
-				}))
-			}));
+			.map(([id, group]) => {
+				let lastKnown = false;
+				const cells: HeatmapCell[] = sortedTimestamps.map((ts) => {
+					if (group.cells.has(ts)) {
+						lastKnown = group.cells.get(ts)!;
+					}
+					return { timestamp: ts, available: lastKnown };
+				});
+				return { label: group.label, id, cells };
+			});
 
 		// Build time labels
 		timeLabels = sortedTimestamps.map((ts) => formatTimestamp(ts));
@@ -167,26 +160,25 @@
 	function formatTimestamp(ts: string): string {
 		const d = new Date(ts);
 		if (granularity === 'hour') {
-			return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-		} else if (granularity === 'day') {
-			return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+			return d.toLocaleString(undefined, {
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit'
+			});
 		}
 		return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
 	}
 
-	function getCellColor(available: boolean | null): string {
-		if (available === null) return 'bg-gray-100 dark:bg-gray-700';
-		return available
-			? 'bg-green-500 dark:bg-green-600'
-			: 'bg-red-400 dark:bg-red-500';
+	function getCellColor(available: boolean): string {
+		return available ? 'bg-green-500 dark:bg-green-600' : 'bg-red-400 dark:bg-red-500';
 	}
 
-	function getCellTitle(row: HeatmapRow, colIdx: number): string {
+	function tooltipText(row: HeatmapRow, colIdx: number): string {
 		const cell = row.cells[colIdx];
 		if (!cell) return '';
-		const status =
-			cell.available === null ? 'No data' : cell.available ? 'Available' : 'Unavailable';
-		return `${row.label} — ${timeLabels[colIdx]}: ${status}`;
+		const status = cell.available ? 'Available' : 'Unavailable';
+		return `${row.label}\n${timeLabels[colIdx]}\n${status}`;
 	}
 </script>
 
@@ -207,15 +199,24 @@
 	{:else}
 		<div class="overflow-x-auto">
 			<div class="inline-flex min-w-full flex-col gap-px">
-				<!-- Time axis labels -->
-				<div class="flex items-end gap-px">
+				<!-- Time axis labels (vertical) -->
+				<div class="flex gap-px">
 					<div class="w-24 shrink-0"></div>
-					<div class="flex flex-1 gap-px">
-						{#each heatmapData[0].cells as cell, colIdx}
-							{@const showLabel = colIdx === 0 || colIdx === heatmapData[0].cells.length - 1 || colIdx % Math.max(1, Math.floor(heatmapData[0].cells.length / 8)) === 0}
-							<div class="flex-1 text-center">
+					<div class="flex flex-1 gap-px" style="height: 5rem;">
+						{#each heatmapData[0].cells as _, colIdx}
+							{@const showLabel =
+								colIdx === 0 ||
+								colIdx === heatmapData[0].cells.length - 1 ||
+								colIdx %
+									Math.max(1, Math.floor(heatmapData[0].cells.length / 10)) ===
+									0}
+							<div class="relative flex-1">
 								{#if showLabel}
-									<span class="text-[10px] leading-none text-gray-500 dark:text-gray-400">{timeLabels[colIdx]}</span>
+									<span
+										class="absolute bottom-0 left-1/2 origin-bottom-left -translate-x-1/2 text-[10px] whitespace-nowrap text-gray-500 dark:text-gray-400"
+										style="writing-mode: vertical-rl; transform: translateX(50%) rotate(180deg);"
+										>{timeLabels[colIdx]}</span
+									>
 								{/if}
 							</div>
 						{/each}
@@ -233,21 +234,32 @@
 						</div>
 						<div class="flex flex-1 gap-px">
 							{#each row.cells as cell, colIdx}
+								{@const dimmed =
+									hoveredCell &&
+									hoveredCell.row !== rowIdx &&
+									hoveredCell.col !== colIdx}
 								<div
-									class="h-5 flex-1 rounded-sm {getCellColor(cell.available)} transition-opacity {hoveredCell && (hoveredCell.row !== rowIdx && hoveredCell.col !== colIdx) ? 'opacity-40' : ''}"
-									title={getCellTitle(row, colIdx)}
+									class="heatmap-cell flex-1 rounded-sm {getCellColor(cell.available)}"
+									class:opacity-40={dimmed}
 									role="gridcell"
-								tabindex="-1"
-									onmouseenter={() => (hoveredCell = { row: rowIdx, col: colIdx })}
+									tabindex="-1"
+									onmouseenter={() =>
+										(hoveredCell = { row: rowIdx, col: colIdx })}
 									onmouseleave={() => (hoveredCell = null)}
-								></div>
+								>
+									<Tooltip placement="top" class="z-50 text-xs"
+										>{tooltipText(row, colIdx)}</Tooltip
+									>
+								</div>
 							{/each}
 						</div>
 					</div>
 				{/each}
 
 				<!-- Legend -->
-				<div class="mt-2 flex items-center gap-4 pl-24 text-xs text-gray-600 dark:text-gray-400">
+				<div
+					class="mt-2 flex items-center gap-4 pl-24 text-xs text-gray-600 dark:text-gray-400"
+				>
 					<div class="flex items-center gap-1">
 						<div class="h-3 w-3 rounded-sm bg-green-500 dark:bg-green-600"></div>
 						Available
@@ -256,12 +268,15 @@
 						<div class="h-3 w-3 rounded-sm bg-red-400 dark:bg-red-500"></div>
 						Unavailable
 					</div>
-					<div class="flex items-center gap-1">
-						<div class="h-3 w-3 rounded-sm bg-gray-100 dark:bg-gray-700"></div>
-						No data
-					</div>
 				</div>
 			</div>
 		</div>
 	{/if}
 </div>
+
+<style>
+	.heatmap-cell {
+		height: 1.25rem;
+		transition: opacity 0.1s;
+	}
+</style>
