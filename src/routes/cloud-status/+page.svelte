@@ -261,7 +261,6 @@
 		(() => {
 			if (!data.statusData) return null;
 
-			let totalSupported = 0;
 			let totalAvailable = 0;
 			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const locationStats = new Map();
@@ -288,7 +287,6 @@
 						getLastSeenAvailable(location.id, id) !== null
 				).length;
 
-				totalSupported += activeSupportedCount;
 				totalAvailable += activeAvailableCount;
 
 				locationStats.set(location.id, {
@@ -994,7 +992,7 @@
 				<div class="flex flex-col gap-4 md:flex-row">
 					<!-- Controls Panel -->
 					<div class="w-full shrink-0 md:w-64">
-						<Card class="p-4!">
+						<Card class="max-w-none! p-4!">
 							<!-- View Mode Toggle -->
 							<div class="mb-4">
 								<Label class="mb-1">View by:</Label>
@@ -1086,7 +1084,7 @@
 
 					<!-- Chart Panel -->
 					<div class="min-w-0 flex-1">
-						<Card class="h-full p-4!">
+						<Card class="h-full max-w-none! p-4!">
 							{#if (availabilityViewMode === 'location' && selectedPatternLocationId) || (availabilityViewMode === 'serverType' && selectedPatternServerTypeId)}
 								<CloudAvailabilityChart
 									startDate={patternDateRanges().start}
