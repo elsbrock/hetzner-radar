@@ -79,7 +79,6 @@
 	let collapsedGroups = $state(new Set<string>());
 	
 	// Availability patterns state
-	let showAvailabilityPatterns = $state(false);
 	let availabilityViewMode = $state<'location' | 'serverType'>('location');
 	let selectedPatternLocationId = $state<number | undefined>();
 	let selectedPatternServerTypeId = $state<number | undefined>();
@@ -987,59 +986,48 @@
 	{#if data.statusData && !data.error && enableAvailabilityPatterns}
 		<section class="mt-8 mb-8">
 			<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
-				<Card class="p-0!">
-					<div class="border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700">
-						<div class="flex flex-wrap items-center justify-between gap-4">
-							<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-								Availability Patterns
-							</h3>
-							<Button
-								size="sm"
-								color={showAvailabilityPatterns ? 'primary' : 'light'}
-								on:click={() => showAvailabilityPatterns = !showAvailabilityPatterns}
-							>
-								{showAvailabilityPatterns ? 'Hide' : 'Show'} Timeline
-							</Button>
-						</div>
-					</div>
-					
-					{#if showAvailabilityPatterns}
-						<div class="p-4">
-							<!-- Controls -->
-							<div class="mb-4 flex flex-wrap gap-4">
-								<!-- View Mode Toggle -->
-								<div class="flex items-center gap-2">
-									<Label>View by:</Label>
-									<ButtonGroup>
-										<Button
-											size="xs"
-											color={availabilityViewMode === 'location' ? 'primary' : 'light'}
-											on:click={() => {
-												availabilityViewMode = 'location';
-												selectedPatternServerTypeId = undefined;
-											}}
-										>
-											Location
-										</Button>
-										<Button
-											size="xs"
-											color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
-											on:click={() => {
-												availabilityViewMode = 'serverType';
-												selectedPatternLocationId = undefined;
-											}}
-										>
-											Server Type
-										</Button>
-									</ButtonGroup>
-								</div>
-								
-								<!-- Location/Server Type Selector -->
+				<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+					Availability Patterns
+				</h3>
+				<div class="flex flex-col gap-4 md:flex-row">
+					<!-- Controls Panel -->
+					<div class="w-full shrink-0 md:w-64">
+						<Card class="p-4!">
+							<!-- View Mode Toggle -->
+							<div class="mb-4">
+								<Label class="mb-1">View by:</Label>
+								<ButtonGroup class="w-full">
+									<Button
+										size="xs"
+										class="flex-1"
+										color={availabilityViewMode === 'location' ? 'primary' : 'light'}
+										on:click={() => {
+											availabilityViewMode = 'location';
+											selectedPatternServerTypeId = undefined;
+										}}
+									>
+										Location
+									</Button>
+									<Button
+										size="xs"
+										class="flex-1"
+										color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
+										on:click={() => {
+											availabilityViewMode = 'serverType';
+											selectedPatternLocationId = undefined;
+										}}
+									>
+										Server Type
+									</Button>
+								</ButtonGroup>
+							</div>
+
+							<!-- Location/Server Type Selector -->
+							<div class="mb-4">
 								{#if availabilityViewMode === 'location'}
 									<Select
 										bind:value={selectedPatternLocationId}
 										size="sm"
-										class="w-64"
 										placeholder="Select a location"
 									>
 										<option value={undefined} disabled>Select a location</option>
@@ -1051,7 +1039,6 @@
 									<Select
 										bind:value={selectedPatternServerTypeId}
 										size="sm"
-										class="w-64"
 										placeholder="Select a server type"
 									>
 										<option value={undefined} disabled>Select a server type</option>
@@ -1060,37 +1047,44 @@
 										{/each}
 									</Select>
 								{/if}
-								
-								<!-- Date Range Selector -->
-								<div class="flex items-center gap-2">
-									<Label>Time range:</Label>
-									<ButtonGroup>
-										<Button
-											size="xs"
-											color={patternDateRange === '24h' ? 'primary' : 'light'}
-											on:click={() => patternDateRange = '24h'}
-										>
-											24 Hours
-										</Button>
-										<Button
-											size="xs"
-											color={patternDateRange === '7d' ? 'primary' : 'light'}
-											on:click={() => patternDateRange = '7d'}
-										>
-											7 Days
-										</Button>
-										<Button
-											size="xs"
-											color={patternDateRange === '30d' ? 'primary' : 'light'}
-											on:click={() => patternDateRange = '30d'}
-										>
-											30 Days
-										</Button>
-									</ButtonGroup>
-								</div>
 							</div>
-							
-							<!-- Chart -->
+
+							<!-- Date Range Selector -->
+							<div>
+								<Label class="mb-1">Time range:</Label>
+								<ButtonGroup class="w-full">
+									<Button
+										size="xs"
+										class="flex-1"
+										color={patternDateRange === '24h' ? 'primary' : 'light'}
+										on:click={() => patternDateRange = '24h'}
+									>
+										24h
+									</Button>
+									<Button
+										size="xs"
+										class="flex-1"
+										color={patternDateRange === '7d' ? 'primary' : 'light'}
+										on:click={() => patternDateRange = '7d'}
+									>
+										7d
+									</Button>
+									<Button
+										size="xs"
+										class="flex-1"
+										color={patternDateRange === '30d' ? 'primary' : 'light'}
+										on:click={() => patternDateRange = '30d'}
+									>
+										30d
+									</Button>
+								</ButtonGroup>
+							</div>
+						</Card>
+					</div>
+
+					<!-- Chart Panel -->
+					<div class="min-w-0 flex-1">
+						<Card class="h-full p-4!">
 							{#if (availabilityViewMode === 'location' && selectedPatternLocationId) || (availabilityViewMode === 'serverType' && selectedPatternServerTypeId)}
 								<CloudAvailabilityChart
 									startDate={patternDateRanges().start}
@@ -1113,9 +1107,9 @@
 									</p>
 								</div>
 							{/if}
-						</div>
-					{/if}
-				</Card>
+						</Card>
+					</div>
+				</div>
 			</div>
 		</section>
 	{/if}

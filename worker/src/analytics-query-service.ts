@@ -95,6 +95,15 @@ export class AnalyticsQueryService {
 		}
 	}
 
+	/**
+	 * Format an ISO date string for Cloudflare Analytics Engine's toDateTime().
+	 * Strips milliseconds and trailing 'Z' since AE only accepts
+	 * 'YYYY-MM-DD HH:MM:SS' or 'YYYY-MM-DDTHH:MM:SS'.
+	 */
+	private formatDateForAE(isoDate: string): string {
+		return isoDate.replace(/\.\d{3}Z$/, '').replace(/Z$/, '');
+	}
+
 	private buildQuery(
 		startDate: string,
 		endDate: string,
@@ -104,9 +113,11 @@ export class AnalyticsQueryService {
 	): string {
 		// Base query components
 		const timeFormat = this.getTimeFormat(granularity);
+		const formattedStart = this.formatDateForAE(startDate);
+		const formattedEnd = this.formatDateForAE(endDate);
 		const whereConditions: string[] = [
-			`timestamp >= toDateTime('${startDate}')`,
-			`timestamp <= toDateTime('${endDate}')`,
+			`timestamp >= toDateTime('${formattedStart}')`,
+			`timestamp <= toDateTime('${formattedEnd}')`,
 			`blob3 = 'available'`, // eventType = 'available'
 		];
 
@@ -183,15 +194,17 @@ export class AnalyticsQueryService {
 			return [];
 		}
 
+		const formattedStart = this.formatDateForAE(startDate);
+		const formattedEnd = this.formatDateForAE(endDate);
 		const sql = `
-			SELECT 
+			SELECT
 				blob1 as serverTypeId,
 				blob2 as locationId,
 				COUNT(*) as totalDataPoints,
 				SUM(double1) as availableDataPoints
 			FROM cloud_availability_v2
-			WHERE timestamp >= toDateTime('${startDate}')
-				AND timestamp <= toDateTime('${endDate}')
+			WHERE timestamp >= toDateTime('${formattedStart}')
+				AND timestamp <= toDateTime('${formattedEnd}')
 				AND blob3 = 'available'
 			GROUP BY blob1, blob2
 		`;
