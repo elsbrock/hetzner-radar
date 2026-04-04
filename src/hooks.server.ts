@@ -3,6 +3,8 @@ import {
   validateSessionToken,
 } from "$lib/api/backend/session";
 import { createBlankSessionCookie, createSessionCookie } from "$lib/cookie";
+import { createMetrics } from "cf-worker-otel";
+import { sequence } from "@sveltejs/kit/hooks";
 import type { Handle } from "@sveltejs/kit";
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
@@ -19,7 +21,30 @@ export async function handleError({ error, event }) {
   };
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+const metricsHandle: Handle = async ({ event, resolve }) => {
+  const env = event.platform?.env;
+  const metrics = createMetrics({
+    serviceName: "server-radar",
+    endpoint: env?.OTLP_ENDPOINT,
+    token: env?.OTLP_AUTH_TOKEN,
+  });
+  const start = Date.now();
+  let status = "500";
+  try {
+    const response = await resolve(event);
+    status = String(response.status);
+    return response;
+  } finally {
+    metrics.counter("cf_worker_requests_total", 1, {
+      method: event.request.method,
+      status,
+    });
+    metrics.histogram("cf_worker_request_duration_ms", Date.now() - start);
+    event.platform?.context?.waitUntil(metrics.flush());
+  }
+};
+
+const sessionHandle: Handle = async ({ event, resolve }) => {
   const env = event.platform?.env;
   const db = env?.DB;
 
@@ -89,3 +114,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   return resolve(event);
 };
+
+export const handle = sequence(metricsHandle, sessionHandle);

@@ -77,6 +77,8 @@ declare global {
     RADAR_WORKER?: RadarWorkerService;
     FORWARDEMAIL_API_KEY?: string;
     VITE_BUILD_STAMP?: string;
+    OTLP_ENDPOINT?: string;
+    OTLP_AUTH_TOKEN?: string;
   }
 
   namespace App {
