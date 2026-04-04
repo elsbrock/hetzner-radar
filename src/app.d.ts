@@ -73,7 +73,6 @@ declare global {
   interface PlatformEnv {
     DB: DB;
     RATE_LIMIT: RateLimitNamespace;
-    CLOUD_STATUS?: CloudStatusService;
     RADAR_WORKER?: RadarWorkerService;
     FORWARDEMAIL_API_KEY?: string;
     VITE_BUILD_STAMP?: string;

@@ -31,9 +31,9 @@ export const load: ServerLoad = async (event: ServerLoadEvent) => {
   // Fetch cloud status data for server types and locations
   let cloudStatusData = null;
   try {
-    if (env?.CLOUD_STATUS) {
-      const cloudStatusWorker = env.CLOUD_STATUS;
-      cloudStatusData = await cloudStatusWorker.getStatus();
+    const radarWorker = env?.RADAR_WORKER;
+    if (radarWorker) {
+      cloudStatusData = await radarWorker.getStatus();
     }
   } catch (error) {
     console.error("Failed to fetch cloud status data:", error);
