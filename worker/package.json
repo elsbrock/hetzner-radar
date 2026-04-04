@@ -14,6 +14,9 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
+	"dependencies": {
+		"@else42/cf-worker-otel": "^0.2.0"
+	},
 	"devDependencies": {
 		"typescript": "5.9.3",
 		"wrangler": "4.54.0",

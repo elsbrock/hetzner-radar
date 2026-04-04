@@ -5,6 +5,7 @@
  */
 
 import { DurableObject } from 'cloudflare:workers';
+import { createMetrics } from '@else42/cf-worker-otel';
 import { CloudStatusService } from './cloud-status-service';
 import { NotificationService } from './notification-service';
 import { CloudAlertService } from './cloud-alert-service';
@@ -19,6 +20,8 @@ interface CloudAvailabilityEnv {
 	DB: D1Database;
 	CF_ACCOUNT_ID?: string;
 	CF_BEARER_TOKEN?: string;
+	OTLP_ENDPOINT?: string;
+	OTLP_AUTH_TOKEN?: string;
 }
 
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
@@ -103,14 +106,33 @@ export class CloudAvailabilityDO extends DurableObject {
 		}
 	}
 
+	private createMetrics() {
+		return createMetrics({
+			serviceName: 'server-radar-worker',
+			endpoint: this.env.OTLP_ENDPOINT,
+			token: this.env.OTLP_AUTH_TOKEN,
+		});
+	}
+
 	async alarm(): Promise<void> {
 		console.log(`[CloudAvailabilityDO ${this.ctx.id}] Alarm triggered for cloud status update...`);
+		const metrics = this.createMetrics();
+		const start = Date.now();
+		let failed = false;
 
 		try {
-			await this.fetchCloudStatus();
+			await this.fetchCloudStatus(metrics);
 		} catch (error) {
+			failed = true;
 			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Failed to update cloud status:`, error);
 		} finally {
+			metrics.counter('cf_worker_do_alarm_total', 1, { do_class: 'CloudAvailabilityDO' });
+			metrics.histogram('cf_worker_do_alarm_duration_ms', Date.now() - start, { do_class: 'CloudAvailabilityDO' });
+			if (failed) {
+				metrics.counter('cf_worker_do_alarm_errors_total', 1, { do_class: 'CloudAvailabilityDO' });
+			}
+			this.ctx.waitUntil(metrics.flush());
+
 			// Schedule next alarm
 			const nextAlarmTime = Date.now() + this.fetchIntervalMs;
 			await this.ctx.storage.setAlarm(nextAlarmTime);
@@ -200,10 +222,11 @@ export class CloudAvailabilityDO extends DurableObject {
 		}
 	}
 
-	private async fetchCloudStatus(): Promise<void> {
+	private async fetchCloudStatus(metrics?: ReturnType<typeof createMetrics>): Promise<void> {
 		try {
 			const changes = await this.cloudStatusService.fetchAndUpdateStatus();
 			if (changes && changes.length > 0) {
+				metrics?.counter('radar_availability_changes_total', changes.length);
 				console.log(`[CloudAvailabilityDO ${this.ctx.id}] Detected ${changes.length} availability changes`);
 
 				// Send to legacy notification service (for analytics and main app webhook)

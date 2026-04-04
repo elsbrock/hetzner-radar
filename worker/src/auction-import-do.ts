@@ -5,6 +5,7 @@
  */
 
 import { DurableObject } from 'cloudflare:workers';
+import { createMetrics } from '@else42/cf-worker-otel';
 import { AuctionService } from './auction-service';
 import { NotificationService } from './notification-service';
 import { AlertService } from './alert-service';
@@ -16,6 +17,8 @@ interface AuctionImportEnv {
 	HETZNER_AUCTION_API_URL?: string;
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
 	FORWARDEMAIL_API_KEY?: string;
+	OTLP_ENDPOINT?: string;
+	OTLP_AUTH_TOKEN?: string;
 }
 
 const DEFAULT_AUCTION_IMPORT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -101,12 +104,27 @@ export class AuctionImportDO extends DurableObject {
 
 	async alarm(): Promise<void> {
 		console.log(`[AuctionImportDO ${this.ctx.id}] Alarm triggered for auction import...`);
+		const metrics = createMetrics({
+			serviceName: 'server-radar-worker',
+			endpoint: this.env.OTLP_ENDPOINT,
+			token: this.env.OTLP_AUTH_TOKEN,
+		});
+		const start = Date.now();
+		let failed = false;
 
 		try {
 			await this.fetchAuctions();
 		} catch (error) {
+			failed = true;
 			console.error(`[AuctionImportDO ${this.ctx.id}] Failed to import auctions:`, error);
 		} finally {
+			metrics.counter('cf_worker_do_alarm_total', 1, { do_class: 'AuctionImportDO' });
+			metrics.histogram('cf_worker_do_alarm_duration_ms', Date.now() - start, { do_class: 'AuctionImportDO' });
+			if (failed) {
+				metrics.counter('cf_worker_do_alarm_errors_total', 1, { do_class: 'AuctionImportDO' });
+			}
+			this.ctx.waitUntil(metrics.flush());
+
 			// Schedule next alarm
 			const nextAlarmTime = Date.now() + this.auctionImportIntervalMs;
 			await this.ctx.storage.setAlarm(nextAlarmTime);

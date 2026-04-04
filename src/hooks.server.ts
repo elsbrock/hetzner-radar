@@ -3,7 +3,7 @@ import {
   validateSessionToken,
 } from "$lib/api/backend/session";
 import { createBlankSessionCookie, createSessionCookie } from "$lib/cookie";
-import { createMetrics } from "cf-worker-otel";
+import { createMetrics } from "@else42/cf-worker-otel";
 import { sequence } from "@sveltejs/kit/hooks";
 import type { Handle } from "@sveltejs/kit";
 
@@ -38,8 +38,11 @@ const metricsHandle: Handle = async ({ event, resolve }) => {
     metrics.counter("cf_worker_requests_total", 1, {
       method: event.request.method,
       status,
+      route: event.route.id ?? "unknown",
     });
-    metrics.histogram("cf_worker_request_duration_ms", Date.now() - start);
+    metrics.histogram("cf_worker_request_duration_ms", Date.now() - start, {
+      route: event.route.id ?? "unknown",
+    });
     event.platform?.context?.waitUntil(metrics.flush());
   }
 };

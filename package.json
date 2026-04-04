@@ -67,7 +67,7 @@
   },
   "type": "module",
   "dependencies": {
-    "cf-worker-otel": "file:../cf-worker-otel",
+    "@else42/cf-worker-otel": "^0.2.2",
     "chart.js": "^4.4.9",
     "chartjs": "^0.3.24",
     "chartjs-adapter-date-fns": "^3.0.0",

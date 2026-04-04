@@ -20,6 +20,7 @@
  */
 
 import { WorkerEntrypoint } from 'cloudflare:workers';
+import { createMetrics } from '@else42/cf-worker-otel';
 import { CloudAvailabilityDO } from './cloud-availability-do';
 import { AuctionImportDO } from './auction-import-do';
 
@@ -36,14 +37,50 @@ interface Env {
 	HETZNER_AUCTION_API_URL?: string;
 	CF_ACCOUNT_ID?: string;
 	CF_BEARER_TOKEN?: string;
+	OTLP_ENDPOINT?: string;
+	OTLP_AUTH_TOKEN?: string;
 }
 
 export { CloudAvailabilityDO, AuctionImportDO };
 
 export default class CloudAvailabilityWorker extends WorkerEntrypoint<Env> {
+	private createMetrics() {
+		return createMetrics({
+			serviceName: 'server-radar-worker',
+			endpoint: this.env.OTLP_ENDPOINT,
+			token: this.env.OTLP_AUTH_TOKEN,
+		});
+	}
+
+	private routeLabel(pathname: string): string {
+		if (pathname.startsWith('/cloud/') || pathname === '/status' || pathname === '/') return 'cloud';
+		if (pathname.startsWith('/auction/')) return 'auction';
+		if (pathname === '/debug') return 'debug';
+		return 'unknown';
+	}
+
 	async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
+		const metrics = this.createMetrics();
+		const start = Date.now();
+		let status = '500';
 
+		try {
+			const response = await this.handleFetch(request, url);
+			status = String(response.status);
+			return response;
+		} finally {
+			metrics.counter('cf_worker_requests_total', 1, {
+				method: request.method,
+				status,
+				route: this.routeLabel(url.pathname),
+			});
+			metrics.histogram('cf_worker_request_duration_ms', Date.now() - start);
+			this.ctx.waitUntil(metrics.flush());
+		}
+	}
+
+	private async handleFetch(request: Request, url: URL): Promise<Response> {
 		try {
 			// Route requests based on path
 			if (url.pathname.startsWith('/cloud/') || url.pathname === '/status' || url.pathname === '/') {
@@ -94,7 +131,7 @@ Combined:
 			}
 		} catch (e: unknown) {
 			console.error('Error in Worker fetch:', e);
-			return new Response(`Error processing request: ${e.message}`, { status: 500 });
+			return new Response(`Error processing request: ${(e as Error).message}`, { status: 500 });
 		}
 	}
 
