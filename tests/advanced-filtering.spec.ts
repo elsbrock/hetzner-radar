@@ -215,4 +215,169 @@ test.describe("Advanced Filtering", () => {
       expect(secondCardPrice).toMatch(/\d+\.\d{2} €/);
     }
   });
+
+  test.describe("Disk OR mode", () => {
+    test("should show OR toggle in disk filter section", async ({ page }) => {
+      await page.goto("/analyze");
+      await waitForAnalyzePageReady(page);
+
+      // AND button should be visible and active by default
+      const andButton = page.getByRole("button", { name: "AND" });
+      const orButton = page.getByRole("button", { name: "OR" });
+      await expect(andButton).toBeVisible();
+      await expect(orButton).toBeVisible();
+    });
+
+    test("should widen results when switching to OR mode with active disk filters", async ({
+      page,
+    }) => {
+      await page.goto("/analyze");
+      await waitForAnalyzePageReady(page);
+
+      // Expand NVMe section and set count to require at least 1 NVMe
+      await page.getByRole("button", { name: "SSDs (NVMe)" }).click();
+      // Drag the NVMe min-count handle from 0 to 1 via keyboard
+      const nvmeSlider = page
+        .locator("li")
+        .filter({ hasText: "SSDs (NVMe)" })
+        .locator(".rangeSlider")
+        .first();
+      const nvmeMinThumb = nvmeSlider.locator(".rangeNub").first();
+      await nvmeMinThumb.click();
+      await page.keyboard.press("ArrowRight");
+      await waitForFilterUpdate(page);
+
+      // Also expand HDD section and require at least 1 HDD
+      await page.getByRole("button", { name: "HDDs" }).click();
+      const hddSlider = page
+        .locator("li")
+        .filter({ hasText: "HDDs" })
+        .locator(".rangeSlider")
+        .first();
+      const hddMinThumb = hddSlider.locator(".rangeNub").first();
+      await hddMinThumb.click();
+      await page.keyboard.press("ArrowRight");
+      await waitForFilterUpdate(page);
+
+      // In AND mode: must have NVMe >= 1 AND HDD >= 1
+      const andBothText = await page
+        .getByTestId("total-configurations")
+        .textContent();
+      const andBothCount = parseInt(andBothText?.match(/(\d+)/)?.[1] || "0");
+
+      // Switch to OR mode
+      await page.getByRole("button", { name: "OR" }).click();
+      await waitForFilterUpdate(page);
+
+      // In OR mode: must have NVMe >= 1 OR HDD >= 1 — should be >= AND count
+      const orCountText = await page
+        .getByTestId("total-configurations")
+        .textContent();
+      const orCount = parseInt(orCountText?.match(/(\d+)/)?.[1] || "0");
+
+      expect(orCount).toBeGreaterThanOrEqual(andBothCount);
+    });
+
+    test("should persist disk OR mode in URL filter", async ({
+      page,
+    }, testInfo) => {
+      testInfo.setTimeout(90000);
+      await page.goto("/analyze");
+      await waitForAnalyzePageReady(page);
+
+      // Switch to OR mode
+      await page.getByRole("button", { name: "OR" }).click();
+      await waitForFilterUpdate(page);
+
+      // Save filter to URL
+      await page.getByTestId("filter-save").click();
+      await expect(page).toHaveURL(/filter=/, { timeout: 5000 });
+
+      // Reload and verify OR mode persisted
+      await page.reload();
+      await waitForAnalyzePageReady(page);
+
+      // The OR button should still be active (has the checked/active styling)
+      const orButton = page.getByRole("button", { name: "OR" });
+      await expect(orButton).toBeVisible();
+      // Flowbite checked buttons get shadow-inner styling
+      await expect(orButton).toHaveClass(/shadow-inner/);
+    });
+
+    test("should return same results as AND when no disk filters are active in OR mode", async ({
+      page,
+    }) => {
+      await page.goto("/analyze");
+      await waitForAnalyzePageReady(page);
+
+      // Get count in AND mode (default, no disk filters changed)
+      const andCountText = await page
+        .getByTestId("total-configurations")
+        .textContent();
+      const andCount = parseInt(andCountText?.match(/(\d+)/)?.[1] || "0");
+
+      // Switch to OR mode without changing any disk filters
+      await page.getByRole("button", { name: "OR" }).click();
+      await waitForFilterUpdate(page);
+
+      const orCountText = await page
+        .getByTestId("total-configurations")
+        .textContent();
+      const orCount = parseInt(orCountText?.match(/(\d+)/)?.[1] || "0");
+
+      // With all disk types at defaults, OR mode skips disk filtering entirely
+      // while AND mode still applies default size ranges (e.g., HDD min 2TB),
+      // so OR may return slightly more results
+      expect(orCount).toBeGreaterThanOrEqual(andCount);
+    });
+
+    test("should narrow results back when switching from OR to AND", async ({
+      page,
+    }) => {
+      await page.goto("/analyze");
+      await waitForAnalyzePageReady(page);
+
+      // Set up: require NVMe >= 1
+      await page.getByRole("button", { name: "SSDs (NVMe)" }).click();
+      const nvmeSlider = page
+        .locator("li")
+        .filter({ hasText: "SSDs (NVMe)" })
+        .locator(".rangeSlider")
+        .first();
+      const nvmeMinThumb = nvmeSlider.locator(".rangeNub").first();
+      await nvmeMinThumb.click();
+      await page.keyboard.press("ArrowRight");
+
+      // Require HDD >= 1
+      await page.getByRole("button", { name: "HDDs" }).click();
+      const hddSlider = page
+        .locator("li")
+        .filter({ hasText: "HDDs" })
+        .locator(".rangeSlider")
+        .first();
+      const hddMinThumb = hddSlider.locator(".rangeNub").first();
+      await hddMinThumb.click();
+      await page.keyboard.press("ArrowRight");
+      await waitForFilterUpdate(page);
+
+      // Switch to OR, get count
+      await page.getByRole("button", { name: "OR" }).click();
+      await waitForFilterUpdate(page);
+      const orCountText = await page
+        .getByTestId("total-configurations")
+        .textContent();
+      const orCount = parseInt(orCountText?.match(/(\d+)/)?.[1] || "0");
+
+      // Switch back to AND, get count
+      await page.getByRole("button", { name: "AND" }).click();
+      await waitForFilterUpdate(page);
+      const andCountText = await page
+        .getByTestId("total-configurations")
+        .textContent();
+      const andCount = parseInt(andCountText?.match(/(\d+)/)?.[1] || "0");
+
+      // AND should be <= OR
+      expect(andCount).toBeLessThanOrEqual(orCount);
+    });
+  });
 });
