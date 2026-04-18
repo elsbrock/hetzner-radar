@@ -5,6 +5,7 @@
 	import 'leaflet/dist/leaflet.css';
 	import type L from 'leaflet';
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
+	import type { CloudAvailabilityAlert } from '$lib/api/backend/cloud-alerts';
 	import CloudAvailabilityChart from '$lib/components/CloudAvailabilityChart.svelte';
 	import { invalidateAll, goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -47,7 +48,7 @@
 
 	// Cloud alert modal state
 	let showCloudAlertModal = $state(false);
-	let editingCloudAlert = $state<any>(null);
+	let editingCloudAlert = $state<CloudAvailabilityAlert | null>(null);
 
 	// Get initial filter values from URL query parameters
 	const params = $page.url.searchParams;
@@ -587,6 +588,8 @@
 		if (browser) {
 			L_Instance = await import('leaflet'); // Store L instance
 
+			// Leaflet's private _getIconUrl isn't in its public type definitions
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			delete (L_Instance.Icon.Default.prototype as any)._getIconUrl;
 			L_Instance.Icon.Default.mergeOptions({
 				iconRetinaUrl: '/node_modules/leaflet/dist/images/marker-icon-2x.png',

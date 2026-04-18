@@ -387,7 +387,7 @@ let isSmallScreen: boolean = $state(false);
 					});
 				}
 			});
-		} catch (error: Error | any) {
+		} catch (error: unknown) {
 			console.error('Error fetching data:', error);
 			addToast({
 				message: 'Failed to fetch server data.',
@@ -498,12 +498,13 @@ let isSmallScreen: boolean = $state(false);
 						valA = a.ram_size ?? 0;
 						valB = b.ram_size ?? 0;
 						break;
-					case 'storage':
+					case 'storage': {
 						const totalStorageA = (a.nvme_size ?? 0) + (a.sata_size ?? 0) + (a.hdd_size ?? 0);
 						const totalStorageB = (b.nvme_size ?? 0) + (b.sata_size ?? 0) + (b.hdd_size ?? 0);
 						valA = totalStorageA;
 						valB = totalStorageB;
 						break;
+					}
 					case 'cpu_score':
 						valA = a.cpu_score ?? 0;
 						valB = b.cpu_score ?? 0;
@@ -587,7 +588,7 @@ let isSmallScreen: boolean = $state(false);
 					});
 					break;
 
-				case 'best_price':
+				case 'best_price': {
 					const bestPriceGroupName = 'Best Price';
 					const aboveBestPriceGroupName = 'Above Best Price';
 					const epsilon = 0.001;
@@ -619,6 +620,7 @@ let isSmallScreen: boolean = $state(false);
 						return 0;
 					});
 					break;
+				}
 			}
 			console.log(
 				` -> After grouping (${currentGroupByField}): ${groupedResult.reduce((sum, g) => sum + g.servers.length, 0)} items in ${groupedResult.length} groups`

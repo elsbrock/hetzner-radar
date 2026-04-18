@@ -137,7 +137,7 @@
 								) {
 									addToast({
 										color: 'green',
-										message: (result.data as any).message,
+										message: (result.data as { message: string }).message,
 										icon: 'success'
 									});
 								} else if (
@@ -148,7 +148,7 @@
 								) {
 									addToast({
 										color: 'red',
-										message: (result.data as any).error,
+										message: (result.data as { error: string }).error,
 										icon: 'error'
 									});
 								}
@@ -255,7 +255,7 @@
 								) {
 									addToast({
 										color: 'green',
-										message: (result.data as any).message,
+										message: (result.data as { message: string }).message,
 										icon: 'success'
 									});
 								} else if (
@@ -266,7 +266,7 @@
 								) {
 									addToast({
 										color: 'red',
-										message: (result.data as any).error,
+										message: (result.data as { error: string }).error,
 										icon: 'error'
 									});
 								}

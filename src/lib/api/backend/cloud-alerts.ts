@@ -185,7 +185,7 @@ export async function updateCloudAlert(
   },
 ): Promise<void> {
   const setClauses: string[] = [];
-  const values: any[] = [];
+  const values: (string | number | boolean | null)[] = [];
 
   if (updates.name !== undefined) {
     setClauses.push("name = ?");

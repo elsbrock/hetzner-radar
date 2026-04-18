@@ -16,7 +16,7 @@
 	} from 'flowbite-svelte';
 	import { tick } from 'svelte';
 	import type { ActionData } from './$types';
-	export let email: string;
+	let email: string = '';
 
 	export let form: ActionData | undefined;
 	let authForm: HTMLFormElement;
@@ -250,7 +250,7 @@
 						// Check result type before accessing data
 						if (result.type === 'success' && result.data?.success === true) {
 							// Assuming result.data.session is of type Session | null
-							session.set(result.data?.session as any); // Cast to 'any' for now, refine if Session type is available
+							session.set(result.data?.session as App.Session | null);
 							addToast({
 								color: 'green',
 								message: 'Signed in successfully.',

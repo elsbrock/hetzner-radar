@@ -30,7 +30,7 @@
 		tooltipShow = true // New prop to control tooltip
 	}: Props = $props();
 
-	let noResults = $state(false);
+	let noResults = $derived(Array.isArray(data) && data.length === 0);
 	let canvasElement: HTMLCanvasElement | null = $state(null);
 	let chartInstance: Chart | null = $state(null);
 	let isDarkMode = $state(
@@ -220,11 +220,12 @@
 						), // Dynamic tick amount
 						color: tickColor // Set tick color based on theme
 					},
-					// Cast grid to any to allow borderDash without TS error
 					grid: {
 						display: false, // Control visibility
 						color: gridColor, // Use dynamic grid color
 						borderDash: [5, 5] // Dashed grid lines - Moved here
+						// chart.js grid types don't expose borderDash, but runtime accepts it
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					} as any
 				},
 				yPrice: {
@@ -249,11 +250,12 @@
 						color: tickColor // Set tick color based on theme
 					},
 					beginAtZero: false, // Ensure axis doesn't start at 0
-					// Cast grid to any to allow borderDash without TS error
 					grid: {
 						drawOnChartArea: true, // Main grid lines
 						color: gridColor, // Use dynamic grid color
 						borderDash: [5, 5] // Dashed grid lines - Moved here
+						// chart.js grid types don't expose borderDash, but runtime accepts it
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					} as any
 				},
 				yVolume: {
@@ -293,7 +295,7 @@
 					bodyColor: tooltipBodyColor,
 					callbacks: {
 						// Custom tooltip label formatting
-						label: function (context: TooltipItem<any>) {
+						label: function (context: TooltipItem<'bar' | 'line'>) {
 							let label = context.dataset.label || '';
 							if (label) {
 								label += ': ';
@@ -324,23 +326,19 @@
 			// Doing this once is usually sufficient, but safe to do before creation
 			Chart.register(...registerables);
 			chartInstance = new Chart(ctx, {
-				// Use 'any' temporarily if strict type checking causes issues with mixed types
-				// Alternatively, define a more precise combined type if needed.
+				// Mixed bar+line: Chart.js strict types don't cover mixed options cleanly
 				type: 'bar', // Base type, datasets specify their own
 				data: chartData,
-				options: chartOptions as any // Use 'as any' to bypass strict type checking for mixed chart types if necessary
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				options: chartOptions as any
 			});
 		} else {
 			// Update by re-assigning the data and rebuilt options
 			chartInstance.data = chartData;
-			chartInstance.options = chartOptions as any; // Re-assign the whole options object
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			chartInstance.options = chartOptions as any;
 			chartInstance.update('none'); // 'none' mode skips animations for faster theme switching
 		}
-	});
-
-	// Update noResults state
-	$effect(() => {
-		noResults = Array.isArray(data) && data.length === 0;
 	});
 
 	// Cleanup chart instance on component destroy

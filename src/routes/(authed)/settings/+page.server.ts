@@ -212,11 +212,10 @@ export const actions: Actions = {
 
     const blankCookie = createBlankSessionCookie(SESSION_COOKIE_NAME);
     await invalidateSession(db, event.locals.session.id);
-    event.cookies.set(
-      blankCookie.name,
-      blankCookie.value,
-      blankCookie.attributes as any,
-    );
+    event.cookies.set(blankCookie.name, blankCookie.value, {
+      path: "/",
+      ...blankCookie.attributes,
+    });
     await db
       .prepare("DELETE FROM user WHERE id = ?")
       .bind(event.locals.user.id)

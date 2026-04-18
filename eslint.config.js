@@ -40,10 +40,10 @@ export default [
     },
   },
   {
-    files: ["src/lib/**/*.ts"],
+    files: ["src/**/*.ts", "src/**/*.svelte"],
     languageOptions: {
       globals: {
-        // SvelteKit App namespace
+        // SvelteKit App namespace declared in src/app.d.ts
         App: "readonly",
       },
     },
@@ -58,13 +58,6 @@ export default [
     rules: {
       // Disable this rule since the project doesn't use a base path
       "svelte/no-navigation-without-resolve": "off",
-    },
-  },
-  {
-    files: ["**/__tests__/**/*", "**/*.test.*", "**/*.spec.*"],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
     },
   },
   {
@@ -88,6 +81,14 @@ export default [
     },
   },
   {
+    // Test overrides must come AFTER the general rules block so they win.
+    files: ["**/__tests__/**/*", "**/*.test.*", "**/*.spec.*"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+  {
     ignores: [
       "build/",
       ".svelte-kit/",
@@ -96,6 +97,8 @@ export default [
       "**/.wrangler/",
       "worker/",
       "fix-*.cjs",
+      "playwright-report/",
+      "test-results/",
     ],
   },
 ];

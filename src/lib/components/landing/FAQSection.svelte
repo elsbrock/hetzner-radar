@@ -1,31 +1,41 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from 'flowbite-svelte';
 
-	const faqItems = [
+	type AnswerSegment = string | { text: string; href: string };
+	type FaqItem = { question: string; answer: AnswerSegment[] };
+
+	const linkClass = 'text-blue-600 hover:underline dark:text-blue-400';
+
+	const faqItems: FaqItem[] = [
 		{
 			question: 'Is Server Radar free?',
-			answer:
-				'Yes. All features including alerts are free. The project is open source.'
+			answer: ['Yes. All features including alerts are free. The project is open source.']
 		},
 		{
 			question: 'How often is the data updated?',
-			answer:
-				'Auction and cloud availability data is updated every few minutes.'
+			answer: ['Auction and cloud availability data is updated every few minutes.']
 		},
 		{
 			question: 'How do alerts work?',
-			answer:
+			answer: [
 				'Create an account and configure alerts for auction prices or cloud availability. When a match is found, you receive a notification via email or Discord webhook.'
+			]
 		},
 		{
 			question: 'What data do you collect?',
-			answer:
-				'Email address (for account/notifications) and Discord webhook URL (if configured). Server auction data is public information from Hetzner. See the <a href="/privacy" class="text-blue-600 hover:underline dark:text-blue-400">Privacy Policy</a> for details.'
+			answer: [
+				'Email address (for account/notifications) and Discord webhook URL (if configured). Server auction data is public information from Hetzner. See the ',
+				{ text: 'Privacy Policy', href: '/privacy' },
+				' for details.'
+			]
 		},
 		{
 			question: 'Can I contribute?',
-			answer:
-				'Yes. The source code is on <a href="https://github.com/elsbrock/hetzner-radar" class="text-blue-600 hover:underline dark:text-blue-400">GitHub</a>. Bug reports, feature requests, and pull requests are welcome.'
+			answer: [
+				'Yes. The source code is on ',
+				{ text: 'GitHub', href: 'https://github.com/elsbrock/hetzner-radar' },
+				'. Bug reports, feature requests, and pull requests are welcome.'
+			]
 		}
 	];
 </script>
@@ -42,7 +52,10 @@
 						{item.question}
 					</span>
 					<p class="leading-relaxed text-gray-600 dark:text-gray-400">
-						{@html item.answer}
+						{#each item.answer as segment}{#if typeof segment === 'string'}{segment}{:else}<a
+									href={segment.href}
+									class={linkClass}>{segment.text}</a
+								>{/if}{/each}
 					</p>
 				</AccordionItem>
 			{/each}

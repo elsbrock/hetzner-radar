@@ -1,9 +1,12 @@
 import { dev } from "$app/environment";
 import type { RequestEvent } from "@sveltejs/kit";
 
-type ActionHandler = (event: RequestEvent) => Promise<any>;
+type ActionHandler<R> = (event: RequestEvent) => Promise<R>;
 
-export function rateLimit(handler: ActionHandler, action: string = "default") {
+export function rateLimit<R>(
+  handler: ActionHandler<R>,
+  action: string = "default",
+) {
   if (dev) {
     return handler;
   }

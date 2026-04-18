@@ -160,7 +160,10 @@ https://radar.iodev.org/`,
         sameSite: "lax",
         path: "/",
       });
-      event.cookies.set(cookie.name, cookie.value, cookie.attributes as any);
+      event.cookies.set(cookie.name, cookie.value, {
+        path: "/",
+        ...cookie.attributes,
+      });
 
       // If application/json, return JSON. Else, redirect to /analyze
       if (event.request.headers.get("accept")?.includes("application/json")) {

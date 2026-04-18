@@ -8,11 +8,10 @@ import type { Actions } from "./$types";
 export const actions: Actions = {
   default: async (event) => {
     const blankCookie = createBlankSessionCookie(SESSION_COOKIE_NAME);
-    event.cookies.set(
-      blankCookie.name,
-      blankCookie.value,
-      blankCookie.attributes as any,
-    );
+    event.cookies.set(blankCookie.name, blankCookie.value, {
+      path: "/",
+      ...blankCookie.attributes,
+    });
     if (event.locals.session?.id) {
       const db = event.platform?.env?.DB;
       if (db) {
