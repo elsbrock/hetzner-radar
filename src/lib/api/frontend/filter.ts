@@ -130,44 +130,74 @@ export function generateFilterQuery(
   query.append(SQL` and ram_size >= ${Math.pow(2, filter.ramInternalSize[0])}`);
   query.append(SQL` and ram_size <= ${Math.pow(2, filter.ramInternalSize[1])}`);
 
-  // disk data
-  query.append(SQL` and nvme_count >= ${filter.ssdNvmeCount[0]}`);
-  query.append(SQL` and nvme_count <= ${filter.ssdNvmeCount[1]}`);
-  query.append(SQL` and sata_count >= ${filter.ssdSataCount[0]}`);
-  query.append(SQL` and sata_count <= ${filter.ssdSataCount[1]}`);
-  query.append(SQL` and hdd_count >= ${filter.hddCount[0]}`);
-  query.append(SQL` and hdd_count <= ${filter.hddCount[1]}`);
-  // NVMe size filtering - per-disk or total mode (default to per-disk for backwards compatibility)
-  if (filter.ssdNvmeSizeMode === "total") {
-    query.append(
-      SQL` and nvme_size >= ${filter.ssdNvmeInternalSize[0] * 500} and nvme_size <= ${filter.ssdNvmeInternalSize[1] * 500}`,
-    );
-  } else {
-    query.append(
-      SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * 500} AND x <= ${filter.ssdNvmeInternalSize[1] * 500})) = array_length(nvme_drives)`,
-    );
+  // disk data — build per-type clauses, then join with AND or OR
+  const useOr = filter.diskMode === "or";
+  const diskClauses: SQLStatement[] = [];
+
+  // NVMe clause
+  const nvmeActive =
+    !useOr || filter.ssdNvmeCount[0] !== 0 || filter.ssdNvmeCount[1] !== 8;
+  if (nvmeActive) {
+    const clause = SQL`(nvme_count >= ${filter.ssdNvmeCount[0]} and nvme_count <= ${filter.ssdNvmeCount[1]}`;
+    if (filter.ssdNvmeSizeMode === "total") {
+      clause.append(
+        SQL` and nvme_size >= ${filter.ssdNvmeInternalSize[0] * 500} and nvme_size <= ${filter.ssdNvmeInternalSize[1] * 500}`,
+      );
+    } else {
+      // "per-disk"
+      clause.append(
+        SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * 500} AND x <= ${filter.ssdNvmeInternalSize[1] * 500})) = array_length(nvme_drives)`,
+      );
+    }
+    clause.append(SQL`)`);
+    diskClauses.push(clause);
   }
 
-  // SATA size filtering - per-disk or total mode
-  if (filter.ssdSataSizeMode === "total") {
-    query.append(
-      SQL` and sata_size >= ${filter.ssdSataInternalSize[0] * 500} and sata_size <= ${filter.ssdSataInternalSize[1] * 500}`,
-    );
-  } else {
-    query.append(
-      SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * 500} AND x <= ${filter.ssdSataInternalSize[1] * 500})) = array_length(sata_drives)`,
-    );
+  // SATA clause
+  const sataActive =
+    !useOr || filter.ssdSataCount[0] !== 0 || filter.ssdSataCount[1] !== 4;
+  if (sataActive) {
+    const clause = SQL`(sata_count >= ${filter.ssdSataCount[0]} and sata_count <= ${filter.ssdSataCount[1]}`;
+    if (filter.ssdSataSizeMode === "total") {
+      clause.append(
+        SQL` and sata_size >= ${filter.ssdSataInternalSize[0] * 500} and sata_size <= ${filter.ssdSataInternalSize[1] * 500}`,
+      );
+    } else {
+      clause.append(
+        SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * 500} AND x <= ${filter.ssdSataInternalSize[1] * 500})) = array_length(sata_drives)`,
+      );
+    }
+    clause.append(SQL`)`);
+    diskClauses.push(clause);
   }
 
-  // HDD size filtering - per-disk or total mode
-  if (filter.hddSizeMode === "total") {
-    query.append(
-      SQL` and hdd_size >= ${filter.hddInternalSize[0] * 500} and hdd_size <= ${filter.hddInternalSize[1] * 500}`,
-    );
-  } else {
-    query.append(
-      SQL` and array_length(array_filter(hdd_drives, x -> x >= ${filter.hddInternalSize[0] * 500} AND x <= ${filter.hddInternalSize[1] * 500})) = array_length(hdd_drives)`,
-    );
+  // HDD clause
+  const hddActive =
+    !useOr || filter.hddCount[0] !== 0 || filter.hddCount[1] !== 15;
+  if (hddActive) {
+    const clause = SQL`(hdd_count >= ${filter.hddCount[0]} and hdd_count <= ${filter.hddCount[1]}`;
+    if (filter.hddSizeMode === "total") {
+      clause.append(
+        SQL` and hdd_size >= ${filter.hddInternalSize[0] * 500} and hdd_size <= ${filter.hddInternalSize[1] * 500}`,
+      );
+    } else {
+      clause.append(
+        SQL` and array_length(array_filter(hdd_drives, x -> x >= ${filter.hddInternalSize[0] * 500} AND x <= ${filter.hddInternalSize[1] * 500})) = array_length(hdd_drives)`,
+      );
+    }
+    clause.append(SQL`)`);
+    diskClauses.push(clause);
+  }
+
+  // Join clauses: AND mode appends each, OR mode wraps in (... or ...)
+  const joiner = useOr ? SQL` or ` : SQL` and `;
+  if (diskClauses.length > 0) {
+    query.append(SQL` and (`);
+    diskClauses.forEach((clause, i) => {
+      if (i > 0) query.append(joiner);
+      query.append(clause);
+    });
+    query.append(SQL`)`);
   }
 
   // // extras

@@ -597,9 +597,27 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 
 		<!-- Disk Filters -->
 		<li>
-			<h2 class="text-base font-semibold dark:text-white">
-				<FontAwesomeIcon class="me-2 h-4 w-4" icon={faHardDrive} />Disks
-			</h2>
+			<div class="flex items-center justify-between">
+				<h2 class="text-base font-semibold dark:text-white">
+					<FontAwesomeIcon class="me-2 h-4 w-4" icon={faHardDrive} />Disks
+				</h2>
+				<ButtonGroup size="xs">
+					<Button
+						size="xs"
+						onclick={() => {
+							filter = { ...filter, diskMode: 'and' };
+						}}
+						checked={filter.diskMode !== 'or'}>AND</Button
+					>
+					<Button
+						size="xs"
+						onclick={() => {
+							filter = { ...filter, diskMode: 'or' };
+						}}
+						checked={filter.diskMode === 'or'}>OR</Button
+					>
+				</ButtonGroup>
+			</div>
 		</li>
 
 		<!-- SSD (NVMe) Filters -->

@@ -36,6 +36,9 @@ export type ServerFilter = {
   ssdSataSizeMode: "per-disk" | "total";
   hddSizeMode: "per-disk" | "total";
 
+  // Disk type combination mode: 'and' requires all disk type constraints, 'or' matches any
+  diskMode: "and" | "or";
+
   selectedDatacenters: string[];
   selectedCpuModels: string[];
 
@@ -78,6 +81,8 @@ export const defaultFilter: ServerFilter = {
   ssdNvmeSizeMode: "per-disk",
   ssdSataSizeMode: "per-disk",
   hddSizeMode: "per-disk",
+
+  diskMode: "and",
 
   selectedDatacenters: [],
   selectedCpuModels: [],
