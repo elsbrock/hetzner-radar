@@ -409,4 +409,46 @@ describe('AlertService', () => {
 			expect(sqlQuery).toContain('extrasRPS');
 		});
 	});
+
+	describe('SQL diskMode handling', () => {
+		// Capture the SQL once for all assertions in this describe block.
+		const getSql = async () => {
+			const mockQueryStatement = {
+				bind: vi.fn().mockReturnThis(),
+				all: vi.fn().mockResolvedValue({ results: [] }),
+				run: vi.fn().mockResolvedValue({ results: [] }),
+				first: vi.fn().mockResolvedValue(null),
+			};
+			mockDb.prepare.mockReturnValueOnce(mockQueryStatement);
+			await service.processAlerts();
+			return mockDb.prepare.mock.calls[0][0] as string;
+		};
+
+		it('should reference the diskMode filter field', async () => {
+			const sql = await getSql();
+			expect(sql).toContain("json_extract(pa.filter, '$.diskMode')");
+		});
+
+		it('should default missing diskMode to "and" via COALESCE', async () => {
+			// Pre-PR-273 alerts have no diskMode key. The SQL must coalesce to 'and'
+			// so behavior is unchanged for existing alerts in the wild.
+			const sql = await getSql();
+			expect(sql).toMatch(/COALESCE\(\s*json_extract\(pa\.filter, '\$\.diskMode'\)\s*,\s*'and'\s*\)/);
+		});
+
+		it('should branch on OR vs AND with CASE', async () => {
+			const sql = await getSql();
+			// Both branches must be present.
+			expect(sql).toMatch(/CASE\s+WHEN[\s\S]+=\s*'or'\s+THEN[\s\S]+ELSE[\s\S]+END/);
+		});
+
+		it('should gate each disk leg on its non-default range in OR mode', async () => {
+			// OR mode must skip a disk type whose count range is at default
+			// (mirrors generateFilterQuery in src/lib/api/frontend/filter.ts).
+			const sql = await getSql();
+			expect(sql).toContain("json_extract(pa.filter, '$.ssdNvmeCount[0]') != 0 OR json_extract(pa.filter, '$.ssdNvmeCount[1]') != 8");
+			expect(sql).toContain("json_extract(pa.filter, '$.ssdSataCount[0]') != 0 OR json_extract(pa.filter, '$.ssdSataCount[1]') != 4");
+			expect(sql).toContain("json_extract(pa.filter, '$.hddCount[0]') != 0 OR json_extract(pa.filter, '$.hddCount[1]') != 15");
+		});
+	});
 });

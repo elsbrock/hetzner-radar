@@ -165,6 +165,21 @@ export const mockMultipleAlertsQueryResult = [
 	},
 ];
 
+// Mock alert filter with diskMode 'or' (new in PR #273)
+export const mockAlertFilterDiskModeOr = {
+	...mockAlertFilter,
+	diskMode: 'or',
+	ssdNvmeCount: [1, 2],
+	ssdSataCount: [0, 0],
+	hddCount: [0, 0],
+};
+
+// Mock alert filter with diskMode 'and' explicitly set (post-PR #273)
+export const mockAlertFilterDiskModeAnd = {
+	...mockAlertFilter,
+	diskMode: 'and',
+};
+
 // Mock complex alert filter (more restrictive)
 export const mockComplexAlertFilter = {
 	locationGermany: 1,
