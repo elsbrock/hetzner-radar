@@ -116,6 +116,7 @@
 
 	function buildHeatmap(data: AvailabilityDataPoint[]) {
 		// Collect unique timestamps and sort chronologically
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const timestampSet = new Set<string>();
 		data.forEach((p) => timestampSet.add(p.timestamp));
 		const sortedTimestamps = Array.from(timestampSet).sort();
@@ -209,7 +210,7 @@
 				<div class="mb-2 flex items-end gap-px">
 					<div class="shrink-0" style="width: {labelWidth};"></div>
 					<div class="flex flex-1 items-end gap-px">
-						{#each heatmapData[0].cells as _, colIdx}
+						{#each heatmapData[0].cells as _, colIdx (colIdx)}
 							{@const showLabel =
 								colIdx === 0 ||
 								colIdx === heatmapData[0].cells.length - 1 ||
@@ -240,7 +241,7 @@
 							{row.label}
 						</div>
 						<div class="flex flex-1 gap-px">
-							{#each row.cells as cell, colIdx}
+							{#each row.cells as cell, colIdx (colIdx)}
 								{@const dimmed =
 									hoveredCell &&
 									hoveredCell.row !== rowIdx &&

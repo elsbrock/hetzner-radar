@@ -99,6 +99,7 @@ export default [
       "fix-*.cjs",
       "playwright-report/",
       "test-results/",
+      ".claude/",
     ],
   },
 ];

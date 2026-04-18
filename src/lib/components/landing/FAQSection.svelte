@@ -52,7 +52,7 @@
 						{item.question}
 					</span>
 					<p class="leading-relaxed text-gray-600 dark:text-gray-400">
-						{#each item.answer as segment}{#if typeof segment === 'string'}{segment}{:else}<a
+						{#each item.answer as segment, i (i)}{#if typeof segment === 'string'}{segment}{:else}<a
 									href={segment.href}
 									class={linkClass}>{segment.text}</a
 								>{/if}{/each}

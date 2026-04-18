@@ -31,7 +31,6 @@
 	import { resolve } from '$app/paths';
 	import { session } from '$lib/stores/session';
 	import { settingsStore } from '$lib/stores/settings';
-	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 	let activeUrl = $derived($page.url.pathname);
 	let isHoveringAlerts = $state(false);
