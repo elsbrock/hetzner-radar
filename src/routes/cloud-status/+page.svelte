@@ -1094,6 +1094,8 @@
 							selectedServerTypeId={selectedPatternServerTypeId}
 							serverTypes={data.statusData.serverTypes}
 							locations={data.statusData.locations}
+							supported={data.statusData.supported}
+							availability={data.statusData.availability}
 						/>
 					{:else}
 						<div

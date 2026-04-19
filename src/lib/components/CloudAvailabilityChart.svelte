@@ -22,6 +22,10 @@
 		selectedServerTypeId?: number;
 		serverTypes?: { id: number; name: string }[];
 		locations?: { id: number; name: string; city: string }[];
+		/** Map of locationId → list of serverTypeIds supported there. */
+		supported?: Record<number, number[]>;
+		/** Map of locationId → list of serverTypeIds currently available there. */
+		availability?: Record<number, number[]>;
 	}
 
 	let {
@@ -34,7 +38,9 @@
 		selectedLocationId,
 		selectedServerTypeId,
 		serverTypes = [],
-		locations = []
+		locations = [],
+		supported = {},
+		availability = {}
 	}: Props = $props();
 
 	let loading = $state(true);
@@ -124,17 +130,112 @@
 		}
 	}
 
-	function buildHeatmap(data: AvailabilityDataPoint[]) {
-		// Collect unique timestamps and sort chronologically
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const timestampSet = new Set<string>();
-		data.forEach((p) => timestampSet.add(p.timestamp));
-		const sortedTimestamps = Array.from(timestampSet).sort();
+	// Canonical bucket key: ISO-Z string aligned to the bucket's UTC boundary.
+	function pad2(n: number): string {
+		return String(n).padStart(2, '0');
+	}
 
-		// Group by entity (server type or location)
+	function bucketKey(d: Date): string {
+		const y = d.getUTCFullYear();
+		const mo = pad2(d.getUTCMonth() + 1);
+		const da = pad2(d.getUTCDate());
+		if (granularity === 'hour') {
+			return `${y}-${mo}-${da}T${pad2(d.getUTCHours())}:00:00Z`;
+		}
+		return `${y}-${mo}-${da}T00:00:00Z`;
+	}
+
+	// Analytics Engine returns "YYYY-MM-DD HH:MM:SS" (no TZ, but UTC). Coerce
+	// to a Date with explicit Z so further bucketing is timezone-stable.
+	function parseEventTimestamp(ts: string): Date {
+		let s = ts;
+		if (!s.includes('T')) s = s.replace(' ', 'T');
+		if (!s.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+		return new Date(s);
+	}
+
+	// Generate the full set of bucket keys spanning [startDate, endDate], aligned
+	// to UTC boundaries. This makes column count deterministic from the time
+	// range — independent of whether any availability changes happened — so
+	// rows for static (non-transitioning) entities can still be drawn.
+	function generateBuckets(): string[] {
+		const buckets: string[] = [];
+		let cur: Date;
+		if (granularity === 'hour') {
+			cur = new Date(
+				Date.UTC(
+					startDate.getUTCFullYear(),
+					startDate.getUTCMonth(),
+					startDate.getUTCDate(),
+					startDate.getUTCHours()
+				)
+			);
+		} else {
+			cur = new Date(
+				Date.UTC(
+					startDate.getUTCFullYear(),
+					startDate.getUTCMonth(),
+					startDate.getUTCDate()
+				)
+			);
+		}
+		const stepMs = granularity === 'hour' ? 3600_000 : 86_400_000;
+		const endMs = endDate.getTime();
+		while (cur.getTime() <= endMs) {
+			buckets.push(bucketKey(cur));
+			cur = new Date(cur.getTime() + stepMs);
+		}
+		return buckets;
+	}
+
+	// All entities (server types or locations) that should appear as rows for the
+	// current selection — derived from the supported/availability snapshot, not
+	// from the event stream. This is what fixes "selecting Falkenstein only
+	// shows one server": types with zero transitions in the period now still
+	// render, filled with their current state.
+	function expectedEntities(): {
+		id: number;
+		label: string;
+		currentlyAvailable: boolean;
+	}[] {
+		const out: { id: number; label: string; currentlyAvailable: boolean }[] = [];
+		if (viewMode === 'location' && selectedLocationId !== undefined) {
+			const supportedTypes = supported[selectedLocationId] || [];
+			const currentlyAvailable = new Set(availability[selectedLocationId] || []);
+			for (const stId of supportedTypes) {
+				const st = serverTypes.find((s) => s.id === stId);
+				if (!st) continue;
+				out.push({
+					id: stId,
+					label: st.name,
+					currentlyAvailable: currentlyAvailable.has(stId)
+				});
+			}
+		} else if (viewMode === 'serverType' && selectedServerTypeId !== undefined) {
+			for (const loc of locations) {
+				const supportedTypes = supported[loc.id] || [];
+				if (!supportedTypes.includes(selectedServerTypeId)) continue;
+				const currentlyAvailable = (availability[loc.id] || []).includes(
+					selectedServerTypeId
+				);
+				out.push({
+					id: loc.id,
+					label: loc.city,
+					currentlyAvailable
+				});
+			}
+		}
+		return out;
+	}
+
+	function buildHeatmap(data: AvailabilityDataPoint[]) {
+		const sortedTimestamps = generateBuckets();
+
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const groups = new Map<number, { label: string; cells: Map<string, boolean> }>();
 
+		// Ingest events, normalising each to the canonical bucket key so they
+		// match keys produced by generateBuckets().
 		data.forEach((point) => {
 			const key = viewMode === 'location' ? point.serverTypeId : point.locationId;
 			if (!groups.has(key)) {
@@ -149,23 +250,40 @@
 				groups.set(key, { label, cells: new Map() });
 			}
 			const group = groups.get(key)!;
-			// If any event in this bucket shows available, mark available
-			const existing = group.cells.get(point.timestamp);
+			const ck = bucketKey(parseEventTimestamp(point.timestamp));
+			const existing = group.cells.get(ck);
+			// If any event in this bucket shows available, mark available.
 			group.cells.set(
-				point.timestamp,
+				ck,
 				existing === true ? true : point.available || (point.availabilityRate ?? 0) > 0
 			);
 		});
 
+		// Seed empty rows for every entity that should appear, even if it had no
+		// events in the range.
+		const expected = expectedEntities();
+		const expectedById = new Map(expected.map((e) => [e.id, e]));
+		for (const ent of expected) {
+			if (!groups.has(ent.id)) {
+				groups.set(ent.id, { label: ent.label, cells: new Map() });
+			}
+		}
+
 		// Build rows with forward-fill: gaps carry forward the last known state.
-		// Infer initial state from the first event: if the first event is a
-		// transition to "unavailable", the server must have been available before
-		// the time range (and vice versa).
+		// For rows with events, infer the pre-first-event state by inverting the
+		// first event (events represent state transitions). For rows with no
+		// events, fill with the current snapshot — that's the most truthful
+		// "we have no evidence of a change" guess.
 		heatmapData = Array.from(groups.entries())
 			.sort(([, a], [, b]) => a.label.localeCompare(b.label))
 			.map(([id, group]) => {
 				const firstEvent = sortedTimestamps.find((ts) => group.cells.has(ts));
-				let lastKnown = firstEvent ? !group.cells.get(firstEvent)! : false;
+				let lastKnown: boolean;
+				if (firstEvent) {
+					lastKnown = !group.cells.get(firstEvent)!;
+				} else {
+					lastKnown = expectedById.get(id)?.currentlyAvailable ?? false;
+				}
 				const cells: HeatmapCell[] = sortedTimestamps.map((ts) => {
 					if (group.cells.has(ts)) {
 						lastKnown = group.cells.get(ts)!;
@@ -175,7 +293,7 @@
 				return { label: group.label, id, cells };
 			});
 
-		// Build time labels
+		// Build time labels (used in tooltips)
 		timeLabels = sortedTimestamps.map((ts) => formatTimestamp(ts));
 	}
 
@@ -225,9 +343,10 @@
 		if (!ts) return '';
 		const d = new Date(ts);
 		if (granularity === 'hour') {
-			// In multi-day views, midnight markers display the date; intraday
-			// markers display the hour. In the 24h view all markers show the hour.
-			if (nCols > 48 && d.getHours() === 0) {
+			// Multi-day hourly view: every label is a date (positioned at local
+			// midnight, plus pinned endpoints) — keeps the axis visually uniform.
+			// 24h view: every label is a time of day.
+			if (nCols > 48) {
 				return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
 			}
 			return d.toLocaleTimeString(undefined, {
