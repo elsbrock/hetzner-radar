@@ -55,11 +55,21 @@
 	let timeLabels = $state<string[]>([]);
 	let hoveredCell = $state<{ row: number; col: number } | null>(null);
 
+	const nCols = $derived(heatmapData[0]?.cells.length ?? 0);
+
 	// Width for labels column based on longest label (in ch units + padding)
 	const labelWidth = $derived(
 		heatmapData.length > 0
 			? `${Math.max(...heatmapData.map((r) => r.label.length)) + 1}ch`
 			: '4ch'
+	);
+
+	// Grid template — first track is the row-label column, then one minmax(6px,1fr)
+	// per data bucket. Using CSS grid (instead of nested flex with flex-1 children)
+	// guarantees that header labels and data cells line up exactly, since both rows
+	// of the grid resolve to the same column tracks at the same pixel positions.
+	const gridTemplate = $derived(
+		`${labelWidth} repeat(${nCols}, minmax(6px, 1fr))`
 	);
 
 	// Fetch data when parameters change
@@ -172,9 +182,61 @@
 	function formatTimestamp(ts: string): string {
 		const d = new Date(ts);
 		if (granularity === 'hour') {
-			return d.toLocaleString(undefined, { hour: '2-digit', minute: '2-digit' });
+			return d.toLocaleString(undefined, {
+				month: 'short',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit'
+			});
 		}
 		return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+	}
+
+	// Decide whether the bucket at index `colIdx` should display a date/time label.
+	// Buckets are 1h/1d aligned on UTC boundaries by the query (toStartOfInterval).
+	// We anchor on the user's local fields so the axis labels read "midnight" /
+	// "00:00" in the same timezone the cell tooltips use — keeping label position
+	// and label content consistent with what the user sees on hover.
+	function isLabelBucket(colIdx: number): boolean {
+		if (nCols === 0) return false;
+		// Always anchor first/last so the axis has clear endpoints.
+		if (colIdx === 0 || colIdx === nCols - 1) return true;
+
+		const ts = heatmapData[0]?.cells[colIdx]?.timestamp;
+		if (!ts) return false;
+		const d = new Date(ts);
+
+		if (granularity === 'hour') {
+			// Wide ranges (e.g. 7d/168 buckets): label only at local midnight (~7).
+			// Narrow ranges (e.g. 24h): label every 6 local hours (~4).
+			if (nCols > 48) return d.getHours() === 0;
+			return d.getHours() % 6 === 0;
+		}
+		if (granularity === 'day') {
+			// Long ranges: every 5th bucket. Short ranges: every bucket.
+			if (nCols > 14) return colIdx % 5 === 0;
+			return true;
+		}
+		return false;
+	}
+
+	function formatAxisLabel(colIdx: number): string {
+		const ts = heatmapData[0]?.cells[colIdx]?.timestamp;
+		if (!ts) return '';
+		const d = new Date(ts);
+		if (granularity === 'hour') {
+			// In multi-day views, midnight markers display the date; intraday
+			// markers display the hour. In the 24h view all markers show the hour.
+			if (nCols > 48 && d.getHours() === 0) {
+				return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+			}
+			return d.toLocaleTimeString(undefined, {
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false
+			});
+		}
+		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
 	}
 
 	function getCellColor(available: boolean): string {
@@ -205,78 +267,68 @@
 		</Alert>
 	{:else}
 		<div class="overflow-x-auto">
-			<div class="inline-flex min-w-full flex-col gap-px">
-				<!-- Time axis labels (vertical) -->
-				<div class="mb-2 flex items-end gap-px">
-					<div class="shrink-0" style="width: {labelWidth};"></div>
-					<div class="flex flex-1 items-end gap-px">
-						{#each heatmapData[0].cells as _, colIdx (colIdx)}
-							{@const showLabel =
-								colIdx === 0 ||
-								colIdx === heatmapData[0].cells.length - 1 ||
-								colIdx %
-									Math.max(1, Math.floor(heatmapData[0].cells.length / 10)) ===
-									0}
-							<div class="flex flex-1 justify-center">
-								{#if showLabel}
-									<span
-										class="text-[10px] leading-none whitespace-nowrap text-gray-500 dark:text-gray-400"
-										style="writing-mode: vertical-rl; transform: rotate(180deg);"
-										>{timeLabels[colIdx]}</span
-									>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				</div>
+			<div
+				class="grid gap-px"
+				style="grid-template-columns: {gridTemplate};"
+			>
+				<!-- Header corner spacer -->
+				<div></div>
 
-				<!-- Data rows -->
-				{#each heatmapData as row, rowIdx (row.id)}
-					<div class="flex items-center gap-px">
-						<div
-							class="shrink-0 truncate pr-2 text-right text-xs text-gray-700 dark:text-gray-300"
-							style="width: {labelWidth};"
-							title={row.label}
-						>
-							{row.label}
-						</div>
-						<div class="flex flex-1 gap-px">
-							{#each row.cells as cell, colIdx (colIdx)}
-								{@const dimmed =
-									hoveredCell &&
-									hoveredCell.row !== rowIdx &&
-									hoveredCell.col !== colIdx}
-								<div
-									class="heatmap-cell flex-1 rounded-sm {getCellColor(cell.available)}"
-									class:opacity-40={dimmed}
-									role="gridcell"
-									tabindex="-1"
-									onmouseenter={() =>
-										(hoveredCell = { row: rowIdx, col: colIdx })}
-									onmouseleave={() => (hoveredCell = null)}
-								>
-									<Tooltip placement="top" class="z-50 text-xs"
-										>{tooltipText(row, colIdx)}</Tooltip
-									>
-								</div>
-							{/each}
-						</div>
+				<!-- Time axis labels — one grid cell per data column so labels and
+				     cells share the exact same column tracks. -->
+				{#each heatmapData[0].cells as _, colIdx (colIdx)}
+					<div class="time-label-cell flex h-16 items-end justify-center">
+						{#if isLabelBucket(colIdx)}
+							<span
+								class="text-[10px] leading-none whitespace-nowrap text-gray-500 dark:text-gray-400"
+								style="writing-mode: vertical-rl; transform: rotate(180deg);"
+								>{formatAxisLabel(colIdx)}</span
+							>
+						{/if}
 					</div>
 				{/each}
 
-				<!-- Legend -->
-				<div
-					class="mt-2 flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400"
-				style="padding-left: {labelWidth};"
-				>
-					<div class="flex items-center gap-1">
-						<div class="h-3 w-3 rounded-sm bg-green-500 dark:bg-green-600"></div>
-						Available
+				<!-- Data rows -->
+				{#each heatmapData as row, rowIdx (row.id)}
+					<div
+						class="flex items-center justify-end overflow-hidden pr-2 text-xs text-gray-700 dark:text-gray-300"
+						title={row.label}
+					>
+						<span class="truncate">{row.label}</span>
 					</div>
-					<div class="flex items-center gap-1">
-						<div class="h-3 w-3 rounded-sm bg-red-400 dark:bg-red-500"></div>
-						Unavailable
-					</div>
+					{#each row.cells as cell, colIdx (colIdx)}
+						{@const dimmed =
+							hoveredCell &&
+							hoveredCell.row !== rowIdx &&
+							hoveredCell.col !== colIdx}
+						<div
+							class="heatmap-cell rounded-sm {getCellColor(cell.available)}"
+							class:opacity-40={dimmed}
+							role="gridcell"
+							tabindex="-1"
+							onmouseenter={() => (hoveredCell = { row: rowIdx, col: colIdx })}
+							onmouseleave={() => (hoveredCell = null)}
+						>
+							<Tooltip placement="top" class="z-50 text-xs"
+								>{tooltipText(row, colIdx)}</Tooltip
+							>
+						</div>
+					{/each}
+				{/each}
+			</div>
+
+			<!-- Legend -->
+			<div
+				class="mt-3 flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400"
+				style="padding-left: calc({labelWidth} + 0.25rem);"
+			>
+				<div class="flex items-center gap-1">
+					<div class="h-3 w-3 rounded-sm bg-green-500 dark:bg-green-600"></div>
+					Available
+				</div>
+				<div class="flex items-center gap-1">
+					<div class="h-3 w-3 rounded-sm bg-red-400 dark:bg-red-500"></div>
+					Unavailable
 				</div>
 			</div>
 		</div>

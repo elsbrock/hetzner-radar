@@ -992,127 +992,123 @@
 				<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 					Availability Patterns
 				</h3>
-				<div class="flex flex-col gap-4 md:flex-row">
-					<!-- Controls Panel -->
-					<div class="w-full shrink-0 md:w-64">
-						<Card class="max-w-none! p-4!">
-							<!-- View Mode Toggle -->
-							<div class="mb-4">
-								<Label class="mb-1">View by:</Label>
-								<ButtonGroup class="w-full">
-									<Button
-										size="xs"
-										class="flex-1"
-										color={availabilityViewMode === 'location' ? 'primary' : 'light'}
-										on:click={() => {
-											availabilityViewMode = 'location';
-											selectedPatternServerTypeId = undefined;
-										}}
-									>
-										Location
-									</Button>
-									<Button
-										size="xs"
-										class="flex-1"
-										color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
-										on:click={() => {
-											availabilityViewMode = 'serverType';
-											selectedPatternLocationId = undefined;
-										}}
-									>
-										Server Type
-									</Button>
-								</ButtonGroup>
-							</div>
+				<Card class="max-w-none! p-4!">
+					<!-- Selectors row -->
+					<div class="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:flex-wrap md:gap-6">
+						<div class="md:w-56">
+							<Label class="mb-1">View by</Label>
+							<ButtonGroup class="w-full">
+								<Button
+									size="xs"
+									class="flex-1 whitespace-nowrap"
+									color={availabilityViewMode === 'location' ? 'primary' : 'light'}
+									on:click={() => {
+										availabilityViewMode = 'location';
+										selectedPatternServerTypeId = undefined;
+									}}
+								>
+									Location
+								</Button>
+								<Button
+									size="xs"
+									class="flex-1 whitespace-nowrap"
+									color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
+									on:click={() => {
+										availabilityViewMode = 'serverType';
+										selectedPatternLocationId = undefined;
+									}}
+								>
+									Server Type
+								</Button>
+							</ButtonGroup>
+						</div>
 
-							<!-- Location/Server Type Selector -->
-							<div class="mb-4">
-								{#if availabilityViewMode === 'location'}
-									<Select
-										bind:value={selectedPatternLocationId}
-										size="sm"
-										placeholder="Select a location"
-									>
-										<option value={undefined} disabled>Select a location</option>
-										{#each locationOptions as location (location.value)}
-											<option value={location.value}>{location.name}</option>
-										{/each}
-									</Select>
-								{:else}
-									<Select
-										bind:value={selectedPatternServerTypeId}
-										size="sm"
-										placeholder="Select a server type"
-									>
-										<option value={undefined} disabled>Select a server type</option>
-										{#each serverTypeOptions as serverType (serverType.value)}
-											<option value={serverType.value}>{serverType.name}</option>
-										{/each}
-									</Select>
-								{/if}
-							</div>
-
-							<!-- Date Range Selector -->
-							<div>
-								<Label class="mb-1">Time range:</Label>
-								<ButtonGroup class="w-full">
-									<Button
-										size="xs"
-										class="flex-1"
-										color={patternDateRange === '24h' ? 'primary' : 'light'}
-										on:click={() => patternDateRange = '24h'}
-									>
-										24h
-									</Button>
-									<Button
-										size="xs"
-										class="flex-1"
-										color={patternDateRange === '7d' ? 'primary' : 'light'}
-										on:click={() => patternDateRange = '7d'}
-									>
-										7d
-									</Button>
-									<Button
-										size="xs"
-										class="flex-1"
-										color={patternDateRange === '30d' ? 'primary' : 'light'}
-										on:click={() => patternDateRange = '30d'}
-									>
-										30d
-									</Button>
-								</ButtonGroup>
-							</div>
-						</Card>
-					</div>
-
-					<!-- Chart Panel -->
-					<div class="min-w-0 flex-1">
-						<Card class="h-full max-w-none! p-4!">
-							{#if (availabilityViewMode === 'location' && selectedPatternLocationId) || (availabilityViewMode === 'serverType' && selectedPatternServerTypeId)}
-								<CloudAvailabilityChart
-									startDate={patternDateRanges().start}
-									endDate={patternDateRanges().end}
-									granularity={patternDateRanges().granularity}
-									viewMode={availabilityViewMode}
-									selectedLocationId={selectedPatternLocationId}
-									selectedServerTypeId={selectedPatternServerTypeId}
-									serverTypes={data.statusData.serverTypes}
-									locations={data.statusData.locations}
-								/>
+						<div class="min-w-0 flex-1 md:max-w-sm">
+							<Label class="mb-1">
+								{availabilityViewMode === 'location' ? 'Location' : 'Server type'}
+							</Label>
+							{#if availabilityViewMode === 'location'}
+								<Select
+									bind:value={selectedPatternLocationId}
+									size="sm"
+									placeholder="Select a location"
+								>
+									<option value={undefined} disabled>Select a location</option>
+									{#each locationOptions as location (location.value)}
+										<option value={location.value}>{location.name}</option>
+									{/each}
+								</Select>
 							{:else}
-								<div class="flex h-64 items-center justify-center text-gray-500 dark:text-gray-400">
-									<p>
-										{#if availabilityViewMode === 'location'}
-											Select a location to view availability patterns
-										{:else}
-											Select a server type to view availability patterns
-										{/if}
-									</p>
-								</div>
+								<Select
+									bind:value={selectedPatternServerTypeId}
+									size="sm"
+									placeholder="Select a server type"
+								>
+									<option value={undefined} disabled>Select a server type</option>
+									{#each serverTypeOptions as serverType (serverType.value)}
+										<option value={serverType.value}>{serverType.name}</option>
+									{/each}
+								</Select>
 							{/if}
-						</Card>
+						</div>
+
+						<div class="md:w-44">
+							<Label class="mb-1">Time range</Label>
+							<ButtonGroup class="w-full">
+								<Button
+									size="xs"
+									class="flex-1"
+									color={patternDateRange === '24h' ? 'primary' : 'light'}
+									on:click={() => (patternDateRange = '24h')}
+								>
+									24h
+								</Button>
+								<Button
+									size="xs"
+									class="flex-1"
+									color={patternDateRange === '7d' ? 'primary' : 'light'}
+									on:click={() => (patternDateRange = '7d')}
+								>
+									7d
+								</Button>
+								<Button
+									size="xs"
+									class="flex-1"
+									color={patternDateRange === '30d' ? 'primary' : 'light'}
+									on:click={() => (patternDateRange = '30d')}
+								>
+									30d
+								</Button>
+							</ButtonGroup>
+						</div>
 					</div>
-				</div>
+
+					<!-- Chart -->
+					{#if (availabilityViewMode === 'location' && selectedPatternLocationId) || (availabilityViewMode === 'serverType' && selectedPatternServerTypeId)}
+						<CloudAvailabilityChart
+							startDate={patternDateRanges().start}
+							endDate={patternDateRanges().end}
+							granularity={patternDateRanges().granularity}
+							viewMode={availabilityViewMode}
+							selectedLocationId={selectedPatternLocationId}
+							selectedServerTypeId={selectedPatternServerTypeId}
+							serverTypes={data.statusData.serverTypes}
+							locations={data.statusData.locations}
+						/>
+					{:else}
+						<div
+							class="flex h-64 items-center justify-center text-gray-500 dark:text-gray-400"
+						>
+							<p>
+								{#if availabilityViewMode === 'location'}
+									Select a location to view availability patterns
+								{:else}
+									Select a server type to view availability patterns
+								{/if}
+							</p>
+						</div>
+					{/if}
+				</Card>
 			</div>
 		</section>
 	{/if}
