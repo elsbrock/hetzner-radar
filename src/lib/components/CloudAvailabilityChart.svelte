@@ -70,13 +70,40 @@
 			: '4ch'
 	);
 
-	// Grid template — first track is the row-label column, then one minmax(6px,1fr)
+	// Grid template — first track is the row-label column, then one minmax(3px,1fr)
 	// per data bucket. Using CSS grid (instead of nested flex with flex-1 children)
 	// guarantees that header labels and data cells line up exactly, since both rows
 	// of the grid resolve to the same column tracks at the same pixel positions.
+	// Min track size is small enough that 168 cells (7d hourly) fit on a typical
+	// laptop viewport without horizontal scrolling.
 	const gridTemplate = $derived(
-		`${labelWidth} repeat(${nCols}, minmax(6px, 1fr))`
+		`${labelWidth} repeat(${nCols}, minmax(3px, 1fr))`
 	);
+
+	// Human-readable banner with the absolute range bounds. Replaces pinning the
+	// first/last buckets as axis labels — those broke the per-range label format
+	// (e.g. "15:00" appearing among "Apr 14" / "Apr 16" labels in the 7d view).
+	const rangeBanner = $derived.by(() => {
+		const ms = endDate.getTime() - startDate.getTime();
+		const days = ms / 86_400_000;
+		let label: string;
+		if (days >= 25) label = 'Last 30 days';
+		else if (days >= 5) label = 'Last 7 days';
+		else label = 'Last 24 hours';
+
+		const fmt =
+			days >= 5
+				? (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })
+				: (d: Date) =>
+						d.toLocaleString(undefined, {
+							month: 'short',
+							day: '2-digit',
+							hour: '2-digit',
+							minute: '2-digit'
+						});
+
+		return `${label} · ${fmt(startDate)} → ${fmt(endDate)}`;
+	});
 
 	// Fetch data when parameters change
 	$effect(() => {
@@ -310,51 +337,63 @@
 		return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
 	}
 
-	// Decide whether the bucket at index `colIdx` should display a date/time label.
-	// Buckets are 1h/1d aligned on UTC boundaries by the query (toStartOfInterval).
-	// We anchor on the user's local fields so the axis labels read "midnight" /
-	// "00:00" in the same timezone the cell tooltips use — keeping label position
-	// and label content consistent with what the user sees on hover.
+	// Find the first column whose local time satisfies `test`. Used to anchor
+	// label cadence to a calendar event (first local midnight, first 3h-aligned
+	// hour) instead of the arbitrary range start — guarantees evenly spaced
+	// labels regardless of when the range happens to begin.
+	function firstAnchorIdx(test: (h: number) => boolean): number {
+		const cells = heatmapData[0]?.cells ?? [];
+		for (let i = 0; i < cells.length; i++) {
+			if (test(new Date(cells[i].timestamp).getHours())) return i;
+		}
+		return -1;
+	}
+
+	// Decide whether the bucket at index `colIdx` should display a label.
+	// One rule per range; ticks are deterministic stepwise from a calendar
+	// anchor. No pinned endpoints — the rangeBanner above the chart conveys
+	// the absolute bounds.
 	function isLabelBucket(colIdx: number): boolean {
 		if (nCols === 0) return false;
-		// Always anchor first/last so the axis has clear endpoints.
-		if (colIdx === 0 || colIdx === nCols - 1) return true;
-
-		const ts = heatmapData[0]?.cells[colIdx]?.timestamp;
-		if (!ts) return false;
-		const d = new Date(ts);
 
 		if (granularity === 'hour') {
-			// Wide ranges (e.g. 7d/168 buckets): label only at local midnight (~7).
-			// Narrow ranges (e.g. 24h): label every 6 local hours (~4).
-			if (nCols > 48) return d.getHours() === 0;
-			return d.getHours() % 6 === 0;
+			if (nCols > 48) {
+				// Multi-day (7d): every 24 buckets from the first local midnight.
+				const anchor = firstAnchorIdx((h) => h === 0);
+				if (anchor < 0) return false;
+				return colIdx >= anchor && (colIdx - anchor) % 24 === 0;
+			}
+			// 24h: every 3 buckets from the first 3h-aligned local hour.
+			const anchor = firstAnchorIdx((h) => h % 3 === 0);
+			if (anchor < 0) return false;
+			return colIdx >= anchor && (colIdx - anchor) % 3 === 0;
 		}
 		if (granularity === 'day') {
-			// Long ranges: every 5th bucket. Short ranges: every bucket.
+			// 30d: every 5th bucket. Short ranges: every bucket.
 			if (nCols > 14) return colIdx % 5 === 0;
 			return true;
 		}
 		return false;
 	}
 
+	// One label format per range — labels are uniform within a single chart.
 	function formatAxisLabel(colIdx: number): string {
 		const ts = heatmapData[0]?.cells[colIdx]?.timestamp;
 		if (!ts) return '';
 		const d = new Date(ts);
 		if (granularity === 'hour') {
-			// Multi-day hourly view: every label is a date (positioned at local
-			// midnight, plus pinned endpoints) — keeps the axis visually uniform.
-			// 24h view: every label is a time of day.
 			if (nCols > 48) {
-				return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+				// 7d: weekday + day-of-month, e.g. "Mon 13".
+				return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
 			}
+			// 24h: time of day, e.g. "15:00".
 			return d.toLocaleTimeString(undefined, {
 				hour: '2-digit',
 				minute: '2-digit',
 				hour12: false
 			});
 		}
+		// 30d: month + day, e.g. "Apr 14".
 		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
 	}
 
@@ -385,6 +424,9 @@
 			No availability data found for the selected time period and filters.
 		</Alert>
 	{:else}
+		<div class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+			{rangeBanner}
+		</div>
 		<div class="overflow-x-auto">
 			<div
 				class="grid gap-px"
