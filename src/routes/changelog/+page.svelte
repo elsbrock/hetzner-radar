@@ -2,11 +2,93 @@
 	import { page as _page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { Timeline, TimelineItem } from 'flowbite-svelte';
+
+	const canonical = 'https://radar.iodev.org/changelog';
+	const ogImage = 'https://radar.iodev.org/images/og-image.webp';
+	const description =
+		'Release notes for Server Radar: new features, filters, alerts, and data improvements across Hetzner auction and cloud server tracking, in reverse order.';
+
+	type Entry = { headline: string; datePublished: string };
+	const entries: Entry[] = [
+		{ headline: 'Standard Dedicated Server Support', datePublished: '2026-01-03' },
+		{ headline: 'Enhanced Cloud Status Visualization', datePublished: '2025-11-06' },
+		{ headline: 'Cloud Availability Alerts', datePublished: '2025-06-03' },
+		{ headline: 'Discord Integration', datePublished: '2025-06-01' },
+		{ headline: 'Statistics & Sold Price Tracking', datePublished: '2025-05-06' },
+		{ headline: 'Navigation & UI Improvements', datePublished: '2025-05-04' },
+		{ headline: 'Auction Alert Management', datePublished: '2025-05-02' },
+		{ headline: 'Result Grouping & Card Stack', datePublished: '2025-04-27' },
+		{ headline: 'Collapsible Filter Panel', datePublished: '2025-04-27' },
+		{ headline: 'Cloud Server Availability Monitoring', datePublished: '2025-04-22' },
+		// Older entries only have month-level granularity in the page copy.
+		{ headline: 'Chart System Upgrade', datePublished: '2024-11-01' },
+		{ headline: 'Filter Persistence & Toast System', datePublished: '2024-10-01' },
+		{ headline: 'Advanced Filtering', datePublished: '2024-08-01' }
+	];
+
+	const blogJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'Blog',
+		name: 'Server Radar Changelog',
+		description,
+		url: canonical,
+		publisher: {
+			'@type': 'Person',
+			name: 'Simon Elsbrock',
+			url: 'https://radar.iodev.org/'
+		},
+		blogPost: entries.map((e) => ({
+			'@type': 'BlogPosting',
+			headline: e.headline,
+			datePublished: e.datePublished,
+			url: canonical,
+			author: {
+				'@type': 'Person',
+				name: 'Simon Elsbrock'
+			}
+		}))
+	};
+
+	const breadcrumbJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{
+				'@type': 'ListItem',
+				position: 1,
+				name: 'Home',
+				item: 'https://radar.iodev.org/'
+			},
+			{
+				'@type': 'ListItem',
+				position: 2,
+				name: 'Changelog',
+				item: canonical
+			}
+		]
+	};
 </script>
 
 <svelte:head>
-	<title>Changelog - Server Radar</title>
-	<meta name="description" content="Latest features and improvements to Server Radar" />
+	<title>Changelog | Server Radar</title>
+	<meta name="description" content={description} />
+	<link rel="canonical" href={canonical} />
+
+	<!-- Open Graph -->
+	<meta property="og:title" content="Changelog | Server Radar" />
+	<meta property="og:description" content={description} />
+	<meta property="og:url" content={canonical} />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content={ogImage} />
+
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Changelog | Server Radar" />
+	<meta name="twitter:description" content={description} />
+
+	<!-- Structured Data -->
+	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</` + `script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify(blogJsonLd)}</` + `script>`}
 </svelte:head>
 
 <div class="container mx-auto max-w-4xl px-4 py-8">
