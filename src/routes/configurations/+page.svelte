@@ -1,80 +1,99 @@
 <script lang="ts">
 	import {
-		getCheapestConfigurations,
-		getCheapestDiskConfigurations,
-		getCheapestNvmeConfigurations,
-		getCheapestRamConfigurations,
-		getCheapestSataConfigurations
+		getConfigurationsByCategory,
+		getConfigurationsMeta,
+		type ConfigurationsByCategory
 	} from '$lib/api/frontend/configs';
 	import { withDbConnections } from '$lib/api/frontend/dbapi';
 	import { type ServerConfiguration } from '$lib/api/frontend/filter';
+	import {
+		CONFIGURATION_CATEGORIES,
+		type ConfigurationCategory,
+		type ConfigurationCategoryId
+	} from '$lib/api/shared/configurations';
 	import PriceControls from '$lib/components/PriceControls.svelte';
 	import ServerCard from '$lib/components/ServerCard.svelte';
 	import Spinner from 'flowbite-svelte/Spinner.svelte';
+	import { defaultFilter, encodeFilter } from '$lib/filter';
 
 	import { settingsStore } from '$lib/stores/settings';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 	import {
+		faArchive,
+		faArrowRight,
+		faBolt,
+		faChartLine,
 		faCloud,
 		faCode,
 		faDatabase,
 		faGamepad,
 		faMemory,
+		faMicrochip,
+		faServer,
 		faShieldAlt
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';
+	import dayjs from 'dayjs';
+	import relativeTime from 'dayjs/plugin/relativeTime';
 	import { db } from '../../stores/db';
 
+	dayjs.extend(relativeTime);
+
 	let { data } = $props();
+
+	const iconMap = {
+		chart: faChartLine,
+		server: faServer,
+		cpu: faMicrochip,
+		memory: faMemory,
+		flash: faBolt,
+		archive: faArchive
+	} as const;
 
 	let selectedTimeUnit = $derived(
 		($settingsStore.timeUnitPrice ?? 'perMonth') as 'perMonth' | 'perHour'
 	);
 
-	// Use server data if available, otherwise fall back to DuckDB
-	const hasServerData = $derived(data.cheapestConfigurations?.length > 0);
+	function emptyCategories(): ConfigurationsByCategory {
+		return Object.fromEntries(
+			CONFIGURATION_CATEGORIES.map((c) => [c.id, []])
+		) as unknown as ConfigurationsByCategory;
+	}
 
-	// DuckDB fallback data (only used when no server data)
-	let duckDbCheapest: ServerConfiguration[] = $state([]);
-	let duckDbDisk: ServerConfiguration[] = $state([]);
-	let duckDbRam: ServerConfiguration[] = $state([]);
-	let duckDbNvme: ServerConfiguration[] = $state([]);
-	let duckDbSata: ServerConfiguration[] = $state([]);
+	const hasServerData = $derived(
+		Object.values(data.categories ?? {}).some((list) => list && list.length > 0)
+	);
+
+	let duckDbCategories: ConfigurationsByCategory = $state(emptyCategories());
+	let duckDbLastUpdatedAt: number | null = $state(null);
+	let duckDbGpuCount: number = $state(0);
 	let loadingDuckDb = $state(false);
 
-	// Derived: use server data if available, otherwise DuckDB data
-	const cheapestConfigurations = $derived(
-		hasServerData ? (data.cheapestConfigurations as ServerConfiguration[]) : duckDbCheapest
+	const categories = $derived<ConfigurationsByCategory>(
+		hasServerData ? (data.categories as ConfigurationsByCategory) : duckDbCategories
 	);
-	const cheapDiskConfigurations = $derived(
-		hasServerData ? (data.cheapDiskConfigurations as ServerConfiguration[]) : duckDbDisk
+	const lastUpdatedAt = $derived<number | null>(
+		hasServerData ? data.lastUpdatedAt : duckDbLastUpdatedAt
 	);
-	const cheapRamConfigurations = $derived(
-		hasServerData ? (data.cheapRamConfigurations as ServerConfiguration[]) : duckDbRam
-	);
-	const cheapNvmeConfigurations = $derived(
-		hasServerData ? (data.cheapNvmeConfigurations as ServerConfiguration[]) : duckDbNvme
-	);
-	const cheapSataConfigurations = $derived(
-		hasServerData ? (data.cheapSataConfigurations as ServerConfiguration[]) : duckDbSata
+	const gpuServerCount = $derived<number>(
+		hasServerData ? data.gpuServerCount : duckDbGpuCount
 	);
 
 	const loading = $derived(!hasServerData && (loadingDuckDb || !$db));
 
-	// Fallback to DuckDB if no server data (e.g., local dev without D1)
 	async function fetchFromDuckDB(database: AsyncDuckDB) {
 		loadingDuckDb = true;
 
-		await withDbConnections(database, async (conn1, conn2, conn3, conn4, conn5) => {
+		await withDbConnections(database, async (conn) => {
 			try {
-				[duckDbCheapest, duckDbDisk, duckDbRam, duckDbNvme, duckDbSata] = await Promise.all([
-					getCheapestConfigurations(conn1),
-					getCheapestDiskConfigurations(conn2),
-					getCheapestRamConfigurations(conn3),
-					getCheapestNvmeConfigurations(conn4),
-					getCheapestSataConfigurations(conn5)
+				const [cats, meta] = await Promise.all([
+					getConfigurationsByCategory(conn),
+					getConfigurationsMeta(conn)
 				]);
+				duckDbCategories = cats;
+				duckDbLastUpdatedAt = meta.lastUpdatedAt;
+				duckDbGpuCount = meta.gpuServerCount;
 			} catch (error) {
 				console.error('Error fetching data from DuckDB:', error);
 			} finally {
@@ -84,11 +103,30 @@
 	}
 
 	$effect(() => {
-		// Only fetch from DuckDB if we don't have server data
 		if (!hasServerData && $db) {
 			fetchFromDuckDB($db);
 		}
 	});
+
+	function cardKey(config: ServerConfiguration, fallbackIndex: number): string {
+		return `${config.cpu}-${config.ram_size}-${config.hdd_size}-${config.nvme_size}-${config.sata_size}-${fallbackIndex}`;
+	}
+
+	function categoryServers(id: ConfigurationCategoryId): ServerConfiguration[] {
+		return categories[id] ?? [];
+	}
+
+	const gpuFilterUrl = $derived.by(() => {
+		const filter = { ...defaultFilter, extrasGPU: true };
+		return `/analyze?filter=${encodeFilter(filter)}`;
+	});
+
+	function displayProps(category: ConfigurationCategory) {
+		return {
+			displayStoragePrice: category.displayStoragePrice,
+			displayRamPrice: category.displayRamPrice
+		};
+	}
 </script>
 
 <main class="p-8">
@@ -102,6 +140,12 @@
 			options that fit your specific needs.
 		</p>
 
+		{#if lastUpdatedAt}
+			<p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
+				Snapshot updated {dayjs.unix(lastUpdatedAt).fromNow()}
+			</p>
+		{/if}
+
 		<div class="mb-5 flex justify-center space-x-4">
 			<PriceControls />
 		</div>
@@ -109,177 +153,58 @@
 
 	<!-- Configurations Sections -->
 	<section class="mx-auto mb-10 max-w-7xl">
-		<!-- Most Affordable Configurations -->
-		<div class="mb-16">
-			<h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-				Most Affordable Configurations
-			</h2>
-			<p class="mb-8 text-gray-600 dark:text-gray-400">
-				Perfect for budget-conscious users looking to maximize value without compromising essential
-				features.
-			</p>
-			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-				{#if loading}
-					<!-- Loading placeholders -->
-					{#each Array(4) as _, i (i)}
-						<div
-							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
-						>
-							<div class="flex h-full items-center justify-center">
-								<Spinner size="8" />
+		{#each CONFIGURATION_CATEGORIES as category (category.id)}
+			<div class="mb-16" id={category.anchor}>
+				<h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
+					<FontAwesomeIcon icon={iconMap[category.iconKey]} class="mr-3 text-orange-500" />
+					{category.title}
+				</h2>
+				<p class="mb-8 text-gray-600 dark:text-gray-400">
+					{category.tagline}
+				</p>
+				<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+					{#if loading}
+						{#each Array(4) as _, i (i)}
+							<div
+								class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
+							>
+								<div class="flex h-full items-center justify-center">
+									<Spinner size="8" />
+								</div>
 							</div>
+						{/each}
+					{:else if categoryServers(category.id).length === 0}
+						<div
+							class="col-span-full rounded-lg border border-dashed border-gray-200 bg-white/50 p-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400"
+						>
+							No matching configurations in the current snapshot.
 						</div>
-					{/each}
-				{:else}
-					{#each cheapestConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
+					{:else}
+						{#each categoryServers(category.id) as config, i (cardKey(config, i))}
 							<ServerCard
 								timeUnitPrice={selectedTimeUnit}
 								{config}
-							loading={false}
-							displayStoragePrice={undefined}
-							displayRamPrice={undefined}
-						></ServerCard>
-					{/each}
-				{/if}
+								loading={false}
+								{...displayProps(category)}
+							/>
+						{/each}
+					{/if}
+				</div>
 			</div>
-		</div>
+		{/each}
 
-		<!-- Best Value for Disk Space -->
-		<div class="mb-16">
-			<h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-				Best Value for Disk Space
-			</h2>
-			<p class="mb-8 text-gray-600 dark:text-gray-400">
-				Ideal for data-intensive applications, backups, and storage-heavy projects requiring ample
-				disk space.
-			</p>
-			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-				{#if loading}
-					<!-- Loading placeholders -->
-					{#each Array(4) as _, i (i)}
-						<div
-							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
-						>
-							<div class="flex h-full items-center justify-center">
-								<Spinner size="8" />
-							</div>
-						</div>
-					{/each}
-				{:else}
-					{#each cheapDiskConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-						<ServerCard
-							timeUnitPrice={selectedTimeUnit}
-							{config}
-							loading={false}
-							displayStoragePrice="perTB"
-							displayRamPrice={undefined}
-						></ServerCard>
-					{/each}
-				{/if}
+		{#if gpuServerCount > 0}
+			<div class="mt-4 flex justify-center">
+				<a
+					href={gpuFilterUrl}
+					class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-orange-600 dark:hover:bg-orange-900/20"
+				>
+					<FontAwesomeIcon icon={faBolt} class="text-orange-500" />
+					{gpuServerCount} GPU server{gpuServerCount === 1 ? '' : 's'} available
+					<FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
+				</a>
 			</div>
-		</div>
-
-		<!-- Best Value for Memory -->
-		<div class="mb-16">
-			<h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-				Best Value for Memory
-			</h2>
-			<p class="mb-8 text-gray-600 dark:text-gray-400">
-				Optimize performance for memory-intensive applications such as databases, virtual machines,
-				and high-traffic websites.
-			</p>
-			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-				{#if loading}
-					<!-- Loading placeholders -->
-					{#each Array(4) as _, i (i)}
-						<div
-							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
-						>
-							<div class="flex h-full items-center justify-center">
-								<Spinner size="8" />
-							</div>
-						</div>
-					{/each}
-				{:else}
-					{#each cheapRamConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-						<ServerCard
-							timeUnitPrice={selectedTimeUnit}
-							{config}
-							loading={false}
-							displayRamPrice="perGB"
-							displayStoragePrice={undefined}
-						></ServerCard>
-					{/each}
-				{/if}
-			</div>
-		</div>
-
-		<!-- Cheapest NVMe Storage -->
-		<div class="mb-16">
-			<h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-				High-Performance NVMe Storage
-			</h2>
-			<p class="mb-8 text-gray-600 dark:text-gray-400">
-				Maximize I/O with NVMe SSDs, perfect for databases, high-traffic sites, and
-				latency-sensitive applications.
-			</p>
-			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-				{#if loading}
-					<!-- Loading placeholders -->
-					{#each Array(4) as _, i (i)}
-						<div
-							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
-						>
-							<div class="flex h-full items-center justify-center">
-								<Spinner size="8" />
-							</div>
-						</div>
-					{/each}
-				{:else}
-					{#each cheapNvmeConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-						<ServerCard
-							timeUnitPrice={selectedTimeUnit}
-							{config}
-							loading={false}
-							displayStoragePrice="perTB"
-							displayRamPrice={undefined}
-						></ServerCard>
-					{/each}
-				{/if}
-			</div>
-		</div>
-
-		<!-- Cheapest SATA Storage -->
-		<div class="mb-16">
-			<h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">Affordable SATA SSDs</h2>
-			<p class="mb-8 text-gray-600 dark:text-gray-400">
-				Affordable SATA SSDs balancing speed and cost for general storage, web hosting, and backups.
-			</p>
-			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-				{#if loading}
-					<!-- Loading placeholders -->
-					{#each Array(4) as _, i (i)}
-						<div
-							class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
-						>
-							<div class="flex h-full items-center justify-center">
-								<Spinner size="8" />
-							</div>
-						</div>
-					{/each}
-				{:else}
-					{#each cheapSataConfigurations.slice(0, 4) as config (config.cpu + '-' + config.ram_size + '-' + config.hdd_size + '-' + config.nvme_size + '-' + config.sata_size)}
-						<ServerCard
-							timeUnitPrice={selectedTimeUnit}
-							{config}
-							loading={false}
-							displayStoragePrice="perTB"
-							displayRamPrice={undefined}
-						></ServerCard>
-					{/each}
-				{/if}
-			</div>
-		</div>
+		{/if}
 	</section>
 
 	<!-- Usage Scenarios Section -->
@@ -288,7 +213,6 @@
 			Common Usage Scenarios
 		</h2>
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-			<!-- High-Memory Applications -->
 			<div
 				class="flex flex-col items-center rounded-lg bg-white p-6 text-center shadow-md dark:bg-gray-800"
 			>
@@ -302,7 +226,6 @@
 				</p>
 			</div>
 
-			<!-- Backup Solutions -->
 			<div
 				class="flex flex-col items-center rounded-lg bg-white p-6 text-center shadow-md dark:bg-gray-800"
 			>
@@ -314,7 +237,6 @@
 				</p>
 			</div>
 
-			<!-- Game Servers -->
 			<div
 				class="flex flex-col items-center rounded-lg bg-white p-6 text-center shadow-md dark:bg-gray-800"
 			>
@@ -326,8 +248,6 @@
 				</p>
 			</div>
 
-			<!-- Additional Scenarios (Optional) -->
-			<!-- You can add more scenarios as needed -->
 			<div
 				class="flex flex-col items-center rounded-lg bg-white p-6 text-center shadow-md dark:bg-gray-800"
 			>

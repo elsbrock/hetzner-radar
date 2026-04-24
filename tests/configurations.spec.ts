@@ -28,24 +28,23 @@ test.describe("Configurations Page (/configurations)", () => {
   }) => {
     // Wait for loading to likely finish by checking for the absence of spinners
     // and presence of cards in the first section. Adjust timeout if needed.
-    const affordableSection = page.locator(
-      'div:has(h2:has-text("Most Affordable Configurations"))',
+    const priceSection = page.locator(
+      'div:has(> h2:has-text("Best Price/Performance"))',
     );
     // Wait for text content ("seen") inside the first card to appear, confirming data load.
-    await expect(affordableSection.locator("text=/seen/").first()).toBeVisible({
+    await expect(priceSection.locator("text=/seen/").first()).toBeVisible({
       timeout: 15000,
     });
-    // REMOVED: Redundant check for spinner count to be 0.
-
-    // Now that content is loaded, check for the card structure itself.
-    // The check above already confirms visibility, but we keep subsequent checks.
 
     // Verify all section headings are present
+    await expect(
+      page.getByRole("heading", { name: "Best Price/Performance" }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Most Affordable Configurations" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Best Value for Disk Space" }),
+      page.getByRole("heading", { name: "Best Value per CPU Core" }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Best Value for Memory" }),
@@ -54,66 +53,46 @@ test.describe("Configurations Page (/configurations)", () => {
       page.getByRole("heading", { name: "High-Performance NVMe Storage" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Affordable SATA SSDs" }),
+      page.getByRole("heading", { name: "Best Value Bulk Storage" }),
     ).toBeVisible();
 
     // Verify at least one server card is visible in each section after load
-    // Check for cards within each section using the corrected locator (div containing h5)
-    await expect(
-      affordableSection.locator("> div > div:has(h5)").first(),
-    ).toBeVisible(); // Already checked above
-    await expect(
-      page
-        .locator('div:has(h2:has-text("Best Value for Disk Space"))')
-        .locator("> div > div:has(h5)")
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .locator('div:has(h2:has-text("Best Value for Memory"))')
-        .locator("> div > div:has(h5)")
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .locator('div:has(h2:has-text("High-Performance NVMe Storage"))')
-        .locator("> div > div:has(h5)")
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .locator('div:has(h2:has-text("Affordable SATA SSDs"))')
-        .locator("> div > div:has(h5)")
-        .first(),
-    ).toBeVisible();
+    for (const heading of [
+      "Best Price/Performance",
+      "Most Affordable Configurations",
+      "Best Value per CPU Core",
+      "Best Value for Memory",
+      "High-Performance NVMe Storage",
+      "Best Value Bulk Storage",
+    ]) {
+      await expect(
+        page
+          .locator(`div:has(> h2:has-text("${heading}"))`)
+          .locator("> div > div:has(h5)")
+          .first(),
+      ).toBeVisible();
+    }
   });
 
   test("should allow server card interaction for detailed view", async ({
     page,
   }) => {
-    // Define the section locator first
-    const affordableSection = page.locator(
-      'div:has(h2:has-text("Most Affordable Configurations"))',
+    const priceSection = page.locator(
+      'div:has(> h2:has-text("Best Price/Performance"))',
     );
 
-    // Wait for the first server card to be available after loading
-    const firstAffordableCard = affordableSection
-      .getByTestId("server-card")
-      .first();
+    const firstCard = priceSection.getByTestId("server-card").first();
 
-    // Wait for text content ("seen") inside the first card to appear, confirming data load.
-    await expect(affordableSection.locator("text=/seen/").first()).toBeVisible({
+    await expect(priceSection.locator("text=/seen/").first()).toBeVisible({
       timeout: 15000,
     });
 
-    // Now that content is loaded, wait for the specific card
-    await expect(firstAffordableCard).toBeVisible({ timeout: 5000 });
+    await expect(firstCard).toBeVisible({ timeout: 5000 });
 
-    // Verify the card has basic content (CPU name)
-    await expect(firstAffordableCard.locator("h5")).toBeVisible();
+    await expect(firstCard.locator("h5")).toBeVisible();
     await expect(
-      firstAffordableCard.locator('.text-xl.font-bold:has-text("€")'),
-    ).toBeVisible(); // Main price
+      firstCard.locator('.text-xl.font-bold:has-text("€")'),
+    ).toBeVisible();
   });
 
   test("should display common usage scenarios section", async ({ page }) => {
