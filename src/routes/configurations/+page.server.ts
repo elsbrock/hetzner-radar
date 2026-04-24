@@ -136,10 +136,7 @@ export const load: PageServerLoad = async ({ platform }) => {
           (result.results ?? []).map(mapRowToConfig),
         ] as const;
       } catch (error) {
-        console.error(
-          `Failed to load category ${category.id}:`,
-          error,
-        );
+        console.error(`Failed to load category ${category.id}:`, error);
         return [category.id, []] as const;
       }
     }),
