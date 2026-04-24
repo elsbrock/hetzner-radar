@@ -3,7 +3,73 @@
 	import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';
+
+	const pageTitle = 'Why I built Server Radar — a Hetzner auction price tracker';
+	const pageDescription =
+		'Why I built Server Radar: a tool that tracks Hetzner dedicated auction prices over time and pings me when the right configuration appears for sale.';
+	const canonical = 'https://radar.iodev.org/about';
+	const ogImage = 'https://radar.iodev.org/images/og-image.webp';
+	const datePublished = '2024-08-18T12:12:01+02:00';
+	const dateModified = '2026-01-01T19:03:52+01:00';
+
+	const breadcrumbJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{
+				'@type': 'ListItem',
+				position: 1,
+				name: 'Home',
+				item: 'https://radar.iodev.org/'
+			},
+			{
+				'@type': 'ListItem',
+				position: 2,
+				name: 'About',
+				item: canonical
+			}
+		]
+	};
+
+	const articleJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'Article',
+		headline: 'Why I built Server Radar',
+		description: pageDescription,
+		mainEntityOfPage: {
+			'@type': 'WebPage',
+			'@id': canonical
+		},
+		author: {
+			'@type': 'Person',
+			name: 'Simon Elsbrock',
+			url: 'https://github.com/elsbrock'
+		},
+		datePublished,
+		dateModified,
+		image: ogImage
+	};
 </script>
+
+<svelte:head>
+	<title>{pageTitle}</title>
+	<meta name="description" content={pageDescription} />
+	<link rel="canonical" href={canonical} />
+
+	<meta property="og:title" content={pageTitle} />
+	<meta property="og:description" content={pageDescription} />
+	<meta property="og:url" content={canonical} />
+	<meta property="og:type" content="article" />
+	<meta property="og:image" content={ogImage} />
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={pageTitle} />
+	<meta name="twitter:description" content={pageDescription} />
+	<meta name="twitter:image" content={ogImage} />
+
+	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</` + `script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify(articleJsonLd)}</` + `script>`}
+</svelte:head>
 
 <main class="p-8">
 	<section class="mx-auto my-12 max-w-7xl text-center">
