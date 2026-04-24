@@ -24,8 +24,8 @@
 					<h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-100">Market Statistics</h2>
 				</div>
 				<p class="mb-6 text-gray-600 dark:text-gray-400">
-					Track auction market trends over time. See how prices evolve, compare AMD vs Intel
-					pricing, and understand volume patterns across datacenters.
+					Daily price index, AMD vs Intel and ECC vs non-ECC spreads, and listing volume by
+					datacenter — useful when you want to understand the market, not just one server.
 				</p>
 				<Button href="/statistics" color="light" size="sm">
 					View Statistics

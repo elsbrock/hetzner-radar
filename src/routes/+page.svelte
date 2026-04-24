@@ -13,7 +13,99 @@
 	import { resolve } from '$app/paths';
 
 	let { data } = $props();
+
+	// Landing FAQ — must mirror the questions/answers shown by FAQSection so the
+	// rich result matches the visible content (Google demotes pages where it doesn't).
+	const faq = [
+		{
+			q: 'Is Server Radar free?',
+			a: 'Yes. All features including alerts are free. The project is open source under the MIT license.'
+		},
+		{
+			q: 'How often is the data updated?',
+			a: 'Auction and cloud availability data is polled every few minutes.'
+		},
+		{
+			q: 'How do alerts work?',
+			a: 'Create an account and configure alerts for auction prices or cloud availability. When a match is found, you receive a notification by email or Discord webhook.'
+		},
+		{
+			q: 'What data do you collect?',
+			a: 'Email address (for account and notifications) and Discord webhook URL if configured. Server auction data is public information published by Hetzner.'
+		},
+		{
+			q: 'Can I contribute?',
+			a: 'Yes. The source code is on GitHub. Bug reports, feature requests, and pull requests are welcome.'
+		}
+	];
+
+	const faqJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'FAQPage',
+		mainEntity: faq.map((item) => ({
+			'@type': 'Question',
+			name: item.q,
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: item.a
+			}
+		}))
+	};
+
+	const searchActionJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'WebSite',
+		url: 'https://radar.iodev.org/',
+		potentialAction: {
+			'@type': 'SearchAction',
+			target: {
+				'@type': 'EntryPoint',
+				urlTemplate: 'https://radar.iodev.org/analyze?filter={search_term_string}'
+			},
+			'query-input': 'required name=search_term_string'
+		}
+	};
 </script>
+
+<svelte:head>
+	<title>Hetzner Dedicated Server Price Tracker — Server Radar</title>
+	<meta
+		name="description"
+		content="Track Hetzner dedicated server auction prices over time, compare against standard and cloud pricing, and get email or Discord alerts on price drops."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/" />
+
+	<!-- Open Graph (overrides root layout) -->
+	<meta
+		property="og:title"
+		content="Hetzner Dedicated Server Price Tracker — Server Radar"
+	/>
+	<meta
+		property="og:description"
+		content="Three months of auction price history, live cloud availability, and configurable alerts for the Hetzner server market."
+	/>
+	<meta property="og:url" content="https://radar.iodev.org/" />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://radar.iodev.org/images/og-image.webp" />
+
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta
+		name="twitter:title"
+		content="Hetzner Dedicated Server Price Tracker — Server Radar"
+	/>
+	<meta
+		name="twitter:description"
+		content="Three months of auction price history, live cloud availability, and configurable alerts for the Hetzner server market."
+	/>
+	<meta name="twitter:image" content="https://radar.iodev.org/images/og-image.webp" />
+
+	<!-- JSON-LD: FAQPage -->
+	{@html `<script type="application/ld+json">${JSON.stringify(faqJsonLd)}</` + `script>`}
+
+	<!-- JSON-LD: WebSite SearchAction (extends, doesn't duplicate, the root WebSite schema) -->
+	{@html `<script type="application/ld+json">${JSON.stringify(searchActionJsonLd)}</` + `script>`}
+</svelte:head>
 
 <main class="p-8">
 	<HeroSection featuredServers={data.featuredServers} />

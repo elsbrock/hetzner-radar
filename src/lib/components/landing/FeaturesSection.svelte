@@ -16,9 +16,12 @@
 </script>
 
 <section id="features" class="mx-auto my-20 max-w-6xl">
-	<h2 class="mb-12 text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
-		Features
+	<h2 class="mb-4 text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
+		What Server Radar tracks
 	</h2>
+	<p class="mx-auto mb-12 max-w-2xl text-center text-gray-600 dark:text-gray-400">
+		Two independent data feeds for the two parts of Hetzner's catalogue most worth watching.
+	</p>
 
 	<!-- Two main product areas -->
 	<div class="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -31,8 +34,8 @@
 				<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Dedicated Servers</h3>
 			</div>
 			<p class="mb-4 text-gray-600 dark:text-gray-400">
-				Compare auction and standard dedicated servers side by side. View 3 months of auction price
-				history to find the best deals.
+				Auction listings and standard dedicated SKUs in one filterable view, with three months of
+				per-configuration price history so you can tell a real deal from a normal day.
 			</p>
 			<ul class="mb-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
 				<li class="flex items-center gap-2">
@@ -67,8 +70,8 @@
 				<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Cloud Server Availability</h3>
 			</div>
 			<p class="mb-4 text-gray-600 dark:text-gray-400">
-				Monitor availability of Hetzner Cloud servers (CAX, CCX, etc.) across all datacenters.
-				Get notified when sold-out servers come back in stock.
+				Stock for every Hetzner Cloud server type (CX, CPX, CCX, CAX) across all locations, sampled
+				continuously. Get notified the moment a sold-out type returns to a specific datacenter.
 			</p>
 			<ul class="mb-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
 				<li class="flex items-center gap-2">

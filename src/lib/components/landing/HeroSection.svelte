@@ -30,12 +30,15 @@
 		<h1
 			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
 		>
-			Helping you find the right Hetzner server
+			Track Hetzner dedicated server prices over time
 		</h1>
-		<p class="mb-6 text-lg font-medium text-orange-500">Open-source Hetzner market intelligence</p>
+		<p class="mb-6 text-lg font-medium text-orange-500">
+			Open-source price tracker for the Hetzner server auction
+		</p>
 		<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
-			Server Radar is a free, open-source tool to monitor the Hetzner server market. Compare auction
-			and standard dedicated servers, check cloud availability, and get notified when deals appear.
+			Server Radar polls the Hetzner auction every few minutes and keeps three months of price
+			history. Filter by CPU, RAM, storage, and location, compare against standard dedicated and
+			cloud pricing, and set alerts when a configuration drops below your target price.
 		</p>
 		<div class="flex flex-col gap-4 sm:flex-row">
 			<Button
