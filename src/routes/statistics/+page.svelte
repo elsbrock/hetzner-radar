@@ -233,14 +233,115 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Hetzner Server Price History &amp; Stats — Server Radar</title>
+	<meta
+		name="description"
+		content="Daily Hetzner server auction statistics: price index, RAM and storage cost per unit, CPU vendor mix and datacenter volume over three months."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/statistics" />
+
+	<!-- Open Graph -->
+	<meta
+		property="og:title"
+		content="Hetzner Server Price History &amp; Stats — Server Radar"
+	/>
+	<meta
+		property="og:description"
+		content="Daily Hetzner server auction statistics: price index, RAM and storage cost per unit, CPU vendor mix and datacenter volume over three months."
+	/>
+	<meta property="og:url" content="https://radar.iodev.org/statistics" />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://radar.iodev.org/images/og-image.webp" />
+
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta
+		name="twitter:title"
+		content="Hetzner Server Price History &amp; Stats — Server Radar"
+	/>
+	<meta
+		name="twitter:description"
+		content="Daily Hetzner server auction statistics: price index, RAM and storage cost per unit, CPU vendor mix and datacenter volume over three months."
+	/>
+
+	<!-- Breadcrumb -->
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "BreadcrumbList",
+			"itemListElement": [
+				{
+					"@type": "ListItem",
+					"position": 1,
+					"name": "Home",
+					"item": "https://radar.iodev.org/"
+				},
+				{
+					"@type": "ListItem",
+					"position": 2,
+					"name": "Statistics",
+					"item": "https://radar.iodev.org/statistics"
+				}
+			]
+		}
+	</script>
+
+	<!-- Dataset -->
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "Dataset",
+			"name": "Hetzner Dedicated Server Auction Statistics",
+			"description": "Daily aggregates derived from Hetzner's dedicated server auction listings, including a rolling-baseline price index, minimum price per GB of RAM, minimum price per TB of storage by media type, average price of auctions that left the listing, listing volume by country and datacenter, and listing volume by CPU vendor and model.",
+			"url": "https://radar.iodev.org/statistics",
+			"isAccessibleForFree": true,
+			"license": "https://github.com/elsbrock/hetzner-radar/blob/main/LICENSE",
+			"creator": {
+				"@type": "Person",
+				"name": "Simon Elsbrock",
+				"url": "https://radar.iodev.org/about"
+			},
+			"temporalCoverage": "P3M",
+			"variableMeasured": [
+				{ "@type": "PropertyValue", "name": "Price index (rolling 90-day baseline)" },
+				{ "@type": "PropertyValue", "name": "Minimum server price per GB of RAM (ECC and non-ECC)" },
+				{ "@type": "PropertyValue", "name": "Minimum server price per TB of HDD storage" },
+				{ "@type": "PropertyValue", "name": "Minimum server price per TB of SSD storage (NVMe and SATA)" },
+				{ "@type": "PropertyValue", "name": "Average price of auctions no longer listed" },
+				{ "@type": "PropertyValue", "name": "Listing volume by country (Finland, Germany)" },
+				{ "@type": "PropertyValue", "name": "Listing volume by datacenter" },
+				{ "@type": "PropertyValue", "name": "Listing volume by CPU vendor (AMD, Intel)" },
+				{ "@type": "PropertyValue", "name": "Listing volume by CPU model (top 7 per vendor)" }
+			]
+		}
+	</script>
+</svelte:head>
+
 <div class="p-8">
 	<section class="mx-auto my-12 max-w-7xl text-center">
 		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
-			Dive into our Auction Statistics
+			Hetzner Auction Statistics
 		</h1>
-		<p class="mb-10 text-lg text-gray-600 dark:text-gray-400">
-			Explore comprehensive insights into server availability, pricing trends, and configuration
-			distributions to optimize your infrastructure investments.
+		<p class="mx-auto mb-6 max-w-3xl text-lg text-gray-600 dark:text-gray-400">
+			Daily aggregates from Hetzner's dedicated server auction over roughly the last three months:
+			a price index against a rolling 90-day baseline, minimum price per GB of RAM, minimum price
+			per TB of HDD, NVMe and SATA storage, and listing volume by country, datacenter and CPU. Use
+			it to judge whether the market is currently cheap or expensive before you commit to a build.
+		</p>
+		<p class="mx-auto max-w-3xl text-base text-gray-600 dark:text-gray-400">
+			Looking for something to buy right now?
+			<a
+				href="/configurations"
+				class="text-orange-600 underline-offset-2 hover:underline dark:text-orange-400"
+				>Browse today's best deals</a
+			>
+			or
+			<a
+				href="/analyze"
+				class="text-orange-600 underline-offset-2 hover:underline dark:text-orange-400"
+				>analyze live auctions with custom filters</a
+			>.
 		</p>
 	</section>
 
