@@ -694,15 +694,135 @@
 		L_Instance = null; // Clear L instance
 		currentTileLayer = null;
 	});
+
+	// JSON-LD: BreadcrumbList + Dataset describing what the page actually shows.
+	const locationCount = $derived(data.statusData?.locations?.length ?? 0);
+	const serverTypeCount = $derived(data.statusData?.serverTypes?.length ?? 0);
+
+	const breadcrumbJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{
+				'@type': 'ListItem',
+				position: 1,
+				name: 'Home',
+				item: 'https://radar.iodev.org/'
+			},
+			{
+				'@type': 'ListItem',
+				position: 2,
+				name: 'Cloud Status',
+				item: 'https://radar.iodev.org/cloud-status'
+			}
+		]
+	};
+
+	const datasetJsonLd = $derived({
+		'@context': 'https://schema.org',
+		'@type': 'Dataset',
+		name: 'Hetzner Cloud Server Availability',
+		description:
+			'Live availability of Hetzner Cloud server types across every Hetzner Cloud location, polled directly from the public Hetzner Cloud API once per minute. Tracks which server types are supported per location, which are currently in stock, and how availability changes over the past 24 hours, 7 days, and 30 days.',
+		url: 'https://radar.iodev.org/cloud-status',
+		isAccessibleForFree: true,
+		keywords: [
+			'Hetzner Cloud',
+			'cloud server availability',
+			'cloud server stock',
+			'Hetzner availability',
+			'cloud datacenter status'
+		],
+		creator: {
+			'@type': 'Person',
+			name: 'Simon Elsbrock',
+			url: 'https://radar.iodev.org/about'
+		},
+		temporalCoverage: 'P30D',
+		variableMeasured: [
+			{
+				'@type': 'PropertyValue',
+				name: 'Availability',
+				description:
+					'Whether a given server type is currently in stock at a given Hetzner Cloud location.'
+			},
+			{
+				'@type': 'PropertyValue',
+				name: 'Support',
+				description:
+					'Whether a given server type is offered at a given location, regardless of current stock.'
+			},
+			{
+				'@type': 'PropertyValue',
+				name: 'Last seen available',
+				description:
+					'Timestamp of the most recent observation showing a given location/server-type as in stock.'
+			},
+			{
+				'@type': 'PropertyValue',
+				name: 'Availability pattern over time',
+				description:
+					'Hourly or daily availability history per location or per server type over 24h, 7d, or 30d windows.'
+			}
+		]
+	});
 </script>
+
+<svelte:head>
+	<title>Hetzner Cloud Availability & Stock Tracker — Server Radar</title>
+	<meta
+		name="description"
+		content="Live Hetzner Cloud server availability across every location. See which CPX, CCX, CAX and other types are in stock right now, plus 30-day patterns."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/cloud-status" />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://radar.iodev.org/cloud-status" />
+	<meta property="og:title" content="Hetzner Cloud Availability & Stock Tracker — Server Radar" />
+	<meta
+		property="og:description"
+		content="Live Hetzner Cloud server availability across every location. See which CPX, CCX, CAX and other types are in stock right now, plus 30-day patterns."
+	/>
+	<meta property="og:image" content="https://radar.iodev.org/og-image.webp" />
+
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Hetzner Cloud Availability & Stock Tracker — Server Radar" />
+	<meta
+		name="twitter:description"
+		content="Live Hetzner Cloud server availability across every location. See which CPX, CCX, CAX and other types are in stock right now, plus 30-day patterns."
+	/>
+	<meta name="twitter:image" content="https://radar.iodev.org/og-image.webp" />
+
+	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}<` +
+		`/script>`}
+	{@html `<script type="application/ld+json">${JSON.stringify(datasetJsonLd).replace(/</g, '\\u003c')}<` +
+		`/script>`}
+</svelte:head>
 
 <div class="p-4 dark:text-gray-100">
 	<Heading tag="h1" class="mt-4 mb-4 text-center text-3xl font-bold dark:text-gray-100"
-		>Cloud Server Availability</Heading
+		>Hetzner Cloud Availability</Heading
 	>
-	<P class="mb-4 text-center text-lg text-gray-600 dark:text-gray-400">
-		Track the real-time availability of Hetzner Cloud server types across different locations.
+	<P class="mb-6 text-center text-lg text-gray-600 dark:text-gray-400">
+		Live stock for every Hetzner Cloud server type, across every Hetzner Cloud location.
 	</P>
+
+	<div class="mx-4 mb-8 md:mx-8 lg:mx-auto lg:max-w-3xl">
+		<p class="text-center text-sm text-gray-600 dark:text-gray-400">
+			This page polls Hetzner's public Cloud API once a minute and records what each location is
+			actually serving. The matrix below shows the full {serverTypeCount}
+			server types &times; {locationCount} locations grid &mdash; supported, in stock, or last seen
+			available &mdash; and the patterns chart further down plots how that has moved over the past
+			24 hours, 7 days, or 30 days. If you're shopping for raw hardware instead, the same data
+			discipline drives our <a
+				href="/configurations"
+				class="font-medium text-orange-600 underline hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+				>dedicated server configurations</a
+			>.
+		</p>
+	</div>
 
 	{#if data.error}
 		<Badge color="red" class="w-full justify-center p-4 text-lg">
