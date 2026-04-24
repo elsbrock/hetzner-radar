@@ -335,7 +335,33 @@
 
   <!-- Internal links -->
   <section class="mx-auto my-20 max-w-7xl">
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <a
+        href="/servers/cpu"
+        class="group flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600 dark:hover:bg-orange-900/20"
+      >
+        <div class="mb-3 flex items-center gap-3">
+          <FontAwesomeIcon
+            icon={faMicrochip}
+            class="text-orange-500"
+            size="lg"
+          />
+          <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            Browse by CPU
+          </h3>
+        </div>
+        <p class="mb-3 text-gray-600 dark:text-gray-400">
+          Per-CPU pages with current cheapest price, common configurations, and
+          90-day price history.
+        </p>
+        <span
+          class="mt-auto inline-flex items-center gap-1 text-sm font-medium text-orange-600 group-hover:text-orange-700 dark:text-orange-400 dark:group-hover:text-orange-300"
+        >
+          Open /servers/cpu
+          <FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
+        </span>
+      </a>
+
       <a
         href="/statistics"
         class="group flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600 dark:hover:bg-orange-900/20"
