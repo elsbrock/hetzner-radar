@@ -22,8 +22,6 @@
 		Badge,
 		Tooltip,
 		Spinner,
-		P,
-		Heading,
 		Button,
 		Input,
 		Select,
@@ -43,6 +41,7 @@
 		ChevronRightOutline,
 		FilterSolid
 	} from 'flowbite-svelte-icons';
+	import PageHero from '$lib/components/PageHero.svelte';
 
 	const { data }: { data: PageData } = $props();
 
@@ -801,28 +800,31 @@
 		`/script>`}
 </svelte:head>
 
-<div class="p-4 dark:text-gray-100">
-	<Heading tag="h1" class="mt-4 mb-4 text-center text-3xl font-bold dark:text-gray-100"
-		>Hetzner Cloud Availability</Heading
-	>
-	<P class="mb-6 text-center text-lg text-gray-600 dark:text-gray-400">
-		Live stock for every Hetzner Cloud server type, across every Hetzner Cloud location.
-	</P>
+<PageHero
+	title="Hetzner Cloud availability"
+	tagline="Live stock for every Hetzner Cloud server type, across every location. Refreshed once a minute, with availability patterns over the past 24 hours, 7 days, or 30 days."
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Cloud Status' }
+	]}
+>
+	{#snippet meta()}
+		<span>
+			Tracking <strong class="text-gray-700 dark:text-gray-200">{serverTypeCount}</strong> server
+			types ×
+			<strong class="text-gray-700 dark:text-gray-200">{locationCount}</strong> locations
+		</span>
+		<span>·</span>
+		<a
+			class="text-orange-600 underline-offset-2 hover:underline dark:text-orange-400"
+			href="/configurations"
+		>
+			Shopping for raw hardware?
+		</a>
+	{/snippet}
+</PageHero>
 
-	<div class="mx-4 mb-8 md:mx-8 lg:mx-auto lg:max-w-3xl">
-		<p class="text-center text-sm text-gray-600 dark:text-gray-400">
-			This page polls Hetzner's public Cloud API once a minute and records what each location is
-			actually serving. The matrix below shows the full {serverTypeCount}
-			server types &times; {locationCount} locations grid &mdash; supported, in stock, or last seen
-			available &mdash; and the patterns chart further down plots how that has moved over the past
-			24 hours, 7 days, or 30 days. If you're shopping for raw hardware instead, the same data
-			discipline drives our <a
-				href="/configurations"
-				class="font-medium text-orange-600 underline hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
-				>dedicated server configurations</a
-			>.
-		</p>
-	</div>
+<div class="mx-auto max-w-6xl px-6 py-10 dark:text-gray-100">
 
 	{#if data.error}
 		<Badge color="red" class="w-full justify-center p-4 text-lg">

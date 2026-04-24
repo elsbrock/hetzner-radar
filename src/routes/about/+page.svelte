@@ -3,10 +3,11 @@
 	import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';
+	import PageHero from '$lib/components/PageHero.svelte';
 
-	const pageTitle = 'Why I built Server Radar — a Hetzner auction price tracker';
+	const pageTitle = 'Why we built Server Radar — a Hetzner auction price tracker';
 	const pageDescription =
-		'Why I built Server Radar: a tool that tracks Hetzner dedicated auction prices over time and pings me when the right configuration appears for sale.';
+		'Why we built Server Radar: a tool that tracks Hetzner dedicated auction prices over time and pings you when the right configuration appears for sale.';
 	const canonical = 'https://radar.iodev.org/about';
 	const ogImage = 'https://radar.iodev.org/images/og-image.webp';
 	const datePublished = '2024-08-18T12:12:01+02:00';
@@ -34,7 +35,7 @@
 	const articleJsonLd = {
 		'@context': 'https://schema.org',
 		'@type': 'Article',
-		headline: 'Why I built Server Radar',
+		headline: 'Why we built Server Radar',
 		description: pageDescription,
 		mainEntityOfPage: {
 			'@type': 'WebPage',
@@ -71,12 +72,17 @@
 	{@html `<script type="application/ld+json">${JSON.stringify(articleJsonLd)}</` + `script>`}
 </svelte:head>
 
-<main class="p-8">
-	<section class="mx-auto my-12 max-w-7xl text-center">
-		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">About</h1>
-	</section>
+<PageHero
+	title="Why we built Server Radar"
+	tagline="A tool that watches Hetzner's dedicated server auction over time and pings you when the right configuration appears at the right price."
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'About' }
+	]}
+/>
 
-	<div class="mx-auto max-w-4xl pb-8">
+<main class="mx-auto max-w-4xl px-6 py-10">
+	<div class="pb-8">
 		<!-- Introduction Section -->
 		<div class="mb-12">
 			<p class="mb-5 text-lg text-gray-600 dark:text-gray-400">

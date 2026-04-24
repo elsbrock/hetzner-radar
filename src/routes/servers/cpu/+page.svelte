@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { EligibleCpu } from '$lib/api/shared/cpu-pages';
+	import PageHero from '$lib/components/PageHero.svelte';
 
 	let { data } = $props();
 
@@ -68,19 +69,22 @@
 	{@html `<script type="application/ld+json">${jsonLd(itemListJsonLd)}<` + `/script>`}
 </svelte:head>
 
-<main class="mx-auto max-w-5xl p-8">
-	<nav class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-		<a class="hover:text-orange-600" href="/">Home</a> <span class="mx-2">/</span>
-		<span>Browse by CPU</span>
-	</nav>
+<PageHero
+	title="Browse Hetzner servers by CPU"
+	tagline="One page per CPU model with the current cheapest price, common configurations, and 90 days of price history."
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Browse by CPU' }
+	]}
+>
+	{#snippet meta()}
+		<span>
+			<strong class="text-gray-700 dark:text-gray-200">{total}</strong> CPU model{total === 1 ? '' : 's'} currently listed
+		</span>
+	{/snippet}
+</PageHero>
 
-	<h1 class="mb-3 text-4xl font-extrabold text-gray-800 dark:text-gray-100">
-		Browse Hetzner servers by CPU
-	</h1>
-	<p class="mb-10 text-gray-600 dark:text-gray-400">
-		One page per CPU model with the current cheapest price, common configurations and 90 days of price
-		history. {total} models tracked across the live auction.
-	</p>
+<main class="mx-auto max-w-6xl px-6 py-10">
 
 	{#each ['AMD', 'Intel', 'Other'] as vendor (vendor)}
 		{@const cpus = grouped[vendor as 'AMD' | 'Intel' | 'Other']}

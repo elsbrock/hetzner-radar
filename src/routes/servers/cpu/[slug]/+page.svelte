@@ -1,5 +1,6 @@
 <script lang="ts">
 	import GenericChart from '$lib/components/GenericChart.svelte';
+	import PageHero from '$lib/components/PageHero.svelte';
 	import { defaultFilter, encodeFilter } from '$lib/filter';
 	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
 	import { convertPrice } from '$lib/currency';
@@ -183,23 +184,24 @@
 	{@html `<script type="application/ld+json">${jsonLd(productJsonLd)}<` + `/script>`}
 </svelte:head>
 
-<main class="mx-auto max-w-5xl p-8">
-	<nav class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-		<a class="hover:text-orange-600" href="/">Home</a> <span class="mx-2">/</span>
-		<a class="hover:text-orange-600" href="/servers/cpu">Browse by CPU</a>
-		<span class="mx-2">/</span>
-		<span>{cpu.displayName}</span>
-	</nav>
+<PageHero
+	title={`Hetzner servers with ${cpu.displayName}`}
+	tagline={`${cpu.listingCount} live listing${cpu.listingCount === 1 ? '' : 's'}${data.priceMin != null ? `, from €${data.priceMin.toFixed(2)}/mo` : ''}. Price history, common configurations and the best deal live right now.`}
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Browse by CPU', href: '/servers/cpu' },
+		{ label: cpu.displayName }
+	]}
+>
+	{#snippet meta()}
+		{#if cpu.cores}<span><strong class="text-gray-700 dark:text-gray-200">{cpu.cores}</strong> cores</span>{/if}
+		{#if cpu.threads}<span>·</span><span><strong class="text-gray-700 dark:text-gray-200">{cpu.threads}</strong> threads</span>{/if}
+		{#if cpu.generation}<span>·</span><span>{cpu.generation}</span>{/if}
+		{#if cpu.multicoreScore}<span>·</span><span>Geekbench 5 <strong class="text-gray-700 dark:text-gray-200">{cpu.multicoreScore.toLocaleString()}</strong></span>{/if}
+	{/snippet}
+</PageHero>
 
-	<h1 class="mb-3 text-4xl font-extrabold text-gray-800 dark:text-gray-100">
-		Hetzner servers with {cpu.displayName}
-	</h1>
-
-	<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
-		{#if cpu.cores}<strong>{cpu.cores}</strong> cores{/if}{#if cpu.threads}, <strong>{cpu.threads}</strong> threads{/if}{#if cpu.generation} · {cpu.generation}{/if}{#if cpu.multicoreScore}
-			· Geekbench 5 multicore <strong>{cpu.multicoreScore.toLocaleString()}</strong>{/if}.
-		{cpu.listingCount} live listing{cpu.listingCount === 1 ? '' : 's'}{#if data.priceMin != null}, from <strong>€{data.priceMin.toFixed(2)}/mo</strong>{/if}.
-	</p>
+<main class="mx-auto max-w-6xl px-6 py-10">
 
 	{#if cheapest}
 		<section class="mb-10 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">

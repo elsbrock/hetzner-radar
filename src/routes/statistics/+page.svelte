@@ -14,6 +14,7 @@
 		type TemporalStat
 	} from '$lib/api/frontend/stats';
 	import GenericChart from '$lib/components/GenericChart.svelte';
+	import PageHero from '$lib/components/PageHero.svelte';
 	import QuickStat from '$lib/components/QuickStat.svelte';
 	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 	import {
@@ -318,32 +319,35 @@
 	</script>
 </svelte:head>
 
-<div class="p-8">
-	<section class="mx-auto my-12 max-w-7xl text-center">
-		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
-			Hetzner Auction Statistics
-		</h1>
-		<p class="mx-auto mb-6 max-w-3xl text-lg text-gray-600 dark:text-gray-400">
-			Daily aggregates from Hetzner's dedicated server auction over roughly the last three months:
-			a price index against a rolling 90-day baseline, minimum price per GB of RAM, minimum price
-			per TB of HDD, NVMe and SATA storage, and listing volume by country, datacenter and CPU. Use
-			it to judge whether the market is currently cheap or expensive before you commit to a build.
-		</p>
-		<p class="mx-auto max-w-3xl text-base text-gray-600 dark:text-gray-400">
-			Looking for something to buy right now?
+<PageHero
+	title="Hetzner auction statistics"
+	tagline="Daily aggregates over the last three months: a price index against a rolling baseline, min €/GB RAM, min €/TB storage, and listing volume by country, datacenter and CPU. Judge the market before you commit to a build."
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Statistics' }
+	]}
+>
+	{#snippet meta()}
+		<span>
+			Looking to buy now?
 			<a
-				href="/configurations"
 				class="text-orange-600 underline-offset-2 hover:underline dark:text-orange-400"
-				>Browse today's best deals</a
+				href="/configurations"
 			>
+				Today's best deals
+			</a>
 			or
 			<a
-				href="/analyze"
 				class="text-orange-600 underline-offset-2 hover:underline dark:text-orange-400"
-				>analyze live auctions with custom filters</a
-			>.
-		</p>
-	</section>
+				href="/analyze"
+			>
+				browse live auctions
+			</a>.
+		</span>
+	{/snippet}
+</PageHero>
+
+<div class="mx-auto max-w-6xl px-6 py-10">
 
 	<!-- Quick Stats Section -->
 	<section class="mx-auto mb-12 max-w-7xl">

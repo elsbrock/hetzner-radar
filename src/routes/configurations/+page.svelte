@@ -11,6 +11,7 @@
     type ConfigurationCategory,
     type ConfigurationCategoryId,
   } from "$lib/api/shared/configurations";
+  import PageHero from "$lib/components/PageHero.svelte";
   import PriceControls from "$lib/components/PriceControls.svelte";
   import ServerCard from "$lib/components/ServerCard.svelte";
   import Spinner from "flowbite-svelte/Spinner.svelte";
@@ -252,28 +253,25 @@
   {/each}
 </svelte:head>
 
-<main class="p-8">
-  <!-- Page Header -->
-  <section class="mx-auto my-12 max-w-7xl text-center">
-    <h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">
-      Choose the Right Server for Your Needs
-    </h1>
-    <p class="mb-5 text-lg text-gray-600 dark:text-gray-400">
-      Explore our curated server configurations tailored to different usage
-      scenarios. Find the best options that fit your specific needs.
-    </p>
-
+<PageHero
+  title="Today's best Hetzner server deals"
+  tagline="Hand-picked servers from the live auction, ranked by what actually matters — price per performance, per core, per GB RAM, per TB storage."
+  breadcrumbs={[
+    { label: "Home", href: "/" },
+    { label: "Configurations" },
+  ]}
+>
+  {#snippet meta()}
     {#if lastUpdatedAt}
-      <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
-        Snapshot updated {dayjs.unix(lastUpdatedAt).fromNow()}
-      </p>
+      <span>Snapshot updated {dayjs.unix(lastUpdatedAt).fromNow()}</span>
     {/if}
+  {/snippet}
+  {#snippet actions()}
+    <PriceControls />
+  {/snippet}
+</PageHero>
 
-    <div class="mb-5 flex justify-center space-x-4">
-      <PriceControls />
-    </div>
-  </section>
-
+<main class="mx-auto max-w-6xl px-6 py-10">
   <!-- Configurations Sections -->
   <section class="mx-auto mb-10 max-w-7xl">
     {#each CONFIGURATION_CATEGORIES as category (category.id)}

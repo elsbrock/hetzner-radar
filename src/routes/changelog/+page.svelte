@@ -2,6 +2,7 @@
 	import { page as _page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { Timeline, TimelineItem } from 'flowbite-svelte';
+	import PageHero from '$lib/components/PageHero.svelte';
 
 	const canonical = 'https://radar.iodev.org/changelog';
 	const ogImage = 'https://radar.iodev.org/images/og-image.webp';
@@ -10,6 +11,11 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'Smarter configuration picks', datePublished: '2026-04-24' },
+		{ headline: 'Finer-grained disk filters', datePublished: '2026-04-18' },
+		{ headline: 'Availability timeline heatmap', datePublished: '2026-03-25' },
+		{ headline: 'Cloud alerts that auto-disarm', datePublished: '2026-03-24' },
+		{ headline: 'CPU specs and benchmark scores on every listing', datePublished: '2026-03-22' },
 		{ headline: 'Standard Dedicated Server Support', datePublished: '2026-01-03' },
 		{ headline: 'Enhanced Cloud Status Visualization', datePublished: '2025-11-06' },
 		{ headline: 'Cloud Availability Alerts', datePublished: '2025-06-03' },
@@ -91,13 +97,60 @@
 	{@html `<script type="application/ld+json">${JSON.stringify(blogJsonLd)}</` + `script>`}
 </svelte:head>
 
-<div class="container mx-auto max-w-4xl px-4 py-8">
-	<div class="mb-8">
-		<h1 class="mb-2 text-3xl font-bold text-gray-900 dark:text-white">Changelog</h1>
-		<p class="text-gray-600 dark:text-gray-400">Latest features and improvements to Server Radar</p>
-	</div>
+<PageHero
+	title="Changelog"
+	tagline="Latest features and improvements to Server Radar, in reverse chronological order."
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Changelog' }
+	]}
+/>
 
+<div class="container mx-auto max-w-4xl px-6 py-10">
 	<Timeline>
+		<TimelineItem title="Smarter configuration picks" date="Released on April 24th, 2026">
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				The Configurations page now ranks deals by what actually matters, not just absolute price.
+				Six fresh categories, each a single click away:
+			</p>
+			<ul class="ml-4 list-inside list-disc space-y-1 text-gray-500 dark:text-gray-400">
+				<li>Best price/performance — cheapest euros per Geekbench 5 multicore point</li>
+				<li>Cheapest absolute — with weak CPUs filtered out so ancient hardware doesn't dominate</li>
+				<li>Best €/core, best €/GB RAM, best €/TB NVMe, best €/TB bulk storage</li>
+				<li>A "snapshot updated" timestamp so you always know how fresh the picks are</li>
+			</ul>
+		</TimelineItem>
+		<TimelineItem title="Finer-grained disk filters" date="Released on April 18th, 2026">
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				You can now ask for "NVMe or SATA" drives in a filter instead of requiring every selected
+				disk type at once. Useful when you don't mind which drive type you get as long as the
+				capacity and price are right.
+			</p>
+		</TimelineItem>
+		<TimelineItem title="Availability timeline heatmap" date="Released on March 25th, 2026">
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				The Cloud Status page now has a heatmap showing exactly when each server type was in and
+				out of stock across every Hetzner location over the past 24 hours, 7 days, or 30 days.
+				Good for spotting the windows when your target type usually frees up.
+			</p>
+		</TimelineItem>
+		<TimelineItem title="Cloud alerts that auto-disarm" date="Released on March 24th, 2026">
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				When a cloud availability alert fires, it now switches itself off automatically so you
+				don't keep getting pinged while the server's still free. Re-arm it from Settings whenever
+				you're ready to watch again.
+			</p>
+		</TimelineItem>
+		<TimelineItem
+			title="CPU specs and benchmark scores on every listing"
+			date="Released on March 22nd, 2026"
+		>
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				Every server card now shows cores, threads, CPU generation, and Geekbench 5 single- and
+				multi-core scores. Sort by CPU score to find the strongest processor within your budget —
+				and these data points power the smarter deal picks on the Configurations page.
+			</p>
+		</TimelineItem>
 		<TimelineItem title="Standard Dedicated Server Support" date="Released on January 3rd, 2026">
 			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
 				Browse Hetzner's standard dedicated servers alongside auction servers in a unified view:
