@@ -289,13 +289,12 @@
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {#if loading}
             {#each Array(4) as _, i (i)}
-              <div
-                class="relative flex min-h-[210px] flex-col justify-between rounded-lg bg-white p-4 shadow-md dark:bg-gray-800"
-              >
-                <div class="flex h-full items-center justify-center">
-                  <Spinner size="8" />
-                </div>
-              </div>
+              <ServerCard
+                config={{} as ServerConfiguration}
+                loading={true}
+                clickable={false}
+                timeUnitPrice={selectedTimeUnit}
+              />
             {/each}
           {:else if categoryServers(category.id).length === 0}
             <div

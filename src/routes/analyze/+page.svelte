@@ -46,11 +46,13 @@
 	import {
 		faArrowDown, // FAB icon
 		faArrowUp,
+		faBars,
 		faBell,
 		faEuroSign,
 		faFilter,
 		faFire,
 		faStopwatch,
+		faTableCellsLarge,
 		faWarning
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -64,7 +66,7 @@
 	import { browser } from '$app/environment';
 	import { db, dbInitProgress } from '../../stores/db';
 
-	type SortField = 'price' | 'ram' | 'storage' | 'cpu_score';
+	type SortField = 'price' | 'ram' | 'storage' | 'cpu_score' | 'cpu_multicore_score';
 	type GroupByField = 'none' | 'cpu_vendor' | 'cpu_model' | 'best_price'; // Updated type
 	type GroupedServerList = Array<{
 		groupName: string;
@@ -83,6 +85,13 @@
 	let sortField: SortField = $state('price');
 	let sortDirection: 'asc' | 'desc' = $state('asc');
 	let groupByField: GroupByField = $state('none');
+	let viewMode: 'grid' | 'list' = $state(
+		($settingsStore.viewMode as 'grid' | 'list' | undefined) ?? 'grid'
+	);
+	function setViewMode(mode: 'grid' | 'list') {
+		viewMode = mode;
+		settingsStore.updateSetting('viewMode', mode);
+	}
 	let queryTime: number | undefined = $state(undefined);
 	let loading = $state(true);
 	let selectedAlert: PriceAlert | null = $state(null);
@@ -121,7 +130,7 @@ let isSmallScreen: boolean = $state(false);
 
 	// Valid values for URL params
 	const validGroupByFields: GroupByField[] = ['none', 'cpu_vendor', 'cpu_model', 'best_price'];
-	const validSortFields: SortField[] = ['price', 'ram', 'storage', 'cpu_score'];
+	const validSortFields: SortField[] = ['price', 'ram', 'storage', 'cpu_score', 'cpu_multicore_score'];
 	const validSortDirections: ('asc' | 'desc')[] = ['asc', 'desc'];
 
 	// Track last URL state to avoid unnecessary updates
@@ -509,14 +518,18 @@ let isSmallScreen: boolean = $state(false);
 						valA = a.cpu_score ?? 0;
 						valB = b.cpu_score ?? 0;
 						break;
+					case 'cpu_multicore_score':
+						valA = a.cpu_multicore_score ?? 0;
+						valB = b.cpu_multicore_score ?? 0;
+						break;
 				}
 
 				// Handle nulls consistently based on sort direction
 				if (valA === Infinity && valB !== Infinity) return currentSortDirection === 'asc' ? 1 : -1;
 				if (valA !== Infinity && valB === Infinity) return currentSortDirection === 'asc' ? -1 : 1;
-				if (valA === 0 && valB !== 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score'))
+				if (valA === 0 && valB !== 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score' || currentSortField === 'cpu_multicore_score'))
 					return currentSortDirection === 'asc' ? -1 : 1;
-				if (valA !== 0 && valB === 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score'))
+				if (valA !== 0 && valB === 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score' || currentSortField === 'cpu_multicore_score'))
 					return currentSortDirection === 'asc' ? 1 : -1;
 				if (valA === valB) return 0;
 
@@ -1060,6 +1073,31 @@ let isSmallScreen: boolean = $state(false);
 							>
 								<GroupControls bind:groupByField />
 								<SortControls bind:sortField bind:sortDirection />
+								<!-- View mode toggle (grid / list) -->
+								<div
+									class="inline-flex h-8 overflow-hidden rounded-md ring-1 ring-zinc-200 dark:ring-zinc-700"
+									role="group"
+									aria-label="View mode"
+								>
+									<button
+										type="button"
+										class={`flex items-center justify-center px-3 transition-colors ${viewMode === 'grid' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'bg-white text-zinc-400 hover:text-zinc-600 dark:bg-zinc-900 dark:text-zinc-500'}`}
+										onclick={() => setViewMode('grid')}
+										aria-pressed={viewMode === 'grid'}
+										aria-label="Grid view"
+									>
+										<FontAwesomeIcon icon={faTableCellsLarge} class="h-4 w-4" />
+									</button>
+									<button
+										type="button"
+										class={`flex items-center justify-center px-3 transition-colors ${viewMode === 'list' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'bg-white text-zinc-400 hover:text-zinc-600 dark:bg-zinc-900 dark:text-zinc-500'}`}
+										onclick={() => setViewMode('list')}
+										aria-pressed={viewMode === 'list'}
+										aria-label="List view"
+									>
+										<FontAwesomeIcon icon={faBars} class="h-4 w-4" />
+									</button>
+								</div>
 							</div>
 						{/if}
 					</div>
@@ -1093,6 +1131,7 @@ let isSmallScreen: boolean = $state(false);
 								<ServerList
 									groupedList={groupedDisplayList}
 									timeUnitPrice={selectedTimeUnit}
+									{viewMode}
 								/>
 							</div>
 						{:else}

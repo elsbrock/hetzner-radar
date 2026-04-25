@@ -206,23 +206,23 @@
 	{:else}
 		<!-- Vertical Layout (rows) -->
 		<div
-			class="mb-3 grid grid-cols-[16px_50px_1fr_auto] gap-x-3 gap-y-1 leading-tight text-sm text-gray-700 dark:text-gray-400"
+			class="grid grid-cols-[14px_44px_minmax(0,1fr)_auto] items-baseline gap-x-2.5 gap-y-2 text-sm leading-tight text-gray-700 dark:text-gray-400"
 		>
 			<!-- CPU -->
 			{#if config.cpu_cores || config.cpu_threads}
-				<div class="flex items-start justify-center pt-0.5">
-					<FontAwesomeIcon icon={faMicrochip} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+				<div class="flex items-center justify-center self-start pt-1">
+					<FontAwesomeIcon icon={faMicrochip} class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
 				</div>
-				<div>CPU</div>
-				<div>
+				<div class="self-start pt-0.5 text-xs text-gray-500 dark:text-gray-400">CPU</div>
+				<div class="min-w-0">
 					<div class="font-medium text-gray-900 dark:text-white">
 						{config.cpu_cores ?? '?'}C / {config.cpu_threads ?? '?'}T
 					</div>
 					{#if config.cpu_generation}
-						<div class="text-xs text-gray-500 dark:text-gray-400">{config.cpu_generation}</div>
+						<div class="truncate text-xs text-gray-500 dark:text-gray-400" title={config.cpu_generation}>{config.cpu_generation}</div>
 					{/if}
 				</div>
-				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
+				<div class="self-start pt-1 text-right text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">
 					{#if config.cpu_score}
 						GB6 {config.cpu_score.toLocaleString()}
 					{/if}
@@ -230,12 +230,12 @@
 			{/if}
 
 			<!-- RAM -->
-			<div class="flex items-start justify-center pt-0.5">
-				<FontAwesomeIcon icon={faMemory} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+			<div class="flex items-center justify-center">
+				<FontAwesomeIcon icon={faMemory} class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
 			</div>
-			<div>RAM</div>
+			<div class="text-xs text-gray-500 dark:text-gray-400">RAM</div>
 			<div class="font-medium text-gray-900 dark:text-white">{config.ram_size} GB</div>
-			<div class="text-right text-xs text-gray-500 dark:text-gray-400">
+			<div class="text-right text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">
 				{#if showPricePerUnit && pricePerGbRam > 0}
 					{pricePerGbRam.toFixed(2)} {$currencySymbol}/GB
 				{/if}
@@ -243,20 +243,20 @@
 
 			<!-- NVMe -->
 			{#if config.nvme_drives.length > 0}
-				<div class="flex items-start justify-center pt-0.5">
-					<FontAwesomeIcon icon={faSdCard} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+				<div class="flex items-center justify-center self-start pt-0.5">
+					<FontAwesomeIcon icon={faSdCard} class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
 				</div>
-				<div>NVMe</div>
+				<div class="self-start text-xs text-gray-500 dark:text-gray-400">NVMe</div>
 				<div class="flex flex-wrap gap-x-2 font-medium text-gray-900 dark:text-white">
 					{#each nvmeSummary as summary (summary.value)}
 						<span class="whitespace-nowrap"
 							>{nvmeSummary.length > 1 || summary.count > 1
-								? `${summary.count}x `
+								? `${summary.count}× `
 								: ''}{getFormattedDiskSize(summary.value)}</span
 						>
 					{/each}
 				</div>
-				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
+				<div class="self-start text-right text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">
 					{#if showPricePerUnit && pricePerTbNvme > 0}
 						{pricePerTbNvme.toFixed(2)} {$currencySymbol}/TB
 					{/if}
@@ -265,20 +265,20 @@
 
 			<!-- SATA -->
 			{#if config.sata_drives.length > 0}
-				<div class="flex items-start justify-center pt-0.5">
-					<FontAwesomeIcon icon={faHardDrive} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+				<div class="flex items-center justify-center self-start pt-0.5">
+					<FontAwesomeIcon icon={faHardDrive} class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
 				</div>
-				<div>SATA</div>
+				<div class="self-start text-xs text-gray-500 dark:text-gray-400">SATA</div>
 				<div class="flex flex-wrap gap-x-2 font-medium text-gray-900 dark:text-white">
 					{#each sataSummary as summary (summary.value)}
 						<span class="whitespace-nowrap"
 							>{sataSummary.length > 1 || summary.count > 1
-								? `${summary.count}x `
+								? `${summary.count}× `
 								: ''}{getFormattedDiskSize(summary.value)}</span
 						>
 					{/each}
 				</div>
-				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
+				<div class="self-start text-right text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">
 					{#if showPricePerUnit && pricePerTbSata > 0}
 						{pricePerTbSata.toFixed(2)} {$currencySymbol}/TB
 					{/if}
@@ -287,20 +287,20 @@
 
 			<!-- HDD -->
 			{#if config.hdd_drives.length > 0}
-				<div class="flex items-start justify-center pt-0.5">
-					<FontAwesomeIcon icon={faHardDrive} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+				<div class="flex items-center justify-center self-start pt-0.5">
+					<FontAwesomeIcon icon={faHardDrive} class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
 				</div>
-				<div>HDD</div>
+				<div class="self-start text-xs text-gray-500 dark:text-gray-400">HDD</div>
 				<div class="flex flex-wrap gap-x-2 font-medium text-gray-900 dark:text-white">
 					{#each hddSummary as summary (summary.value)}
 						<span class="whitespace-nowrap"
 							>{hddSummary.length > 1 || summary.count > 1
-								? `${summary.count}x `
+								? `${summary.count}× `
 								: ''}{getFormattedDiskSize(summary.value)}</span
 						>
 					{/each}
 				</div>
-				<div class="text-right text-xs text-gray-500 dark:text-gray-400">
+				<div class="self-start text-right text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">
 					{#if showPricePerUnit && pricePerTbHdd > 0}
 						{pricePerTbHdd.toFixed(2)} {$currencySymbol}/TB
 					{/if}
@@ -309,10 +309,10 @@
 
 			<!-- Extras -->
 			{#if showBadges}
-				<div class="flex items-start justify-center pt-0.5">
-					<FontAwesomeIcon icon={faTags} class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+				<div class="flex items-center justify-center self-start pt-0.5">
+					<FontAwesomeIcon icon={faTags} class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
 				</div>
-				<div>Extras</div>
+				<div class="self-start text-xs text-gray-500 dark:text-gray-400">Extras</div>
 				<div class="col-span-2">
 					{#if config.is_ecc || config.with_inic || config.with_gpu || config.with_hwr || config.with_rps}
 						<div class="flex flex-wrap gap-1">
@@ -323,7 +323,7 @@
 							{#if config.with_rps}<Badge border class="px-1.5 py-0.5 text-xs">RPS</Badge>{/if}
 						</div>
 					{:else}
-						<span class="text-gray-400 dark:text-gray-500">none</span>
+						<span class="text-xs text-gray-400 dark:text-gray-500">none</span>
 					{/if}
 				</div>
 			{/if}

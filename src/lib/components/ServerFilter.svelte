@@ -607,14 +607,14 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 						onclick={() => {
 							filter = { ...filter, diskMode: 'and' };
 						}}
-						checked={filter.diskMode !== 'or'}>AND</Button
+						checked={filter.diskMode !== 'or'}>all</Button
 					>
 					<Button
 						size="xs"
 						onclick={() => {
 							filter = { ...filter, diskMode: 'or' };
 						}}
-						checked={filter.diskMode === 'or'}>OR</Button
+						checked={filter.diskMode === 'or'}>any</Button
 					>
 				</ButtonGroup>
 			</div>

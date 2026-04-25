@@ -4,6 +4,7 @@
 	import { withDbConnections } from '$lib/api/frontend/dbapi';
 	import type { ServerConfiguration, ServerPriceStat } from '$lib/api/frontend/filter';
 	import { getPrices } from '$lib/api/frontend/filter';
+	import { getFormattedDiskSize } from '$lib/disksize';
 	import { convertServerConfigurationToFilter, getHetznerLink } from '$lib/filter';
 	import { filter } from '$lib/stores/filter';
 	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
@@ -11,30 +12,35 @@
 	import {
 		faArrowDown,
 		faChartLine,
+		faDisplay,
 		faExternalLinkAlt,
 		faFilter,
+		faFire,
+		faGaugeHigh,
 		faGavel,
-		faShoppingCart,
-		faStore
+		faHardDrive,
+		faLayerGroup,
+		faMemory,
+		faMicrochip,
+		faNetworkWired,
+		faPlug,
+		faSdCard,
+		faShieldHalved,
+		faShoppingCart
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon as Fa } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
-	import { Button, CloseButton, Drawer, Indicator, Tooltip } from 'flowbite-svelte';
+	import { Button, CloseButton, Drawer, Tooltip } from 'flowbite-svelte';
 	import { sineIn } from 'svelte/easing';
 	import { db } from '../../stores/db';
-	import ServerFactSheet from './ServerFactSheet.svelte';
 	import ServerPriceChart from './ServerPriceChart.svelte';
 	import { vatOptions } from './VatSelector.svelte';
 	import type { LiveAuctionResult } from '../../routes/api/auctions/+server';
-	// Runes ($state, $derived, etc.) are compiler features and don't need explicit imports.
 
-	// Props using Svelte 5 runes
 	interface _$Props {
 		config?: ServerConfiguration | null;
 		hidden?: boolean;
 	}
-	// Define props using $props. Default values are assigned directly.
-	// Type inference usually works, so <_$Props> is often optional.
 	let { config = null, hidden = $bindable(true) } = $props();
 
 	let transitionParamsRight = {
@@ -43,16 +49,13 @@
 		easing: sineIn
 	};
 
-	// State using Svelte 5 runes
 	let auctions = $state<LiveAuctionResult[]>([]);
 	let loadingAuctions = $state(false);
 
-	// Fetch auctions from live D1 API when config changes (only for auction servers)
 	$effect(() => {
 		const currentConfig = config;
 		const currentFilter = $filter;
 
-		// Skip fetching for standard servers - they don't have auction listings
 		if (currentConfig?.server_type === 'standard') {
 			auctions = [];
 			loadingAuctions = false;
@@ -117,62 +120,63 @@
 
 	type VatCountryCode = keyof typeof vatOptions;
 
-	// Derived values using Svelte 5 runes
-	// Add optional chaining ?. to safely access countryCode
-	let countryCode = $derived($settingsStore.vatSelection?.countryCode);
-	let validCountryCode = $derived(
+	const countryCode = $derived($settingsStore.vatSelection?.countryCode);
+	const validCountryCode = $derived(
 		countryCode && countryCode in vatOptions ? (countryCode as VatCountryCode) : 'NET'
 	);
-	// Explicitly cast validCountryCode to VatCountryCode for type safety when indexing vatOptions
-	let selectedOption = $derived(
+	const selectedOption = $derived(
 		config ? vatOptions[validCountryCode as VatCountryCode] : vatOptions['NET']
 	);
-	let priceWithVat = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
-	let displayPrice = $derived(convertPrice(priceWithVat, 'EUR', $currentCurrency));
-	let vatSuffix = $derived(
-		selectedOption.rate > 0 ? `(${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
+	const priceWithVat = $derived(config ? (config.price ?? 0) * (1 + selectedOption.rate) : 0);
+	const displayPrice = $derived(convertPrice(priceWithVat, 'EUR', $currentCurrency));
+	const vatLabel = $derived(
+		selectedOption.rate > 0 ? `incl. ${(selectedOption.rate * 100).toFixed(0)}% VAT` : 'net price'
 	);
-	let selectedTimeUnit = $derived((
-		$settingsStore.timeUnitPrice ?? 'perMonth'
-	) as 'perMonth' | 'perHour');
+	const selectedTimeUnit = $derived(
+		($settingsStore.timeUnitPrice ?? 'perMonth') as 'perMonth' | 'perHour'
+	);
 
-	// Calculate color hue for markup percentage (green=0% to red=100%)
-	// Hue range: 120 (green) down to 0 (red)
-	let markupColorHue = $derived(
-		config && config.markup_percentage !== null
-			? Math.max(0, 120 - (config.markup_percentage / 100) * 120)
-			: 120 // Default to green if no markup
+	// State / derived
+	const isAuction = $derived(!!config && config.server_type !== 'standard');
+	const isBestDeal = $derived(
+		isAuction &&
+			config?.markup_percentage !== undefined &&
+			config?.markup_percentage !== null &&
+			config.markup_percentage <= 0
+	);
+	const isFresh = $derived(
+		!!config?.last_seen && dayjs.unix(config.last_seen) > dayjs().subtract(80, 'minutes')
 	);
 
 	let serverPrices = $state<ServerPriceStat[]>([]);
 	let loadingPrices = $state(true);
 
-	// Derived stats from serverPrices
-	let lowestPriceRecord = $derived(
+	const lowestPriceRecord = $derived(
 		serverPrices.length > 0
 			? serverPrices.reduce((min, p) => (p.min_price < min.min_price ? p : min), serverPrices[0])
 			: null
 	);
-	let lowestPrice = $derived(lowestPriceRecord?.min_price ?? null);
-	let lowestPriceDate = $derived(lowestPriceRecord?.seen ? dayjs.unix(lowestPriceRecord.seen) : null);
-	let averageSupply = $derived(
+	const lowestPrice = $derived(lowestPriceRecord?.min_price ?? null);
+	const lowestPriceDate = $derived(
+		lowestPriceRecord?.seen ? dayjs.unix(lowestPriceRecord.seen) : null
+	);
+	const averageSupply = $derived(
 		serverPrices.length > 0
 			? Math.round(serverPrices.reduce((sum, p) => sum + p.count, 0) / serverPrices.length)
 			: null
 	);
-	let currentSupply = $derived(
-		serverPrices.length > 0 ? serverPrices[serverPrices.length - 1]?.count ?? null : null
+	const currentSupply = $derived(
+		serverPrices.length > 0 ? (serverPrices[serverPrices.length - 1]?.count ?? null) : null
 	);
-	let supplyTrend = $derived(
+	const supplyTrend = $derived(
 		averageSupply !== null && currentSupply !== null && averageSupply > 0
 			? Math.round(((currentSupply - averageSupply) / averageSupply) * 100)
 			: null
 	);
 
-	// Fetch prices using $effect
 	$effect(() => {
-		const currentConfig = config; // Capture current value
-		const currentDb = $db; // Capture current value
+		const currentConfig = config;
+		const currentDb = $db;
 
 		if (currentConfig && currentDb) {
 			loadingPrices = true;
@@ -181,7 +185,10 @@
 			(async () => {
 				try {
 					await withDbConnections(currentDb, async (conn) => {
-						const prices = await getPrices(conn, convertServerConfigurationToFilter(currentConfig));
+						const prices = await getPrices(
+							conn,
+							convertServerConfigurationToFilter(currentConfig)
+						);
 						if (!cancelled) {
 							serverPrices = prices;
 						}
@@ -198,7 +205,6 @@
 				}
 			})();
 
-			// Cleanup function
 			return () => {
 				cancelled = true;
 			};
@@ -207,6 +213,88 @@
 			loadingPrices = false;
 		}
 	});
+
+	// Storage rendering helpers (mirror ServerCard logic)
+	function summarize(arr: number[]) {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const counts = new Map<number, number>();
+		for (const v of arr) counts.set(v, (counts.get(v) || 0) + 1);
+		return Array.from(counts.entries())
+			.map(([value, count]) => ({ count, value }))
+			.sort((a, b) => a.value - b.value);
+	}
+	function formatDriveLine(arr: number[]) {
+		const summary = summarize(arr);
+		return summary
+			.map((s) =>
+				summary.length > 1 || s.count > 1
+					? `${s.count}× ${getFormattedDiskSize(s.value)}`
+					: getFormattedDiskSize(s.value)
+			)
+			.join(' + ');
+	}
+	function totalTb(arr: number[]) {
+		return arr.reduce((s, v) => s + v, 0) / 1000;
+	}
+	function buildStorageRow(
+		label: string,
+		drives: number[] | undefined | null,
+		totalGb: number | null | undefined
+	) {
+		if (drives && drives.length > 0) {
+			const tb = totalTb(drives);
+			return {
+				label,
+				text: formatDriveLine(drives),
+				pricePerTb: tb > 0 ? displayPrice / tb : 0
+			};
+		}
+		if (totalGb && totalGb > 0) {
+			const tb = totalGb / 1000;
+			return {
+				label,
+				text: getFormattedDiskSize(totalGb),
+				pricePerTb: tb > 0 ? displayPrice / tb : 0
+			};
+		}
+		return null;
+	}
+
+	const storageRows = $derived(
+		!config
+			? []
+			: ([
+					buildStorageRow('NVMe', config.nvme_drives, config.nvme_size),
+					buildStorageRow('SATA', config.sata_drives, config.sata_size),
+					buildStorageRow('HDD', config.hdd_drives, config.hdd_size)
+				].filter(Boolean) as { label: string; text: string; pricePerTb: number }[])
+	);
+	const storageIcon = $derived(
+		(config?.nvme_drives?.length ?? 0) > 0 || (config?.nvme_size ?? 0) > 0
+			? faSdCard
+			: faHardDrive
+	);
+	const ramPricePerGb = $derived(
+		config && (config.ram_size ?? 0) > 0 ? displayPrice / (config.ram_size as number) : 0
+	);
+
+	const extras = $derived(
+		!config
+			? []
+			: ([
+					config.is_ecc && { label: 'ECC', icon: faShieldHalved, title: 'ECC memory' },
+					config.with_inic && { label: 'iNIC', icon: faNetworkWired, title: 'Intel NIC (10G)' },
+					config.with_gpu && { label: 'GPU', icon: faDisplay, title: 'GPU' },
+					config.with_hwr && { label: 'HWR', icon: faLayerGroup, title: 'Hardware RAID' },
+					config.with_rps && { label: 'RPS', icon: faPlug, title: 'Redundant power supply' }
+				].filter(Boolean) as { label: string; icon: typeof faShieldHalved; title: string }[])
+	);
+
+	function compact(n: number): string {
+		if (n >= 10000) return Math.round(n / 1000) + 'k';
+		if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+		return n.toString();
+	}
 </script>
 
 <Drawer
@@ -218,327 +306,459 @@
 	transitionParams={transitionParamsRight}
 	id="server-detail-drawer"
 	width="w-96"
-	class="border-l border-gray-200 dark:border-gray-700"
+	class="border-l border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
 >
-	<div class="mb-4 flex items-center">
-		<h5 class="inline-flex items-center text-base font-semibold text-gray-500 dark:text-gray-400">
-			Server Details
-		</h5>
-		<CloseButton onclick={closeDrawer} class="ms-auto" />
-	</div>
+	<!-- Best-deal accent stripe -->
+	{#if isBestDeal}
+		<div
+			class="-mx-4 -mt-4 mb-3 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400"
+		></div>
+	{/if}
 
 	{#if config}
-		<div class="mb-6">
-			<div class="mb-2 flex items-center justify-between">
-				<h5 class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-					{config.cpu}
-				</h5>
-				<Button
-					size="xs"
-					color="alternative"
-					onclick={() => {
-						const currentConfig = config; // Use captured value
-						if (currentConfig) {
-							const newFilter = convertServerConfigurationToFilter(currentConfig);
-							filter.set(newFilter);
-							if (window.location.pathname !== '/analyze') {
-								goto(resolve('/analyze'));
-								return;
-							}
-							closeDrawer();
-						}
-					}}
-				>
-					<Fa icon={faFilter} />
-				</Button>
-				<Tooltip placement="bottom" class="z-50">Apply configuration to filter</Tooltip>
-			</div>
-			<!-- Price with VAT -->
-			<div class="mb-3 max-w-full overflow-hidden">
-				<!-- Price chart - only show for auction servers -->
-				{#if config.server_type !== 'standard'}
-					<div class="-mx-3 h-20">
-						<ServerPriceChart
-							data={serverPrices}
-							loading={loadingPrices}
-							toolbarShow={false}
-							legendShow={false}
-							timeUnitPrice={selectedTimeUnit}
-						/>
-					</div>
-				{/if}
-				<span class="text-lg font-bold text-gray-900 dark:text-white">
-					{displayPrice.toFixed(2)} {$currencySymbol}
-				</span>
-				<span class="ml-1 text-sm text-gray-600 dark:text-gray-400">{vatSuffix}</span>
-				<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">
-					{selectedTimeUnit === 'perMonth' ? 'monthly' : 'hourly'}
-				</span>
-				<!-- Setup fee for standard servers -->
-				{#if config.server_type === 'standard' && config.setup_price && config.setup_price > 0}
-					<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-						+ {convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(0)} {$currencySymbol} setup fee
-					</div>
-				{/if}
-				<!-- Markup Percentage Display - only for auctions -->
-				{#if config.server_type !== 'standard' && config.markup_percentage !== null}
-					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-						{#if config.markup_percentage > 0}
-							<span style={`color: hsl(${markupColorHue}, 100%, 40%)`}>
-								{(config.markup_percentage ?? 0).toFixed(0)}%
-							</span> higher than best
-						{:else}
-							best price
+		<!-- Chrome strip: freshness · type · close -->
+		<div class="mb-3 flex items-center justify-between text-[10px]">
+			<div class="flex items-center gap-2">
+				<span class="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+					<span class="relative flex h-1.5 w-1.5">
+						{#if isFresh}
+							<span
+								class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"
+							></span>
 						{/if}
-					</div>
+						<span
+							class={`relative inline-flex h-1.5 w-1.5 rounded-full ${isFresh ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+						></span>
+					</span>
+					<span class="tabular-nums">
+						{config.last_seen ? dayjs.unix(config.last_seen).fromNow() : 'never'}
+					</span>
+				</span>
+				{#if isBestDeal}
+					<span
+						class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+					>
+						<Fa icon={faFire} class="h-2.5 w-2.5" />
+						Best deal
+					</span>
+				{:else if isAuction}
+					<span
+						class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400"
+					>
+						Auction
+					</span>
+				{:else}
+					<span
+						class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400"
+					>
+						Standard
+					</span>
 				{/if}
 			</div>
-
-			<!-- Auction Stats - only for auctions -->
-			{#if config.server_type !== 'standard'}
-				{#if !loadingPrices && serverPrices.length > 0}
-					<div
-						class="mb-3 grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
-					>
-						<!-- Lowest Price -->
-						<div class="flex items-start gap-2">
-							<Fa icon={faArrowDown} class="mt-0.5 text-green-500" size="sm" />
-							<div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">Lowest Price</div>
-								<div class="font-semibold text-gray-900 dark:text-white">
-									{lowestPrice !== null ? `${convertPrice(lowestPrice * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(2)} ${$currencySymbol}` : '—'}
-								</div>
-								{#if lowestPriceDate}
-									<div class="text-xs text-gray-400 dark:text-gray-500">
-										{lowestPriceDate.format('MMM D, YYYY')}
-									</div>
-								{/if}
-							</div>
-						</div>
-
-						<!-- Average Supply -->
-						<div class="flex items-start gap-2">
-							<Fa icon={faChartLine} class="mt-0.5 text-blue-500" size="sm" />
-							<div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">Avg. Supply</div>
-								<div class="font-semibold text-gray-900 dark:text-white">
-									{averageSupply !== null ? `${averageSupply}/day` : '—'}
-								</div>
-								{#if supplyTrend !== null}
-									<div class="text-xs">
-										{#if supplyTrend > 0}
-											<span class="text-green-600 dark:text-green-400">+{supplyTrend}%</span>
-										{:else if supplyTrend < 0}
-											<span class="text-red-600 dark:text-red-400">{supplyTrend}%</span>
-										{:else}
-											<span class="text-gray-400 dark:text-gray-500">stable</span>
-										{/if}
-										<span class="text-gray-400 dark:text-gray-500">now</span>
-									</div>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{:else if loadingPrices}
-					<div
-						class="mb-3 animate-pulse rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
-					>
-						<div class="h-12"></div>
-					</div>
-				{/if}
-			{/if}
+			<CloseButton onclick={closeDrawer} class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
 		</div>
 
-		<!-- Server Hardware Details -->
-		<ServerFactSheet {config} {displayPrice} showPricePerUnit={true} layout="horizontal" class="mb-3" />
-
-		{#if config?.server_type === 'standard'}
-			<!-- Standard server - direct order link -->
-			<div class="mb-1 flex items-center justify-between">
-				<h6 class="flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-white">
-					<Fa icon={faStore} />
-					Standard Server
-				</h6>
-			</div>
-		{:else}
-			<!-- Auction server - show available auctions -->
-			<div class="mb-1 flex items-center justify-between">
-				<h6 class="flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-white">
-					<Fa icon={faGavel} />
-					Auctions
-				</h6>
-				{#if config}
-					<Button
-						href={getHetznerLink(config)}
-						target="_blank"
-						rel="noopener noreferrer"
-						size="xs"
-						color="alternative"
-					>
-						<Fa icon={faExternalLinkAlt} />
-					</Button>
-					<Tooltip placement="bottom" class="z-50">Search on Hetzner with this configuration</Tooltip>
-				{/if}
-			</div>
-		{/if}
-
-		{#if config?.cpu_cores || config?.cpu_threads || config?.cpu_generation || config?.cpu_score}
-			<!-- CPU details (all server types) -->
-			<div class="mb-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800">
-				{#if config.cpu_cores || config.cpu_threads}
-					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">Cores / Threads</span>
-						<span class="font-medium text-gray-900 dark:text-white">
-							{config.cpu_cores ?? '?'} / {config.cpu_threads ?? '?'}
-						</span>
-					</div>
-				{/if}
+		<!-- Title -->
+		<div class="mb-4 flex items-start justify-between gap-2">
+			<div class="min-w-0 flex-1">
+				<h3
+					class="truncate font-mono text-base leading-tight font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+					title={config.cpu}
+				>
+					{config.cpu}
+				</h3>
 				{#if config.cpu_generation}
-					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">Architecture</span>
-						<span class="font-medium text-gray-900 dark:text-white">{config.cpu_generation}</span>
-					</div>
+					<p class="mt-1 truncate text-xs text-zinc-400 dark:text-zinc-500">
+						{config.cpu_generation}
+					</p>
 				{/if}
-				{#if config.cpu_score}
-					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">Geekbench 6</span>
-						<span class="font-medium text-gray-900 dark:text-white">
-							{config.cpu_score.toLocaleString()} / {config.cpu_multicore_score?.toLocaleString() ?? '?'}
+			</div>
+			<Button
+				size="xs"
+				color="alternative"
+				class="shrink-0"
+				onclick={() => {
+					const currentConfig = config;
+					if (currentConfig) {
+						const newFilter = convertServerConfigurationToFilter(currentConfig);
+						filter.set(newFilter);
+						if (window.location.pathname !== '/analyze') {
+							goto(resolve('/analyze'));
+							return;
+						}
+						closeDrawer();
+					}
+				}}
+				aria-label="Apply configuration to filter"
+			>
+				<Fa icon={faFilter} />
+			</Button>
+			<Tooltip placement="bottom" class="z-50">Apply configuration to filter</Tooltip>
+		</div>
+
+		<!-- Hero price -->
+		<div class="mb-4">
+			<div class="flex items-baseline gap-1.5 leading-none">
+				<span
+					class="text-3xl font-semibold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-50"
+				>
+					{#if selectedTimeUnit === 'perMonth'}
+						{displayPrice.toFixed(2)}
+					{:else}
+						{(displayPrice / (30 * 24)).toFixed(4)}
+					{/if}
+				</span>
+				<span class="text-base font-medium text-zinc-500 dark:text-zinc-400"
+					>{$currencySymbol}</span
+				>
+				<span class="text-xs text-zinc-400 dark:text-zinc-500"
+					>/{selectedTimeUnit === 'perMonth' ? 'mo' : 'hr'}</span
+				>
+			</div>
+			<div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+				{vatLabel}
+				{#if config.server_type === 'standard' && config.setup_price && config.setup_price > 0}
+					<span class="mx-1 text-zinc-300 dark:text-zinc-600">·</span>
+					<span class="whitespace-nowrap tabular-nums"
+						>+{convertPrice(
+							config.setup_price * (1 + selectedOption.rate),
+							'EUR',
+							$currentCurrency
+						).toFixed(0)}
+						{$currencySymbol} setup</span
+					>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Price chart (auctions only) -->
+		{#if isAuction}
+			<div class="-mx-2 mb-4 h-20">
+				<ServerPriceChart
+					data={serverPrices}
+					loading={loadingPrices}
+					toolbarShow={false}
+					legendShow={false}
+					timeUnitPrice={selectedTimeUnit}
+				/>
+			</div>
+
+			<!-- Auction stats: lowest + supply -->
+			<div class="mb-4 grid grid-cols-2 gap-1.5">
+				<div
+					class="rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				>
+					<div class="flex items-center gap-1.5">
+						<Fa icon={faArrowDown} class="h-3 w-3 text-emerald-500" />
+						<span
+							class="font-mono text-sm leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+						>
+							{lowestPrice !== null
+								? convertPrice(
+										lowestPrice * (1 + selectedOption.rate),
+										'EUR',
+										$currentCurrency
+									).toFixed(2)
+								: '—'}
 						</span>
 					</div>
-				{/if}
+					<div class="mt-0.5 text-[9px] text-zinc-400 dark:text-zinc-500">
+						lowest{#if lowestPriceDate} · {lowestPriceDate.format('MMM D')}{/if}
+					</div>
+				</div>
+
+				<div
+					class="rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				>
+					<div class="flex items-center gap-1.5">
+						<Fa icon={faChartLine} class="h-3 w-3 text-sky-500" />
+						<span
+							class="font-mono text-sm leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+						>
+							{averageSupply !== null ? averageSupply : '—'}
+						</span>
+						{#if supplyTrend !== null && supplyTrend !== 0}
+							<span
+								class={`text-[10px] font-medium tabular-nums ${supplyTrend > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}
+								>{supplyTrend > 0 ? '+' : ''}{supplyTrend}%</span
+							>
+						{/if}
+					</div>
+					<div class="mt-0.5 text-[9px] text-zinc-400 dark:text-zinc-500">avg supply / day</div>
+				</div>
 			</div>
 		{/if}
 
-		{#if config?.server_type === 'standard'}
-			<!-- Standard server details -->
-			<div class="mb-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800">
-				{#if config.datacenter}
-					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">Datacenter</span>
-						<span class="font-medium text-gray-900 dark:text-white">{config.datacenter}</span>
+		<!-- Stat tiles: 2x2 (matches ServerCard) -->
+		<div class="mb-3 grid grid-cols-2 gap-1.5">
+			<!-- Cores / threads -->
+			<div
+				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+			>
+				<Fa
+					icon={faMicrochip}
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+				/>
+				<div
+					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100"
+				>
+					{config.cpu_cores ?? '?'}<span class="text-zinc-300 dark:text-zinc-600"
+						>/</span
+					>{config.cpu_threads ?? '?'}
+				</div>
+				<div class="text-[9px] tracking-wide text-zinc-400 dark:text-zinc-500">cores · threads</div>
+			</div>
+
+			<!-- RAM -->
+			<div
+				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+			>
+				<Fa
+					icon={faMemory}
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+				/>
+				<div
+					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100"
+				>
+					{config.ram_size}<span class="ml-0.5 text-xs font-medium text-zinc-400 dark:text-zinc-500"
+						>GB</span
+					>
+				</div>
+				<div class="text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+					{ramPricePerGb > 0 ? `${ramPricePerGb.toFixed(2)} ${$currencySymbol}/GB` : 'memory'}
+				</div>
+			</div>
+
+			<!-- Storage -->
+			<div
+				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+			>
+				<Fa
+					icon={storageIcon}
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+				/>
+				{#if storageRows.length === 0}
+					<div
+						class="truncate pr-5 font-mono text-xs leading-tight font-semibold text-zinc-400 dark:text-zinc-500"
+					>
+						—
 					</div>
-				{/if}
-				{#if config.setup_price && config.setup_price > 0}
-					<div class="flex justify-between">
-						<span class="text-gray-500 dark:text-gray-400">Setup Fee</span>
-						<span class="font-medium text-gray-900 dark:text-white">
-							{convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(2)} {$currencySymbol}
-						</span>
+					<div class="text-[9px] text-zinc-400 dark:text-zinc-500">no storage</div>
+				{:else if storageRows.length === 1}
+					<div
+						class="truncate pr-5 font-mono text-xs leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+						title={storageRows[0].text}
+					>
+						{storageRows[0].text}
 					</div>
+					<div class="truncate text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+						{storageRows[0].label.toLowerCase()}{storageRows[0].pricePerTb > 0
+							? ` · ${storageRows[0].pricePerTb.toFixed(0)} ${$currencySymbol}/TB`
+							: ''}
+					</div>
+				{:else}
+					{#each storageRows as row (row.label)}
+						<div
+							class="truncate pr-5 font-mono text-[10px] leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+							title={`${row.text} ${row.label}`}
+						>
+							{row.text}<span
+								class="ml-0.5 text-[9px] font-medium lowercase text-zinc-400 dark:text-zinc-500"
+								>{row.label}</span
+							>
+						</div>
+					{/each}
 				{/if}
 			</div>
 
-			<!-- Standard server - show order button -->
-			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-				<p class="mb-3 text-sm text-gray-700 dark:text-gray-300">
-					This is a standard dedicated server from Hetzner's regular lineup with fixed pricing.
+			<!-- Performance (GB6) -->
+			<div
+				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+			>
+				<Fa
+					icon={faGaugeHigh}
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+				/>
+				<div
+					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100"
+				>
+					{#if config.cpu_score || config.cpu_multicore_score}
+						<span class={config.cpu_score ? '' : 'text-zinc-400 dark:text-zinc-500'}
+							>{config.cpu_score ? compact(config.cpu_score) : '—'}</span
+						><span class="text-zinc-300 dark:text-zinc-600">/</span><span
+							class={config.cpu_multicore_score ? '' : 'text-zinc-400 dark:text-zinc-500'}
+							>{config.cpu_multicore_score ? compact(config.cpu_multicore_score) : '—'}</span
+						>
+					{:else}
+						<span class="text-zinc-400 dark:text-zinc-500">—</span>
+					{/if}
+				</div>
+				<div class="text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+					GB6 single · multi
+				</div>
+			</div>
+		</div>
+
+		<!-- Extras chips -->
+		{#if extras.length > 0}
+			<div class="mb-4 flex flex-wrap gap-1">
+				{#each extras as ext (ext.label)}
+					<span
+						class="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+						title={ext.title}
+					>
+						<Fa icon={ext.icon} class="h-2.5 w-2.5 text-zinc-400 dark:text-zinc-500" />
+						{ext.label}
+					</span>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Standard server: order CTA -->
+		{#if config.server_type === 'standard'}
+			<div
+				class="mb-4 rounded-lg bg-zinc-50 p-3 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+			>
+				{#if config.datacenter}
+					<div class="mb-2 flex items-baseline justify-between text-xs">
+						<span class="text-zinc-500 dark:text-zinc-400">Datacenter</span>
+						<span class="font-mono font-medium text-zinc-900 dark:text-zinc-100"
+							>{config.datacenter}</span
+						>
+					</div>
+				{/if}
+				<p class="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
+					Standard server with fixed pricing — always available from Hetzner.
 				</p>
 				<Button
 					href={`https://www.hetzner.com/dedicated-rootserver?utm_source=server-radar&utm_medium=referral&utm_campaign=standard-server#search=${config.information?.[0] ?? ''}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					color="blue"
+					color="primary"
 					class="w-full"
+					size="sm"
 				>
 					<Fa icon={faShoppingCart} class="mr-2" />
 					Order from Hetzner
 				</Button>
 			</div>
-			<hr class="my-4 border-gray-200 dark:border-gray-600" />
-			<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
-				<p>
-					Standard servers have fixed pricing and are always available for order directly from Hetzner.
-				</p>
-				<p>
-					Prices shown include VAT based on your selection. Hetzner's final price may vary based on configuration options.
-				</p>
-			</div>
 		{:else}
-			<!-- Auction server - show available auctions -->
-			<div class="space-y-2">
-				{#if loadingAuctions}
-					<div class="py-4 text-center">
-						<p class="text-gray-700 dark:text-gray-400">Loading auctions...</p>
-					</div>
-				{:else if auctions.length > 0}
+			<!-- Auctions section -->
+			<div class="mb-2 flex items-center justify-between">
+				<h6
+					class="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] text-zinc-400 uppercase dark:text-zinc-500"
+				>
+					<Fa icon={faGavel} class="h-3 w-3" />
+					Live auctions
+				</h6>
+				<Button
+					href={getHetznerLink(config)}
+					target="_blank"
+					rel="noopener noreferrer"
+					size="xs"
+					color="alternative"
+					aria-label="Search on Hetzner"
+				>
+					<Fa icon={faExternalLinkAlt} />
+				</Button>
+				<Tooltip placement="bottom" class="z-50">Search on Hetzner with this configuration</Tooltip>
+			</div>
+
+			{#if loadingAuctions}
+				<div class="space-y-1.5">
+					{#each Array(3) as _, i (i)}
+						<div
+							class="h-12 animate-pulse rounded-lg bg-zinc-50 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+						></div>
+					{/each}
+				</div>
+			{:else if auctions.length > 0}
+				<div class="space-y-1.5">
 					{#each auctions.slice(0, 5) as auction (auction.id)}
-						<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
-							<div class="flex items-start justify-between gap-2">
-								<div class="min-w-0 flex-1">
-									<div class="flex items-center gap-2">
-										<span class="font-mono text-sm font-medium text-gray-900 dark:text-white">#{auction.id}</span>
-										<span class="inline-flex items-center">
-											{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
-												<Indicator color="green" class="animate-pulse" size="xs" />
-											{:else}
-												<Indicator color="red" size="xs" />
-											{/if}
-										</span>
-									</div>
-									<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-										{auction.datacenter}
-									</div>
-									<div class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-										seen {auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
-									</div>
-								</div>
-								<div class="flex items-center gap-2">
-									<div class="text-right">
-										<div class="font-medium text-gray-900 dark:text-white">
-											{convertPrice(
-												auction.lastPrice * (1 + selectedOption.rate),
-												'EUR',
-												$currentCurrency
-											).toFixed(2)} {$currencySymbol}
-										</div>
-										<div class="text-xs text-gray-500 dark:text-gray-400">
-											{vatSuffix}
-										</div>
-									</div>
-									<Button
-										href={`https://www.hetzner.com/sb/?utm_source=server-radar&utm_medium=referral&utm_campaign=auction#search=${auction.id}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										size="sm"
-										aria-label="View on Hetzner"
+						<a
+							href={`https://www.hetzner.com/sb/?utm_source=server-radar&utm_medium=referral&utm_campaign=auction#search=${auction.id}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="group flex items-center justify-between gap-2 rounded-lg bg-zinc-50 px-2.5 py-2 ring-1 ring-zinc-100 transition-colors hover:bg-zinc-100 hover:ring-zinc-200 dark:bg-zinc-800/50 dark:ring-zinc-700/40 dark:hover:bg-zinc-800 dark:hover:ring-zinc-700"
+						>
+							<div class="min-w-0 flex-1">
+								<div class="flex items-center gap-1.5">
+									<span class="relative flex h-1.5 w-1.5">
+										{#if dayjs.unix(auction.lastSeen ?? 0) > dayjs().subtract(80, 'minutes')}
+											<span
+												class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"
+											></span>
+											<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"
+											></span>
+										{:else}
+											<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600"
+											></span>
+										{/if}
+									</span>
+									<span
+										class="font-mono text-xs font-medium tabular-nums text-zinc-900 dark:text-zinc-100"
+										>#{auction.id}</span
 									>
-										<Fa icon={faShoppingCart} />
-									</Button>
+									<span class="text-[10px] text-zinc-400 dark:text-zinc-500"
+										>· {auction.datacenter}</span
+									>
+								</div>
+								<div class="mt-0.5 text-[10px] text-zinc-400 dark:text-zinc-500">
+									{auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
 								</div>
 							</div>
-						</div>
+							<div class="text-right">
+								<div
+									class="font-mono text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+								>
+									{convertPrice(
+										auction.lastPrice * (1 + selectedOption.rate),
+										'EUR',
+										$currentCurrency
+									).toFixed(2)}
+									<span class="text-[10px] font-normal text-zinc-400 dark:text-zinc-500"
+										>{$currencySymbol}</span
+									>
+								</div>
+								<Fa
+									icon={faExternalLinkAlt}
+									class="ml-auto h-2.5 w-2.5 text-zinc-300 group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+								/>
+							</div>
+						</a>
 					{/each}
-				{:else}
-					<div class="py-4 text-center">
-						<p class="text-gray-700 dark:text-gray-400">No matching auctions found.</p>
-					</div>
+				</div>
+				{#if auctions.length > 5}
+					<p class="mt-2 text-[10px] text-zinc-400 dark:text-zinc-500">
+						Showing 5 most recent of {auctions.length} matching auctions.
+					</p>
 				{/if}
-			</div>
-			{#if auctions.length > 5}
-				<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-					Showing the 5 most recently seen auctions. More may be available.
+			{:else}
+				<div
+					class="rounded-lg border border-dashed border-zinc-200 px-3 py-4 text-center dark:border-zinc-700"
+				>
+					<p class="text-xs text-zinc-400 dark:text-zinc-500">No matching auctions found.</p>
+				</div>
+			{/if}
+		{/if}
+
+		<!-- Fine print -->
+		<div class="mt-5 border-t border-zinc-100 pt-3 text-[10px] leading-relaxed text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
+			{#if config.server_type === 'standard'}
+				<p>
+					Prices include VAT based on your selection. Hetzner's final price may vary based on
+					configuration options.
+				</p>
+			{:else}
+				<p>
+					Hetzner search results depend on availability and may differ. Prices include VAT based on
+					your selection; Hetzner's final price may vary. Provided as-is, no warranty.
 				</p>
 			{/if}
-
-			<hr class="my-4 border-gray-200 dark:border-gray-600" />
-			<div class="space-y-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
-				<p>
-					Clicking the <Fa icon={faShoppingCart} class="mx-1 inline" /> button opens the auction
-					on Hetzner's server auction page.
-				</p>
-				<p>
-					Please note: Hetzner search results depend on availability and may differ. Ensure server
-					specs meet your needs. Prices shown here include VAT based on your selection, but Hetzner's
-					final price may vary.
-				</p>
-				<p>
-					This service is provided "as is" without warranty. The author assumes no responsibility for
-					issues or discrepancies on the Hetzner platform.
-				</p>
-			</div>
-		{/if}
+		</div>
 	{:else}
-		<p class="text-gray-500 dark:text-gray-400">No server selected.</p>
+		<div class="flex h-full items-center justify-center">
+			<p class="text-sm text-zinc-400 dark:text-zinc-500">No server selected.</p>
+		</div>
 	{/if}
 </Drawer>
