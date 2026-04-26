@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install Poetry
         run: pip install poetry
@@ -26,7 +26,7 @@ jobs:
 
       - name: Download existing database from R2
         id: download
-        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
 
       - name: Backup current DB before upload
         if: success()
-        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           # Keep a rolling backup - overwrites previous backup each time
           command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu
@@ -49,7 +49,7 @@ jobs:
 
       - name: Deploy DB to R2
         if: success()
-        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
