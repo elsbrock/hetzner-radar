@@ -43,7 +43,7 @@
     "flowbite": "^4.0.1",
     "flowbite-svelte": "^0.48.6",
     "flowbite-svelte-icons": "3.0.1",
-    "globals": "16.5.0",
+    "globals": "17.5.0",
     "leaflet": "1.9.4",
     "lz-string": "1.5.0",
     "oslo": "1.2.1",
