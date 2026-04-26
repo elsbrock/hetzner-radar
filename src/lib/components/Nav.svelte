@@ -116,7 +116,7 @@
 	});
 </script>
 
-<Navbar class="relative h-[4.25rem] w-full">
+<Navbar class="relative z-30 h-[4.25rem] w-full">
 	<NavBrand href="/">
 		<div style="width: 32px; height: 32px">
 			<Radar />

@@ -26,6 +26,11 @@ interface CurrentAuctionRow {
   with_rps: number;
   price: number;
   seen: string;
+  cpu_cores: number | null;
+  cpu_threads: number | null;
+  cpu_generation: string | null;
+  cpu_score: number | null;
+  cpu_multicore_score: number | null;
 }
 
 // ServerConfiguration type for the frontend
@@ -52,6 +57,11 @@ export interface FeaturedServer {
   markup_percentage: number | null;
   last_seen: number | null;
   count: number | null;
+  cpu_cores: number | null;
+  cpu_threads: number | null;
+  cpu_generation: string | null;
+  cpu_score: number | null;
+  cpu_multicore_score: number | null;
 }
 
 function parseJsonArray<T>(value: string | null): T[] {
@@ -91,6 +101,11 @@ function mapAuctionToFeaturedServer(row: CurrentAuctionRow): FeaturedServer {
       ? Math.floor(new Date(row.seen).getTime() / 1000)
       : null,
     count: 1,
+    cpu_cores: row.cpu_cores,
+    cpu_threads: row.cpu_threads,
+    cpu_generation: row.cpu_generation,
+    cpu_score: row.cpu_score,
+    cpu_multicore_score: row.cpu_multicore_score,
   };
 }
 
@@ -192,7 +207,9 @@ export const load: PageServerLoad = async ({ platform }) => {
           `SELECT id, cpu, ram, ram_size, is_ecc, hdd_arr,
                   nvme_size, nvme_drives, sata_size, sata_drives,
                   hdd_size, hdd_drives, with_inic, with_hwr,
-                  with_gpu, with_rps, price, seen
+                  with_gpu, with_rps, price, seen,
+                  cpu_cores, cpu_threads, cpu_generation,
+                  cpu_score, cpu_multicore_score
            FROM current_auctions
            ORDER BY price ASC
            LIMIT 50`,
