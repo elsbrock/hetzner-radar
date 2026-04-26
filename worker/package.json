@@ -18,7 +18,7 @@
 		"@else42/cf-worker-otel": "^0.2.0"
 	},
 	"devDependencies": {
-		"typescript": "5.9.3",
+		"typescript": "6.0.3",
 		"wrangler": "4.54.0",
 		"vitest": "4.1.1",
 		"@cloudflare/workers-types": "^4.20250705.0",
