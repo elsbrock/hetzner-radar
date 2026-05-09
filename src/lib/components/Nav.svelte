@@ -168,7 +168,7 @@
 		</Button>
 		<NavHamburger
 			data-testid="nav-hamburger"
-			class="md:block! xl:hidden! rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+			class="!block xl:!hidden rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
 			onclick={() => (isNavOpen = !isNavOpen)}
 		/>
 	</div>
@@ -181,7 +181,7 @@
 		ulClass="flex flex-col p-4 mt-4 xl:flex-row xl:space-x-1 rtl:space-x-reverse xl:mt-0 xl:text-sm xl:font-medium"
 		{activeUrl}
 	>
-		<NavLi href="/" data-testid="nav-link-home" class="bg-transparent!">
+		<NavLi href="/" data-testid="nav-link-home" class="!bg-transparent">
 			<span
 				class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all {activeUrl === '/'
 					? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -191,7 +191,7 @@
 				Home
 			</span>
 		</NavLi>
-		<NavLi href="/configurations" data-testid="nav-link-configurations" class="bg-transparent!">
+		<NavLi href="/configurations" data-testid="nav-link-configurations" class="!bg-transparent">
 			<span
 				class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all {activeUrl === '/configurations'
 					? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -201,7 +201,7 @@
 				Configurations
 			</span>
 		</NavLi>
-		<NavLi href="/analyze" data-testid="nav-link-analyze" class="bg-transparent!">
+		<NavLi href="/analyze" data-testid="nav-link-analyze" class="!bg-transparent">
 			<span
 				class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all {activeUrl === '/analyze'
 					? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -211,7 +211,7 @@
 				Auctions
 			</span>
 		</NavLi>
-		<NavLi href="/cloud-status" data-testid="nav-link-cloud-status" class="bg-transparent!">
+		<NavLi href="/cloud-status" data-testid="nav-link-cloud-status" class="!bg-transparent">
 			<span
 				class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all {activeUrl === '/cloud-status'
 					? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -221,7 +221,7 @@
 				Cloud
 			</span>
 		</NavLi>
-		<NavLi href="/statistics" data-testid="nav-link-statistics" class="bg-transparent!">
+		<NavLi href="/statistics" data-testid="nav-link-statistics" class="!bg-transparent">
 			<span
 				class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all {activeUrl === '/statistics'
 					? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -231,7 +231,7 @@
 				Statistics
 			</span>
 		</NavLi>
-		<NavLi href="/about" data-testid="nav-link-about" class="bg-transparent!">
+		<NavLi href="/about" data-testid="nav-link-about" class="!bg-transparent">
 			<span
 				class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all {activeUrl === '/about'
 					? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
