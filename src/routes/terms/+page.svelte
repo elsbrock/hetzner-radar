@@ -1,14 +1,22 @@
 <script>
 	import { A } from 'flowbite-svelte';
+	import PageHero from '$lib/components/PageHero.svelte';
 </script>
 
-<main class="p-8">
-	<section class="mx-auto my-12 max-w-7xl text-center">
-		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">Terms of Service</h1>
-		<p class="text-sm text-gray-600 dark:text-gray-400">Last updated: June 7, 2025</p>
-	</section>
+<PageHero
+	title="Terms of Service"
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Terms of Service' }
+	]}
+>
+	{#snippet meta()}
+		<span>Last updated: June 7, 2025</span>
+	{/snippet}
+</PageHero>
 
-	<div class="mx-auto max-w-4xl pb-8 text-gray-700 dark:text-gray-300">
+<main class="mx-auto max-w-3xl px-6 py-12">
+	<div class="prose prose-gray max-w-none dark:prose-invert">
 		<section class="mb-8">
 			<h2 class="mb-4 text-2xl font-semibold dark:text-gray-100">1. Acceptance of Terms</h2>
 			<p>

@@ -4,8 +4,6 @@
 	type AnswerSegment = string | { text: string; href: string };
 	type FaqItem = { question: string; answer: AnswerSegment[] };
 
-	const linkClass = 'text-blue-600 hover:underline dark:text-blue-400';
-
 	const faqItems: FaqItem[] = [
 		{
 			question: 'Is Server Radar free?',
@@ -40,25 +38,33 @@
 	];
 </script>
 
-<section id="faq" class="mx-auto my-20 max-w-4xl">
-	<h2 class="mb-8 text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">FAQ</h2>
-	<div
-		class="rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
-	>
-		<Accordion class="divide-y divide-gray-200 dark:divide-gray-700">
-			{#each faqItems as item (item.question)}
-				<AccordionItem class="border-b border-gray-200 last:border-b-0 dark:border-gray-700">
-					<span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
-						{item.question}
-					</span>
-					<p class="leading-relaxed text-gray-600 dark:text-gray-400">
-						{#each item.answer as segment, i (i)}{#if typeof segment === 'string'}{segment}{:else}<a
-									href={segment.href}
-									class={linkClass}>{segment.text}</a
-								>{/if}{/each}
-					</p>
-				</AccordionItem>
-			{/each}
-		</Accordion>
+<section id="faq" class="border-b border-gray-200 bg-white py-20 md:py-28 dark:border-gray-800 dark:bg-gray-950">
+	<div class="mx-auto max-w-3xl px-6">
+		<h2 class="mb-12 text-center text-3xl font-bold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+			Frequently asked questions
+		</h2>
+		
+		<div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+			<Accordion class="divide-y divide-gray-200 dark:divide-gray-800">
+				{#each faqItems as item (item.question)}
+					<AccordionItem class="border-0">
+						<span slot="header" class="text-base font-medium text-gray-900 dark:text-white">
+							{item.question}
+						</span>
+						<p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+							{#each item.answer as segment, i (i)}
+								{#if typeof segment === 'string'}
+									{segment}
+								{:else}
+									<a href={segment.href} class="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+										{segment.text}
+									</a>
+								{/if}
+							{/each}
+						</p>
+					</AccordionItem>
+				{/each}
+			</Accordion>
+		</div>
 	</div>
 </section>

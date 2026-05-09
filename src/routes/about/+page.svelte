@@ -81,58 +81,54 @@
 	]}
 />
 
-<main class="mx-auto max-w-4xl px-6 py-10">
-	<div class="pb-8">
-		<!-- Introduction Section -->
-		<div class="mb-12">
-			<p class="mb-5 text-lg text-gray-600 dark:text-gray-400">
-				Server Radar tracks Hetzner's dedicated server auction and cloud availability. It provides
-				historical pricing data, advanced filtering, and configurable alerts to help you find
-				servers that match your requirements and budget.
-			</p>
-			<p class="text-lg text-gray-600 dark:text-gray-400">
-				The project is open source. Data queries run client-side using DuckDB for fast filtering,
-				while the backend handles alerting and user accounts.
-			</p>
-		</div>
-
-		<!-- Author Section -->
-		<section class="mb-12">
-			<h2 class="mb-6 text-3xl font-semibold text-gray-800 dark:text-gray-100">Author</h2>
-			<div
-				class="flex flex-col items-center rounded-lg bg-white p-6 shadow-md md:flex-row md:space-x-8 dark:bg-gray-800"
-			>
-				<img
-					src="/images/operator.webp"
-					alt="Simon"
-					class="mb-6 h-48 w-48 rounded-full drop-shadow-lg md:mb-0"
-				/>
-				<div>
-					<p class="mb-4 text-gray-600 dark:text-gray-400">
-						I'm Simon, a software engineer based in Germany. I built Server Radar to solve a
-						problem I had: tracking Hetzner auction prices over time and getting notified when
-						specific configurations became available.
-					</p>
-					<p class="text-gray-600 dark:text-gray-400">
-						The tool grew from a simple script into a full application. I've open-sourced it so
-						others can use it, audit the code, and contribute improvements.
-					</p>
-				</div>
-			</div>
-		</section>
-
-		<!-- Links Section -->
-		<section class="text-center">
-			<div class="flex justify-center space-x-4">
-				<Button href="https://github.com/elsbrock/hetzner-radar" class="shadow-xs">
-					<FontAwesomeIcon icon={faGithub} class="mr-2" />
-					GitHub
-				</Button>
-				<Button href="/contact" color="alternative" class="shadow-xs">
-					<FontAwesomeIcon icon={faEnvelope} class="mr-2" />
-					Contact
-				</Button>
-			</div>
-		</section>
+<main class="mx-auto max-w-3xl px-6 py-12">
+	<!-- Introduction -->
+	<div class="mb-12">
+		<p class="mb-4 text-base leading-relaxed text-gray-600 dark:text-gray-400">
+			Server Radar tracks Hetzner&apos;s dedicated server auction and cloud availability. It provides historical pricing data, advanced filtering, and configurable alerts to help you find servers that match your requirements and budget.
+		</p>
+		<p class="text-base leading-relaxed text-gray-600 dark:text-gray-400">
+			The project is open source. Data queries run client-side using DuckDB for fast filtering, while the backend handles alerting and user accounts.
+		</p>
 	</div>
+
+	<!-- Author Section -->
+	<section class="mb-12">
+		<h2 class="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Author</h2>
+		<div class="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-start dark:border-gray-800 dark:bg-gray-900">
+			<img
+				src="/images/operator.webp"
+				alt="Simon"
+				class="h-24 w-24 shrink-0 rounded-full object-cover"
+			/>
+			<div>
+				<p class="mb-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+					I&apos;m Simon, a software engineer based in Germany. I built Server Radar to solve a problem I had: tracking Hetzner auction prices over time and getting notified when specific configurations became available.
+				</p>
+				<p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+					The tool grew from a simple script into a full application. I&apos;ve open-sourced it so others can use it, audit the code, and contribute improvements.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- Links Section -->
+	<section class="text-center">
+		<div class="flex flex-wrap justify-center gap-3">
+			<a
+				href="https://github.com/elsbrock/hetzner-radar"
+				class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+			>
+				<FontAwesomeIcon icon={faGithub} class="h-4 w-4" />
+				GitHub
+			</a>
+			<a
+				href="/contact"
+				class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+			>
+				<FontAwesomeIcon icon={faEnvelope} class="h-4 w-4" />
+				Contact
+			</a>
+		</div>
+	</section>
 </main>

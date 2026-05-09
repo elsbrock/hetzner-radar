@@ -276,17 +276,23 @@
   <section class="mx-auto mb-10 max-w-7xl">
     {#each CONFIGURATION_CATEGORIES as category (category.id)}
       <div class="mb-16" id={category.anchor}>
-        <h2 class="mb-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-          <FontAwesomeIcon
-            icon={iconMap[category.iconKey]}
-            class="mr-3 text-orange-500"
-          />
-          {category.title}
-        </h2>
-        <p class="mb-8 text-gray-600 dark:text-gray-400">
-          {category.tagline}
-        </p>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div class="mb-6 flex items-center gap-4">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
+            <FontAwesomeIcon
+              icon={iconMap[category.iconKey]}
+              class="h-5 w-5 text-primary-600 dark:text-primary-400"
+            />
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {category.title}
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {category.tagline}
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {#if loading}
             {#each Array(4) as _, i (i)}
               <ServerCard
@@ -332,10 +338,10 @@
 
   <!-- Internal links -->
   <section class="mx-auto my-20 max-w-7xl">
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <a
         href="/servers/cpu"
-        class="group flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600 dark:hover:bg-orange-900/20"
+        class="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
       >
         <div class="mb-3 flex items-center gap-3">
           <FontAwesomeIcon
@@ -361,7 +367,7 @@
 
       <a
         href="/statistics"
-        class="group flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600 dark:hover:bg-orange-900/20"
+        class="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
       >
         <div class="mb-3 flex items-center gap-3">
           <FontAwesomeIcon
@@ -387,7 +393,7 @@
 
       <a
         href="/cloud-status"
-        class="group flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600 dark:hover:bg-orange-900/20"
+        class="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
       >
         <div class="mb-3 flex items-center gap-3">
           <FontAwesomeIcon icon={faServer} class="text-orange-500" size="lg" />
@@ -410,23 +416,19 @@
   </section>
 
   <!-- Call to Action -->
-  <section class="mx-auto my-12 max-w-7xl text-center">
-    <h2 class="mb-6 text-4xl font-extrabold text-gray-800 dark:text-gray-100">
+  <section class="mx-auto my-16 max-w-2xl text-center">
+    <h2 class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl dark:text-white">
       Browse all live auctions
     </h2>
-    <p class="mb-10 text-lg text-gray-600 dark:text-gray-400">
-      Apply your own filters across the full set of current Hetzner auctions and
-      standard servers.
+    <p class="mb-8 text-gray-600 dark:text-gray-400">
+      Apply your own filters across the full set of current Hetzner auctions and standard servers.
     </p>
-    <div class="flex justify-center space-x-4">
-      <Button
-        color="primary"
-        href="/analyze"
-        class="px-8 py-3 text-lg shadow-xs"
-      >
-        Open the analyzer
-        <FontAwesomeIcon icon={faArrowRight} class="ml-2 h-4 w-4" />
-      </Button>
-    </div>
+    <Button
+      href="/analyze"
+      class="rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+    >
+      Open the analyzer
+      <FontAwesomeIcon icon={faArrowRight} class="ml-2 h-4 w-4" />
+    </Button>
   </section>
 </main>

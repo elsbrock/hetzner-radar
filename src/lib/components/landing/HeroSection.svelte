@@ -9,113 +9,79 @@
 	let { featuredServers = [] }: { featuredServers?: ServerConfiguration[] } = $props();
 </script>
 
-<section
-	class="relative -mx-8 -mt-8 overflow-hidden border-b border-orange-200 bg-linear-to-br from-orange-100 via-amber-100 to-orange-200 px-8 py-16 dark:border-orange-900/50 dark:from-orange-950/40 dark:via-gray-900 dark:to-orange-950/30"
-	style="width: calc(100% + 4rem);"
->
-	<!-- Animated radar dots background -->
-	<div class="pointer-events-none absolute inset-0">
-		<div class="radar-dot" style="top: 15%; left: 10%;"></div>
-		<div class="radar-dot" style="top: 25%; left: 85%;"></div>
-		<div class="radar-dot" style="top: 70%; left: 20%;"></div>
-		<div class="radar-dot" style="top: 60%; left: 75%;"></div>
-		<div class="radar-dot" style="top: 40%; left: 50%;"></div>
-		<div class="radar-dot" style="top: 80%; left: 60%;"></div>
-		<div class="radar-dot" style="top: 10%; left: 40%;"></div>
-		<div class="radar-dot" style="top: 50%; left: 5%;"></div>
-	</div>
+<section class="relative overflow-hidden border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+	<!-- Subtle background pattern -->
+	<div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style="background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 32px 32px;"></div>
+	
+	<!-- Gradient accent -->
+	<div class="absolute -top-48 right-0 h-96 w-96 rounded-full bg-primary-500/10 blur-3xl"></div>
+	<div class="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-primary-500/5 blur-3xl"></div>
 
-	<div class="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-8 lg:grid-cols-5">
-		<div class="justify-center text-left lg:col-span-3">
-		<h1
-			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
-		>
-			Track Hetzner dedicated server prices over time
-		</h1>
-		<p class="mb-6 text-lg font-medium text-orange-500">
-			Open-source price tracker for the Hetzner server auction
-		</p>
-		<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
-			Server Radar polls the Hetzner auction every few minutes and keeps three months of price
-			history. Filter by CPU, RAM, storage, and location, compare against standard dedicated and
-			cloud pricing, and set alerts when a configuration drops below your target price.
-		</p>
-		<div class="flex flex-col gap-4 sm:flex-row">
-			<Button
-				data-testid="cta-get-started"
-				color="primary"
-				href="/analyze"
-				size="lg"
-				class="shadow-xs"
-			>
-				Browse Servers
-				<ArrowRightOutline class="ms-2 h-5 w-5" />
-			</Button>
-			<Button
-				data-testid="cta-view-github"
-				color="alternative"
-				href="https://github.com/elsbrock/hetzner-radar"
-				size="lg"
-				class="shadow-xs"
-			>
-				<FontAwesomeIcon icon={faGithub} class="mr-2 h-6! w-6!" />
-				View Source
-			</Button>
-		</div>
-	</div>
-		<div class="my-8 mt-4 mr-8 lg:col-span-2 lg:mt-12">
-			<SampleCardStack configs={featuredServers} />
+	<div class="relative mx-auto max-w-6xl px-6 py-16 md:py-24">
+		<div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+			<!-- Content -->
+			<div>
+				<div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 dark:border-primary-800 dark:bg-primary-950/50 dark:text-primary-400">
+					<span class="flex h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+					Open-source price tracker
+				</div>
+				
+				<h1 class="mb-6 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-[3.25rem] lg:leading-[1.15] dark:text-white">
+					Track Hetzner server prices over time
+				</h1>
+				
+				<p class="mb-8 max-w-lg text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+					Server Radar polls the Hetzner auction every few minutes and keeps three months of price history. Filter, compare, and set alerts when configurations drop below your target price.
+				</p>
+				
+				<div class="flex flex-col gap-3 sm:flex-row sm:gap-4">
+					<Button
+						data-testid="cta-get-started"
+						href="/analyze"
+						size="lg"
+						class="rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+					>
+						Browse Servers
+						<ArrowRightOutline class="ml-2 h-4 w-4" />
+					</Button>
+					<Button
+						data-testid="cta-view-github"
+						href="https://github.com/elsbrock/hetzner-radar"
+						size="lg"
+						class="rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+					>
+						<FontAwesomeIcon icon={faGithub} class="mr-2 h-4 w-4" />
+						View on GitHub
+					</Button>
+				</div>
+
+				<!-- Trust indicators -->
+				<div class="mt-10 flex flex-wrap items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+					<div class="flex items-center gap-2">
+						<svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+						</svg>
+						<span>Free forever</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+						</svg>
+						<span>No account required</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+						</svg>
+						<span>Open source</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Card Stack -->
+			<div class="relative lg:pl-8">
+				<SampleCardStack configs={featuredServers} />
+			</div>
 		</div>
 	</div>
 </section>
-
-<style>
-	.radar-dot {
-		position: absolute;
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background-color: rgb(249 115 22 / 0.5);
-		animation: pulse-float 4s ease-in-out infinite;
-	}
-
-	:global(.dark) .radar-dot {
-		background-color: rgb(251 146 60 / 0.6);
-	}
-
-	.radar-dot:nth-child(2) {
-		animation-delay: 0.5s;
-	}
-	.radar-dot:nth-child(3) {
-		animation-delay: 1s;
-	}
-	.radar-dot:nth-child(4) {
-		animation-delay: 1.5s;
-	}
-	.radar-dot:nth-child(5) {
-		animation-delay: 2s;
-	}
-	.radar-dot:nth-child(6) {
-		animation-delay: 2.5s;
-	}
-	.radar-dot:nth-child(7) {
-		animation-delay: 3s;
-	}
-	.radar-dot:nth-child(8) {
-		animation-delay: 3.5s;
-	}
-
-	@keyframes pulse-float {
-		0%,
-		100% {
-			opacity: 0.3;
-			transform: scale(1) translate(0, 0);
-			box-shadow: 0 0 4px 2px rgb(249 115 22 / 0.3);
-		}
-		50% {
-			opacity: 0.8;
-			transform: scale(2) translate(3px, -3px);
-			box-shadow: 0 0 12px 4px rgb(249 115 22 / 0.4);
-		}
-	}
-</style>

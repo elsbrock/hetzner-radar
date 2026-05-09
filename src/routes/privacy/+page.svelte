@@ -1,24 +1,29 @@
 <script>
 	import { A } from 'flowbite-svelte';
+	import PageHero from '$lib/components/PageHero.svelte';
 </script>
 
-<main class="p-8">
-	<section class="mx-auto my-12 max-w-7xl text-center">
-		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">Privacy Policy</h1>
-	</section>
+<PageHero
+	title="Privacy Policy"
+	breadcrumbs={[
+		{ label: 'Home', href: '/' },
+		{ label: 'Privacy Policy' }
+	]}
+/>
 
-	<div class="mx-auto max-w-4xl pb-8 text-gray-700 dark:text-gray-300">
-		<section class="mb-8">
-			<p>
-				This Privacy Policy outlines how <strong>Server Radar</strong> collects, uses, and protects
+<main class="mx-auto max-w-3xl px-6 py-12">
+	<div class="prose prose-gray max-w-none dark:prose-invert">
+		<section class="mb-10">
+			<p class="text-gray-600 dark:text-gray-400">
+				This Privacy Policy outlines how <strong class="text-gray-900 dark:text-white">Server Radar</strong> collects, uses, and protects
 				your data. By using Server Radar, you agree to the practices described in this policy.
 			</p>
 		</section>
 
-		<section class="mb-8">
-			<h2 class="mb-4 text-2xl font-semibold dark:text-gray-100">1. Information We Collect</h2>
+		<section class="mb-10">
+			<h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">1. Information We Collect</h2>
 
-			<h3 class="mb-3 text-xl font-semibold dark:text-gray-100">1.1. Your Data on Your Device</h3>
+			<h3 class="mb-3 text-lg font-medium text-gray-900 dark:text-white">1.1. Your Data on Your Device</h3>
 			<p class="mb-4">
 				When you use Server Radar, we store certain settings and preferences directly on your device
 				using localStorage. This enhances your experience by remembering your preferences and

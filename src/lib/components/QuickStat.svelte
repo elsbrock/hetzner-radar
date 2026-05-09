@@ -24,59 +24,37 @@
 		'data-testid': testId
 	} = $props();
 
-	// Format the value if it's a number
 	let formattedValue = $derived(
 		typeof value === 'number' ? (Number.isNaN(value) ? 'N/A' : value.toString()) : value
 	);
 </script>
 
 <div
-	class="rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800 {size ===
-	'sm'
-		? 'p-2'
-		: size === 'lg'
-			? 'p-4'
-			: 'p-3'} flex flex-col"
+	class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 {size === 'sm' ? 'p-3' : size === 'lg' ? 'p-5' : 'p-4'} flex flex-col"
 	data-testid={testId}
 >
-	<div class="flex items-center {size === 'sm' ? 'mb-1' : 'mb-2'}">
+	<div class="flex items-center {size === 'sm' ? 'mb-2' : 'mb-3'}">
 		{#if icon}
-			<FontAwesomeIcon
-				{icon}
-				class="{size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} icon mr-2 text-orange-500"
-			/>
+			<div class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
+				<FontAwesomeIcon
+					{icon}
+					class="{size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-primary-600 dark:text-primary-400"
+				/>
+			</div>
 		{/if}
-		<h3
-			class="{size === 'sm' ? 'text-xs' : 'text-sm'} font-semibold text-gray-700 dark:text-gray-300"
-		>
+		<h3 class="{size === 'sm' ? 'text-xs' : 'text-sm'} font-medium text-gray-600 dark:text-gray-400">
 			{title}
 		</h3>
 	</div>
 	{#if value !== null && !loading}
-		<p
-			class="{size === 'sm'
-				? 'text-lg'
-				: size === 'lg'
-					? 'text-3xl'
-					: 'text-2xl'} font-bold {valueClass} value"
-		>
+		<p class="{size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-2xl' : 'text-xl'} font-semibold tabular-nums {valueClass}">
 			{formattedValue}
 		</p>
-		<p
-			class="text-xs text-gray-500 dark:text-gray-400 {size === 'sm' ? 'mt-0.5' : 'mt-1'} subtitle"
-		>
+		<p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
 			{subtitle}
 		</p>
 	{:else}
-		<div
-			class="{size === 'sm'
-				? 'h-5 w-14'
-				: 'h-6 w-16'} mt-1 mb-1 animate-pulse rounded bg-gray-200 dark:bg-gray-700"
-		></div>
-		<div
-			class="{size === 'sm'
-				? 'h-2 w-20'
-				: 'h-3 w-24'} animate-pulse rounded bg-gray-200 dark:bg-gray-700"
-		></div>
+		<div class="{size === 'sm' ? 'h-5 w-14' : 'h-6 w-16'} mb-1 mt-1 animate-pulse rounded-md bg-gray-100 dark:bg-gray-800"></div>
+		<div class="{size === 'sm' ? 'h-2 w-20' : 'h-3 w-24'} animate-pulse rounded-md bg-gray-100 dark:bg-gray-800"></div>
 	{/if}
 </div>

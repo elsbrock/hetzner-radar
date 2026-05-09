@@ -114,9 +114,7 @@
 
 <AnimatedBackground />
 
-<div
-	class="flex min-h-screen flex-col"
->
+<div class="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
 	<div class="grow">
 		<Banner version={6} id="standard-servers">
 			<strong>New:</strong> <a href={resolve('/cloud-status?timeline=true')}>Availability Timeline</a> — see when Cloud servers come and go across locations 📊
