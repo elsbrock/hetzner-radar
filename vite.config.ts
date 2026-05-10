@@ -15,8 +15,8 @@ const formattedDate = date.toLocaleDateString("de-DE", {
 
 export default defineConfig(({ mode }) => ({
   plugins: [
-    tailwindcss(),
     sveltekit(),
+    tailwindcss(),
     process.env.NODE_ENV === "production"
       ? removeConsole({
           includes: ["log", "debug", "table", "info"],
