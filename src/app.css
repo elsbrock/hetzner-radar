@@ -104,7 +104,7 @@ a {
 }
 
 .section-accent {
-  @apply bg-gradient-to-b from-primary-50/50 via-white to-white dark:from-primary-950/20 dark:via-gray-950 dark:to-gray-950;
+  @apply bg-gradient-to-b from-primary-50/50 via-white to-white dark:from-primary-900/20 dark:via-gray-950 dark:to-gray-950;
 }
 
 /* Refined focus states */

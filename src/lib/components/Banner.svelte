@@ -31,7 +31,7 @@
 <Banner
 	bind:bannerStatus
 	{id}
-	class="z-10 flex items-center justify-between border-b border-primary-200/50 bg-gradient-to-r from-primary-50 via-primary-50/80 to-primary-50 px-4 py-2.5 dark:border-primary-900/30 dark:from-primary-950/40 dark:via-primary-950/30 dark:to-primary-950/40"
+	class="z-10 flex items-center justify-between border-b border-primary-200/50 bg-gradient-to-r from-primary-50 via-primary-50/80 to-primary-50 px-4 py-2.5 dark:border-primary-900/30 dark:from-primary-900/40 dark:via-primary-900/30 dark:to-primary-900/40"
 	position="relative"
 >
 	<p class="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
