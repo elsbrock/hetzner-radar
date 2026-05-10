@@ -40,10 +40,15 @@
 	];
 </script>
 
-<section id="faq" class="mx-auto my-20 max-w-4xl">
-	<h2 class="mb-8 text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">FAQ</h2>
+<section id="faq" class="mx-auto my-24 max-w-4xl">
+	<div class="mb-4 text-center">
+		<span class="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+			Common Questions
+		</span>
+	</div>
+	<h2 class="mb-10 text-center text-2xl font-bold text-gray-900 dark:text-gray-50">Frequently Asked Questions</h2>
 	<div
-		class="rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
+		class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
 	>
 		<Accordion class="divide-y divide-gray-200 dark:divide-gray-700">
 			{#each faqItems as item (item.question)}

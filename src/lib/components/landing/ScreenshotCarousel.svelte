@@ -109,11 +109,17 @@
 </script>
 
 {#if screenshots.length > 0}
-	<section class="mx-auto my-16 max-w-5xl">
+	<section class="mx-auto my-20 max-w-5xl">
+		<div class="mb-4 text-center">
+			<span class="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+				Interface Preview
+			</span>
+		</div>
+		<h2 class="mb-8 text-center text-2xl font-bold text-gray-900 dark:text-gray-50">See it in action</h2>
 		<div class="relative">
 			<!-- Screenshot display -->
 			<div
-				class="overflow-hidden rounded-lg border border-gray-200 bg-gray-100 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+				class="overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-lg dark:border-gray-700 dark:bg-gray-800"
 			>
 				{#key currentIndex}
 					<img

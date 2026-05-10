@@ -124,47 +124,50 @@
 
 	<OpenSourceBanner />
 
-	<!-- Links -->
-	<section class="mx-auto my-16 max-w-4xl">
-		<div class="flex flex-wrap items-center justify-center gap-8 text-gray-600 dark:text-gray-400">
+	<!-- Community Links -->
+	<section class="mx-auto my-20 max-w-4xl">
+		<p class="mb-6 text-center text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Join the community</p>
+		<div class="flex flex-wrap items-center justify-center gap-4">
 			<a
 				href="https://github.com/elsbrock/hetzner-radar"
-				class="flex items-center gap-2 transition-colors hover:text-gray-900 dark:hover:text-gray-200"
+				class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-3 text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600"
 			>
 				<FontAwesomeIcon icon={faGithub} class="h-5 w-5" />
-				<span>GitHub</span>
+				<span class="font-medium">GitHub</span>
 			</a>
 			<a
 				href="https://discord.gg/dcuGfURbdc"
-				class="flex items-center gap-2 transition-colors hover:text-gray-900 dark:hover:text-gray-200"
+				class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-3 text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600"
 			>
 				<FontAwesomeIcon icon={faDiscord} class="h-5 w-5" />
-				<span>Discord</span>
+				<span class="font-medium">Discord</span>
 			</a>
 			<a
 				href="/contact"
-				class="flex items-center gap-2 transition-colors hover:text-gray-900 dark:hover:text-gray-200"
+				class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-3 text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600"
 			>
 				<FontAwesomeIcon icon={faEnvelope} class="h-5 w-5" />
-				<span>Contact</span>
+				<span class="font-medium">Contact</span>
 			</a>
 		</div>
 	</section>
 
 	<!-- Disclaimer -->
-	<section class="mx-auto mb-4 max-w-4xl text-center">
-		<p class="text-xs text-gray-500 dark:text-gray-400">
-			Server Radar is an independent project and is not affiliated with, endorsed, or sponsored by
-			Hetzner Online GmbH. "Hetzner" is a trademark of Hetzner Online GmbH. Data accuracy is not
-			guaranteed. See <a
-				href={resolve('/terms')}
-				class="underline hover:text-orange-500 dark:hover:text-orange-400">Terms</a
-			>
-			and
-			<a
-				href={resolve('/privacy')}
-				class="underline hover:text-orange-500 dark:hover:text-orange-400">Privacy Policy</a
-			>.
-		</p>
+	<section class="mx-auto mb-8 max-w-4xl">
+		<div class="rounded-lg border border-gray-100 bg-gray-50 px-6 py-4 text-center dark:border-gray-800 dark:bg-gray-900/50">
+			<p class="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+				Server Radar is an independent project and is not affiliated with, endorsed, or sponsored by
+				Hetzner Online GmbH. "Hetzner" is a trademark of Hetzner Online GmbH. Data accuracy is not
+				guaranteed. See <a
+					href={resolve('/terms')}
+					class="font-medium underline decoration-gray-300 underline-offset-2 hover:text-orange-500 hover:decoration-orange-500 dark:decoration-gray-600 dark:hover:text-orange-400 dark:hover:decoration-orange-400">Terms</a
+				>
+				and
+				<a
+					href={resolve('/privacy')}
+					class="font-medium underline decoration-gray-300 underline-offset-2 hover:text-orange-500 hover:decoration-orange-500 dark:decoration-gray-600 dark:hover:text-orange-400 dark:hover:decoration-orange-400">Privacy Policy</a
+				>.
+			</p>
+		</div>
 	</section>
 </main>

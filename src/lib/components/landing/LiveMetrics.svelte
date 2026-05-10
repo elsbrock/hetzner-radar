@@ -89,7 +89,8 @@
 	});
 </script>
 
-<section class="mx-auto mt-8 mb-20 max-w-6xl px-4">
+<section class="mx-auto mt-8 mb-24 max-w-6xl px-4">
+	<p class="mb-6 text-center text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Platform activity</p>
 	<dl class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
 		<!-- Auctions Tracked -->
 		<div

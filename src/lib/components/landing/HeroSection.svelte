@@ -10,7 +10,7 @@
 </script>
 
 <section
-	class="relative -mx-8 -mt-8 overflow-hidden border-b border-orange-200 bg-linear-to-br from-orange-100 via-amber-100 to-orange-200 px-8 py-16 dark:border-orange-900/50 dark:from-orange-950/40 dark:via-gray-900 dark:to-orange-950/30"
+	class="relative -mx-8 -mt-8 overflow-hidden border-b border-orange-200 bg-linear-to-br from-orange-100 via-amber-100 to-orange-200 px-8 py-20 dark:border-orange-900/50 dark:from-orange-950/40 dark:via-gray-900 dark:to-orange-950/30"
 	style="width: calc(100% + 4rem);"
 >
 	<!-- Animated radar dots background -->
@@ -25,30 +25,29 @@
 		<div class="radar-dot" style="top: 50%; left: 5%;"></div>
 	</div>
 
-	<div class="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-8 lg:grid-cols-5">
-		<div class="justify-center text-left lg:col-span-3">
+	<div class="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-8 lg:grid-cols-5">
+		<div class="text-left lg:col-span-3">
+		<div class="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-300 bg-white/60 px-3 py-1 text-sm font-medium text-orange-700 dark:border-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
+			<span class="inline-block h-2 w-2 animate-pulse rounded-full bg-orange-500"></span>
+			Tracking live auction data
+		</div>
 		<h1
-			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
+			class="mb-4 text-balance text-4xl font-extrabold leading-tight tracking-tight text-gray-900 md:text-5xl dark:text-gray-50"
 		>
-			Track Hetzner dedicated server prices over time
+			Never overpay for a Hetzner dedicated server again
 		</h1>
-		<p class="mb-6 text-lg font-medium text-orange-500">
-			Open-source price tracker for the Hetzner server auction
+		<p class="mb-8 max-w-xl text-pretty text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+			Server Radar monitors the Hetzner auction every few minutes and stores three months of pricing history. Compare configurations, spot trends, and get instant alerts when prices drop below your target.
 		</p>
-		<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
-			Server Radar polls the Hetzner auction every few minutes and keeps three months of price
-			history. Filter by CPU, RAM, storage, and location, compare against standard dedicated and
-			cloud pricing, and set alerts when a configuration drops below your target price.
-		</p>
-		<div class="flex flex-col gap-4 sm:flex-row">
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-center">
 			<Button
 				data-testid="cta-get-started"
 				color="primary"
 				href="/analyze"
 				size="lg"
-				class="shadow-xs"
+				class="shadow-md"
 			>
-				Browse Servers
+				Start Exploring
 				<ArrowRightOutline class="ms-2 h-5 w-5" />
 			</Button>
 			<Button
@@ -59,11 +58,14 @@
 				class="shadow-xs"
 			>
 				<FontAwesomeIcon icon={faGithub} class="mr-2 h-6! w-6!" />
-				View Source
+				View on GitHub
 			</Button>
 		</div>
+		<p class="mt-6 text-sm text-gray-500 dark:text-gray-500">
+			Free and open source. No account required to browse.
+		</p>
 	</div>
-		<div class="my-8 mt-4 mr-8 lg:col-span-2 lg:mt-12">
+		<div class="my-4 lg:col-span-2 lg:mt-0">
 			<SampleCardStack configs={featuredServers} />
 		</div>
 	</div>
