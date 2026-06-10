@@ -14,7 +14,6 @@
   import PageHero from "$lib/components/PageHero.svelte";
   import PriceControls from "$lib/components/PriceControls.svelte";
   import ServerCard from "$lib/components/ServerCard.svelte";
-  import Spinner from "flowbite-svelte/Spinner.svelte";
   import { defaultFilter, encodeFilter } from "$lib/filter";
 
   import { settingsStore } from "$lib/stores/settings";
