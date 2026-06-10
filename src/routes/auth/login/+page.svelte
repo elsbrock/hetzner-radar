@@ -16,22 +16,22 @@
 	} from 'flowbite-svelte';
 	import { tick } from 'svelte';
 	import type { ActionData } from './$types';
-	let email: string = '';
+	let email: string = $state('');
 
-	export let form: ActionData | undefined;
-	let authForm: HTMLFormElement;
+	let { form }: { form: ActionData | undefined } = $props();
+	let authForm: HTMLFormElement | undefined = $state();
 
-	let identifying = false;
-	let code: string = '';
+	let identifying = $state(false);
+	let code: string = $state('');
 
 	const IDENTIFY = 1,
 		AUTHENTICATE = 2;
 
 	const stepValues = ['Identify', 'Authenticate'];
 
-	let currentStep = IDENTIFY;
+	let currentStep = $state(IDENTIFY);
 
-	let codeInputs: HTMLInputElement[] = [];
+	let codeInputs: HTMLInputElement[] = $state([]);
 
 	// Handles input events on the code fields
 	async function handleCodeInput(index: number, event: Event) {
@@ -121,7 +121,7 @@
 				// Auto-submit if we have a complete code
 				if (code.length === codeInputs.length) {
 					await tick();
-					authForm.requestSubmit();
+					authForm?.requestSubmit();
 				}
 			}
 		} catch (err) {
@@ -144,9 +144,11 @@
 		codeInputs[index] = node;
 	}
 
-	$: if (code.length === 6) {
-		tick().then(() => authForm.requestSubmit());
-	}
+	$effect(() => {
+		if (code.length === 6) {
+			tick().then(() => authForm?.requestSubmit());
+		}
+	});
 </script>
 
 <div class="flex items-center justify-center px-3 py-10">
@@ -239,7 +241,7 @@
 				bind:this={authForm}
 				method="POST"
 				class="space-y-6"
-				on:submit={handleCodeSubmit}
+				onsubmit={handleCodeSubmit}
 				action="?/authenticate"
 				use:enhance={({ formData }) => {
 					// Correctly access formData
@@ -300,9 +302,9 @@
 							inputmode="numeric"
 							autocomplete="one-time-code"
 							maxlength="1"
-							on:input={(e) => handleCodeInput(index, e)}
-							on:keydown={(e) => handleCodeKeyDown(index, e)}
-							on:paste={handleCodePaste}
+							oninput={(e) => handleCodeInput(index, e)}
+							onkeydown={(e) => handleCodeKeyDown(index, e)}
+							onpaste={handleCodePaste}
 							required
 						/>
 					{/each}

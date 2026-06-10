@@ -7,14 +7,15 @@
 	import { onDestroy } from 'svelte';
 	import { db } from '../../stores/db';
 
-	export let lastUpdate: number;
-	export let threshold = 60 * 65; // in seconds
+	let { lastUpdate, threshold = 60 * 65 }: { lastUpdate: number; threshold?: number } = $props(); // threshold in seconds
 
-	let reloading = false;
-	let showElement = false;
+	let reloading = $state(false);
+	let showElement = $state(false);
 	let timer: ReturnType<typeof setTimeout> | null = null;
 
-	$: if (lastUpdate) {
+	$effect(() => {
+		if (!lastUpdate) return;
+
 		const now = dayjs();
 		const lastUpdateDate = dayjs(lastUpdate * 1000);
 		const elapsedSeconds = now.diff(lastUpdateDate, 'second');
@@ -27,17 +28,15 @@
 				clearTimeout(timer);
 			}
 			if (remainingTime > 0) {
-				/* eslint-disable svelte/infinite-reactive-loop -- Timer and showElement updates are guarded by conditional checks */
 				timer = setTimeout(() => {
 					showElement = true;
 					timer = null;
 				}, remainingTime * 1000);
-				/* eslint-enable svelte/infinite-reactive-loop */
 			} else {
 				showElement = true;
 			}
 		}
-	}
+	});
 
 	onDestroy(() => {
 		if (timer !== null) {

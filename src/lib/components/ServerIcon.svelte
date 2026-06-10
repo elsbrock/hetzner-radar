@@ -1,8 +1,10 @@
 <script lang="ts">
 	// Props for customization
-	export let width: string = '100%';
-	export let height: string = 'auto';
-	export let className: string = '';
+	let {
+		width = '100%',
+		height = 'auto',
+		className = ''
+	}: { width?: string; height?: string; className?: string } = $props();
 
 	// Generate random blink durations for LEDs (much faster)
 	const getRandomDuration = () => (Math.random() * 0.5 + 0.2).toFixed(1);

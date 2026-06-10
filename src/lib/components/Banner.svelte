@@ -2,13 +2,16 @@
 	import { Banner } from 'flowbite-svelte';
 	import { BullhornSolid } from 'flowbite-svelte-icons';
 	import { settingsStore } from '$lib/stores/settings';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { get } from 'svelte/store';
 
-	export let id: string = 'default';
-	export let version: string | number = 1; // Add version prop
-	let bannerStatus: boolean = false;
-	let initialized: boolean = false;
+	let {
+		id = 'default',
+		version = 1,
+		children
+	}: { id?: string; version?: string | number; children?: Snippet } = $props();
+	let bannerStatus: boolean = $state(false);
+	let initialized: boolean = $state(false);
 
 	onMount(() => {
 		const settings = get(settingsStore);
@@ -24,10 +27,12 @@
 		initialized = true;
 	});
 
-	$: if (initialized && !bannerStatus) {
-		// Store the version that was dismissed
-		settingsStore.updateSetting(`sr-banner-closed-${id}`, version);
-	}
+	$effect(() => {
+		if (initialized && !bannerStatus) {
+			// Store the version that was dismissed
+			settingsStore.updateSetting(`sr-banner-closed-${id}`, version);
+		}
+	});
 </script>
 
 <Banner
@@ -42,7 +47,7 @@
 			<span class="sr-only">Notification Icon</span>
 		</span>
 		<span>
-			<slot />
+			{@render children?.()}
 		</span>
 	</p>
 </Banner>
