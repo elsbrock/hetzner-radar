@@ -1,5 +1,5 @@
 import { initDB } from "$lib/api/frontend/dbapi";
-import { createDB } from "$lib/duckdb";
+import { createDB, tearDownDB as terminateDB } from "$lib/duckdb";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import { writable, get } from "svelte/store";
 
@@ -33,7 +33,7 @@ export async function tearDownDB() {
   const idb = get(db);
 
   if (idb) {
-    await tearDownDB();
+    await terminateDB();
   }
 
   db.set(null);
