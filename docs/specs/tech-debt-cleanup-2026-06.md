@@ -43,11 +43,14 @@ binaries in repo root (not ours to delete).
 ## Implementation Steps
 
 - [x] Survey codebase (checks, lint, tests, exploration)
-- [ ] Fix `tearDownDB` recursion bug
-- [ ] Remove unused `Spinner` import (lint error)
-- [ ] Delete unused components and unused export
-- [ ] Remove debug `console.log` statements
-- [ ] Extract shared `jsonLdSafe` + `formatStorage` helpers
-- [ ] Migrate remaining `export let` props to `$props()`
-- [ ] Final validation: `npm run check`, `npm run lint`, `npm run test`,
+- [x] Fix `tearDownDB` recursion bug
+- [x] Remove unused `Spinner` import (lint error)
+- [x] Delete unused components and unused export
+- [x] Remove debug `console.log` statements (kept the `if (dev)` mail dump in
+      `mail.ts` and the default progress handler in `dbapi.ts` — intentional)
+- [x] Extract shared `jsonLdSafe` + `formatStorageSize` helpers (`$lib/util`)
+- [x] Migrate remaining `export let` props to `$props()` (HetznerModal was
+      deleted as dead code; the other 5 files migrated, including their `$:`
+      blocks and deprecated event directives)
+- [x] Final validation: `npm run check`, `npm run lint`, `npm run test`,
       `npm run build`
