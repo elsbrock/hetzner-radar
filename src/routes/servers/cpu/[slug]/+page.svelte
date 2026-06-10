@@ -4,6 +4,7 @@
 	import { defaultFilter, encodeFilter } from '$lib/filter';
 	import { settingsStore, currencySymbol, currentCurrency } from '$lib/stores/settings';
 	import { convertPrice } from '$lib/currency';
+	import { formatStorageSize, jsonLdSafe } from '$lib/util';
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -57,13 +58,6 @@
 		return converted.toFixed(2);
 	}
 
-	function formatStorage(gb: number): string {
-		if (gb >= 1000) {
-			const tb = gb / 1000;
-			return `${tb % 1 === 0 ? tb.toFixed(0) : tb.toFixed(1)} TB`;
-		}
-		return `${gb} GB`;
-	}
 
 	function describeStorage(v: {
 		nvmeSize: number | null;
@@ -71,9 +65,9 @@
 		hddSize: number | null;
 	}): string {
 		const parts: string[] = [];
-		if (v.nvmeSize) parts.push(`${formatStorage(v.nvmeSize)} NVMe`);
-		if (v.sataSize) parts.push(`${formatStorage(v.sataSize)} SATA`);
-		if (v.hddSize) parts.push(`${formatStorage(v.hddSize)} HDD`);
+		if (v.nvmeSize) parts.push(`${formatStorageSize(v.nvmeSize)} NVMe`);
+		if (v.sataSize) parts.push(`${formatStorageSize(v.sataSize)} SATA`);
+		if (v.hddSize) parts.push(`${formatStorageSize(v.hddSize)} HDD`);
 		return parts.join(' + ') || 'no storage';
 	}
 
@@ -161,9 +155,6 @@
 		};
 	});
 
-	function jsonLd(value: unknown): string {
-		return JSON.stringify(value).replace(/</g, '\\u003c');
-	}
 </script>
 
 <svelte:head>
@@ -180,8 +171,8 @@
 	<meta name="twitter:description" content={DESCRIPTION} />
 	<meta name="twitter:image" content="https://radar.iodev.org/images/og-image.webp" />
 
-	{@html `<script type="application/ld+json">${jsonLd(breadcrumbJsonLd)}<` + `/script>`}
-	{@html `<script type="application/ld+json">${jsonLd(productJsonLd)}<` + `/script>`}
+	{@html `<script type="application/ld+json">${jsonLdSafe(breadcrumbJsonLd)}<` + `/script>`}
+	{@html `<script type="application/ld+json">${jsonLdSafe(productJsonLd)}<` + `/script>`}
 </svelte:head>
 
 <PageHero

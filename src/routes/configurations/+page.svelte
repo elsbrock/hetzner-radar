@@ -15,6 +15,7 @@
   import PriceControls from "$lib/components/PriceControls.svelte";
   import ServerCard from "$lib/components/ServerCard.svelte";
   import { defaultFilter, encodeFilter } from "$lib/filter";
+  import { formatStorageSize, jsonLdSafe } from "$lib/util";
 
   import { settingsStore } from "$lib/stores/settings";
   import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
@@ -132,35 +133,23 @@
   const PAGE_DESCRIPTION =
     "Live rankings of the best Hetzner dedicated server auctions: best price-per-performance, plus cheapest per core, per GB RAM, NVMe, and bulk storage.";
 
-  function formatStorage(gb: number): string {
-    if (gb >= 1000) {
-      const tb = gb / 1000;
-      return `${tb % 1 === 0 ? tb.toFixed(0) : tb.toFixed(1)} TB`;
-    }
-    return `${gb} GB`;
-  }
-
   function describeServer(config: ServerConfiguration): string {
     const parts: string[] = [];
     parts.push(`${config.ram_size} GB${config.is_ecc ? " ECC" : ""} RAM`);
     if (config.nvme_size && config.nvme_size > 0) {
-      parts.push(`${formatStorage(config.nvme_size)} NVMe`);
+      parts.push(`${formatStorageSize(config.nvme_size)} NVMe`);
     }
     if (config.sata_size && config.sata_size > 0) {
-      parts.push(`${formatStorage(config.sata_size)} SATA`);
+      parts.push(`${formatStorageSize(config.sata_size)} SATA`);
     }
     if (config.hdd_size && config.hdd_size > 0) {
-      parts.push(`${formatStorage(config.hdd_size)} HDD`);
+      parts.push(`${formatStorageSize(config.hdd_size)} HDD`);
     }
     if (config.with_gpu) parts.push("GPU");
     if (config.with_inic) parts.push("iNIC");
     if (config.with_hwr) parts.push("hardware RAID");
     if (config.with_rps) parts.push("redundant PSU");
     return parts.join(", ");
-  }
-
-  function jsonLdSafe(value: unknown): string {
-    return JSON.stringify(value).replace(/</g, "\\u003c");
   }
 
   const breadcrumbJsonLd = $derived({

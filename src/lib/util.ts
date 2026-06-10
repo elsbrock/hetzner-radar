@@ -12,6 +12,21 @@ export function debounce<T extends (...args: never[]) => void>(
   };
 }
 
+// Serialize a value for embedding in a JSON-LD <script> block, escaping "<"
+// so the payload cannot break out of the script element.
+export function jsonLdSafe(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+// Format a GB value for display, switching to TB at 1000 GB.
+export function formatStorageSize(gb: number): string {
+  if (gb >= 1000) {
+    const tb = gb / 1000;
+    return `${tb % 1 === 0 ? tb.toFixed(0) : tb.toFixed(1)} TB`;
+  }
+  return `${gb} GB`;
+}
+
 export function formatRelativeTime(
   timestamp: string | null | undefined,
 ): string {

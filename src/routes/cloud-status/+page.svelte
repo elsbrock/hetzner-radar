@@ -11,7 +11,7 @@
 	import { page } from '$app/stores';
 	// import QuickStat from '$lib/components/QuickStat.svelte';
 	import { fade as _fade, slide as _slide } from 'svelte/transition';
-	import { formatRelativeTime, getAvailabilityRecency } from '$lib/util';
+	import { formatRelativeTime, getAvailabilityRecency, jsonLdSafe } from '$lib/util';
 	import {
 		Table,
 		TableHead,
@@ -794,10 +794,8 @@
 	/>
 	<meta name="twitter:image" content="https://radar.iodev.org/og-image.webp" />
 
-	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}<` +
-		`/script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify(datasetJsonLd).replace(/</g, '\\u003c')}<` +
-		`/script>`}
+	{@html `<script type="application/ld+json">${jsonLdSafe(breadcrumbJsonLd)}<` + `/script>`}
+	{@html `<script type="application/ld+json">${jsonLdSafe(datasetJsonLd)}<` + `/script>`}
 </svelte:head>
 
 <PageHero

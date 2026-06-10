@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { EligibleCpu } from '$lib/api/shared/cpu-pages';
 	import PageHero from '$lib/components/PageHero.svelte';
+	import { jsonLdSafe } from '$lib/util';
 
 	let { data } = $props();
 
@@ -46,9 +47,6 @@
 		}))
 	});
 
-	function jsonLd(value: unknown): string {
-		return JSON.stringify(value).replace(/</g, '\\u003c');
-	}
 </script>
 
 <svelte:head>
@@ -65,8 +63,8 @@
 	<meta name="twitter:description" content={PAGE_DESCRIPTION} />
 	<meta name="twitter:image" content="https://radar.iodev.org/images/og-image.webp" />
 
-	{@html `<script type="application/ld+json">${jsonLd(breadcrumbJsonLd)}<` + `/script>`}
-	{@html `<script type="application/ld+json">${jsonLd(itemListJsonLd)}<` + `/script>`}
+	{@html `<script type="application/ld+json">${jsonLdSafe(breadcrumbJsonLd)}<` + `/script>`}
+	{@html `<script type="application/ld+json">${jsonLdSafe(itemListJsonLd)}<` + `/script>`}
 </svelte:head>
 
 <PageHero
