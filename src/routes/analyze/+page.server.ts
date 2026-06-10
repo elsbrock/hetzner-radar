@@ -11,7 +11,6 @@ export const load: PageServerLoad = async (event) => {
     return { alert, user };
   }
 
-  console.log("loading data");
   const env = event.platform?.env;
   const db = env?.DB;
   const filterString = event.url.searchParams.get("filter");

@@ -62,7 +62,6 @@ export const actions: Actions = {
       }
 
       const verificationCode = await generateEmailVerificationCode(db, email);
-      console.log("verification code", verificationCode);
 
       try {
         await sendMail(env, {

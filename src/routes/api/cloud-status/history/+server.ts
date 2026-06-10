@@ -90,10 +90,6 @@ export const GET: RequestHandler = async ({ url, platform }) => {
     }
 
     // Call the worker RPC method
-    console.log(
-      "[cloud-status/history] Fetching historical availability:",
-      options,
-    );
     const historicalData = (await radarWorker.getHistoricalAvailability(
       options,
     )) as Record<string, unknown>;

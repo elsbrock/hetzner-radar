@@ -21,7 +21,6 @@ export async function initializeDB() {
     await initDB(idb, (loaded, total) => {
       const progress = Math.round((loaded / total) * 100);
       dbInitProgress.set(progress);
-      console.log(`Initialization Progress: ${progress}%`);
     });
   }
 

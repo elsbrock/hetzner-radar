@@ -219,13 +219,6 @@ let isSmallScreen: boolean = $state(false);
 			if (bannerElement && bannerElement.offsetHeight > 0)
 				totalOffset += bannerElement.offsetHeight; // Only if banner is visible
 
-			console.log('Sidebar height calculation:', {
-				nav: nav?.offsetHeight,
-				footer: footer?.offsetHeight,
-				banner: bannerElement?.offsetHeight,
-				total: totalOffset
-			});
-
 			// Set CSS custom property
 			document.documentElement.style.setProperty('--header-footer-height', `${totalOffset}px`);
 		}
@@ -276,7 +269,6 @@ let isSmallScreen: boolean = $state(false);
 		const mediaQuery = window.matchMedia('(max-width: 1024px)'); // lg breakpoint
 		const updateScreenSize = () => {
 			isSmallScreen = mediaQuery.matches;
-			console.log('isSmallScreen:', isSmallScreen);
 
 			// If screen size changes, we need to re-evaluate visibility immediately
 			// This ensures FAB state is correct before observers fire
@@ -311,11 +303,9 @@ let isSmallScreen: boolean = $state(false);
 			resultsObserver?.disconnect();
 
 			if (isSmallScreen && filterSection && resultsSection) {
-				console.log('Setting up observers for small screen');
 				filterObserver = new IntersectionObserver((entries) => {
 					entries.forEach((entry) => {
 						filterIsIntersecting = entry.isIntersecting;
-						console.log('Filter intersecting:', filterIsIntersecting);
 					});
 				}, observerOptions);
 				filterObserver.observe(filterSection);
@@ -323,12 +313,10 @@ let isSmallScreen: boolean = $state(false);
 				resultsObserver = new IntersectionObserver((entries) => {
 					entries.forEach((entry) => {
 						resultsAreIntersecting = entry.isIntersecting;
-						console.log('Results intersecting:', resultsAreIntersecting);
 					});
 				}, observerOptions);
 				resultsObserver.observe(resultsSection);
 			} else {
-				console.log('Disconnecting observers (not small screen or elements missing)');
 				// On larger screens, reset the state
 				filterIsIntersecting = false;
 				resultsAreIntersecting = false;
@@ -339,7 +327,6 @@ let isSmallScreen: boolean = $state(false);
 
 		// Cleanup function
 		return () => {
-			console.log('Cleaning up observers and listeners');
 			mediaQuery.removeEventListener('change', updateScreenSize);
 			filterObserver?.disconnect();
 			resultsObserver?.disconnect();
@@ -348,7 +335,6 @@ let isSmallScreen: boolean = $state(false);
 
 	async function fetchData(dbInstance: AsyncDuckDB, currentFilter: ServerFilterType) {
 		loading = true;
-		console.log('Fetching data with filter:', currentFilter);
 		let queryStart = performance.now();
 		try {
 			await withDbConnections(dbInstance, async (conn1, conn2, conn3, conn4, conn5) => {
@@ -386,7 +372,6 @@ let isSmallScreen: boolean = $state(false);
 					popularityFormatted = 'Normal';
 				}
 				queryTime = performance.now() - queryStart;
-				console.log(`fetchData completed. serverList length: ${serverList.length}`);
 
 				// Refresh last update timestamp
 				if (!lastUpdate || dayjs().diff(lastUpdate, 'minute') > 65) {
@@ -404,9 +389,7 @@ let isSmallScreen: boolean = $state(false);
 				icon: 'error'
 			});
 		} finally {
-			console.log('Setting loading = false (before)'); // Added for debugging
 			loading = false;
-			console.log('Setting loading = false (after)'); // Added for debugging
 		}
 	}
 
@@ -451,10 +434,6 @@ let isSmallScreen: boolean = $state(false);
 
 	// Effect to filter, sort, and group the server list for display
 	$effect(() => {
-		console.log(
-			`Filtering/Sorting/Grouping Effect running. serverList: ${serverList.length}, priceMin: ${priceMin}, priceMax: ${priceMax}, sort: ${sortField} ${sortDirection}, group: ${groupByField}`
-		);
-
 		// Capture dependencies for deferred processing
 		const currentServerList = serverList;
 		const currentPriceMin = priceMin;
@@ -490,7 +469,6 @@ let isSmallScreen: boolean = $state(false);
 					return meetsMin && meetsMax;
 				});
 			}
-			console.log(` -> After price filter: ${list.length} items`);
 
 			// 2. Apply sorting (on a copy)
 			const listToSort = [...list];
@@ -536,7 +514,6 @@ let isSmallScreen: boolean = $state(false);
 				const comparison = (valA as number) < (valB as number) ? -1 : 1;
 				return currentSortDirection === 'asc' ? comparison : comparison * -1;
 			});
-			console.log(` -> After sorting: ${listToSort.length} items`);
 
 			// 3. Apply grouping
 			let groupedResult: GroupedServerList = [];
@@ -635,9 +612,6 @@ let isSmallScreen: boolean = $state(false);
 					break;
 				}
 			}
-			console.log(
-				` -> After grouping (${currentGroupByField}): ${groupedResult.reduce((sum, g) => sum + g.servers.length, 0)} items in ${groupedResult.length} groups`
-			);
 
 			// Update the grouped display list state
 			groupedDisplayList = groupedResult;

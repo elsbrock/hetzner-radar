@@ -120,7 +120,6 @@
 
 				// Auto-submit if we have a complete code
 				if (code.length === codeInputs.length) {
-					console.log('Code complete after paste, submitting', code);
 					await tick();
 					authForm.requestSubmit();
 				}
@@ -146,7 +145,6 @@
 	}
 
 	$: if (code.length === 6) {
-		console.log('Code is complete', code);
 		tick().then(() => authForm.requestSubmit());
 	}
 </script>

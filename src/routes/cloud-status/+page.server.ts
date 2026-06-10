@@ -48,15 +48,12 @@ export const load: PageServerLoad = async ({
   platform,
   locals,
 }): Promise<LoadOutput> => {
-  console.log("Executing /cloud-status server load function...");
-
   const env = platform?.env;
   const radarWorker = env?.RADAR_WORKER;
 
   try {
     // In development mode, use wrangler dev service binding
     if (dev) {
-      console.log("Development mode: Using wrangler dev service binding");
       if (!radarWorker) {
         throw new Error(
           "RADAR_WORKER binding not found in development mode. Please run 'npx wrangler dev' instead of 'npm run dev'.",
@@ -82,15 +79,8 @@ export const load: PageServerLoad = async ({
       };
     }
 
-    console.log(
-      `[${new Date().toISOString()}] Calling getStatus() on RADAR_WORKER service binding...`,
-    );
-
     const statusData = (await radarWorker.getStatus()) as CloudStatusData;
     const normalizedStatusData = normalizeStatusData(statusData);
-    console.log(
-      `[${new Date().toISOString()}] Successfully received status data from DO via fetch.`,
-    );
 
     return {
       statusData: normalizedStatusData,

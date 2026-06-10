@@ -274,10 +274,8 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			lastUrlFilterString = filterString;
 
 			if (filterString) {
-				console.log('ServerFilter: URL filter changed to:', filterString);
 				const decodedFilter = decodeFilterString(filterString);
 				if (decodedFilter) {
-					console.log('ServerFilter: Updating filter from URL with:', decodedFilter);
 					updateFilterFromUrl(decodedFilter);
 				}
 			}

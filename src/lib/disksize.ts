@@ -18,20 +18,8 @@ export function getFormattedMemorySize(exp: number) {
 
 export function getFormattedDiskSize(base: number, multiplier: number = 1) {
   // Expects base size in GB, converts to Bytes for filesize
-  // Log inputs for debugging
-  console.log(
-    `getFormattedDiskSize called with base: ${base}, multiplier: ${multiplier}`,
-  );
-
-  // Apply multiplier to base (if provided)
   const adjustedBase = base * multiplier;
-
-  // Convert to bytes and format
-  const result = filesize(adjustedBase * Math.pow(1000, 3), diskSizeOptions);
-  console.log(
-    `getFormattedDiskSize result: ${result} (adjusted base: ${adjustedBase}GB)`,
-  );
-  return result;
+  return filesize(adjustedBase * Math.pow(1000, 3), diskSizeOptions);
 }
 
 export function getInverseMemoryExp(size: number): number {

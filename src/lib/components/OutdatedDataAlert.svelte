@@ -17,11 +17,8 @@
 	$: if (lastUpdate) {
 		const now = dayjs();
 		const lastUpdateDate = dayjs(lastUpdate * 1000);
-		console.log('last update', lastUpdateDate);
 		const elapsedSeconds = now.diff(lastUpdateDate, 'second');
-		console.log('elapsed seconds', elapsedSeconds);
 		const remainingTime = threshold - elapsedSeconds;
-		console.log('remaining time', remainingTime);
 
 		if (elapsedSeconds >= threshold) {
 			showElement = true;

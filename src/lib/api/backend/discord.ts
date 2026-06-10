@@ -24,10 +24,6 @@ export async function sendDiscordNotification(
   payload: DiscordWebhookPayload,
 ): Promise<boolean> {
   try {
-    console.log(
-      `Sending Discord notification to webhook: ${webhookUrl.substring(0, 50)}...`,
-    );
-
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
