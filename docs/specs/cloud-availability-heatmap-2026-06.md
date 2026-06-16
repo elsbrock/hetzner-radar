@@ -106,4 +106,7 @@ date-formatted ticks (via a tick `callback`) and deriving cell width/height from
   consider a sampled heartbeat write (cost trade-off noted above).
 - The summary query's `SUM/COUNT` "availabilityPercentage" averages transition
   events and is likely inaccurate — separate cleanup, not in scope here.
+
+```
+
 ```

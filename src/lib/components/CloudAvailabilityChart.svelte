@@ -47,7 +47,9 @@
 		endDate,
 		serverTypeId: _serverTypeId,
 		locationId: _locationId,
-		granularity = 'hour',
+		// Accepted for caller compatibility but unused — bucketing is derived from
+		// the start/end range, not the granularity hint.
+		granularity: _granularity = 'hour',
 		viewMode,
 		selectedLocationId,
 		selectedServerTypeId,
