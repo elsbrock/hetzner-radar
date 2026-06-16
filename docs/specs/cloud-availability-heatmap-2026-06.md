@@ -69,14 +69,30 @@ per-minute heartbeat**. Consequences:
 
 ## Implementation steps
 
-- [ ] Add `chartjs-chart-matrix` dependency; confirm chart.js v4 compatibility.
-- [ ] Extract uptime-fraction-per-bucket from the step function (replace the
-      binary forward-fill in `buildHeatmap`).
-- [ ] Rewrite the render layer as a chart.js matrix on a canvas (register
+- [x] Add `chartjs-chart-matrix` dependency (3.0.4; peer chart.js >=3, ours 4.5.1).
+- [x] Extract uptime-fraction-per-bucket from the step function (replace the
+      binary forward-fill in `buildHeatmap` → `buildMatrix`).
+- [x] Rewrite the render layer as a chart.js matrix on a canvas (register
       `MatrixController`/`MatrixElement` locally); wire color scale + tooltip.
-- [ ] Preserve empty/loading/error states, range banner, legend, dark mode,
-      responsiveness, and horizontal fit for 168 hourly buckets (7d).
-- [ ] `npm run check` clean; manual verify 24h/7d/30d in both view modes and
-      both themes via the live app.
-- [ ] Changelog entry (noteworthy feature).
+- [x] **Always fetch hourly**, integrate to the display bucket size. The API
+      pre-buckets with `MAX` at the requested granularity, so requesting 'day'
+      would collapse sub-day detail. Hourly fetch + client integration yields a
+      real daily uptime fraction (verified: 35% of 30d daily cells are partial on
+      live fsn1 data, vs. 100% binary before).
+- [x] Preserve empty/loading/error states, range banner, legend, dark mode
+      (axis colors matched to `GenericChart`), responsiveness (legend wraps).
+- [x] `npm run check` clean; `npm run build` clean; uptime math unit-checked;
+      real API shape + shading verified via CDP against production data.
+- [ ] Live visual verification of the rendered matrix at 24h/7d/30d in both
+      themes and on mobile — pending (offline harness blocked by site CSP; do on
+      a deploy/preview or via local Chrome render).
+- [x] Changelog entry (noteworthy feature).
+
+## Notes / follow-ups
+
+- The worker's `MAX(double1)` bucketing still loses multiple transitions inside a
+  single hour. Hourly is fine for these views; if finer fidelity is ever needed,
+  consider a sampled heartbeat write (cost trade-off noted above).
+- The summary query's `SUM/COUNT` "availabilityPercentage" averages transition
+  events and is likely inaccurate — separate cleanup, not in scope here.
 ```

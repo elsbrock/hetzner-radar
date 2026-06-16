@@ -1,5 +1,19 @@
 <script lang="ts">
-	import { Spinner, Alert, Tooltip } from 'flowbite-svelte';
+	import { Spinner, Alert } from 'flowbite-svelte';
+	import {
+		Chart,
+		CategoryScale,
+		TimeScale,
+		LinearScale,
+		Tooltip,
+		type ChartConfiguration,
+		type TooltipItem
+	} from 'chart.js';
+	import 'chartjs-adapter-date-fns';
+	import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
+	import { onDestroy } from 'svelte';
+
+	Chart.register(MatrixController, MatrixElement, CategoryScale, TimeScale, LinearScale, Tooltip);
 
 	interface AvailabilityDataPoint {
 		timestamp: string;
@@ -46,46 +60,30 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
-	interface HeatmapCell {
-		timestamp: string;
-		available: boolean;
+	// One datum per (entity row × time bucket). `v` is the fraction of the bucket
+	// the entity was available (0..1), computed by integrating the step function
+	// defined by the transition events — not a binary "up at any point" flag.
+	interface MatrixDatum {
+		x: number; // bucket start (ms)
+		y: string; // entity row label
+		v: number; // uptime fraction 0..1
 	}
 
-	interface HeatmapRow {
-		label: string;
-		id: number;
-		cells: HeatmapCell[];
-	}
+	let rowLabels = $state<string[]>([]);
+	let matrixData = $state<MatrixDatum[]>([]);
 
-	let heatmapData = $state<HeatmapRow[]>([]);
-	let timeLabels = $state<string[]>([]);
-	let hoveredCell = $state<{ row: number; col: number } | null>(null);
+	const stepMs = $derived(granularity === 'hour' ? 3_600_000 : 86_400_000);
+	const nRows = $derived(rowLabels.length);
 
-	const nCols = $derived(heatmapData[0]?.cells.length ?? 0);
-
-	// Width for labels column based on longest label (in ch units + padding)
-	const labelWidth = $derived(
-		heatmapData.length > 0
-			? `${Math.max(...heatmapData.map((r) => r.label.length)) + 1}ch`
-			: '4ch'
+	let canvasElement: HTMLCanvasElement | null = $state(null);
+	let chartInstance: Chart<'matrix'> | null = null;
+	let isDarkMode = $state(
+		typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
 	);
 
-	// Grid template — first track is the row-label column, then one minmax(3px,1fr)
-	// per data bucket. Using CSS grid (instead of nested flex with flex-1 children)
-	// guarantees that header labels and data cells line up exactly, since both rows
-	// of the grid resolve to the same column tracks at the same pixel positions.
-	// Min track size is small enough that 168 cells (7d hourly) fit on a typical
-	// laptop viewport without horizontal scrolling.
-	const gridTemplate = $derived(
-		`${labelWidth} repeat(${nCols}, minmax(3px, 1fr))`
-	);
-
-	// Human-readable banner with the absolute range bounds. Replaces pinning the
-	// first/last buckets as axis labels — those broke the per-range label format
-	// (e.g. "15:00" appearing among "Apr 14" / "Apr 16" labels in the 7d view).
+	// Human-readable banner with the absolute range bounds.
 	const rangeBanner = $derived.by(() => {
-		const ms = endDate.getTime() - startDate.getTime();
-		const days = ms / 86_400_000;
+		const days = (endDate.getTime() - startDate.getTime()) / 86_400_000;
 		let label: string;
 		if (days >= 25) label = 'Last 30 days';
 		else if (days >= 5) label = 'Last 7 days';
@@ -109,7 +107,6 @@
 	$effect(() => {
 		if (viewMode === 'location' && !selectedLocationId) return;
 		if (viewMode === 'serverType' && !selectedServerTypeId) return;
-
 		fetchData();
 	});
 
@@ -118,11 +115,17 @@
 		error = null;
 
 		try {
+			// Always fetch at hourly resolution, regardless of the display bucket
+			// size. The API pre-buckets with MAX(available) at the requested
+			// granularity, so requesting 'day' would collapse each day to a single
+			// binary value and destroy the sub-day detail we need to shade daily
+			// cells by uptime fraction. Hourly transitions are integrated into
+			// whatever bucket size we render (see buildMatrix).
 			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const params = new URLSearchParams({
 				startDate: startDate.toISOString(),
 				endDate: endDate.toISOString(),
-				granularity
+				granularity: 'hour'
 			});
 
 			if (viewMode === 'location' && selectedLocationId) {
@@ -139,193 +142,160 @@
 			}
 
 			const result = await response.json();
-
-			if (!result.data || result.data.length === 0) {
-				heatmapData = [];
-				timeLabels = [];
-				return;
-			}
-
-			buildHeatmap(result.data);
+			buildMatrix((result.data as AvailabilityDataPoint[]) ?? []);
 		} catch (err) {
 			console.error('Error fetching availability data:', err);
 			error = err instanceof Error ? err.message : 'Failed to load data';
-			heatmapData = [];
-			timeLabels = [];
+			rowLabels = [];
+			matrixData = [];
 		} finally {
 			loading = false;
 		}
 	}
 
-	// Canonical bucket key: ISO-Z string aligned to the bucket's UTC boundary.
-	function pad2(n: number): string {
-		return String(n).padStart(2, '0');
-	}
-
-	function bucketKey(d: Date): string {
-		const y = d.getUTCFullYear();
-		const mo = pad2(d.getUTCMonth() + 1);
-		const da = pad2(d.getUTCDate());
-		if (granularity === 'hour') {
-			return `${y}-${mo}-${da}T${pad2(d.getUTCHours())}:00:00Z`;
-		}
-		return `${y}-${mo}-${da}T00:00:00Z`;
-	}
-
 	// Analytics Engine returns "YYYY-MM-DD HH:MM:SS" (no TZ, but UTC). Coerce
-	// to a Date with explicit Z so further bucketing is timezone-stable.
-	function parseEventTimestamp(ts: string): Date {
+	// to a Date with explicit Z so bucketing is timezone-stable.
+	function parseEventTimestamp(ts: string): number {
 		let s = ts;
 		if (!s.includes('T')) s = s.replace(' ', 'T');
 		if (!s.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
-		return new Date(s);
+		return new Date(s).getTime();
 	}
 
-	// Generate the full set of bucket keys spanning [startDate, endDate], aligned
-	// to UTC boundaries. This makes column count deterministic from the time
-	// range — independent of whether any availability changes happened — so
-	// rows for static (non-transitioning) entities can still be drawn.
-	function generateBuckets(): string[] {
-		const buckets: string[] = [];
-		let cur: Date;
-		if (granularity === 'hour') {
-			cur = new Date(
-				Date.UTC(
-					startDate.getUTCFullYear(),
-					startDate.getUTCMonth(),
-					startDate.getUTCDate(),
-					startDate.getUTCHours()
-				)
-			);
-		} else {
-			cur = new Date(
-				Date.UTC(
-					startDate.getUTCFullYear(),
-					startDate.getUTCMonth(),
-					startDate.getUTCDate()
-				)
-			);
-		}
-		const stepMs = granularity === 'hour' ? 3600_000 : 86_400_000;
+	// Bucket start timestamps (ms), aligned to UTC boundaries, spanning the range.
+	// Column count is derived from the time range so static rows still render.
+	function generateBucketStarts(): number[] {
+		const buckets: number[] = [];
+		let cur =
+			granularity === 'hour'
+				? Date.UTC(
+						startDate.getUTCFullYear(),
+						startDate.getUTCMonth(),
+						startDate.getUTCDate(),
+						startDate.getUTCHours()
+					)
+				: Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
 		const endMs = endDate.getTime();
-		while (cur.getTime() <= endMs) {
-			buckets.push(bucketKey(cur));
-			cur = new Date(cur.getTime() + stepMs);
+		while (cur <= endMs) {
+			buckets.push(cur);
+			cur += stepMs;
 		}
 		return buckets;
 	}
 
-	// All entities (server types or locations) that should appear as rows for the
-	// current selection — derived from the supported/availability snapshot, not
-	// from the event stream. This is what fixes "selecting Falkenstein only
-	// shows one server": types with zero transitions in the period now still
-	// render, filled with their current state.
-	function expectedEntities(): {
-		id: number;
-		label: string;
-		currentlyAvailable: boolean;
-	}[] {
+	// Rows that should appear for the current selection, derived from the
+	// supported/availability snapshot (not the event stream) so entities with no
+	// transitions in the window still render, seeded with their current state.
+	function expectedEntities(): { id: number; label: string; currentlyAvailable: boolean }[] {
 		const out: { id: number; label: string; currentlyAvailable: boolean }[] = [];
 		if (viewMode === 'location' && selectedLocationId !== undefined) {
-			const supportedTypes = supported[selectedLocationId] || [];
 			const currentlyAvailable = new Set(availability[selectedLocationId] || []);
-			for (const stId of supportedTypes) {
+			for (const stId of supported[selectedLocationId] || []) {
 				const st = serverTypes.find((s) => s.id === stId);
 				if (!st) continue;
-				out.push({
-					id: stId,
-					label: st.name,
-					currentlyAvailable: currentlyAvailable.has(stId)
-				});
+				out.push({ id: stId, label: st.name, currentlyAvailable: currentlyAvailable.has(stId) });
 			}
 		} else if (viewMode === 'serverType' && selectedServerTypeId !== undefined) {
 			for (const loc of locations) {
-				const supportedTypes = supported[loc.id] || [];
-				if (!supportedTypes.includes(selectedServerTypeId)) continue;
-				const currentlyAvailable = (availability[loc.id] || []).includes(
-					selectedServerTypeId
-				);
-				out.push({
-					id: loc.id,
-					label: loc.city,
-					currentlyAvailable
-				});
+				if (!(supported[loc.id] || []).includes(selectedServerTypeId)) continue;
+				const currentlyAvailable = (availability[loc.id] || []).includes(selectedServerTypeId);
+				out.push({ id: loc.id, label: loc.city, currentlyAvailable });
 			}
 		}
 		return out;
 	}
 
-	function buildHeatmap(data: AvailabilityDataPoint[]) {
-		const sortedTimestamps = generateBuckets();
-
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const groups = new Map<number, { label: string; cells: Map<string, boolean> }>();
-
-		// Ingest events, normalising each to the canonical bucket key so they
-		// match keys produced by generateBuckets().
-		data.forEach((point) => {
-			const key = viewMode === 'location' ? point.serverTypeId : point.locationId;
-			if (!groups.has(key)) {
-				let label: string;
-				if (viewMode === 'location') {
-					const st = serverTypes.find((s) => s.id === point.serverTypeId);
-					label = st?.name || point.serverTypeName || `Server ${point.serverTypeId}`;
-				} else {
-					const loc = locations.find((l) => l.id === point.locationId);
-					label = loc?.city || point.locationName || `Location ${point.locationId}`;
-				}
-				groups.set(key, { label, cells: new Map() });
-			}
-			const group = groups.get(key)!;
-			const ck = bucketKey(parseEventTimestamp(point.timestamp));
-			const existing = group.cells.get(ck);
-			// If any event in this bucket shows available, mark available.
-			group.cells.set(
-				ck,
-				existing === true ? true : point.available || (point.availabilityRate ?? 0) > 0
-			);
-		});
-
-		// Seed empty rows for every entity that should appear, even if it had no
-		// events in the range.
-		const expected = expectedEntities();
-		const expectedById = new Map(expected.map((e) => [e.id, e]));
-		for (const ent of expected) {
-			if (!groups.has(ent.id)) {
-				groups.set(ent.id, { label: ent.label, cells: new Map() });
-			}
+	// Fraction of [a, b) during which `changePoints` is in the available state.
+	function availableFraction(
+		changePoints: { t: number; up: boolean }[],
+		a: number,
+		b: number,
+		windowEnd: number
+	): number {
+		if (b <= a) return 0;
+		let up = 0;
+		for (let i = 0; i < changePoints.length; i++) {
+			if (!changePoints[i].up) continue;
+			const segStart = changePoints[i].t;
+			const segEnd = i + 1 < changePoints.length ? changePoints[i + 1].t : windowEnd;
+			up += Math.max(0, Math.min(segEnd, b) - Math.max(segStart, a));
 		}
-
-		// Build rows with forward-fill: gaps carry forward the last known state.
-		// For rows with events, infer the pre-first-event state by inverting the
-		// first event (events represent state transitions). For rows with no
-		// events, fill with the current snapshot — that's the most truthful
-		// "we have no evidence of a change" guess.
-		heatmapData = Array.from(groups.entries())
-			.sort(([, a], [, b]) => a.label.localeCompare(b.label))
-			.map(([id, group]) => {
-				const firstEvent = sortedTimestamps.find((ts) => group.cells.has(ts));
-				let lastKnown: boolean;
-				if (firstEvent) {
-					lastKnown = !group.cells.get(firstEvent)!;
-				} else {
-					lastKnown = expectedById.get(id)?.currentlyAvailable ?? false;
-				}
-				const cells: HeatmapCell[] = sortedTimestamps.map((ts) => {
-					if (group.cells.has(ts)) {
-						lastKnown = group.cells.get(ts)!;
-					}
-					return { timestamp: ts, available: lastKnown };
-				});
-				return { label: group.label, id, cells };
-			});
-
-		// Build time labels (used in tooltips)
-		timeLabels = sortedTimestamps.map((ts) => formatTimestamp(ts));
+		return up / (b - a);
 	}
 
-	function formatTimestamp(ts: string): string {
-		const d = new Date(ts);
+	function buildMatrix(data: AvailabilityDataPoint[]) {
+		const bucketStarts = generateBucketStarts();
+		const windowStart = bucketStarts[0] ?? startDate.getTime();
+		const windowEnd = endDate.getTime();
+
+		// Group transition events by entity (server type or location).
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const events = new Map<number, { t: number; up: boolean }[]>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const labelById = new Map<number, string>();
+		for (const point of data) {
+			const id = viewMode === 'location' ? point.serverTypeId : point.locationId;
+			if (!labelById.has(id)) {
+				const label =
+					viewMode === 'location'
+						? serverTypes.find((s) => s.id === point.serverTypeId)?.name ||
+							point.serverTypeName ||
+							`Server ${point.serverTypeId}`
+						: locations.find((l) => l.id === point.locationId)?.city ||
+							point.locationName ||
+							`Location ${point.locationId}`;
+				labelById.set(id, label);
+			}
+			const up = point.available || (point.availabilityRate ?? 0) > 0;
+			const t = Math.max(parseEventTimestamp(point.timestamp), windowStart);
+			(events.get(id) ?? events.set(id, []).get(id)!).push({ t, up });
+		}
+
+		// Union of rows: every expected entity, plus any entity that has events but
+		// somehow isn't in the supported snapshot.
+		const expected = expectedEntities();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const rows = new Map<number, { label: string; currentlyAvailable: boolean }>();
+		for (const e of expected) rows.set(e.id, { label: e.label, currentlyAvailable: e.currentlyAvailable });
+		for (const [id, label] of labelById) {
+			if (!rows.has(id)) rows.set(id, { label, currentlyAvailable: false });
+		}
+
+		const ordered = Array.from(rows.entries()).sort(([, a], [, b]) =>
+			a.label.localeCompare(b.label)
+		);
+
+		rowLabels = ordered.map(([, r]) => r.label);
+
+		const out: MatrixDatum[] = [];
+		for (const [id, row] of ordered) {
+			const evs = (events.get(id) ?? []).slice().sort((p, q) => p.t - q.t);
+			// State at the window start: events are transitions, so invert the first
+			// one. With no events, fall back to the current snapshot.
+			const seed = evs.length > 0 ? !evs[0].up : row.currentlyAvailable;
+			const changePoints = [{ t: windowStart, up: seed }, ...evs];
+
+			for (const bStart of bucketStarts) {
+				const bEnd = Math.min(bStart + stepMs, windowEnd);
+				out.push({
+					x: bStart,
+					y: row.label,
+					v: availableFraction(changePoints, bStart, bEnd, windowEnd)
+				});
+			}
+		}
+		matrixData = out;
+	}
+
+	// Continuous red → amber → green ramp by uptime fraction.
+	function colorForFraction(v: number): string {
+		const hue = Math.max(0, Math.min(1, v)) * 130; // 0=red, 130=green
+		const light = isDarkMode ? 42 : 52;
+		return `hsl(${hue}, 65%, ${light}%)`;
+	}
+
+	function formatBucket(ms: number): string {
+		const d = new Date(ms);
 		if (granularity === 'hour') {
 			return d.toLocaleString(undefined, {
 				month: 'short',
@@ -334,79 +304,110 @@
 				minute: '2-digit'
 			});
 		}
-		return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 	}
 
-	// Find the first column whose local time satisfies `test`. Used to anchor
-	// label cadence to a calendar event (first local midnight, first 3h-aligned
-	// hour) instead of the arbitrary range start — guarantees evenly spaced
-	// labels regardless of when the range happens to begin.
-	function firstAnchorIdx(test: (h: number) => boolean): number {
-		const cells = heatmapData[0]?.cells ?? [];
-		for (let i = 0; i < cells.length; i++) {
-			if (test(new Date(cells[i].timestamp).getHours())) return i;
-		}
-		return -1;
-	}
+	// Watch for theme changes so canvas colours track light/dark.
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		isDarkMode = document.documentElement.classList.contains('dark');
+		const observer = new MutationObserver(() => {
+			isDarkMode = document.documentElement.classList.contains('dark');
+		});
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+		return () => observer.disconnect();
+	});
 
-	// Decide whether the bucket at index `colIdx` should display a label.
-	// One rule per range; ticks are deterministic stepwise from a calendar
-	// anchor. No pinned endpoints — the rangeBanner above the chart conveys
-	// the absolute bounds.
-	function isLabelBucket(colIdx: number): boolean {
-		if (nCols === 0) return false;
+	// (Re)build the chart whenever data or theme changes.
+	$effect(() => {
+		if (!canvasElement || matrixData.length === 0) return;
+		// Touch reactive deps so the effect re-runs on change.
+		const data = matrixData;
+		const dark = isDarkMode;
+		// Match the app's other charts (GenericChart) so axes look consistent
+		// across light/dark themes.
+		const tickColor = dark ? '#F3F4F6' : '#374151';
+		const gridColor = dark ? 'rgba(75,85,99,0.2)' : 'rgba(209,213,219,0.3)';
 
-		if (granularity === 'hour') {
-			if (nCols > 48) {
-				// Multi-day (7d): every 24 buckets from the first local midnight.
-				const anchor = firstAnchorIdx((h) => h === 0);
-				if (anchor < 0) return false;
-				return colIdx >= anchor && (colIdx - anchor) % 24 === 0;
+		const config: ChartConfiguration<'matrix'> = {
+			type: 'matrix',
+			data: {
+				datasets: [
+					{
+						label: 'Availability',
+						data: data as unknown as { x: number; y: string }[],
+						backgroundColor: (ctx) =>
+							colorForFraction((ctx.raw as MatrixDatum | undefined)?.v ?? 0),
+						borderWidth: 0,
+						width: (ctx) => {
+							const x = ctx.chart.scales.x;
+							const raw = ctx.raw as MatrixDatum | undefined;
+							if (!raw) return 0;
+							return Math.max(1, x.getPixelForValue(raw.x + stepMs) - x.getPixelForValue(raw.x) - 0.5);
+						},
+						height: (ctx) => {
+							const area = ctx.chart.chartArea;
+							return area ? Math.max(1, area.height / Math.max(1, nRows) - 1) : 0;
+						}
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				animation: false,
+				layout: { padding: { right: 4 } },
+				scales: {
+					x: {
+						type: 'time',
+						min: startDate.getTime(),
+						max: endDate.getTime(),
+						offset: false,
+						ticks: { color: tickColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 },
+						grid: { display: false },
+						border: { color: gridColor }
+					},
+					y: {
+						type: 'category',
+						labels: rowLabels,
+						offset: true,
+						reverse: true,
+						ticks: { color: tickColor, autoSkip: false },
+						grid: { display: false },
+						border: { color: gridColor }
+					}
+				},
+				plugins: {
+					legend: { display: false },
+					tooltip: {
+						displayColors: false,
+						callbacks: {
+							title: (items: TooltipItem<'matrix'>[]) => {
+								const raw = items[0]?.raw as MatrixDatum | undefined;
+								return raw ? `${raw.y} · ${formatBucket(raw.x)}` : '';
+							},
+							label: (item: TooltipItem<'matrix'>) => {
+								const raw = item.raw as MatrixDatum | undefined;
+								return `Uptime: ${Math.round((raw?.v ?? 0) * 100)}%`;
+							}
+						}
+					}
+				}
 			}
-			// 24h: every 3 buckets from the first 3h-aligned local hour.
-			const anchor = firstAnchorIdx((h) => h % 3 === 0);
-			if (anchor < 0) return false;
-			return colIdx >= anchor && (colIdx - anchor) % 3 === 0;
-		}
-		if (granularity === 'day') {
-			// 30d: every 5th bucket. Short ranges: every bucket.
-			if (nCols > 14) return colIdx % 5 === 0;
-			return true;
-		}
-		return false;
-	}
+		};
 
-	// One label format per range — labels are uniform within a single chart.
-	function formatAxisLabel(colIdx: number): string {
-		const ts = heatmapData[0]?.cells[colIdx]?.timestamp;
-		if (!ts) return '';
-		const d = new Date(ts);
-		if (granularity === 'hour') {
-			if (nCols > 48) {
-				// 7d: weekday + day-of-month, e.g. "Mon 13".
-				return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
-			}
-			// 24h: time of day, e.g. "15:00".
-			return d.toLocaleTimeString(undefined, {
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: false
-			});
-		}
-		// 30d: month + day, e.g. "Apr 14".
-		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
-	}
+		if (chartInstance) chartInstance.destroy();
+		const ctx = canvasElement.getContext('2d');
+		if (ctx) chartInstance = new Chart(ctx, config);
+	});
 
-	function getCellColor(available: boolean): string {
-		return available ? 'bg-green-500 dark:bg-green-600' : 'bg-red-400 dark:bg-red-500';
-	}
+	onDestroy(() => {
+		chartInstance?.destroy();
+		chartInstance = null;
+	});
 
-	function tooltipText(row: HeatmapRow, colIdx: number): string {
-		const cell = row.cells[colIdx];
-		if (!cell) return '';
-		const status = cell.available ? 'Available' : 'Unavailable';
-		return `${row.label}\n${timeLabels[colIdx]}\n${status}`;
-	}
+	// Height grows with the number of rows; bounded so it never collapses.
+	const chartHeight = $derived(`${Math.max(160, nRows * 24 + 64)}px`);
 </script>
 
 <div class="w-full">
@@ -417,88 +418,27 @@
 		</div>
 	{:else if error}
 		<Alert color="red">
-			<strong>Error:</strong> {error}
+			<strong>Error:</strong>
+			{error}
 		</Alert>
-	{:else if heatmapData.length === 0}
+	{:else if matrixData.length === 0}
 		<Alert color="yellow">
 			No availability data found for the selected time period and filters.
 		</Alert>
 	{:else}
-		<div class="mb-3 text-xs text-gray-500 dark:text-gray-400">
-			{rangeBanner}
+		<div class="mb-3 text-xs text-gray-500 dark:text-gray-400">{rangeBanner}</div>
+		<div class="relative w-full" style="height: {chartHeight};">
+			<canvas bind:this={canvasElement}></canvas>
 		</div>
-		<div class="overflow-x-auto">
+
+		<!-- Legend: continuous uptime ramp -->
+		<div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+			<span>Less available</span>
 			<div
-				class="grid gap-px"
-				style="grid-template-columns: {gridTemplate};"
-			>
-				<!-- Header corner spacer -->
-				<div></div>
-
-				<!-- Time axis labels — one grid cell per data column so labels and
-				     cells share the exact same column tracks. -->
-				{#each heatmapData[0].cells as _, colIdx (colIdx)}
-					<div class="time-label-cell flex h-16 items-end justify-center">
-						{#if isLabelBucket(colIdx)}
-							<span
-								class="text-[10px] leading-none whitespace-nowrap text-gray-500 dark:text-gray-400"
-								style="writing-mode: vertical-rl; transform: rotate(180deg);"
-								>{formatAxisLabel(colIdx)}</span
-							>
-						{/if}
-					</div>
-				{/each}
-
-				<!-- Data rows -->
-				{#each heatmapData as row, rowIdx (row.id)}
-					<div
-						class="flex items-center justify-end overflow-hidden pr-2 text-xs text-gray-700 dark:text-gray-300"
-						title={row.label}
-					>
-						<span class="truncate">{row.label}</span>
-					</div>
-					{#each row.cells as cell, colIdx (colIdx)}
-						{@const dimmed =
-							hoveredCell &&
-							hoveredCell.row !== rowIdx &&
-							hoveredCell.col !== colIdx}
-						<div
-							class="heatmap-cell rounded-sm {getCellColor(cell.available)}"
-							class:opacity-40={dimmed}
-							role="gridcell"
-							tabindex="-1"
-							onmouseenter={() => (hoveredCell = { row: rowIdx, col: colIdx })}
-							onmouseleave={() => (hoveredCell = null)}
-						>
-							<Tooltip placement="top" class="z-50 text-xs"
-								>{tooltipText(row, colIdx)}</Tooltip
-							>
-						</div>
-					{/each}
-				{/each}
-			</div>
-
-			<!-- Legend -->
-			<div
-				class="mt-3 flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400"
-				style="padding-left: calc({labelWidth} + 0.25rem);"
-			>
-				<div class="flex items-center gap-1">
-					<div class="h-3 w-3 rounded-sm bg-green-500 dark:bg-green-600"></div>
-					Available
-				</div>
-				<div class="flex items-center gap-1">
-					<div class="h-3 w-3 rounded-sm bg-red-400 dark:bg-red-500"></div>
-					Unavailable
-				</div>
-			</div>
+				class="h-3 w-32 rounded-sm"
+				style="background: linear-gradient(to right, hsl(0,65%,52%), hsl(65,65%,52%), hsl(130,65%,52%));"
+			></div>
+			<span>More available</span>
 		</div>
 	{/if}
 </div>
-
-<style>
-	.heatmap-cell {
-		height: 1.25rem;
-		transition: opacity 0.1s;
-	}
-</style>

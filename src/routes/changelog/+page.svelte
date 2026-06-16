@@ -11,6 +11,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'Availability heatmap shows uptime, not just in/out of stock', datePublished: '2026-06-16' },
 		{ headline: 'Smarter configuration picks', datePublished: '2026-04-24' },
 		{ headline: 'Finer-grained disk filters', datePublished: '2026-04-18' },
 		{ headline: 'Availability timeline heatmap', datePublished: '2026-03-25' },
@@ -108,6 +109,18 @@
 
 <div class="container mx-auto max-w-4xl px-6 py-10">
 	<Timeline>
+		<TimelineItem
+			title="Availability heatmap shows uptime, not just in/out of stock"
+			date="Released on June 16th, 2026"
+		>
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				The Cloud Status availability chart now shades each cell by how much of the period a server
+				type was actually in stock, instead of a flat green/red "available at some point". Over
+				longer windows like 30 days, a day that was only briefly available now reads as partial
+				rather than fully green — so you can see real availability patterns at a glance. The chart is
+				now built on the same charting library as the rest of the site.
+			</p>
+		</TimelineItem>
 		<TimelineItem title="Smarter configuration picks" date="Released on April 24th, 2026">
 			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
 				The Configurations page now ranks deals by what actually matters, not just absolute price.
