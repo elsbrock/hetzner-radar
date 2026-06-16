@@ -83,10 +83,21 @@ per-minute heartbeat**. Consequences:
       (axis colors matched to `GenericChart`), responsiveness (legend wraps).
 - [x] `npm run check` clean; `npm run build` clean; uptime math unit-checked;
       real API shape + shading verified via CDP against production data.
-- [ ] Live visual verification of the rendered matrix at 24h/7d/30d in both
-      themes and on mobile — pending (offline harness blocked by site CSP; do on
-      a deploy/preview or via local Chrome render).
+- [x] Live visual verification: rendered the real chart.js matrix with live
+      production data (fsn1, 30d) at desktop (1280px) and mobile (375px) in both
+      themes. Confirmed shading, row labels, and date axis. Fixed a layout bug
+      found here — see below.
 - [x] Changelog entry (noteworthy feature).
+
+## Layout fix (found during visual verification)
+
+The first matrix config used a `time` x-axis and computed cell width via
+`scales.x.getPixelForValue(x + stepMs) - getPixelForValue(x)`. That pixel math
+fed back into the chart's layout fit and collapsed the y-axis label gutter at
+wide viewports, so the server-type row labels disappeared on desktop (but showed
+on mobile). Fixed by switching to a **linear bucket-index x-axis** with
+date-formatted ticks (via a tick `callback`) and deriving cell width/height from
+`chartArea` + column/row counts — the canonical, layout-stable matrix recipe.
 
 ## Notes / follow-ups
 
