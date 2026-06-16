@@ -579,7 +579,8 @@
 		currentTileLayer = L_Instance.tileLayer(tileUrl, {
 			attribution: tileAttribution,
 			maxZoom: 18, // Standard max zoom
-			minZoom: 2 // Prevent zooming out too far
+			minZoom: 2, // Prevent zooming out too far
+			referrerPolicy: 'strict-origin-when-cross-origin' // Required by OSM tile usage policy
 		}).addTo(map);
 	}
 
