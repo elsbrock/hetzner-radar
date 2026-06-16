@@ -7,7 +7,11 @@
 	import { onDestroy } from 'svelte';
 	import { db } from '../../stores/db';
 
-	let { lastUpdate, threshold = 60 * 65 }: { lastUpdate: number; threshold?: number } = $props(); // threshold in seconds
+	// The Hetzner import cadence is irregular (~80-120 min between snapshots, not
+	// hourly), so the threshold must sit comfortably above the real gap or the
+	// banner nags every cycle even when nothing is wrong. 150 min only fires on a
+	// genuinely stalled feed.
+	let { lastUpdate, threshold = 60 * 150 }: { lastUpdate: number; threshold?: number } = $props(); // threshold in seconds
 
 	let reloading = $state(false);
 	let showElement = $state(false);
