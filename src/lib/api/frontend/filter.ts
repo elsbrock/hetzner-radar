@@ -215,9 +215,15 @@ export function generateFilterQuery(
   }
 
   // recently seen
+  // "Recently seen" means "present in the latest data snapshot". Anchor the window
+  // to the dataset's own newest `seen` value, NOT wall-clock `now()`. The import
+  // cadence is irregular (often 80-120 min apart, not hourly), so a now()-relative
+  // window would be empty whenever the last import landed more than 70 min ago,
+  // making the page show no results until the next import. Anchoring to max(seen)
+  // always returns the latest snapshot and is timezone-independent.
   if (recentlySeen && filter.recentlySeen) {
     query.append(
-      SQL` and seen > (now()::timestamp - interval '70 minute')::timestamp`,
+      SQL` and seen > (SELECT max(seen) FROM server) - interval '70 minute'`,
     );
   }
 
@@ -420,7 +426,8 @@ export async function getConfigurations(
     )`);
   if (filter.recentlySeen) {
     configurations_query.append(
-      SQL` where last_seen > (now()::timestamp - interval '70 minute')::timestamp`,
+      // See note above: anchor to the dataset's newest snapshot, not wall-clock now.
+      SQL` where last_seen > (SELECT max(seen) FROM server) - interval '70 minute'`,
     );
   }
   configurations_query.append(`
