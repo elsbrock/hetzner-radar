@@ -30,15 +30,16 @@
 		<h1
 			class="mb-2 text-4xl font-extrabold tracking-tight text-gray-800 md:text-5xl dark:text-gray-100"
 		>
-			Track Hetzner dedicated server prices over time
+			Track Hetzner server prices and availability over time
 		</h1>
 		<p class="mb-6 text-lg font-medium text-orange-500">
-			Open-source price tracker for the Hetzner server auction
+			Open-source tracker for Hetzner auction, dedicated, and cloud servers
 		</p>
 		<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
 			Server Radar polls the Hetzner auction every few minutes and keeps three months of price
 			history. Filter by CPU, RAM, storage, and location, compare against standard dedicated and
-			cloud pricing, and set alerts when a configuration drops below your target price.
+			cloud pricing, track cloud server availability by location, and set alerts on price drops or
+			when capacity comes back.
 		</p>
 		<div class="flex flex-col gap-4 sm:flex-row">
 			<Button

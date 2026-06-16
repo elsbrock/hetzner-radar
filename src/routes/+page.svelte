@@ -68,7 +68,7 @@
 </script>
 
 <svelte:head>
-	<title>Hetzner Dedicated Server Price Tracker — Server Radar</title>
+	<title>Hetzner Server Price &amp; Availability Tracker — Server Radar</title>
 	<meta
 		name="description"
 		content="Track Hetzner dedicated server auction prices over time, compare against standard and cloud pricing, and get email or Discord alerts on price drops."
@@ -78,7 +78,7 @@
 	<!-- Open Graph (overrides root layout) -->
 	<meta
 		property="og:title"
-		content="Hetzner Dedicated Server Price Tracker — Server Radar"
+		content="Hetzner Server Price & Availability Tracker — Server Radar"
 	/>
 	<meta
 		property="og:description"
@@ -92,7 +92,7 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta
 		name="twitter:title"
-		content="Hetzner Dedicated Server Price Tracker — Server Radar"
+		content="Hetzner Server Price & Availability Tracker — Server Radar"
 	/>
 	<meta
 		name="twitter:description"
