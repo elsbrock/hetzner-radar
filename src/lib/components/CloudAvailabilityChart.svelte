@@ -77,7 +77,16 @@
 	let matrixData = $state<MatrixDatum[]>([]);
 	let bucketStarts = $state<number[]>([]); // ms, one per column; for tick labels + tooltip
 
-	const stepMs = $derived(granularity === 'hour' ? 3_600_000 : 86_400_000);
+	// Fixed number of columns for every horizon (24h/7d/30d) so the heatmap reads
+	// the same regardless of range; bucket size = horizon / BUCKET_COUNT.
+	const BUCKET_COUNT = 84;
+	// Always reconstruct availability state from at least this much transition
+	// history, even for short display windows. Without it a 24h/7d window can miss
+	// the transition that set the current state and seed the wrong value — which is
+	// why short ranges used to disagree with the 30d view.
+	const LOOKBACK_MS = 30 * 86_400_000;
+	const stepMs = $derived((endDate.getTime() - startDate.getTime()) / BUCKET_COUNT);
+	const fetchStartMs = $derived(Math.min(startDate.getTime(), endDate.getTime() - LOOKBACK_MS));
 	const nRows = $derived(rowLabels.length);
 	const nCols = $derived(bucketStarts.length);
 
@@ -121,15 +130,16 @@
 		error = null;
 
 		try {
-			// Always fetch at hourly resolution, regardless of the display bucket
-			// size. The API pre-buckets with MAX(available) at the requested
-			// granularity, so requesting 'day' would collapse each day to a single
-			// binary value and destroy the sub-day detail we need to shade daily
-			// cells by uptime fraction. Hourly transitions are integrated into
-			// whatever bucket size we render (see buildMatrix).
+			// Always fetch hourly resolution over a wide LOOKBACK window (not just the
+			// display range). Hourly because the API pre-buckets with MAX(available)
+			// at the requested granularity — 'day' would destroy the sub-day detail we
+			// integrate into cells. Wide because availability state is reconstructed
+			// from transitions: a short display window can miss the transition that set
+			// the current state, so we always seed from ≥30d of history and then render
+			// only [startDate, endDate]. This keeps 24h/7d consistent with 30d.
 			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const params = new URLSearchParams({
-				startDate: startDate.toISOString(),
+				startDate: new Date(fetchStartMs).toISOString(),
 				endDate: endDate.toISOString(),
 				granularity: 'hour'
 			});
@@ -168,24 +178,12 @@
 		return new Date(s).getTime();
 	}
 
-	// Bucket start timestamps (ms), aligned to UTC boundaries, spanning the range.
-	// Column count is derived from the time range so static rows still render.
+	// BUCKET_COUNT evenly spaced bucket starts spanning the display range. Fixed
+	// count → identical column count for every horizon.
 	function generateBucketStarts(): number[] {
+		const startMs = startDate.getTime();
 		const buckets: number[] = [];
-		let cur =
-			granularity === 'hour'
-				? Date.UTC(
-						startDate.getUTCFullYear(),
-						startDate.getUTCMonth(),
-						startDate.getUTCDate(),
-						startDate.getUTCHours()
-					)
-				: Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
-		const endMs = endDate.getTime();
-		while (cur <= endMs) {
-			buckets.push(cur);
-			cur += stepMs;
-		}
+		for (let i = 0; i < BUCKET_COUNT; i++) buckets.push(startMs + i * stepMs);
 		return buckets;
 	}
 
@@ -230,8 +228,10 @@
 	}
 
 	function buildMatrix(data: AvailabilityDataPoint[]) {
-		const starts = generateBucketStarts();
-		const windowStart = starts[0] ?? startDate.getTime();
+		const starts = generateBucketStarts(); // display buckets over [start, end]
+		// Step function is seeded from the wide fetch window so the display window's
+		// entry state is established by real transitions, not the current snapshot.
+		const seedStart = fetchStartMs;
 		const windowEnd = endDate.getTime();
 
 		// Group transition events by entity (server type or location).
@@ -253,7 +253,7 @@
 				labelById.set(id, label);
 			}
 			const up = point.available || (point.availabilityRate ?? 0) > 0;
-			const t = Math.max(parseEventTimestamp(point.timestamp), windowStart);
+			const t = Math.max(parseEventTimestamp(point.timestamp), seedStart);
 			(events.get(id) ?? events.set(id, []).get(id)!).push({ t, up });
 		}
 
@@ -276,10 +276,10 @@
 		const out: MatrixDatum[] = [];
 		for (const [id, row] of ordered) {
 			const evs = (events.get(id) ?? []).slice().sort((p, q) => p.t - q.t);
-			// State at the window start: events are transitions, so invert the first
+			// State at the seed start: events are transitions, so invert the first
 			// one. With no events, fall back to the current snapshot.
 			const seed = evs.length > 0 ? !evs[0].up : row.currentlyAvailable;
-			const changePoints = [{ t: windowStart, up: seed }, ...evs];
+			const changePoints = [{ t: seedStart, up: seed }, ...evs];
 
 			for (let i = 0; i < starts.length; i++) {
 				const bStart = starts[i];
@@ -303,8 +303,14 @@
 	}
 
 	function formatBucket(ms: number): string {
+		const horizonDays = (endDate.getTime() - startDate.getTime()) / 86_400_000;
 		const d = new Date(ms);
-		if (granularity === 'hour') {
+		if (horizonDays <= 2) {
+			// 24h: time of day.
+			return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+		}
+		if (horizonDays <= 10) {
+			// 7d: day + time so intra-day buckets are distinguishable.
 			return d.toLocaleString(undefined, {
 				month: 'short',
 				day: '2-digit',
@@ -312,7 +318,8 @@
 				minute: '2-digit'
 			});
 		}
-		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+		// 30d: date only.
+		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
 	}
 
 	// Watch for theme changes so canvas colours track light/dark.
@@ -375,12 +382,14 @@
 				scales: {
 					x: {
 						type: 'linear',
+						position: 'top',
 						min: -0.5,
 						max: cols - 0.5,
 						offset: false,
 						ticks: {
 							color: tickColor,
-							maxRotation: 0,
+							minRotation: 45,
+							maxRotation: 45,
 							autoSkip: true,
 							maxTicksLimit: 12,
 							stepSize: 1,
@@ -414,7 +423,7 @@
 							},
 							label: (item: TooltipItem<'matrix'>) => {
 								const raw = item.raw as MatrixDatum | undefined;
-								return `Uptime: ${Math.round((raw?.v ?? 0) * 100)}%`;
+								return `Available: ${Math.round((raw?.v ?? 0) * 100)}% of the time`;
 							}
 						}
 					}
