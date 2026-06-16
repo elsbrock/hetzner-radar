@@ -329,8 +329,15 @@
 	// (Re)build the chart whenever data or theme changes.
 	$effect(() => {
 		if (!canvasElement || matrixData.length === 0) return;
-		// Touch reactive deps so the effect re-runs on change.
-		const data = matrixData;
+		// Hand Chart.js plain (non-reactive) copies. Chart.js decorates the data
+		// points and labels with internal properties; doing that to Svelte's
+		// `$state` proxies throws `state_descriptors_fixed`. Snapshotting also
+		// touches the reactive deps so the effect re-runs on change.
+		const data = $state.snapshot(matrixData) as MatrixDatum[];
+		const labels = $state.snapshot(rowLabels) as string[];
+		const buckets = $state.snapshot(bucketStarts) as number[];
+		const cols = nCols;
+		const rows = nRows;
 		const dark = isDarkMode;
 		// Match the app's other charts (GenericChart) so axes look consistent
 		// across light/dark themes.
@@ -351,11 +358,11 @@
 						// viewport widths and independent of axis pixel math.
 						width: (ctx) => {
 							const area = ctx.chart.chartArea;
-							return area ? Math.max(1, area.width / Math.max(1, nCols) - 1) : 0;
+							return area ? Math.max(1, area.width / Math.max(1, cols) - 1) : 0;
 						},
 						height: (ctx) => {
 							const area = ctx.chart.chartArea;
-							return area ? Math.max(1, area.height / Math.max(1, nRows) - 1) : 0;
+							return area ? Math.max(1, area.height / Math.max(1, rows) - 1) : 0;
 						}
 					}
 				]
@@ -369,7 +376,7 @@
 					x: {
 						type: 'linear',
 						min: -0.5,
-						max: nCols - 0.5,
+						max: cols - 0.5,
 						offset: false,
 						ticks: {
 							color: tickColor,
@@ -380,7 +387,7 @@
 							// Linear axis carries bucket indices; render the bucket's date.
 							callback: (value) => {
 								const i = Math.round(value as number);
-								return i >= 0 && i < bucketStarts.length ? formatBucket(bucketStarts[i]) : '';
+								return i >= 0 && i < buckets.length ? formatBucket(buckets[i]) : '';
 							}
 						},
 						grid: { display: false },
@@ -388,7 +395,7 @@
 					},
 					y: {
 						type: 'category',
-						labels: rowLabels,
+						labels,
 						offset: true,
 						reverse: true,
 						ticks: { color: tickColor, autoSkip: false },
@@ -403,7 +410,7 @@
 						callbacks: {
 							title: (items: TooltipItem<'matrix'>[]) => {
 								const raw = items[0]?.raw as MatrixDatum | undefined;
-								return raw ? `${raw.y} · ${formatBucket(bucketStarts[raw.x] ?? 0)}` : '';
+								return raw ? `${raw.y} · ${formatBucket(buckets[raw.x] ?? 0)}` : '';
 							},
 							label: (item: TooltipItem<'matrix'>) => {
 								const raw = item.raw as MatrixDatum | undefined;
