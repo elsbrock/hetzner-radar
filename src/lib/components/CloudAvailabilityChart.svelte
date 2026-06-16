@@ -63,17 +63,23 @@
 	// One datum per (entity row × time bucket). `v` is the fraction of the bucket
 	// the entity was available (0..1), computed by integrating the step function
 	// defined by the transition events — not a binary "up at any point" flag.
+	// `x` is the bucket *index* (not a timestamp): the matrix uses a linear index
+	// axis and derives cell sizes from chartArea, which keeps the layout stable.
+	// (A time x-axis with pixel-derived cell widths fed back into the fit and
+	// collapsed the y-axis label gutter at wide viewports.)
 	interface MatrixDatum {
-		x: number; // bucket start (ms)
+		x: number; // bucket index 0..nCols-1
 		y: string; // entity row label
 		v: number; // uptime fraction 0..1
 	}
 
 	let rowLabels = $state<string[]>([]);
 	let matrixData = $state<MatrixDatum[]>([]);
+	let bucketStarts = $state<number[]>([]); // ms, one per column; for tick labels + tooltip
 
 	const stepMs = $derived(granularity === 'hour' ? 3_600_000 : 86_400_000);
 	const nRows = $derived(rowLabels.length);
+	const nCols = $derived(bucketStarts.length);
 
 	let canvasElement: HTMLCanvasElement | null = $state(null);
 	let chartInstance: Chart<'matrix'> | null = null;
@@ -224,8 +230,8 @@
 	}
 
 	function buildMatrix(data: AvailabilityDataPoint[]) {
-		const bucketStarts = generateBucketStarts();
-		const windowStart = bucketStarts[0] ?? startDate.getTime();
+		const starts = generateBucketStarts();
+		const windowStart = starts[0] ?? startDate.getTime();
 		const windowEnd = endDate.getTime();
 
 		// Group transition events by entity (server type or location).
@@ -275,15 +281,17 @@
 			const seed = evs.length > 0 ? !evs[0].up : row.currentlyAvailable;
 			const changePoints = [{ t: windowStart, up: seed }, ...evs];
 
-			for (const bStart of bucketStarts) {
+			for (let i = 0; i < starts.length; i++) {
+				const bStart = starts[i];
 				const bEnd = Math.min(bStart + stepMs, windowEnd);
 				out.push({
-					x: bStart,
+					x: i,
 					y: row.label,
 					v: availableFraction(changePoints, bStart, bEnd, windowEnd)
 				});
 			}
 		}
+		bucketStarts = starts;
 		matrixData = out;
 	}
 
@@ -339,11 +347,11 @@
 						backgroundColor: (ctx) =>
 							colorForFraction((ctx.raw as MatrixDatum | undefined)?.v ?? 0),
 						borderWidth: 0,
+						// Cell size from chartArea + column/row counts — stable across
+						// viewport widths and independent of axis pixel math.
 						width: (ctx) => {
-							const x = ctx.chart.scales.x;
-							const raw = ctx.raw as MatrixDatum | undefined;
-							if (!raw) return 0;
-							return Math.max(1, x.getPixelForValue(raw.x + stepMs) - x.getPixelForValue(raw.x) - 0.5);
+							const area = ctx.chart.chartArea;
+							return area ? Math.max(1, area.width / Math.max(1, nCols) - 1) : 0;
 						},
 						height: (ctx) => {
 							const area = ctx.chart.chartArea;
@@ -359,11 +367,22 @@
 				layout: { padding: { right: 4 } },
 				scales: {
 					x: {
-						type: 'time',
-						min: startDate.getTime(),
-						max: endDate.getTime(),
+						type: 'linear',
+						min: -0.5,
+						max: nCols - 0.5,
 						offset: false,
-						ticks: { color: tickColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 },
+						ticks: {
+							color: tickColor,
+							maxRotation: 0,
+							autoSkip: true,
+							maxTicksLimit: 12,
+							stepSize: 1,
+							// Linear axis carries bucket indices; render the bucket's date.
+							callback: (value) => {
+								const i = Math.round(value as number);
+								return i >= 0 && i < bucketStarts.length ? formatBucket(bucketStarts[i]) : '';
+							}
+						},
 						grid: { display: false },
 						border: { color: gridColor }
 					},
@@ -384,7 +403,7 @@
 						callbacks: {
 							title: (items: TooltipItem<'matrix'>[]) => {
 								const raw = items[0]?.raw as MatrixDatum | undefined;
-								return raw ? `${raw.y} · ${formatBucket(raw.x)}` : '';
+								return raw ? `${raw.y} · ${formatBucket(bucketStarts[raw.x] ?? 0)}` : '';
 							},
 							label: (item: TooltipItem<'matrix'>) => {
 								const raw = item.raw as MatrixDatum | undefined;
