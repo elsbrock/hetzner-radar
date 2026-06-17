@@ -28,9 +28,24 @@ jobs:
         id: download
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
         with:
-          command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
+          # --remote is required: wrangler defaults `r2 object` to LOCAL storage,
+          # which silently returns an empty file ("key does not exist").
+          command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Pin wrangler so a future version can't silently change command defaults.
+          wranglerVersion: "4.101.0"
         continue-on-error: true # First run won't have existing DB
+
+      - name: Verify downloaded database
+        run: |
+          # Fail fast (and preserve the good R2 object — uploads are gated on
+          # success) if the download didn't produce a valid DuckDB file, instead
+          # of crashing later with a confusing error or uploading garbage.
+          if [ ! -s static/sb.duckdb.wasm ] || [ "$(stat -c%s static/sb.duckdb.wasm)" -lt 100000 ]; then
+            echo "::error::R2 download produced a missing/too-small database file." \
+                 "Check the CLOUDFLARE_API_TOKEN secret and that 'r2 object get' uses --remote."
+            exit 1
+          fi
 
       - name: Run incremental update
         id: update
@@ -43,16 +58,18 @@ jobs:
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
         with:
           # Keep a rolling backup - overwrites previous backup each time
-          command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu
+          command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          wranglerVersion: "4.101.0"
         continue-on-error: true # Don't fail if backup fails
 
       - name: Deploy DB to R2
         if: success()
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
         with:
-          command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
+          command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          wranglerVersion: "4.101.0"
 
   notify_failure:
     runs-on: ubuntu-latest
