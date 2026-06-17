@@ -134,114 +134,103 @@ export class AlertService {
 				AND (ln(c.ram_size) / ln(2)) <= json_extract(pa.filter, '$.ramInternalSize[1]')
 			)
 
-			-- Disk type filters (NVMe / SATA / HDD), combined per filter.diskMode.
-			-- Missing diskMode (pre-OR-feature alerts) coalesces to 'and' → preserves prior behavior.
-			-- OR mode mirrors the frontend: inactive disk types (count at defaults [0,8]/[0,4]/[0,15])
-			-- are skipped; if none is active, the block is a no-op (matches everything).
+			-- Disk type filters (NVMe / SATA / HDD). Mirrors generateFilterQuery() in
+			-- src/lib/api/frontend/filter.ts EXACTLY — keep the two in sync.
+			--   unit       : 500 GB per slider step (getFormattedDiskSize(v, 500) in the UI)
+			--   total mode : <type>_size BETWEEN lo*500 AND hi*500
+			--   per-disk   : <type>_count = 0 (empty array passes, like the frontend's
+			--               array_filter == array_length) OR every drive within [lo*500, hi*500]
+			--   missing sizeMode/diskMode (pre-2026 alerts) -> 'per-disk' / 'and'
 			AND (
 				CASE
 					WHEN COALESCE(json_extract(pa.filter, '$.diskMode'), 'and') = 'or' THEN
-						-- No disk type constrained → skip the filter entirely
-						(
-							json_extract(pa.filter, '$.ssdNvmeCount[0]') = 0 AND json_extract(pa.filter, '$.ssdNvmeCount[1]') = 8
-							AND json_extract(pa.filter, '$.ssdSataCount[0]') = 0 AND json_extract(pa.filter, '$.ssdSataCount[1]') = 4
-							AND json_extract(pa.filter, '$.hddCount[0]') = 0 AND json_extract(pa.filter, '$.hddCount[1]') = 15
+						-- OR mode: only types whose count range differs from the default
+						-- ([0,8]/[0,4]/[0,15]) contribute; if none is active this is a no-op.
+						(NOT (json_extract(pa.filter, '$.ssdNvmeCount[0]') != 0 OR json_extract(pa.filter, '$.ssdNvmeCount[1]') != 8) AND NOT (json_extract(pa.filter, '$.ssdSataCount[0]') != 0 OR json_extract(pa.filter, '$.ssdSataCount[1]') != 4) AND NOT (json_extract(pa.filter, '$.hddCount[0]') != 0 OR json_extract(pa.filter, '$.hddCount[1]') != 15))
+						OR ((json_extract(pa.filter, '$.ssdNvmeCount[0]') != 0 OR json_extract(pa.filter, '$.ssdNvmeCount[1]') != 8) AND
+								(
+									c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
+									AND (
+										CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdNvmeSizeMode'), 'per-disk') = 'total' THEN
+											(c.nvme_size >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.nvme_size <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500)
+										ELSE
+											(c.nvme_count = 0 OR (c.min_nvme_drive >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.max_nvme_drive <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500))
+										END
+									)
+								)
 						)
-						OR (
-							-- NVMe leg (only contributes when constrained)
-							(
-								(json_extract(pa.filter, '$.ssdNvmeCount[0]') != 0 OR json_extract(pa.filter, '$.ssdNvmeCount[1]') != 8)
-								AND c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
-								AND (
-									json_extract(pa.filter, '$.ssdNvmeCount[0]') = 0
-									OR (
-										json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') <=
-											COALESCE(FLOOR(c.min_nvme_drive / 250.0), 0)
-										AND
-											(FLOOR(c.max_nvme_drive / 250.0) + CASE WHEN (c.max_nvme_drive / 250.0) > FLOOR(c.max_nvme_drive / 250.0) THEN 1 ELSE 0 END)
-											<= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]')
+						OR ((json_extract(pa.filter, '$.ssdSataCount[0]') != 0 OR json_extract(pa.filter, '$.ssdSataCount[1]') != 4) AND
+								(
+									c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
+									AND (
+										CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdSataSizeMode'), 'per-disk') = 'total' THEN
+											(c.sata_size >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.sata_size <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500)
+										ELSE
+											(c.sata_count = 0 OR (c.min_sata_drive >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.max_sata_drive <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500))
+										END
 									)
 								)
-							)
-							OR
-							-- SATA leg
-							(
-								(json_extract(pa.filter, '$.ssdSataCount[0]') != 0 OR json_extract(pa.filter, '$.ssdSataCount[1]') != 4)
-								AND c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
-								AND (
-									json_extract(pa.filter, '$.ssdSataCount[0]') = 0
-									OR (
-										json_extract(pa.filter, '$.ssdSataInternalSize[0]') <=
-											COALESCE(FLOOR(c.min_sata_drive / 250.0), 0)
-										AND
-											(FLOOR(c.max_sata_drive / 250.0) + CASE WHEN (c.max_sata_drive / 250.0) > FLOOR(c.max_sata_drive / 250.0) THEN 1 ELSE 0 END)
-											<= json_extract(pa.filter, '$.ssdSataInternalSize[1]')
+						)
+						OR ((json_extract(pa.filter, '$.hddCount[0]') != 0 OR json_extract(pa.filter, '$.hddCount[1]') != 15) AND
+								(
+									c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
+									AND (
+										CASE WHEN COALESCE(json_extract(pa.filter, '$.hddSizeMode'), 'per-disk') = 'total' THEN
+											(c.hdd_size >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.hdd_size <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500)
+										ELSE
+											(c.hdd_count = 0 OR (c.min_hdd_drive >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.max_hdd_drive <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500))
+										END
 									)
 								)
-							)
-							OR
-							-- HDD leg
-							(
-								(json_extract(pa.filter, '$.hddCount[0]') != 0 OR json_extract(pa.filter, '$.hddCount[1]') != 15)
-								AND c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
-								AND (
-									json_extract(pa.filter, '$.hddCount[0]') = 0
-									OR (
-										json_extract(pa.filter, '$.hddInternalSize[0]') <=
-											COALESCE(FLOOR(c.min_hdd_drive / 500.0), 0)
-										AND
-											(FLOOR(c.max_hdd_drive / 500.0) + CASE WHEN (c.max_hdd_drive / 500.0) > FLOOR(c.max_hdd_drive / 500.0) THEN 1 ELSE 0 END)
-											<= json_extract(pa.filter, '$.hddInternalSize[1]')
-									)
-								)
-							)
 						)
 					ELSE
-						-- AND mode (default, also covers old alerts without diskMode)
-						(
-							c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
-							AND (
-								json_extract(pa.filter, '$.ssdNvmeCount[0]') = 0
-								OR (
-									json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') <=
-										COALESCE(FLOOR(c.min_nvme_drive / 250.0), 0)
-									AND
-										(FLOOR(c.max_nvme_drive / 250.0) + CASE WHEN (c.max_nvme_drive / 250.0) > FLOOR(c.max_nvme_drive / 250.0) THEN 1 ELSE 0 END)
-										<= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]')
+						-- AND mode (default; also covers old alerts without diskMode)
+							(
+								c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
+								AND (
+									CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdNvmeSizeMode'), 'per-disk') = 'total' THEN
+										(c.nvme_size >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.nvme_size <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500)
+									ELSE
+										(c.nvme_count = 0 OR (c.min_nvme_drive >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.max_nvme_drive <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500))
+									END
 								)
 							)
-							AND c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
-							AND (
-								json_extract(pa.filter, '$.ssdSataCount[0]') = 0
-								OR (
-									json_extract(pa.filter, '$.ssdSataInternalSize[0]') <=
-										COALESCE(FLOOR(c.min_sata_drive / 250.0), 0)
-									AND
-										(FLOOR(c.max_sata_drive / 250.0) + CASE WHEN (c.max_sata_drive / 250.0) > FLOOR(c.max_sata_drive / 250.0) THEN 1 ELSE 0 END)
-										<= json_extract(pa.filter, '$.ssdSataInternalSize[1]')
+						AND
+							(
+								c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
+								AND (
+									CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdSataSizeMode'), 'per-disk') = 'total' THEN
+										(c.sata_size >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.sata_size <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500)
+									ELSE
+										(c.sata_count = 0 OR (c.min_sata_drive >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.max_sata_drive <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500))
+									END
 								)
 							)
-							AND c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
-							AND (
-								json_extract(pa.filter, '$.hddCount[0]') = 0
-								OR (
-									json_extract(pa.filter, '$.hddInternalSize[0]') <=
-										COALESCE(FLOOR(c.min_hdd_drive / 500.0), 0)
-									AND
-										(FLOOR(c.max_hdd_drive / 500.0) + CASE WHEN (c.max_hdd_drive / 500.0) > FLOOR(c.max_hdd_drive / 500.0) THEN 1 ELSE 0 END)
-										<= json_extract(pa.filter, '$.hddInternalSize[1]')
+						AND
+							(
+								c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
+								AND (
+									CASE WHEN COALESCE(json_extract(pa.filter, '$.hddSizeMode'), 'per-disk') = 'total' THEN
+										(c.hdd_size >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.hdd_size <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500)
+									ELSE
+										(c.hdd_count = 0 OR (c.min_hdd_drive >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.max_hdd_drive <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500))
+									END
 								)
 							)
-						)
 				END
 			)
 
-			-- Selected Datacenters
+			-- Selected Datacenters. Mirrors generateFilterQuery: a selection is either a
+			-- specific datacenter (exact match, e.g. 'FSN1-DC14') or a city prefix
+			-- ('FSN'/'NBG'/'HEL', matched with LIKE 'FSN%'). Exact IN would never match a
+			-- city prefix, so city-level alerts would silently never fire.
 			AND (
 				json_extract(pa.filter, '$.selectedDatacenters') IS NULL
 				OR json_array_length(json_extract(pa.filter, '$.selectedDatacenters')) = 0
-				OR c.datacenter IN (
-					SELECT value FROM json_each(pa.filter, '$.selectedDatacenters')
+				OR EXISTS (
+					SELECT 1 FROM json_each(pa.filter, '$.selectedDatacenters') AS dc
+					WHERE c.datacenter = dc.value
+						OR (dc.value IN ('FSN', 'NBG', 'HEL') AND c.datacenter LIKE dc.value || '%')
 				)
 			)
 
