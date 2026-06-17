@@ -29,7 +29,7 @@ frontend; the worker was never updated. Three concrete divergences:
   report #1. (HDD already used 500 in both.)
 - **B. Size skipped when count lower bound is 0.** Worker gates each per-disk size
   check behind `xxxCount[0] != 0`. Count sliders default to a `0` lower bound, so
-  users who constrain by *size only* get the size filter silently ignored. The
+  users who constrain by _size only_ get the size filter silently ignored. The
   frontend never gates size on count.
 - **C. `total` size mode unsupported.** Worker always applies per-disk min/max
   logic and has no `xxx_size` (sum) branch → report #2 (combined with B, the HDD
@@ -67,7 +67,7 @@ Per disk type (NVMe, SATA, HDD), unit = **500 GB**:
 Combine per `diskMode` (missing → `and`):
 
 - **and**: `nvme AND sata AND hdd`
-- **or**: all-unconstrained → no-op; otherwise OR of each *active* clause, where a
+- **or**: all-unconstrained → no-op; otherwise OR of each _active_ clause, where a
   type is active when its count range differs from the default
   (`[0,8]`/`[0,4]`/`[0,15]`). Mirrors frontend `nvmeActive`/`sataActive`/`hddActive`.
 
