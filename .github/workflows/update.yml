@@ -28,7 +28,7 @@ jobs:
         id: download
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
         with:
-          command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
+          command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         continue-on-error: true # First run won't have existing DB
 
@@ -43,7 +43,7 @@ jobs:
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
         with:
           # Keep a rolling backup - overwrites previous backup each time
-          command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu
+          command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         continue-on-error: true # Don't fail if backup fails
 
@@ -51,7 +51,7 @@ jobs:
         if: success()
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
         with:
-          command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu
+          command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
   notify_failure:
