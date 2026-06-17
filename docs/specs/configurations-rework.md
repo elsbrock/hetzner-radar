@@ -5,7 +5,7 @@
 The `/configurations` page is meant to surface genuinely useful "best deal" highlights so visitors can see at a glance what's worth buying today. It currently does not deliver on that:
 
 1. The highlighted configs frequently look wrong or inconsistent between reloads.
-2. CPU performance data (`cpu_score`, `cpu_multicore_score`) has been available since the CPU-enrichment work (`specs/cpu-enrichment.md`, phases 2–3 done) but is not used for ranking.
+2. CPU performance data (`cpu_score`, `cpu_multicore_score`) has been available since the CPU-enrichment work (`docs/specs/cpu-enrichment.md`, phases 2–3 done) but is not used for ranking.
 3. The page has two divergent implementations — D1 (primary) and DuckDB (fallback) — with different bugs.
 
 This spec is about fixing the ranking logic first. The follow-up (static per-config / per-CPU SEO landing pages) is out of scope here and tracked separately.

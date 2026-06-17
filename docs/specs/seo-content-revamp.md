@@ -4,7 +4,7 @@
 
 Hetzner Server Radar has substance (real data, real tools) but its content pages haven't been tuned for SEO — most inherit a single generic meta description from `src/routes/+layout.svelte`, every page has the same canonical, and several pages end with filler "scenarios" copy that signals low-value content under Google's helpful-content framework.
 
-This spec is a shared playbook for revamping all major content pages. It sits alongside `specs/configurations-rework.md` (which fixed the ranking logic) and covers:
+This spec is a shared playbook for revamping all major content pages. It sits alongside `docs/specs/configurations-rework.md` (which fixed the ranking logic) and covers:
 
 - Unique `<svelte:head>` per page (title, description, canonical, OG, Twitter)
 - Page-appropriate JSON-LD (BreadcrumbList on every page; ItemList / FAQPage / Article / StatisticalStudy where they fit)
@@ -51,12 +51,12 @@ Keep JSON-LD truthful — Google demotes pages where rich data doesn't match vis
 - Unique `<svelte:head>` with title targeting "Hetzner dedicated server price tracker" (or similar — pick one primary keyword, don't keyword-stuff).
 - Keep `HeroSection`, `LiveMetrics`, `ConfigurationsTeaser`, `StatisticsTeaser`, `OpenSourceBanner`.
 - Review `FeaturesSection`, `ScreenshotCarousel`, `FAQSection`, `TestimonialsSection` — cut anything generic. FAQ should keep and emit FAQPage schema.
-- Update `ConfigurationsTeaser.svelte` to feature the new **Best Price/Performance** category introduced by `specs/configurations-rework.md` — currently it only links to affordable/ram/storage/nvme.
+- Update `ConfigurationsTeaser.svelte` to feature the new **Best Price/Performance** category introduced by `docs/specs/configurations-rework.md` — currently it only links to affordable/ram/storage/nvme.
 - Add `SearchAction` potentialAction pointing to `/analyze` if feasible.
 
 ### `/configurations`
 
-- Add `<svelte:head>` (page was just reworked in `specs/configurations-rework.md`, but SEO bits were deferred).
+- Add `<svelte:head>` (page was just reworked in `docs/specs/configurations-rework.md`, but SEO bits were deferred).
 - Emit one `ItemList` with `Product` entries per category (6 lists), each product showing CPU, RAM, storage, `offers.price`.
 - Drop the "Common Usage Scenarios" block — it's generic filler with no links, no data. Replace with a small data-backed block: live CPU-generation breakdown, or top-N CPU families with listing counts, each deep-linking into `/analyze` with pre-applied filters.
 - Replace the "Ready to Explore More?" CTA with a specific one: "Browse all N live auctions →" where N comes from the snapshot metadata already loaded.

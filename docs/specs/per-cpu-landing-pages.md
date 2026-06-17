@@ -4,7 +4,7 @@
 
 Generate a stable, indexable page per CPU model that appears on Hetzner's auction (e.g. `/servers/cpu/ryzen-5-3600`, `/servers/cpu/xeon-e3-1245v2`). These pages aggregate current listings and 90-day price history for a single CPU into one URL that can earn ranking on long-tail queries like "cheap Ryzen 5 3600 server" or "Xeon E3-1245v2 price".
 
-This is the "Phase B" follow-up flagged in `specs/configurations-rework.md`. It's the largest remaining SEO lever before per-Hetzner-model pages (AX41, EX44 — separate spec, depends on data enrichment we don't have yet).
+This is the "Phase B" follow-up flagged in `docs/specs/configurations-rework.md`. It's the largest remaining SEO lever before per-Hetzner-model pages (AX41, EX44 — separate spec, depends on data enrichment we don't have yet).
 
 ## Goals
 
