@@ -4,6 +4,7 @@
 	import Toast from '$lib/components/Toast.svelte';
 	import '../app.css';
 	import FloatingActionButton from '$lib/components/FloatingActionButton.svelte';
+	import SqlConsoleLauncher from '$lib/components/console/SqlConsoleLauncher.svelte';
 	import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
@@ -138,3 +139,6 @@
 	priority={100}
 	ariaLabel="Scroll to top"
 />
+
+<!-- Global SQL Console launcher (persistent FAB + slide-out) -->
+<SqlConsoleLauncher />

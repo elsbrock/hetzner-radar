@@ -4,17 +4,19 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome'; // Use named import
 	import { fly } from 'svelte/transition';
 	import { onDestroy } from 'svelte';
-	import { activeFabId, registerFab, unregisterFab } from '$lib/stores/fabStore';
+	import { fabSlots, registerFab, unregisterFab } from '$lib/stores/fabStore';
 
 	let {
 		icon,
 		targetSelector = null,
+		onClick = null,
 		visible,
 		priority,
 		ariaLabel
 	}: {
 		icon: IconDefinition;
 		targetSelector?: string | null;
+		onClick?: (() => void) | null;
 		visible: boolean;
 		priority: number;
 		ariaLabel: string;
@@ -38,10 +40,21 @@
 		unregisterFab(fabId);
 	});
 
-	// Determine if this specific FAB should be rendered based on priority
-	let shouldRender = $derived(visible && $activeFabId === fabId);
+	// This instance's vertical slot (0 = bottom-most). Undefined while unregistered.
+	let slot = $derived($fabSlots.get(fabId));
+
+	// Render whenever this FAB is visible and has been assigned a slot.
+	let shouldRender = $derived(visible && slot !== undefined);
+
+	// Vertical offset: slot 0 sits at the original bottom-12 (3rem); each higher
+	// slot stacks upward by 4.5rem.
+	let bottomStyle = $derived(`bottom: calc(3rem + ${slot ?? 0} * 4.5rem)`);
 
 	function handleClick() {
+		if (onClick) {
+			onClick();
+			return;
+		}
 		if (targetSelector) {
 			const targetElement = document.querySelector(targetSelector);
 			if (targetElement) {
@@ -57,7 +70,7 @@
 </script>
 
 {#if shouldRender}
-	<div class="fixed right-6 bottom-12 z-50" transition:fly={{ y: 100, duration: 300 }}>
+	<div class="fixed right-6 z-50" style={bottomStyle} transition:fly={{ y: 100, duration: 300 }}>
 		<Button
 			onclick={handleClick}
 			size="lg"

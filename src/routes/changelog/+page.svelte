@@ -11,6 +11,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'Run your own SQL with the SQL Console', datePublished: '2026-06-17' },
 		{ headline: 'Availability heatmap shows uptime, not just in/out of stock', datePublished: '2026-06-16' },
 		{ headline: 'Smarter configuration picks', datePublished: '2026-04-24' },
 		{ headline: 'Finer-grained disk filters', datePublished: '2026-04-18' },
@@ -109,6 +110,16 @@
 
 <div class="container mx-auto max-w-4xl px-6 py-10">
 	<Timeline>
+		<TimelineItem title="Run your own SQL with the SQL Console" date="Released on June 17th, 2026">
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				Power users can now query the auction dataset directly from the data pages. A floating button
+				opens a SQL console with syntax highlighting, schema-aware autocomplete, and CSV/JSON export.
+				Ready-made views make it easy: <code>available</code> lists what's currently for sale (with a
+				direct order link), and <code>server_history</code> covers prices over time — both with
+				prices that already include IPv4 and your selected VAT and currency. Everything runs entirely
+				in your browser, so it's instant and private.
+			</p>
+		</TimelineItem>
 		<TimelineItem
 			title="Availability heatmap shows uptime, not just in/out of stock"
 			date="Released on June 16th, 2026"
