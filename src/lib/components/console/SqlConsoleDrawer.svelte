@@ -225,14 +225,12 @@
 
 <Drawer
 	bind:hidden
-	backdrop={true}
-	bgOpacity="bg-black/25"
 	placement="right"
-	transitionType="fly"
 	{transitionParams}
 	id="sql-console-drawer"
-	width="w-full sm:w-[40rem] lg:w-[52rem]"
-	class="border-l border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+	class="w-full border-l border-zinc-200 bg-white sm:w-[40rem] lg:w-[52rem] dark:border-zinc-700 dark:bg-zinc-900"
+	outsideclose={true}
+	dismissable={false}
 >
 	<div class="flex h-full flex-col">
 		<!-- Header -->

@@ -337,10 +337,12 @@
 		<!-- Tabs -->
 		<Tabs contentClass="mt-6">
 			<TabItem bind:open={priceAlertsTabOpen}>
-				<div slot="title" class="flex items-center gap-2">
-					<BellRingSolid class="h-4 w-4" />
-					Price Alerts
-				</div>
+				{#snippet titleSlot()}
+					<div class="flex items-center gap-2">
+						<BellRingSolid class="h-4 w-4" />
+						Price Alerts
+					</div>
+				{/snippet}
 
 				<div class="space-y-6">
 					<!-- Price Alerts Header -->
@@ -459,7 +461,7 @@
 													</Button>
 													<Button
 														size="xs"
-														on:click={() => {
+														onclick={() => {
 															selectedAlert = alert;
 															showEdit = true;
 														}}
@@ -468,7 +470,7 @@
 													</Button>
 													<Button
 														size="xs"
-														on:click={() => openDeleteConfirmation('price', alert.id, alert.name)}
+														onclick={() => openDeleteConfirmation('price', alert.id, alert.name)}
 													>
 														<FontAwesomeIcon icon={faTrash} />
 													</Button>
@@ -481,7 +483,9 @@
 						</div>
 					{:catch error}
 						<Alert color="red" class="rounded-2xl">
-							<ExclamationCircleSolid slot="icon" class="h-4 w-4" />
+							{#snippet icon()}
+								<ExclamationCircleSolid class="h-4 w-4" />
+							{/snippet}
 							<strong>Error:</strong> Could not load price alerts.
 						</Alert>
 					{/await}
@@ -568,7 +572,7 @@
 													</Button>
 													<Button
 														size="xs"
-														on:click={async () => {
+														onclick={async () => {
 															try {
 																const response = await fetch(`/alerts/${alert.id}/auctions`);
 																if (!response.ok) {
@@ -605,7 +609,9 @@
 						</div>
 					{:catch error}
 						<Alert color="red" class="rounded-2xl">
-							<ExclamationCircleSolid slot="icon" class="h-4 w-4" />
+							{#snippet icon()}
+								<ExclamationCircleSolid class="h-4 w-4" />
+							{/snippet}
 							<strong>Error:</strong> Could not load triggered alerts.
 						</Alert>
 					{/await}
@@ -613,10 +619,12 @@
 			</TabItem>
 
 			<TabItem bind:open={cloudAlertsTabOpen}>
-				<div slot="title" class="flex items-center gap-2">
-					<BullhornSolid class="h-4 w-4" />
-					Cloud Alerts
-				</div>
+				{#snippet titleSlot()}
+					<div class="flex items-center gap-2">
+						<BullhornSolid class="h-4 w-4" />
+						Cloud Alerts
+					</div>
+				{/snippet}
 
 				<div class="space-y-6">
 					<!-- Cloud Alerts Header -->
@@ -627,7 +635,7 @@
 								Monitor cloud server availability changes in real-time
 							</p>
 						</div>
-						<Button on:click={openCreateCloudAlertModal} class="rounded-xl px-6 py-3 font-medium">
+						<Button onclick={openCreateCloudAlertModal} class="rounded-xl px-6 py-3 font-medium">
 							<BellRingSolid class="mr-2 h-4 w-4" />
 							Create Cloud Alert
 						</Button>
@@ -656,7 +664,7 @@
 									</p>
 									<p class="mt-2">
 										<Button
-											on:click={openCreateCloudAlertModal}
+											onclick={openCreateCloudAlertModal}
 											color="primary"
 											size="sm"
 											class="shadow-xs"
@@ -681,7 +689,7 @@
 													{alert.name}
 												</span>
 												{#if !alert.is_armed}
-													<Badge color="dark" class="mt-1 text-xs">Disarmed</Badge>
+													<Badge color="gray" class="mt-1 text-xs">Disarmed</Badge>
 												{/if}
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
@@ -768,18 +776,18 @@
 														<Button
 															size="xs"
 															color="green"
-															on:click={() => rearmCloudAlert(alert.id)}
+															onclick={() => rearmCloudAlert(alert.id)}
 															title="Re-arm alert"
 														>
 															<FontAwesomeIcon icon={faRotateRight} class="h-4 w-4" />
 														</Button>
 													{/if}
-													<Button size="xs" on:click={() => openEditCloudAlertModal(alert)}>
+													<Button size="xs" onclick={() => openEditCloudAlertModal(alert)}>
 														<PenSolid class="h-4 w-4" />
 													</Button>
 													<Button
 														size="xs"
-														on:click={() => openDeleteConfirmation('cloud', alert.id, alert.name)}
+														onclick={() => openDeleteConfirmation('cloud', alert.id, alert.name)}
 													>
 														<TrashBinSolid class="h-4 w-4" />
 													</Button>
@@ -863,7 +871,9 @@
 						{/if}
 					{:else}
 						<Alert color="yellow" class="rounded-2xl">
-							<InfoCircleSolid slot="icon" class="h-4 w-4" />
+							{#snippet icon()}
+								<InfoCircleSolid class="h-4 w-4" />
+							{/snippet}
 							Unable to load cloud alerts data.
 						</Alert>
 					{/if}
@@ -898,14 +908,14 @@
 		<div class="flex justify-center gap-3">
 			<Button
 				color="alternative"
-				on:click={() => {
+				onclick={() => {
 					showDeleteModal = false;
 				}}
 				disabled={deleteConfirmation.isDeleting}
 			>
 				Cancel
 			</Button>
-			<Button color="red" on:click={confirmDelete} disabled={deleteConfirmation.isDeleting}>
+			<Button color="red" onclick={confirmDelete} disabled={deleteConfirmation.isDeleting}>
 				{#if deleteConfirmation.isDeleting}
 					<Spinner size="4" class="me-2" />
 					Deleting...

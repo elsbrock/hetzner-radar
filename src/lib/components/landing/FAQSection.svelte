@@ -45,12 +45,18 @@
 	<div
 		class="rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
 	>
-		<Accordion class="divide-y divide-gray-200 dark:divide-gray-700">
+		<Accordion flush class="divide-y divide-gray-200 dark:divide-gray-700">
 			{#each faqItems as item (item.question)}
-				<AccordionItem class="border-b border-gray-200 last:border-b-0 dark:border-gray-700">
-					<span slot="header" class="text-base font-semibold text-gray-800 dark:text-gray-100">
-						{item.question}
-					</span>
+				<AccordionItem
+					class="border-b border-gray-200 last:border-b-0 dark:border-gray-700"
+					headerClass="px-5"
+					contentClass="px-5"
+				>
+					{#snippet header()}
+						<span class="text-base font-semibold text-gray-800 dark:text-gray-100">
+							{item.question}
+						</span>
+					{/snippet}
 					<p class="leading-relaxed text-gray-600 dark:text-gray-400">
 						{#each item.answer as segment, i (i)}{#if typeof segment === 'string'}{segment}{:else}<a
 									href={segment.href}

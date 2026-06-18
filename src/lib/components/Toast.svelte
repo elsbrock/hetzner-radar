@@ -34,7 +34,7 @@
 <div class="fixed right-0 bottom-5 z-50 w-96" data-testid="toast">
 	{#each toasts as toast (toast.id)}
 		<Toast color={toast.color} dismissable={false} class="mt-5 flex items-center gap-2">
-			<svelte:fragment slot="icon">
+			{#snippet icon()}
 				{#if toast.icon === 'success'}
 					<CheckCircleSolid class="h-5 w-5" />
 					<span class="sr-only">Success Icon</span>
@@ -42,7 +42,7 @@
 					<CloseCircleSolid class="h-5 w-5" />
 					<span class="sr-only">Error Icon</span>
 				{/if}
-			</svelte:fragment>
+			{/snippet}
 			{toast.message}
 		</Toast>
 	{/each}

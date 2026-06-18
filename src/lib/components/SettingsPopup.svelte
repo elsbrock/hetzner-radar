@@ -75,7 +75,7 @@
 			</div>
 			<div class="flex items-center justify-between px-2 py-1.5">
 				<span class="text-gray-700 dark:text-gray-300">Theme</span>
-				<ButtonGroup size="xs">
+				<ButtonGroup size="sm">
 					<Button
 						color={currentTheme === 'light' ? 'primary' : 'alternative'}
 						onclick={() => setTheme('light')}
@@ -108,7 +108,7 @@
 			</div>
 			<div class="flex items-center justify-between px-2 py-1.5">
 				<span class="text-gray-700 dark:text-gray-300">Monthly prices</span>
-				<Toggle size="small" checked={isMonthly} on:change={togglePriceUnit} />
+				<Toggle size="small" checked={isMonthly} onchange={togglePriceUnit} />
 			</div>
 			<div class="flex items-center justify-between px-2 py-1.5">
 				<span class="text-gray-700 dark:text-gray-300">Currency</span>

@@ -893,8 +893,8 @@
 					/>
 
 					<div class="ml-auto flex gap-2">
-						<Button size="xs" color="light" on:click={expandAll}>Expand All</Button>
-						<Button size="xs" color="light" on:click={collapseAll}>Collapse All</Button>
+						<Button size="xs" color="light" onclick={expandAll}>Expand All</Button>
+						<Button size="xs" color="light" onclick={collapseAll}>Collapse All</Button>
 					</div>
 				</div>
 			</div>
@@ -933,7 +933,7 @@
 										{@const isCollapsed = collapsedGroups.has(groupKey)}
 										<TableBodyRow
 											class="cursor-pointer border-t border-b bg-gray-200 transition-colors hover:bg-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
-											on:click={() => toggleGroup(groupKey)}
+											onclick={() => toggleGroup(groupKey)}
 										>
 											<TableBodyCell
 												colspan={data.statusData.locations.length + 2}
@@ -947,7 +947,7 @@
 													{/if}
 													{architecture.toUpperCase()} / {cpuType.charAt(0).toUpperCase() +
 														cpuType.slice(1)} CPU
-													<Badge color="dark" class="ml-2">{serverTypes.length}</Badge>
+													<Badge color="gray" class="ml-2">{serverTypes.length}</Badge>
 												</div>
 											</TableBodyCell>
 										</TableBodyRow>
@@ -1123,7 +1123,7 @@
 									size="xs"
 									class="flex-1 whitespace-nowrap"
 									color={availabilityViewMode === 'location' ? 'primary' : 'light'}
-									on:click={() => {
+									onclick={() => {
 										availabilityViewMode = 'location';
 										selectedPatternServerTypeId = undefined;
 									}}
@@ -1134,7 +1134,7 @@
 									size="xs"
 									class="flex-1 whitespace-nowrap"
 									color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
-									on:click={() => {
+									onclick={() => {
 										availabilityViewMode = 'serverType';
 										selectedPatternLocationId = undefined;
 									}}
@@ -1180,7 +1180,7 @@
 									size="xs"
 									class="flex-1"
 									color={patternDateRange === '24h' ? 'primary' : 'light'}
-									on:click={() => (patternDateRange = '24h')}
+									onclick={() => (patternDateRange = '24h')}
 								>
 									24h
 								</Button>
@@ -1188,7 +1188,7 @@
 									size="xs"
 									class="flex-1"
 									color={patternDateRange === '7d' ? 'primary' : 'light'}
-									on:click={() => (patternDateRange = '7d')}
+									onclick={() => (patternDateRange = '7d')}
 								>
 									7d
 								</Button>
@@ -1196,7 +1196,7 @@
 									size="xs"
 									class="flex-1"
 									color={patternDateRange === '30d' ? 'primary' : 'light'}
-									on:click={() => (patternDateRange = '30d')}
+									onclick={() => (patternDateRange = '30d')}
 								>
 									30d
 								</Button>
@@ -1252,7 +1252,7 @@
 					</p>
 					<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
 						{#if data.user}
-							<Button on:click={openCreateAlertModal} color="primary" class="px-6 py-2 font-medium">
+							<Button onclick={openCreateAlertModal} color="primary" class="px-6 py-2 font-medium">
 								<BellRingSolid class="mr-2 h-4 w-4" />
 								Create Availability Alert
 							</Button>

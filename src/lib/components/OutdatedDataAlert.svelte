@@ -58,7 +58,7 @@
 			color="primary"
 			size="xs"
 			disabled={reloading}
-			on:click={async () => {
+			onclick={async () => {
 				reloading = true;
 				if ($db) {
 					await reloadDB($db);

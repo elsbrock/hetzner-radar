@@ -34,7 +34,6 @@
 
 	let activeUrl = $derived($page.url.pathname);
 	let isHoveringAlerts = $state(false);
-	let isNavOpen = $state(false); // State for mobile nav visibility
 	let isActuallyNavigating = $derived($navigating !== null);
 	let isVisible = $state(false); // Controls opacity
 	let isAnimating = $state(false); // Controls animation class
@@ -107,16 +106,9 @@
 		}
 	});
 
-	// Close nav on navigation
-	$effect(() => {
-		if ($page.url) {
-			// Ensure url is available
-			isNavOpen = false;
-		}
-	});
 </script>
 
-<Navbar class="relative z-30 h-[4.25rem] w-full">
+<Navbar breakpoint="xl" class="relative z-30 h-[4.25rem] w-full">
 	<NavBrand href="/">
 		<div style="width: 32px; height: 32px">
 			<Radar />
@@ -201,19 +193,13 @@
 				Auctions</span
 			>
 		</Button>
-		<NavHamburger
-			data-testid="nav-hamburger"
-			class="md:block! xl:hidden!"
-			onclick={() => (isNavOpen = !isNavOpen)}
-		/>
+		<NavHamburger data-testid="nav-hamburger" class="md:block! xl:hidden!" />
 	</div>
 
 	<NavUl
-		hidden={!isNavOpen}
 		slideParams={{ duration: 250, delay: 0 }}
-		class="order-1"
-		divClass="w-full xl:block xl:w-auto xl:flex-1"
-		ulClass="flex flex-col p-4 mt-4 xl:flex-row xl:space-x-1 rtl:space-x-reverse xl:mt-0 xl:text-sm xl:font-medium"
+		class="order-1 w-full xl:block xl:w-auto xl:flex-1"
+		ulClass="flex flex-col p-4 mt-4 xl:flex-row xl:space-x-1 rtl:space-x-reverse xl:mt-0 xl:py-0 xl:text-sm xl:font-medium"
 		{activeUrl}
 	>
 		<NavLi href="/" data-testid="nav-link-home" class="bg-transparent!">

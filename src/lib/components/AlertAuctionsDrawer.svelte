@@ -183,24 +183,12 @@
 
 <Drawer
 	bind:hidden
-	backdrop={true}
-	bgOpacity="bg-black/25"
 	placement="right"
-	transitionType="fly"
 	transitionParams={transitionParamsRight}
 	id="alert-auctions-drawer"
-	width="w-96"
-	class="border-l border-gray-200 dark:border-gray-700"
-	activateClickOutside={true}
-	on:hidden={() => {
-		// Ensure URL is updated when drawer is closed by any means
-		const url = new URL(window.location.href);
-		if (url.searchParams.has('view')) {
-			url.searchParams.delete('view');
-			 
-			goto(url.pathname, { replaceState: true, keepFocus: true });
-		}
-	}}
+	class="w-96 border-l border-gray-200 dark:border-gray-700"
+	outsideclose={true}
+	dismissable={false}
 >
 	<div class="mb-2 flex items-center">
 		<h5 class="inline-flex items-center text-base font-semibold text-gray-500 dark:text-gray-400">

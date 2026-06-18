@@ -40,7 +40,7 @@
 				<h2 class="mb-2 text-xs font-semibold text-gray-900 uppercase dark:text-white">
 					Resources
 				</h2>
-				<FooterLinkGroup ulClass="space-y-1">
+				<FooterLinkGroup class="space-y-1">
 					<FooterLink
 						href="/configurations"
 						liClass="mb-2"
@@ -72,7 +72,7 @@
 				<h2 class="mb-2 text-xs font-semibold text-gray-900 uppercase dark:text-white">
 					Follow us
 				</h2>
-				<FooterLinkGroup ulClass="space-y-1">
+				<FooterLinkGroup class="space-y-1">
 					<FooterLink
 						href="https://github.com/elsbrock/hetzner-radar"
 						liClass="mb-2"
@@ -89,7 +89,7 @@
 			</div>
 			<div>
 				<h2 class="mb-2 text-xs font-semibold text-gray-900 uppercase dark:text-white">Legal</h2>
-				<FooterLinkGroup ulClass="space-y-1">
+				<FooterLinkGroup class="space-y-1">
 					<FooterLink
 						data-testid="footer-link-privacy"
 						href="/privacy"

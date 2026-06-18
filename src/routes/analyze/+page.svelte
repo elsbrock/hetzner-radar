@@ -80,8 +80,8 @@
 	let serverPrices: ServerPriceStat[] = $state([]);
 	let cpuModels: NameValuePair[] = $state([]);
 	let datacenters: NameValuePair[] = $state([]);
-	let priceMin: number | null = $state(null);
-	let priceMax: number | null = $state(null);
+	let priceMin: number | undefined = $state(undefined);
+	let priceMax: number | undefined = $state(undefined);
 	let sortField: SortField = $state('price');
 	let sortDirection: 'asc' | 'desc' = $state('asc');
 	let groupByField: GroupByField = $state('none');
@@ -456,9 +456,13 @@ let isSmallScreen: boolean = $state(false);
 			const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
 			const vatRate = selectedOption.rate;
 			const minPriceBeforeVat =
-				currentPriceMin !== null ? Math.round((currentPriceMin / (1 + vatRate)) * 100) / 100 : null;
+				currentPriceMin !== undefined
+					? Math.round((currentPriceMin / (1 + vatRate)) * 100) / 100
+					: null;
 			const maxPriceBeforeVat =
-				currentPriceMax !== null ? Math.round((currentPriceMax / (1 + vatRate)) * 100) / 100 : null;
+				currentPriceMax !== undefined
+					? Math.round((currentPriceMax / (1 + vatRate)) * 100) / 100
+					: null;
 
 			if (minPriceBeforeVat !== null || maxPriceBeforeVat !== null) {
 				list = list.filter((server) => {
@@ -750,11 +754,11 @@ let isSmallScreen: boolean = $state(false);
 	// Ensure priceMin/Max are numbers when changed
 	function handlePriceMinChange(event: Event) {
 		const input = event.target as HTMLInputElement;
-		priceMin = input.value === '' ? null : Number(input.value);
+		priceMin = input.value === '' ? undefined : Number(input.value);
 	}
 	function handlePriceMaxChange(event: Event) {
 		const input = event.target as HTMLInputElement;
-		priceMax = input.value === '' ? null : Number(input.value);
+		priceMax = input.value === '' ? undefined : Number(input.value);
 	}
 </script>
 
@@ -1111,7 +1115,9 @@ let isSmallScreen: boolean = $state(false);
 						{:else}
 							<!-- Show No Results Alert -->
 							<Alert class="mx-5 mt-4">
-								<InfoCircleSolid slot="icon" class="h-5 w-5" />
+								{#snippet icon()}
+									<InfoCircleSolid class="h-5 w-5" />
+								{/snippet}
 								No servers matching the criteria were found. Try changing some of the parameters.
 							</Alert>
 						{/if}

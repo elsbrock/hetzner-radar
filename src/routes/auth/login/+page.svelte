@@ -157,7 +157,7 @@
 		<StepIndicator
 			{currentStep}
 			steps={stepValues}
-			size="h-1.5"
+			size="xs"
 			class="dark:[&>li>div]:bg-gray-700"
 		/>
 
@@ -310,7 +310,7 @@
 					{/each}
 				</div>
 				<div class="flex w-full items-center justify-between">
-					<Button outline color="alternative" type="button" on:click={() => (currentStep = 1)}>
+					<Button outline color="alternative" type="button" onclick={() => (currentStep = 1)}>
 						Back
 					</Button>
 

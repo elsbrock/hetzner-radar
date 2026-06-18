@@ -20,7 +20,7 @@
 </script>
 
 <div class="flex items-center">
-	<ButtonGroup size="xs" class="divide-x divide-gray-300 font-semibold dark:divide-gray-600">
+	<ButtonGroup size="sm" class="divide-x divide-gray-300 font-semibold dark:divide-gray-600">
 		<InputAddon
 			size="sm"
 			class="border-r-0 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"

@@ -227,7 +227,7 @@
 						<li class="rounded-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
 							<Checkbox
 								checked={type.checked}
-								on:change={(event) =>
+								onchange={(event) =>
 									updateSelectedServerTypes(
 										type.value,
 										(event.currentTarget as HTMLInputElement).checked
@@ -331,7 +331,7 @@
 
 		<!-- Action Buttons -->
 		<div class="flex justify-end space-x-2 pt-2">
-			<Button type="button" color="alternative" size="sm" on:click={handleCancel}>Cancel</Button>
+			<Button type="button" color="alternative" size="sm" onclick={handleCancel}>Cancel</Button>
 			<Button type="submit" color="primary" size="sm" disabled={isSubmitting || !isFormValid}>
 				{#if isSubmitting}
 					<Spinner size="4" class="ms-0 me-1" /> Saving

@@ -54,7 +54,7 @@
 			</Button>
 			<Button
 				data-testid="cta-view-github"
-				color="alternative"
+				color="light"
 				href="https://github.com/elsbrock/hetzner-radar"
 				size="lg"
 				class="shadow-xs"

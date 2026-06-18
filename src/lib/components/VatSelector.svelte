@@ -66,7 +66,7 @@
 	}
 </script>
 
-<ButtonGroup size="xs">
+<ButtonGroup size="sm">
 	<InputAddon
 		size="sm"
 		class="bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -76,7 +76,7 @@
 	<Select
 		id="vat-select"
 		bind:value={selectedCountryCode}
-		on:change={handleVatChange}
+		onchange={handleVatChange}
 		items={Object.entries(vatOptions).map(([code, option]) => ({
 			value: code,
 			name: formatOptionText(option.flag, option.name, option.rate)

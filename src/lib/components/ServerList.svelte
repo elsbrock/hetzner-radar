@@ -35,7 +35,9 @@
 {#if browser}
 	{#if totalServers === 0}
 		<Alert color="blue" class="mx-5 mb-5">
-			<InfoCircleSolid slot="icon" class="h-4 w-4" />
+			{#snippet icon()}
+				<InfoCircleSolid class="h-4 w-4" />
+			{/snippet}
 			<span class="font-medium">No Results:</span> No server configurations match your current filter
 			criteria. Try adjusting the filters.
 		</Alert>
@@ -52,7 +54,7 @@
 						style="grid-column: 1 / -1;"
 					>
 						<span>{group.groupName}</span>
-						<Badge color="dark" rounded class="text-xs">{group.servers.length}</Badge>
+						<Badge color="gray" rounded class="text-xs">{group.servers.length}</Badge>
 					</h2>
 					{#each group.servers.slice(0, 100) as config, index (getConfigKey(config, index))}
 						<ServerListRow {config} {timeUnitPrice} />
@@ -69,7 +71,7 @@
 							class="sticky top-0 z-10 -mx-5 mb-3 flex items-center gap-2 bg-white px-5 py-2 text-lg font-semibold text-gray-700 dark:bg-gray-900 dark:text-gray-300"
 						>
 							<span>{group.groupName}</span>
-							<Badge color="dark" rounded class="text-xs">{group.servers.length}</Badge>
+							<Badge color="gray" rounded class="text-xs">{group.servers.length}</Badge>
 						</h2>
 						<div
 							class="grid w-full grid-cols-[repeat(auto-fill,minmax(240px,1fr))] items-stretch gap-4"
@@ -96,7 +98,7 @@
 						class="sticky top-0 z-10 -mx-5 mb-3 flex items-center gap-2 bg-white px-5 py-2 text-lg font-semibold text-gray-700 dark:bg-gray-900 dark:text-gray-300"
 					>
 						<span>{group.groupName}</span>
-						<Badge color="dark" rounded class="text-xs">{group.servers.length}</Badge>
+						<Badge color="gray" rounded class="text-xs">{group.servers.length}</Badge>
 					</h2>
 					<div
 						class="grid w-full grid-cols-[repeat(auto-fill,minmax(240px,1fr))] items-stretch gap-4"

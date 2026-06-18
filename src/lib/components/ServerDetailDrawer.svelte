@@ -299,14 +299,12 @@
 
 <Drawer
 	bind:hidden
-	backdrop={true}
-	bgOpacity="bg-black/25"
 	placement="right"
-	transitionType="fly"
 	transitionParams={transitionParamsRight}
 	id="server-detail-drawer"
-	width="w-96"
-	class="border-l border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+	class="w-96 border-l border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+	outsideclose={true}
+	dismissable={false}
 >
 	<!-- Best-deal accent stripe -->
 	{#if isBestDeal}

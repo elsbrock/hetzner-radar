@@ -566,7 +566,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<div class="flex items-center justify-between">
 				<Label class="text-sm">ECC</Label>
 				<div>
-					<ButtonGroup size="xs">
+					<ButtonGroup size="sm">
 						<Button
 							size="xs"
 							onclick={() => {
@@ -599,7 +599,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 				<h2 class="text-base font-semibold dark:text-white">
 					<FontAwesomeIcon class="me-2 h-4 w-4" icon={faHardDrive} />Disks
 				</h2>
-				<ButtonGroup size="xs">
+				<ButtonGroup size="sm">
 					<Button
 						size="xs"
 						onclick={() => {
@@ -683,7 +683,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					/>
 					<div class="flex items-center justify-between">
 						<Label class="text-sm">Filter by</Label>
-						<ButtonGroup size="xs">
+						<ButtonGroup size="sm">
 							<Button
 								size="xs"
 								onclick={() => {
@@ -769,7 +769,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					/>
 					<div class="flex items-center justify-between">
 						<Label class="text-sm">Filter by</Label>
-						<ButtonGroup size="xs">
+						<ButtonGroup size="sm">
 							<Button
 								size="xs"
 								onclick={() => {
@@ -855,7 +855,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 					/>
 					<div class="flex items-center justify-between">
 						<Label class="text-sm">Filter by</Label>
-						<ButtonGroup size="xs">
+						<ButtonGroup size="sm">
 							<Button
 								size="xs"
 								onclick={() => {
@@ -897,7 +897,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<li>
 				<div class="flex items-center justify-between">
 					<Label class="text-sm">Intel NIC</Label>
-					<ButtonGroup size="xs">
+					<ButtonGroup size="sm">
 						<Button
 							size="xs"
 							onclick={() => {
@@ -926,7 +926,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<li>
 				<div class="flex items-center justify-between">
 					<Label class="text-sm">Hardware RAID</Label>
-					<ButtonGroup size="xs">
+					<ButtonGroup size="sm">
 						<Button
 							size="xs"
 							onclick={() => {
@@ -955,7 +955,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<li>
 				<div class="flex items-center justify-between">
 					<Label class="text-sm">GPU</Label>
-					<ButtonGroup size="xs">
+					<ButtonGroup size="sm">
 						<Button
 							size="xs"
 							onclick={() => {
@@ -984,7 +984,7 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 			<li>
 				<div class="flex items-center justify-between">
 					<Label class="text-sm">Redundant PSU</Label>
-					<ButtonGroup size="xs">
+					<ButtonGroup size="sm">
 						<Button
 							size="xs"
 							onclick={() => {
