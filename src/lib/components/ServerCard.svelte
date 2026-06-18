@@ -44,7 +44,7 @@
 		buttons?: import('svelte').Snippet;
 	} = $props();
 
-	let drawerHidden = $state(true);
+	let drawerOpen = $state(false);
 	let selectedConfig = $state<ServerConfiguration | null>(null);
 
 	// VAT
@@ -146,7 +146,7 @@
 		if (clickable && (e.key === 'Enter' || e.key === ' ')) {
 			e.preventDefault();
 			selectedConfig = config;
-			drawerHidden = false;
+			drawerOpen = true;
 		}
 	}
 </script>
@@ -166,7 +166,7 @@
 	onclick={() => {
 		if (clickable) {
 			selectedConfig = config;
-			drawerHidden = false;
+			drawerOpen = true;
 		}
 	}}
 	onkeydown={handleKeydown}
@@ -354,4 +354,4 @@
 		</div>
 	{/if}
 </div>
-<ServerDetailDrawer bind:hidden={drawerHidden} config={selectedConfig} />
+<ServerDetailDrawer bind:open={drawerOpen} config={selectedConfig} />

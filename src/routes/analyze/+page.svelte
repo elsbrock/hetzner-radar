@@ -809,7 +809,7 @@ let isSmallScreen: boolean = $state(false);
 							<div
 								class="scrollbar-hide flex flex-nowrap items-start gap-3 overflow-x-auto text-xs text-gray-900 dark:text-gray-300"
 							>
-								<ButtonGroup class="shrink-0">
+								<ButtonGroup class="h-8 shrink-0">
 									<InputAddon
 										size="sm"
 										class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -823,7 +823,7 @@ let isSmallScreen: boolean = $state(false);
 										step="1"
 										placeholder="min"
 										data-testid="price-min-input"
-										class="w-12 [appearance:textfield] bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+										class="w-16! [appearance:textfield] bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 										bind:value={priceMin}
 										onchange={handlePriceMinChange}
 									/>
@@ -834,12 +834,12 @@ let isSmallScreen: boolean = $state(false);
 										step="1"
 										placeholder="max"
 										data-testid="price-max-input"
-										class="w-12 [appearance:textfield] bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+										class="w-16! [appearance:textfield] bg-white text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 										bind:value={priceMax}
 										onchange={handlePriceMaxChange}
 									/>
 								</ButtonGroup>
-								<ButtonGroup class="shrink-0">
+								<ButtonGroup class="h-8 shrink-0">
 									<InputAddon
 										size="sm"
 										class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"
@@ -876,7 +876,7 @@ let isSmallScreen: boolean = $state(false);
 								</Tooltip>
 
 								{#if !showOnlyStandard}
-								<ButtonGroup class="shrink-0">
+								<ButtonGroup class="h-8 shrink-0">
 									<InputAddon
 										size="sm"
 										class="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-gray-300"

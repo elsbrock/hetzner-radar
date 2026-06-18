@@ -29,7 +29,7 @@
 		type TableSchema
 	} from '$lib/api/frontend/console';
 
-	let { hidden = $bindable(true) }: { hidden?: boolean } = $props();
+	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	interface ReplEntry {
 		id: number;
@@ -106,7 +106,7 @@
 	// from the current settings, then refresh the schema. Re-runs whenever the VAT
 	// country or currency changes so the views stay in sync with the rest of the app.
 	$effect(() => {
-		if (hidden) return;
+		if (!open) return;
 		const database = $db;
 		if (!database) {
 			initializeDB();
@@ -224,7 +224,7 @@
 </script>
 
 <Drawer
-	bind:hidden
+	bind:open
 	placement="right"
 	{transitionParams}
 	id="sql-console-drawer"
@@ -245,7 +245,7 @@
 				</p>
 			</div>
 			<CloseButton
-				onclick={() => (hidden = true)}
+				onclick={() => (open = false)}
 				class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
 			/>
 		</div>

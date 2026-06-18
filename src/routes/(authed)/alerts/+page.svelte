@@ -112,7 +112,7 @@
 	// Price alerts state
 	let showEdit = $state(false);
 	let selectedAlert = $state<PriceAlert | null>(null);
-	let drawerHidden = $state(true);
+	let drawerOpen = $state(false);
 	let selectedAlertId = $state<string | null>(null);
 	let selectedVatRate = $state(0);
 
@@ -134,7 +134,7 @@
 		// Tab is now automatically handled by derived value
 
 		const viewParam = $page.url.searchParams.get('view');
-		if (viewParam && drawerHidden) {
+		if (viewParam && !drawerOpen) {
 			try {
 				const response = await fetch(`/alerts/${viewParam}/auctions`);
 
@@ -155,7 +155,7 @@
 
 				selectedAlertId = viewParam;
 				selectedVatRate = 0;
-				drawerHidden = false;
+				drawerOpen = true;
 			} catch (err) {
 				console.error('Error checking alert:', err);
 				addToast({
@@ -175,7 +175,7 @@
 
 	// Reset selectedAlertId when drawer is closed
 	$effect(() => {
-		if (drawerHidden) {
+		if (!drawerOpen) {
 			selectedAlertId = null;
 		}
 	});
@@ -316,10 +316,10 @@
 	on:success={() => invalidateAll()}
 />
 
-{#if !drawerHidden && selectedAlertId}
+{#if drawerOpen && selectedAlertId}
 	<AlertAuctionsDrawer
 		alertId={selectedAlertId}
-		bind:hidden={drawerHidden}
+		bind:open={drawerOpen}
 		vatRate={selectedVatRate}
 	/>
 {/if}
@@ -586,7 +586,7 @@
 																}
 																selectedAlertId = alert.id;
 																selectedVatRate = alert.vat_rate;
-																drawerHidden = false;
+																drawerOpen = true;
 															} catch (err) {
 																console.error('Error checking alert:', err);
 																addToast({

@@ -36,7 +36,7 @@
 		clickable?: boolean;
 	} = $props();
 
-	let drawerHidden = $state(true);
+	let drawerOpen = $state(false);
 	let selectedConfig = $state<ServerConfiguration | null>(null);
 
 	const countryCode = $derived($settingsStore?.vatSelection?.countryCode ?? 'NET');
@@ -120,7 +120,7 @@
 	function handleClick() {
 		if (clickable) {
 			selectedConfig = config;
-			drawerHidden = false;
+			drawerOpen = true;
 		}
 	}
 	function handleKeydown(e: KeyboardEvent) {
@@ -286,4 +286,4 @@
 		</div>
 	</div>
 </div>
-<ServerDetailDrawer bind:hidden={drawerHidden} config={selectedConfig} />
+<ServerDetailDrawer bind:open={drawerOpen} config={selectedConfig} />

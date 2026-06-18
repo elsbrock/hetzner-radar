@@ -39,9 +39,9 @@
 
 	interface _$Props {
 		config?: ServerConfiguration | null;
-		hidden?: boolean;
+		open?: boolean;
 	}
-	let { config = null, hidden = $bindable(true) } = $props();
+	let { config = null, open = $bindable(false) } = $props();
 
 	let transitionParamsRight = {
 		x: 320,
@@ -115,7 +115,7 @@
 	});
 
 	function closeDrawer() {
-		hidden = true;
+		open = false;
 	}
 
 	type VatCountryCode = keyof typeof vatOptions;
@@ -298,7 +298,7 @@
 </script>
 
 <Drawer
-	bind:hidden
+	bind:open
 	placement="right"
 	transitionParams={transitionParamsRight}
 	id="server-detail-drawer"

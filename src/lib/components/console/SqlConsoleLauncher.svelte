@@ -7,21 +7,21 @@
 	// The console only makes sense on the DuckDB-backed data pages.
 	const ALLOWED_ROUTES = new Set(['/configurations', '/statistics', '/analyze']);
 
-	let hidden = $state(true);
+	let open = $state(false);
 	let visible = $derived(ALLOWED_ROUTES.has($page.url.pathname.replace(/\/+$/, '') || '/'));
 
 	// If we navigate off an allowed route while the console is open, close it.
 	$effect(() => {
-		if (!visible) hidden = true;
+		if (!visible) open = false;
 	});
 </script>
 
 <FloatingActionButton
 	icon={faTerminal}
-	onClick={() => (hidden = false)}
+	onClick={() => (open = true)}
 	{visible}
 	priority={200}
 	ariaLabel="Open SQL console"
 />
 
-<SqlConsoleDrawer bind:hidden />
+<SqlConsoleDrawer bind:open />

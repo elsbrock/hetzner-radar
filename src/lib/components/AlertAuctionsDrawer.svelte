@@ -45,12 +45,12 @@
 	// Props using Svelte 5 runes
 	interface _$Props {
 		alertId?: string | null;
-		hidden?: boolean;
+		open?: boolean;
 		vatRate?: number;
 	}
 
 	// Define props using $props with default values
-	let { alertId = null, hidden = $bindable(true), vatRate = 0 } = $props();
+	let { alertId = null, open = $bindable(false), vatRate = 0 } = $props();
 
 	let transitionParamsRight = {
 		x: 320,
@@ -69,13 +69,13 @@
 		const viewParam = $page.url.searchParams.get('view');
 		if (viewParam) {
 			alertId = viewParam;
-			hidden = false;
+			open = true;
 		}
 	});
 
-	// Make sure the drawer properly closes when hidden is set to true
+	// Reset state and clean up the URL whenever the drawer closes.
 	$effect(() => {
-		if (hidden) {
+		if (!open) {
 			// Reset state when drawer is closed
 			alertId = null;
 			auctions = [];
@@ -129,7 +129,7 @@
 					goto(url.pathname, { replaceState: true, keepFocus: true });
 
 					// Close the drawer by dispatching an event
-					hidden = true;
+					open = false;
 
 					return;
 				}
@@ -158,14 +158,14 @@
 			goto(url.pathname, { replaceState: true, keepFocus: true });
 
 			// Close the drawer
-			hidden = true;
+			open = false;
 		} finally {
 			loading = false;
 		}
 	}
 
 	function closeDrawer() {
-		hidden = true;
+		open = false;
 
 		// Update URL to remove the view parameter
 		const url = new URL(window.location.href);
@@ -182,7 +182,7 @@
 </script>
 
 <Drawer
-	bind:hidden
+	bind:open
 	placement="right"
 	transitionParams={transitionParamsRight}
 	id="alert-auctions-drawer"
@@ -197,7 +197,7 @@
 		<CloseButton onclick={closeDrawer} class="ms-auto" />
 	</div>
 
-	{#if alertId && !hidden}
+	{#if alertId && open}
 		<div class="mb-6">
 			<div class="mb-1 flex items-center justify-between">
 				<h5 class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
