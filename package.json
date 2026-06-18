@@ -44,7 +44,7 @@
     "eslint-plugin-svelte": "3.19.0",
     "filesize": "11.0.17",
     "flowbite": "4.0.2",
-    "flowbite-svelte": "0.48.6",
+    "flowbite-svelte": "1.33.1",
     "flowbite-svelte-icons": "3.1.0",
     "globals": "17.6.0",
     "leaflet": "1.9.4",
