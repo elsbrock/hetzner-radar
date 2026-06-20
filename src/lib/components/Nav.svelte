@@ -4,7 +4,6 @@
 		faBell,
 		faBinoculars,
 		faChartLine,
-		faCircleInfo,
 		faCloud,
 		faGavel,
 		faHouse,
@@ -240,14 +239,6 @@
 					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
 					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
 				><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faChartLine} />Statistics</span
-			>
-		</NavLi>
-		<NavLi href="/about" data-testid="nav-link-about" class="bg-transparent!">
-			<span
-				class="rounded-full px-3 py-1.5 text-sm transition-all {activeUrl === '/about'
-					? 'bg-orange-100 font-medium text-gray-900 ring-1 ring-orange-300 dark:bg-orange-900/40 dark:text-white dark:ring-orange-600/60'
-					: 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}"
-				><FontAwesomeIcon class="mr-1.5 h-3.5 w-3.5 opacity-60" icon={faCircleInfo} />About</span
 			>
 		</NavLi>
 
