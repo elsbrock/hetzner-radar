@@ -1,21 +1,50 @@
 <script lang="ts">
-	import {
-		faChartLine,
-		faMemory,
-		faMicrochip,
-		faGlobe
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faChartLine, faMemory, faMicrochip, faGlobe } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { Button } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
+	import SectionEyebrow from './SectionEyebrow.svelte';
+
+	const highlights = [
+		{
+			icon: faChartLine,
+			color: 'text-orange-500',
+			title: 'Price Index',
+			desc: 'Daily market average'
+		},
+		{
+			icon: faMicrochip,
+			color: 'text-purple-500',
+			title: 'AMD vs Intel',
+			desc: 'Price comparison'
+		},
+		{
+			icon: faMemory,
+			color: 'text-blue-500',
+			title: 'RAM Pricing',
+			desc: 'ECC vs non-ECC trends'
+		},
+		{
+			icon: faGlobe,
+			color: 'text-green-500',
+			title: 'Volume by DC',
+			desc: 'Finland vs Germany'
+		}
+	];
 </script>
 
 <section class="mx-auto my-16 max-w-5xl">
-	<div class="rounded-lg border border-gray-200 bg-white p-8 dark:border-gray-700 dark:bg-gray-800">
-		<div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-2">
+	<div
+		class="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-8 dark:border-gray-700 dark:bg-gray-800"
+	>
+		<div
+			class="radar-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(120%_120%_at_0%_0%,black,transparent)]"
+		></div>
+		<div class="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-2">
 			<!-- Left: Description -->
 			<div>
-				<div class="mb-4 flex items-center gap-3">
+				<SectionEyebrow label="Market intel" />
+				<div class="mt-3 mb-4 flex items-center gap-3">
 					<div
 						class="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30"
 					>
@@ -35,29 +64,15 @@
 
 			<!-- Right: Stat highlights -->
 			<div class="grid grid-cols-2 gap-4">
-				<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-					<FontAwesomeIcon icon={faChartLine} class="mb-2 h-5 w-5 text-orange-500" />
-					<p class="text-sm font-medium text-gray-800 dark:text-gray-100">Price Index</p>
-					<p class="text-xs text-gray-500 dark:text-gray-400">Daily market average</p>
-				</div>
-
-				<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-					<FontAwesomeIcon icon={faMicrochip} class="mb-2 h-5 w-5 text-purple-500" />
-					<p class="text-sm font-medium text-gray-800 dark:text-gray-100">AMD vs Intel</p>
-					<p class="text-xs text-gray-500 dark:text-gray-400">Price comparison</p>
-				</div>
-
-				<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-					<FontAwesomeIcon icon={faMemory} class="mb-2 h-5 w-5 text-blue-500" />
-					<p class="text-sm font-medium text-gray-800 dark:text-gray-100">RAM Pricing</p>
-					<p class="text-xs text-gray-500 dark:text-gray-400">ECC vs non-ECC trends</p>
-				</div>
-
-				<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-					<FontAwesomeIcon icon={faGlobe} class="mb-2 h-5 w-5 text-green-500" />
-					<p class="text-sm font-medium text-gray-800 dark:text-gray-100">Volume by DC</p>
-					<p class="text-xs text-gray-500 dark:text-gray-400">Finland vs Germany</p>
-				</div>
+				{#each highlights as h (h.title)}
+					<div
+						class="signal-edge group rounded-lg border border-gray-100 bg-gray-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-200 dark:border-gray-700 dark:bg-gray-700/50 dark:hover:border-gray-600"
+					>
+						<FontAwesomeIcon icon={h.icon} class="mb-2 h-5 w-5 {h.color}" />
+						<p class="text-sm font-medium text-gray-800 dark:text-gray-100">{h.title}</p>
+						<p class="text-xs text-gray-500 dark:text-gray-400">{h.desc}</p>
+					</div>
+				{/each}
 			</div>
 		</div>
 	</div>

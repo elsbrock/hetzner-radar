@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from 'flowbite-svelte';
+	import SectionEyebrow from './SectionEyebrow.svelte';
 
 	type AnswerSegment = string | { text: string; href: string };
 	type FaqItem = { question: string; answer: AnswerSegment[] };
@@ -40,10 +41,13 @@
 	];
 </script>
 
-<section id="faq" class="mx-auto my-20 max-w-4xl">
-	<h2 class="mb-8 text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">FAQ</h2>
+<section id="faq" class="mx-auto my-20 max-w-5xl">
+	<div class="mb-8 text-center">
+		<SectionEyebrow label="Questions" />
+		<h2 class="mt-3 text-3xl font-semibold text-gray-800 dark:text-gray-100">FAQ</h2>
+	</div>
 	<div
-		class="rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
+		class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
 	>
 		<Accordion flush class="divide-y divide-gray-200 dark:divide-gray-700">
 			{#each faqItems as item (item.question)}

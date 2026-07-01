@@ -125,7 +125,7 @@
 	<OpenSourceBanner />
 
 	<!-- Links -->
-	<section class="mx-auto my-16 max-w-4xl">
+	<section class="mx-auto my-16 max-w-5xl">
 		<div class="flex flex-wrap items-center justify-center gap-8 text-gray-600 dark:text-gray-400">
 			<a
 				href="https://github.com/elsbrock/hetzner-radar"
@@ -152,7 +152,7 @@
 	</section>
 
 	<!-- Disclaimer -->
-	<section class="mx-auto mb-4 max-w-4xl text-center">
+	<section class="mx-auto mb-4 max-w-5xl text-center">
 		<p class="text-xs text-gray-500 dark:text-gray-400">
 			Server Radar is an independent project and is not affiliated with, endorsed, or sponsored by
 			Hetzner Online GmbH. "Hetzner" is a trademark of Hetzner Online GmbH. Data accuracy is not

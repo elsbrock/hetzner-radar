@@ -2,6 +2,7 @@
 	import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { browser } from '$app/environment';
+	import SectionEyebrow from './SectionEyebrow.svelte';
 
 	const screenshots: { light: string; dark: string; alt: string }[] = [
 		{
@@ -110,18 +111,38 @@
 
 {#if screenshots.length > 0}
 	<section class="mx-auto my-16 max-w-5xl">
+		<div class="mb-8 text-center">
+			<SectionEyebrow label="Interface" />
+			<h2 class="mt-3 text-2xl font-semibold text-gray-800 dark:text-gray-100">See it in action</h2>
+		</div>
 		<div class="relative">
-			<!-- Screenshot display -->
+			<!-- Monitor bezel -->
 			<div
-				class="overflow-hidden rounded-lg border border-gray-200 bg-gray-100 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+				class="overflow-hidden rounded-xl border border-gray-300 bg-gray-200/70 shadow-xl ring-1 ring-black/5 dark:border-gray-700 dark:bg-gray-900"
 			>
-				{#key currentIndex}
-					<img
-						src={isDarkMode ? screenshots[currentIndex].dark : screenshots[currentIndex].light}
-						alt={screenshots[currentIndex].alt}
-						class="w-full animate-fade-in"
-					/>
-				{/key}
+				<!-- Chrome bar -->
+				<div
+					class="flex items-center border-b border-gray-300/70 bg-gray-100 px-4 py-2.5 dark:border-gray-700 dark:bg-gray-800"
+				>
+					<span class="flex gap-1.5">
+						<span class="h-2.5 w-2.5 rounded-full bg-red-400/80"></span>
+						<span class="h-2.5 w-2.5 rounded-full bg-amber-400/80"></span>
+						<span class="h-2.5 w-2.5 rounded-full bg-emerald-400/80"></span>
+					</span>
+					<span class="ms-4 truncate font-mono text-[11px] text-gray-500 dark:text-gray-400">
+						{screenshots[currentIndex].alt}
+					</span>
+				</div>
+				<!-- Screenshot display -->
+				<div class="overflow-hidden bg-gray-100 dark:bg-gray-800">
+					{#key currentIndex}
+						<img
+							src={isDarkMode ? screenshots[currentIndex].dark : screenshots[currentIndex].light}
+							alt={screenshots[currentIndex].alt}
+							class="w-full animate-fade-in"
+						/>
+					{/key}
+				</div>
 			</div>
 
 			<!-- Navigation arrows -->

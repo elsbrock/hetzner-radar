@@ -86,14 +86,8 @@ test.describe("Landing Page Tests", () => {
   });
 
   test("should display live metrics section", async () => {
-    // Check the containers for the stats using test IDs with increased timeout
+    // Social-proof band shows four rounded headline numbers.
     const glanceTimeout = { timeout: 10000 }; // 10 seconds
-    await expect(page.getByTestId("glance-auctions-tracked")).toBeVisible(
-      glanceTimeout,
-    );
-    await expect(page.getByTestId("glance-last-batch")).toBeVisible(
-      glanceTimeout,
-    );
     await expect(page.getByTestId("glance-active-users")).toBeVisible(
       glanceTimeout,
     );
@@ -101,6 +95,9 @@ test.describe("Landing Page Tests", () => {
       glanceTimeout,
     );
     await expect(page.getByTestId("glance-notifications-sent")).toBeVisible(
+      glanceTimeout,
+    );
+    await expect(page.getByTestId("glance-auctions-tracked")).toBeVisible(
       glanceTimeout,
     );
   });
