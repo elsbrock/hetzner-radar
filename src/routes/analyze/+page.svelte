@@ -57,9 +57,8 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import dayjs from 'dayjs';
-	import { Alert, Button, ButtonGroup, Input, InputAddon, Tooltip } from 'flowbite-svelte';
+	import { Alert, Button, ButtonGroup, Input, InputAddon, Spinner, Tooltip } from 'flowbite-svelte';
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
-	import Spinner from 'flowbite-svelte/Spinner.svelte';
 	import { onMount } from 'svelte';
 	import { slide as _slide } from 'svelte/transition';
 	// Import slide transition
