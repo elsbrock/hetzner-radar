@@ -55,7 +55,7 @@
     "prettier-plugin-svelte": "4.1.0",
     "prettier-plugin-tailwindcss": "0.7.4",
     "sql-template-strings": "2.2.2",
-    "super-sitemap": "1.0.12",
+    "super-sitemap": "2.0.4",
     "svelte": "5.56.3",
     "svelte-check": "4.6.0",
     "svelte-range-slider-pips": "4.1.1",
