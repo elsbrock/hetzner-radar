@@ -24,9 +24,12 @@ from datetime import datetime
 HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
 HETZNER_LIVE_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_en_EUR.json"
 
-# Minimum expected records to prevent uploading a corrupted/empty database
-# This should be set to a reasonable minimum based on typical data volume
-MIN_AUCTION_RECORDS = 50000  # ~50k auction records expected for 90 days
+# Minimum expected records to prevent uploading a corrupted/empty database.
+# This is a corruption/emptiness guard, NOT a market-health assertion: a wiped
+# or corrupt DB has ~0 records. Hetzner auction volume varies wildly (dropped
+# from ~2000/day to <100/day in mid-2026), so the floor is kept well below any
+# realistic cumulative count. The MIN_DAYS_OF_DATA check guards a wiped DB.
+MIN_AUCTION_RECORDS = 5000
 MIN_DAYS_OF_DATA = 30  # At least 30 days of data expected
 
 # Schema for the server table (new columns at end for backwards compat)
