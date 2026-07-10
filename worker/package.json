@@ -21,7 +21,7 @@
 		"typescript": "6.0.3",
 		"wrangler": "4.100.0",
 		"vitest": "4.1.8",
-		"@cloudflare/workers-types": "4.20260617.1",
+		"@cloudflare/workers-types": "5.20260707.1",
 		"@vitest/coverage-v8": "4.1.8",
 		"eslint": "10.5.0",
 		"eslint-config-prettier": "10.1.8",
