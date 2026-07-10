@@ -76,5 +76,8 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-chart-matrix": "^3.0.4",
     "date-fns": "^4.1.0"
+  },
+  "overrides": {
+    "esrap": "2.2.11"
   }
 }
