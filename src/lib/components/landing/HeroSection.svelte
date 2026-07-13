@@ -64,7 +64,7 @@
 			</Button>
 		</div>
 	</div>
-		<div class="my-8 mt-4 mr-8 lg:col-span-2 lg:mt-12">
+		<div class="my-8 mt-4 mr-8 hidden lg:col-span-2 lg:mt-12 lg:block">
 			<SampleCardStack configs={featuredServers} />
 		</div>
 	</div>
