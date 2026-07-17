@@ -9,8 +9,7 @@ const SESSION_EXPIRY = 1000 * 60 * 60 * 24 * 30;
 const SESSION_RENEWAL_THRESHOLD = 1000 * 60 * 60 * 24 * 15;
 
 export type SessionValidationResult =
-  | { session: Session; user: User }
-  | { session: null; user: null };
+  { session: Session; user: User } | { session: null; user: null };
 
 export interface Session {
   id: string;

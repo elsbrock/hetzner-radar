@@ -17,10 +17,7 @@ export const GET: RequestHandler = async ({ url, platform }) => {
     const serverTypeId = url.searchParams.get("serverTypeId");
     const locationId = url.searchParams.get("locationId");
     const granularity = url.searchParams.get("granularity") as
-      | "hour"
-      | "day"
-      | "week"
-      | null;
+      "hour" | "day" | "week" | null;
 
     // Validate required parameters
     if (!startDate || !endDate) {
