@@ -759,9 +759,71 @@ let isSmallScreen: boolean = $state(false);
 		const input = event.target as HTMLInputElement;
 		priceMax = input.value === '' ? undefined : Number(input.value);
 	}
+
+	const breadcrumbJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{ '@type': 'ListItem', position: 1, name: 'Home', item: 'https://radar.iodev.org/' },
+			{
+				'@type': 'ListItem',
+				position: 2,
+				name: 'Server Search',
+				item: 'https://radar.iodev.org/analyze'
+			}
+		]
+	};
 </script>
 
+<svelte:head>
+	<title>Hetzner Auction Server Search &amp; Price History — Server Radar</title>
+	<meta
+		name="description"
+		content="Filter live Hetzner auction listings by CPU, RAM, storage, and location. See price history per configuration and set alerts on price drops."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/analyze" />
+
+	<meta
+		property="og:title"
+		content="Hetzner Auction Server Search & Price History — Server Radar"
+	/>
+	<meta
+		property="og:description"
+		content="Filter live Hetzner auction listings by CPU, RAM, storage, and location. See price history per configuration and set alerts on price drops."
+	/>
+	<meta property="og:url" content="https://radar.iodev.org/analyze" />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://radar.iodev.org/images/og-image.webp" />
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta
+		name="twitter:title"
+		content="Hetzner Auction Server Search & Price History — Server Radar"
+	/>
+	<meta
+		name="twitter:description"
+		content="Filter live Hetzner auction listings by CPU, RAM, storage, and location. See price history per configuration and set alerts on price drops."
+	/>
+	<meta name="twitter:image" content="https://radar.iodev.org/images/og-image.webp" />
+
+	{@html `<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</` + `script>`}
+</svelte:head>
+
 <div class="mx-auto h-full max-w-[1680px]">
+	<div
+		class="border-b border-gray-200 bg-white px-5 py-2 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+	>
+		<h1 class="inline text-sm font-semibold text-gray-800 dark:text-gray-200">
+			Hetzner auction server search
+		</h1>
+		<span>
+			— filter live auction listings by CPU, RAM, storage, and location, with price history per
+			configuration. Set
+			<a href="/alerts" class="text-orange-500 hover:underline">price alerts</a> to get notified on
+			drops, or read the
+			<a href="/guide" class="text-orange-500 hover:underline">guide</a> if you're new to the auction.
+		</span>
+	</div>
 	<OutdatedDataAlert lastUpdate={lastUpdate ?? 0} />
 	<AlertModal
 		bind:open={alertDialogOpen}
