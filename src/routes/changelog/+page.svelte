@@ -11,6 +11,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'New guide: the Hetzner server auction, explained', datePublished: '2026-07-23' },
 		{ headline: 'Run your own SQL with the SQL Console', datePublished: '2026-06-17' },
 		{ headline: 'Availability heatmap shows uptime, not just in/out of stock', datePublished: '2026-06-16' },
 		{ headline: 'Smarter configuration picks', datePublished: '2026-04-24' },
@@ -110,6 +111,16 @@
 
 <div class="container mx-auto max-w-4xl px-6 py-10">
 	<Timeline>
+		<TimelineItem
+			title="New guide: the Hetzner server auction, explained"
+			date="Released on July 23rd, 2026"
+		>
+			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
+				A new <a href="/guide" class="text-orange-500 hover:underline">guide page</a> covers how the
+				Hetzner server auction works, what happened to prices in 2026, and how to get the most out of
+				Server Radar — from the auction search and cloud availability tracking to price alerts.
+			</p>
+		</TimelineItem>
 		<TimelineItem title="Run your own SQL with the SQL Console" date="Released on June 17th, 2026">
 			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
 				Power users can now query the auction dataset directly from the data pages. A floating button

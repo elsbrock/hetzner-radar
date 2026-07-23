@@ -66,6 +66,12 @@
 						aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline"
 						>Analyze</FooterLink
 					>
+					<FooterLink
+						href="/guide"
+						liClass="mb-2"
+						aClass="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline"
+						>Guide</FooterLink
+					>
 				</FooterLinkGroup>
 			</div>
 			<div>
