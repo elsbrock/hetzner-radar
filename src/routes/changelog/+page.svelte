@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { page as _page } from '$app/stores';
 	import { resolve } from '$app/paths';
-	import { Timeline, TimelineItem } from 'flowbite-svelte';
 	import PageHero from '$lib/components/PageHero.svelte';
 
 	const canonical = 'https://radar.iodev.org/changelog';
@@ -15,24 +13,18 @@
 		{ headline: 'Run your own SQL with the SQL Console', datePublished: '2026-06-17' },
 		{ headline: 'Availability heatmap shows uptime, not just in/out of stock', datePublished: '2026-06-16' },
 		{ headline: 'Smarter configuration picks', datePublished: '2026-04-24' },
-		{ headline: 'Finer-grained disk filters', datePublished: '2026-04-18' },
 		{ headline: 'Availability timeline heatmap', datePublished: '2026-03-25' },
 		{ headline: 'Cloud alerts that auto-disarm', datePublished: '2026-03-24' },
 		{ headline: 'CPU specs and benchmark scores on every listing', datePublished: '2026-03-22' },
-		{ headline: 'Standard Dedicated Server Support', datePublished: '2026-01-03' },
-		{ headline: 'Enhanced Cloud Status Visualization', datePublished: '2025-11-06' },
-		{ headline: 'Cloud Availability Alerts', datePublished: '2025-06-03' },
-		{ headline: 'Discord Integration', datePublished: '2025-06-01' },
-		{ headline: 'Statistics & Sold Price Tracking', datePublished: '2025-05-06' },
-		{ headline: 'Navigation & UI Improvements', datePublished: '2025-05-04' },
-		{ headline: 'Auction Alert Management', datePublished: '2025-05-02' },
-		{ headline: 'Result Grouping & Card Stack', datePublished: '2025-04-27' },
-		{ headline: 'Collapsible Filter Panel', datePublished: '2025-04-27' },
-		{ headline: 'Cloud Server Availability Monitoring', datePublished: '2025-04-22' },
+		{ headline: 'Standard dedicated server support', datePublished: '2026-01-03' },
+		{ headline: 'Cloud status page redesign', datePublished: '2025-11-06' },
+		{ headline: 'Cloud availability alerts', datePublished: '2025-06-03' },
+		{ headline: 'Discord integration', datePublished: '2025-06-01' },
+		{ headline: 'Statistics & sold price tracking', datePublished: '2025-05-06' },
+		{ headline: 'Auction alert management', datePublished: '2025-05-02' },
+		{ headline: 'Cloud server availability monitoring', datePublished: '2025-04-22' },
 		// Older entries only have month-level granularity in the page copy.
-		{ headline: 'Chart System Upgrade', datePublished: '2024-11-01' },
-		{ headline: 'Filter Persistence & Toast System', datePublished: '2024-10-01' },
-		{ headline: 'Advanced Filtering', datePublished: '2024-08-01' }
+		{ headline: 'Advanced filtering', datePublished: '2024-08-01' }
 	];
 
 	const blogJsonLd = {
@@ -102,7 +94,7 @@
 
 <PageHero
 	title="Changelog"
-	tagline="Latest features and improvements to Server Radar, in reverse chronological order."
+	tagline="Noteworthy features and improvements to Server Radar, in reverse chronological order."
 	breadcrumbs={[
 		{ label: 'Home', href: '/' },
 		{ label: 'Changelog' }
@@ -110,185 +102,261 @@
 />
 
 <div class="container mx-auto max-w-4xl px-6 py-10">
-	<Timeline>
-		<TimelineItem
-			title="New guide: the Hetzner server auction, explained"
-			date="Released on July 23rd, 2026"
+	<!-- 2026 -->
+	<section class="mb-12">
+		<h2
+			class="mb-6 border-b border-gray-200 pb-2 text-sm font-semibold tracking-widest text-gray-400 uppercase dark:border-gray-700 dark:text-gray-500"
 		>
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				A new <a href="/guide" class="text-orange-500 hover:underline">guide page</a> covers how the
-				Hetzner server auction works, what happened to prices in 2026, and how to get the most out of
-				Server Radar — from the auction search and cloud availability tracking to price alerts.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Run your own SQL with the SQL Console" date="Released on June 17th, 2026">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Power users can now query the auction dataset directly from the data pages. A floating button
-				opens a SQL console with syntax highlighting, schema-aware autocomplete, and CSV/JSON export.
-				Ready-made views make it easy: <code>available</code> lists what's currently for sale (with a
-				direct order link), and <code>server_history</code> covers prices over time — both with
-				prices that already include IPv4 and your selected VAT and currency. Everything runs entirely
-				in your browser, so it's instant and private.
-			</p>
-		</TimelineItem>
-		<TimelineItem
-			title="Availability heatmap shows uptime, not just in/out of stock"
-			date="Released on June 16th, 2026"
+			2026
+		</h2>
+		<div class="space-y-10">
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jul 23</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						New guide: the Hetzner server auction, explained
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						A new <a href="/guide" class="text-orange-500 hover:underline">guide page</a> covers how
+						the Hetzner server auction works, what happened to prices in 2026, and how to get the most
+						out of Server Radar — from the auction search and cloud availability tracking to price alerts.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jun 17</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Run your own SQL with the SQL Console
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Query the auction dataset right from the data pages: a floating button opens a SQL
+						console with syntax highlighting, schema-aware autocomplete, and CSV/JSON export.
+						Ready-made views cover current listings and price history, with IPv4, VAT, and currency
+						already applied. Everything runs in your browser — instant and private.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jun 16</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Availability heatmap shows uptime, not just in/out of stock
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Cells in the Cloud Status availability chart are now shaded by how much of the period a
+						server type was actually in stock — so a day with one brief restock no longer reads the
+						same as a fully available one.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Apr 24</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Smarter configuration picks
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						The Configurations page now ranks deals by what actually matters instead of absolute
+						price alone: best price/performance (€ per Geekbench 5 multicore point), cheapest
+						absolute with ancient hardware filtered out, and best € per core, GB of RAM, and TB of
+						NVMe or bulk storage.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Mar 25</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Availability timeline heatmap
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						The Cloud Status page shows exactly when each server type was in and out of stock across
+						every location over the past 24 hours, 7 days, or 30 days — good for spotting the
+						windows when your target type usually frees up.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Mar 24</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Cloud alerts that auto-disarm
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						When a cloud availability alert fires it switches itself off, so you aren't pinged
+						repeatedly while the server is still available. Re-arm it whenever you want to watch
+						again.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Mar 22</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						CPU specs and benchmark scores on every listing
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Every server card shows cores, threads, CPU generation, and Geekbench 5 scores. Sort by
+						CPU score to find the strongest processor within your budget.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jan 3</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Standard dedicated server support
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Browse Hetzner's standard dedicated servers alongside auction listings in one filterable
+						view, with badges to tell them apart and direct links to Hetzner's product pages.
+					</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<!-- 2025 -->
+	<section class="mb-12">
+		<h2
+			class="mb-6 border-b border-gray-200 pb-2 text-sm font-semibold tracking-widest text-gray-400 uppercase dark:border-gray-700 dark:text-gray-500"
 		>
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				The Cloud Status availability chart now shades each cell by how much of the period a server
-				type was actually in stock, instead of a flat green/red "available at some point". Over
-				longer windows like 30 days, a day that was only briefly available now reads as partial
-				rather than fully green — so you can see real availability patterns at a glance. The chart is
-				now built on the same charting library as the rest of the site.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Smarter configuration picks" date="Released on April 24th, 2026">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				The Configurations page now ranks deals by what actually matters, not just absolute price.
-				Six fresh categories, each a single click away:
-			</p>
-			<ul class="ml-4 list-inside list-disc space-y-1 text-gray-500 dark:text-gray-400">
-				<li>Best price/performance — cheapest euros per Geekbench 5 multicore point</li>
-				<li>Cheapest absolute — with weak CPUs filtered out so ancient hardware doesn't dominate</li>
-				<li>Best €/core, best €/GB RAM, best €/TB NVMe, best €/TB bulk storage</li>
-				<li>A "snapshot updated" timestamp so you always know how fresh the picks are</li>
-			</ul>
-		</TimelineItem>
-		<TimelineItem title="Finer-grained disk filters" date="Released on April 18th, 2026">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				You can now ask for "NVMe or SATA" drives in a filter instead of requiring every selected
-				disk type at once. Useful when you don't mind which drive type you get as long as the
-				capacity and price are right.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Availability timeline heatmap" date="Released on March 25th, 2026">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				The Cloud Status page now has a heatmap showing exactly when each server type was in and
-				out of stock across every Hetzner location over the past 24 hours, 7 days, or 30 days.
-				Good for spotting the windows when your target type usually frees up.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Cloud alerts that auto-disarm" date="Released on March 24th, 2026">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				When a cloud availability alert fires, it now switches itself off automatically so you
-				don't keep getting pinged while the server's still free. Re-arm it from Settings whenever
-				you're ready to watch again.
-			</p>
-		</TimelineItem>
-		<TimelineItem
-			title="CPU specs and benchmark scores on every listing"
-			date="Released on March 22nd, 2026"
+			2025
+		</h2>
+		<div class="space-y-10">
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Nov 6</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Cloud status page redesign
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Summary cards for overall availability and scarcest types, interactive filters,
+						collapsible server groups, and a mobile-friendly availability matrix.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jun 3</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Cloud availability alerts
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Get notified when your preferred cloud server type becomes available in a specific
+						location.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jun 1</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Discord integration
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Receive auction and cloud availability alerts directly in your Discord server via
+						webhooks, alongside or instead of email.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>May 6</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Statistics & sold price tracking
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Sold auction prices are now tracked and shown on the statistics page, with price trends
+						and volume comparisons — what servers actually sell for, not just asking prices.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>May 2</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Auction alert management
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Track and manage your auction alerts with a detailed history of which servers matched
+						and when.
+					</p>
+				</div>
+			</article>
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Apr 22</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Cloud server availability monitoring
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Live monitoring of Hetzner cloud server availability across all locations, with
+						color-coded indicators designed to work for color-blind users too.
+					</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<!-- 2024 -->
+	<section>
+		<h2
+			class="mb-6 border-b border-gray-200 pb-2 text-sm font-semibold tracking-widest text-gray-400 uppercase dark:border-gray-700 dark:text-gray-500"
 		>
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Every server card now shows cores, threads, CPU generation, and Geekbench 5 single- and
-				multi-core scores. Sort by CPU score to find the strongest processor within your budget —
-				and these data points power the smarter deal picks on the Configurations page.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Standard Dedicated Server Support" date="Released on January 3rd, 2026">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Browse Hetzner's standard dedicated servers alongside auction servers in a unified view:
-			</p>
-			<ul class="ml-4 list-inside list-disc space-y-1 text-gray-500 dark:text-gray-400">
-				<li>Filter between auction and standard servers with new toggle options</li>
-				<li>Visual badges distinguish server types at a glance</li>
-				<li>Direct links to Hetzner's product pages for standard servers</li>
-				<li>Backwards compatible with existing auction alerts</li>
-			</ul>
-		</TimelineItem>
-		<TimelineItem title="Enhanced Cloud Status Visualization" date="Released on November 6th, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Completely redesigned cloud status page with improved data visualization and user
-				experience:
-			</p>
-			<ul class="ml-4 list-inside list-disc space-y-1 text-gray-500 dark:text-gray-400">
-				<li>
-					Summary statistics cards showing overall availability, best/worst locations, and scarcest
-					server types
-				</li>
-				<li>
-					Interactive filters for availability status, architecture, CPU type, and server name
-					search
-				</li>
-				<li>Collapsible server type groups with expandable/collapsible sections</li>
-				<li>Color-coded background cells for better availability status recognition</li>
-				<li>Additional "Available In" column showing availability counts per server type</li>
-				<li>Location availability percentage summary row</li>
-				<li>Mobile-optimized responsive design with simplified location headers</li>
-			</ul>
-		</TimelineItem>
-		<TimelineItem title="Cloud Availability Alerts" date="Released on June 3rd, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Get notified when your preferred cloud server configurations become available. Set up alerts
-				for specific server types, locations, and pricing thresholds.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Discord Integration" date="Released on June 1st, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Comprehensive Discord notification system with dual-channel support. Get alerts directly in
-				your Discord server for auction and cloud availability updates.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Statistics & Sold Price Tracking" date="Released on May 6th, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Added sold auction price tracking and enhanced statistics page with quick stats overview,
-				price trends, and volume comparisons.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Navigation & UI Improvements" date="Released on May 4th, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Redesigned navigation with improved desktop layout and loading indicators.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Auction Alert Management" date="Released on May 2nd, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Advanced auction view system allowing users to track and manage their auction alerts with
-				detailed matching history.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Result Grouping & Card Stack" date="Released on April 27th, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Intelligent result grouping functionality and interactive card stack display for better data
-				visualization on the landing page.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Collapsible Filter Panel" date="Released on April 27th, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Responsive collapsible filter panel with different display modes for desktop and mobile.
-				Improved user experience with better transitions and icons.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Cloud Server Availability Monitoring" date="Released on April 22nd, 2025">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Real-time monitoring of Hetzner's cloud server availability across all locations. Live
-				status page with color-coded indicators and accessibility features for color-blind users.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Chart System Upgrade" date="Released on November 2024">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Switched from D3 to ApexCharts for better performance and added stacked charts for enhanced
-				data visualization.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Filter Persistence & Toast System" date="Released on October 2024">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Added filter persistence across sessions and comprehensive toast notification system. Major
-				page rework with improved layouts.
-			</p>
-		</TimelineItem>
-		<TimelineItem title="Advanced Filtering" date="Released on August 2024">
-			<p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">
-				Dual range sliders, RPS filtering, recently seen servers filter, and shareable filter URLs
-				for better user experience.
-			</p>
-		</TimelineItem>
-	</Timeline>
+			2024
+		</h2>
+		<div class="space-y-10">
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Aug</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Advanced filtering
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Where it all started: dual range sliders, a recently-seen filter, and shareable filter
+						URLs for the auction search.
+					</p>
+				</div>
+			</article>
+		</div>
+	</section>
 
 	<div class="mt-12 text-center">
 		<p class="text-sm text-gray-600 dark:text-gray-400">
 			Want to suggest a feature or report a bug?
-			<a href={resolve('/contact')} class="text-blue-600 hover:underline dark:text-blue-400">Get in touch</a>
+			<a href={resolve('/contact')} class="text-orange-500 hover:underline">Get in touch</a>
 		</p>
 	</div>
 </div>
