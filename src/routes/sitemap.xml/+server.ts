@@ -16,6 +16,15 @@ export const GET: RequestHandler = async ({ platform }) => {
 
   return await sitemap.response({
     origin: "https://radar.iodev.org",
+    // Auth/session pages carry noindex and don't belong in the sitemap.
+    // Patterns cover both route IDs (with layout group) and resulting paths.
+    excludeRoutePatterns: [
+      "^/auth/.*",
+      ".*\\(authed\\).*",
+      "^/alerts$",
+      "^/cloud-alerts$",
+      "^/settings$",
+    ],
     paramValues: {
       "/servers/cpu/[slug]": cpuSlugs,
     },

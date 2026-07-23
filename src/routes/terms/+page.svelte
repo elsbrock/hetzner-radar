@@ -2,6 +2,15 @@
 	import { A } from 'flowbite-svelte';
 </script>
 
+<svelte:head>
+	<title>Terms of Service — Server Radar</title>
+	<meta
+		name="description"
+		content="Terms of service for Server Radar, the independent price and availability tracker for the Hetzner server auction."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/terms" />
+</svelte:head>
+
 <main class="p-8">
 	<section class="mx-auto my-12 max-w-7xl text-center">
 		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">Terms of Service</h1>

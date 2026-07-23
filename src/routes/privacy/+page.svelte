@@ -2,6 +2,15 @@
 	import { A } from 'flowbite-svelte';
 </script>
 
+<svelte:head>
+	<title>Privacy Policy — Server Radar</title>
+	<meta
+		name="description"
+		content="How Server Radar handles your data: local browser storage for filters and settings, optional accounts via magic link, and what alert emails contain."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/privacy" />
+</svelte:head>
+
 <main class="p-8">
 	<section class="mx-auto my-12 max-w-7xl text-center">
 		<h1 class="mb-6 text-5xl font-extrabold text-gray-800 dark:text-gray-100">Privacy Policy</h1>

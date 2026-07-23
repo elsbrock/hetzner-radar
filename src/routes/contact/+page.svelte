@@ -4,6 +4,15 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 </script>
 
+<svelte:head>
+	<title>Contact — Server Radar</title>
+	<meta
+		name="description"
+		content="Get in touch with Server Radar: report bugs and request features on GitHub, or reach us via email or Discord."
+	/>
+	<link rel="canonical" href="https://radar.iodev.org/contact" />
+</svelte:head>
+
 <div>
 	<div class="mx-auto max-w-4xl p-8">
 		<h1 class="mb-6 text-center text-4xl font-bold text-gray-800 dark:text-gray-100">Contact</h1>
