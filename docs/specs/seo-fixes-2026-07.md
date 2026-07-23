@@ -59,10 +59,13 @@ Hetzner auction works, and what happened to prices / Hetzner news).
 
 ## Implementation Steps
 
-- [ ] Remove page-level meta fallbacks from `src/routes/+layout.svelte`
-- [ ] Sitemap excludes + `noindex` for auth/authed routes
-- [ ] Minimal heads for `/privacy`, `/terms`, `/contact`
-- [ ] `/analyze`: head + server-rendered intro copy
-- [ ] `/guide` page with content, schema, footer link
-- [ ] Changelog entry for the guide
-- [ ] `npm run check` + `npm run lint` clean; verify heads in page source
+- [x] Remove page-level meta fallbacks from `src/routes/+layout.svelte`
+- [x] Sitemap excludes + `noindex` for auth/authed routes
+- [x] Minimal heads for `/privacy`, `/terms`, `/contact`
+- [x] `/analyze`: head + server-rendered intro copy
+- [x] `/guide` page with content, schema, footer link
+- [x] Changelog entry for the guide
+- [x] `npm run check` + `npm run lint` clean; verify heads in page source
+- [x] Also fixed along the way: `src/app.html` shipped a static `<title>` before
+      `%sveltekit.head%`, producing two title tags on every page — removed; fallback titles
+      added for auth/authed layouts and the error page (all `noindex`).
