@@ -1,22 +1,35 @@
-import { initDB } from "$lib/api/frontend/dbapi";
-import { createDB, tearDownDB as terminateDB } from "$lib/duckdb";
-import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import { writable, get } from "svelte/store";
 
 export const db = writable<null | AsyncDuckDB>();
 export const dbInitProgress = writable<number>(0);
 
-export async function initializeDB() {
-  let idb;
-  db.subscribe((value) => {
-    idb = value;
-  });
+let initPromise: Promise<typeof db> | null = null;
 
-  if (idb) {
+// DuckDB (the JS library and the WASM bundle) is loaded dynamically so pages
+// that never query it don't carry it in their bundle. Multiple callers share
+// one in-flight initialization.
+export function initializeDB() {
+  if (!initPromise) {
+    initPromise = doInitializeDB().catch((error) => {
+      initPromise = null;
+      throw error;
+    });
+  }
+  return initPromise;
+}
+
+async function doInitializeDB() {
+  if (get(db)) {
     return db;
   }
 
-  idb = await createDB();
+  const [{ createDB }, { initDB }] = await Promise.all([
+    import("$lib/duckdb"),
+    import("$lib/api/frontend/dbapi"),
+  ]);
+
+  const idb = await createDB();
   if (idb) {
     await initDB(idb, (loaded, total) => {
       const progress = Math.round((loaded / total) * 100);
@@ -32,9 +45,11 @@ export async function tearDownDB() {
   const idb = get(db);
 
   if (idb) {
+    const { tearDownDB: terminateDB } = await import("$lib/duckdb");
     await terminateDB();
   }
 
+  initPromise = null;
   db.set(null);
   dbInitProgress.set(0);
 }

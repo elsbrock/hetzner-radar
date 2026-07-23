@@ -133,11 +133,24 @@
 		}
 	}
 
-	// Start animation on component mount
+	// Animate only when the stack is actually visible (it's hidden below lg),
+	// so mobile doesn't burn cycles re-rendering a display:none subtree.
 	$effect(() => {
-		startAnimation();
+		if (typeof window === 'undefined') return;
+
+		const mq = window.matchMedia('(min-width: 1024px)');
+		const update = () => {
+			if (mq.matches) {
+				startAnimation();
+			} else {
+				stopAnimation();
+			}
+		};
+		update();
+		mq.addEventListener('change', update);
 
 		return () => {
+			mq.removeEventListener('change', update);
 			stopAnimation();
 		};
 	});

@@ -26,11 +26,16 @@
 		faMicrochip,
 		faServer
 	} from '@fortawesome/free-solid-svg-icons';
-	import { db } from '../../stores/db';
+	import { db, initializeDB } from '../../stores/db';
 	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
 	import { convertPrice } from '$lib/currency';
+	import { onMount } from 'svelte';
 
 	let _loading = $state(true);
+
+	onMount(() => {
+		initializeDB();
+	});
 
 	let dailyPriceIndexStats = $state<TemporalStat[]>([]);
 	let ramWithECCPriceStats = $state<TemporalStat[]>([]);

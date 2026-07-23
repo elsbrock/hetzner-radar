@@ -42,7 +42,7 @@
 	import { convertPrice } from '$lib/currency';
 	import { addToast } from '$lib/stores/toast';
 	import { debounce } from '$lib/util';
-	import { AsyncDuckDB } from '@duckdb/duckdb-wasm';
+	import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 	import {
 		faArrowDown, // FAB icon
 		faArrowUp,
@@ -63,7 +63,7 @@
 	import { slide as _slide } from 'svelte/transition';
 	// Import slide transition
 	import { browser } from '$app/environment';
-	import { db, dbInitProgress } from '../../stores/db';
+	import { db, dbInitProgress, initializeDB } from '../../stores/db';
 
 	type SortField = 'price' | 'ram' | 'storage' | 'cpu_score' | 'cpu_multicore_score';
 	type GroupByField = 'none' | 'cpu_vendor' | 'cpu_model' | 'best_price'; // Updated type
@@ -177,6 +177,7 @@ let isSmallScreen: boolean = $state(false);
 	const debouncedUpdateViewStateUrl = debounce(updateViewStateUrl, 300);
 
 	onMount(() => {
+		initializeDB();
 		storedFilter = loadFilter();
 
 		// Read view state from URL on mount

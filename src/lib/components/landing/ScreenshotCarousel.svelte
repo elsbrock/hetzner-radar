@@ -55,16 +55,14 @@
 		return () => observer.disconnect();
 	});
 
-	// Preload all images
+	// Preload only the next slide in the active theme, so the initial page load
+	// doesn't fetch all variants (~3.4 MB of PNGs) up front.
 	$effect(() => {
 		if (!browser) return;
 
-		for (const screenshot of screenshots) {
-			const lightImg = new Image();
-			lightImg.src = screenshot.light;
-			const darkImg = new Image();
-			darkImg.src = screenshot.dark;
-		}
+		const next = screenshots[(currentIndex + 1) % screenshots.length];
+		const img = new Image();
+		img.src = isDarkMode ? next.dark : next.light;
 	});
 
 	$effect(() => {
@@ -139,7 +137,11 @@
 						<img
 							src={isDarkMode ? screenshots[currentIndex].dark : screenshots[currentIndex].light}
 							alt={screenshots[currentIndex].alt}
-							class="w-full animate-fade-in"
+							width="1667"
+							height="1116"
+							loading="lazy"
+							decoding="async"
+							class="h-auto w-full animate-fade-in"
 						/>
 					{/key}
 				</div>

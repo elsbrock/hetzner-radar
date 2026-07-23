@@ -44,6 +44,34 @@
       })();
     </script>
     <!-- End script -->
+    <!-- Hide banners dismissed in this exact version before first paint (avoids CLS).
+         Banner elements carry a version-encoded id: banner-<id>-v<version>. -->
+    <script>
+      (function () {
+        try {
+          var settings = JSON.parse(
+            localStorage.getItem("sr-settings") || "{}",
+          );
+          var rules = "";
+          for (var key in settings) {
+            if (key.indexOf("sr-banner-closed-") === 0) {
+              var id = key.slice("sr-banner-closed-".length);
+              var version = String(settings[key]);
+              if (/^[\w-]+$/.test(id) && /^[\w-]+$/.test(version)) {
+                rules += "#banner-" + id + "-v" + version + "{display:none}";
+              }
+            }
+          }
+          if (rules) {
+            var style = document.createElement("style");
+            style.textContent = rules;
+            document.head.appendChild(style);
+          }
+        } catch (e) {
+          /* banner simply stays visible */
+        }
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover" class="bg-gray-50 dark:bg-gray-900">

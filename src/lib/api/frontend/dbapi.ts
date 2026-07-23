@@ -59,14 +59,16 @@ async function fetchWithProgress(
 
 type ProgressFn = (loaded: number, total: number) => void;
 
-async function initDB(db: AsyncDuckDB, progress?: ProgressFn) {
-  const {
-    hostname: _hostname,
-    port: _port,
-    protocol: _protocol,
-  } = window.location;
-  // const url = `${protocol}//${hostname}:${port}/sb.duckdb.wasm`;
-  const url = `https://static.radar.iodev.org/sb.duckdb?cb=${Math.random()}*100}`;
+async function initDB(
+  db: AsyncDuckDB,
+  progress?: ProgressFn,
+  opts?: { fresh?: boolean },
+) {
+  // Bucket the cache-buster to 5-minute windows so navigations and reloads
+  // within the window can reuse the HTTP cache (the dataset updates every few
+  // minutes, so this matches the data cadence). Explicit reloads bypass it.
+  const cb = opts?.fresh ? Math.random() : Math.floor(Date.now() / 300_000);
+  const url = `https://static.radar.iodev.org/sb.duckdb?cb=${cb}`;
   const res = await fetchWithProgress(url, progress);
   const buffer = await res.arrayBuffer();
   await db.registerFileBuffer("sb.duckdb", new Uint8Array(buffer));
@@ -77,7 +79,7 @@ async function initDB(db: AsyncDuckDB, progress?: ProgressFn) {
 
 async function reloadDB(db: AsyncDuckDB) {
   db.dropFiles();
-  return initDB(db);
+  return initDB(db, undefined, { fresh: true });
 }
 
 async function withDbConnections(

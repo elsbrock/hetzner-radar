@@ -32,11 +32,16 @@
   import { Button } from "flowbite-svelte";
   import dayjs from "dayjs";
   import relativeTime from "dayjs/plugin/relativeTime";
-  import { db } from "../../stores/db";
+  import { onMount } from "svelte";
+  import { db, initializeDB } from "../../stores/db";
 
   dayjs.extend(relativeTime);
 
   let { data } = $props();
+
+  onMount(() => {
+    initializeDB();
+  });
 
   const iconMap = {
     chart: faChartLine,

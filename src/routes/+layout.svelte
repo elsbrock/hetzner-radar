@@ -11,9 +11,15 @@
 
 	import Banner from '$lib/components/Banner.svelte';
 	import { session } from '$lib/stores/session';
-	import { onDestroy, onMount } from 'svelte';
-	import { initializeDB, tearDownDB } from '../stores/db';
+	import { onDestroy } from 'svelte';
+	import { tearDownDB } from '../stores/db';
 	import AnimatedBackground from '$lib/components/AnimatedBackground.svelte';
+
+	// FontAwesome injects its CSS at runtime by default, which leaves SSR'd icons
+	// unsized until hydration (visible nav reflow). Ship the CSS statically instead.
+	import { config as faConfig } from '@fortawesome/fontawesome-svg-core';
+	import '@fortawesome/fontawesome-svg-core/styles.css';
+	faConfig.autoAddCss = false;
 
 	let { data, children } = $props<
 		import('./$types').LayoutData & { children: import('svelte').Snippet }
@@ -28,10 +34,8 @@
 
 	let showScrollToTop = $state(false);
 
-	onMount(async () => {
-		return initializeDB();
-	});
-
+	// DuckDB is initialized lazily by the pages/components that query it
+	// (analyze, configurations, statistics, server drawer, SQL console).
 	onDestroy(async () => {
 		await tearDownDB();
 	});

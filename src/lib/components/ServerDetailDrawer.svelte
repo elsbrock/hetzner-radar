@@ -32,7 +32,7 @@
 	import dayjs from 'dayjs';
 	import { Button, CloseButton, Drawer, Tooltip } from 'flowbite-svelte';
 	import { sineIn } from 'svelte/easing';
-	import { db } from '../../stores/db';
+	import { db, initializeDB } from '../../stores/db';
 	import ServerPriceChart from './ServerPriceChart.svelte';
 	import { vatOptions } from './VatSelector.svelte';
 	import type { LiveAuctionResult } from '../../routes/api/auctions/+server';
@@ -173,6 +173,13 @@
 			? Math.round(((currentSupply - averageSupply) / averageSupply) * 100)
 			: null
 	);
+
+	// The drawer can be opened from pages that don't preload DuckDB.
+	$effect(() => {
+		if (open) {
+			initializeDB();
+		}
+	});
 
 	$effect(() => {
 		const currentConfig = config;

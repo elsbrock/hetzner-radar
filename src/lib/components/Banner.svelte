@@ -10,19 +10,21 @@
 		version = 1,
 		children
 	}: { id?: string; version?: string | number; children?: Snippet } = $props();
-	let bannerStatus: boolean = $state(false);
+
+	// Server-render the banner visible so it never pops in after hydration (CLS).
+	// Users who dismissed this exact version get it hidden pre-paint by the
+	// inline script in app.html, which targets the version-encoded element id.
+	const domId = $derived(`banner-${id}-v${version}`);
+	let bannerStatus: boolean = $state(true);
 	let initialized: boolean = $state(false);
 
 	onMount(() => {
 		const settings = get(settingsStore);
 		const dismissedVersion = settings[`sr-banner-closed-${id}`];
 
-		// Show banner if no version dismissed OR if dismissed version is different from current version
-		if (dismissedVersion === undefined || dismissedVersion !== version) {
-			bannerStatus = true;
-		} else {
-			bannerStatus = false; // Hide banner if the current version was already dismissed
-		}
+		// Remove the banner from the DOM if this exact version was dismissed
+		// (visually it is already hidden by the pre-paint style).
+		bannerStatus = dismissedVersion === undefined || dismissedVersion !== version;
 
 		initialized = true;
 	});
@@ -37,7 +39,7 @@
 
 <Banner
 	bind:open={bannerStatus}
-	{id}
+	id={domId}
 	class="relative z-10 flex items-center justify-between bg-gray-100 px-2 py-1 dark:border-gray-600 dark:bg-gray-700"
 	closeClass="p-1"
 >
