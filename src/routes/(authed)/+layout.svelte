@@ -3,6 +3,7 @@
 </script>
 
 <svelte:head>
+	<title>Server Radar</title>
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 

@@ -5,6 +5,11 @@
 	import { A } from 'flowbite-svelte';
 </script>
 
+<svelte:head>
+	<title>{$page.status === 500 ? 'Server Error' : 'Not Found'} — Server Radar</title>
+	<meta name="robots" content="noindex" />
+</svelte:head>
+
 <div class="flex items-center justify-center px-3 py-10">
 	<div class="w-[450px] rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
 		{#if $page.status === 500}
