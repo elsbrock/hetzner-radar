@@ -23,7 +23,7 @@ Hetzner auction works, and what happened to prices / Hetzner news).
    JSON-LD). The hardcoded `canonical: https://radar.iodev.org/`, `description`, `keywords`
    (legacy, ignored by Google), `robots` and `og:*` fallbacks are removed from
    `src/routes/+layout.svelte`. Rationale: SvelteKit does not deduplicate `<meta>`/`<link>`
-   between layout and page heads, so every page with its own head currently ships *two*
+   between layout and page heads, so every page with its own head currently ships _two_
    canonicals — the layout one claiming `/` is canonical for every URL. Every indexable page
    already has (or gets, in this spec) its own complete head, so fallbacks are not needed.
 2. **Auth/session pages are excluded from the sitemap and noindexed.**
@@ -43,9 +43,9 @@ Hetzner auction works, and what happened to prices / Hetzner news).
    - Using the auction search (`/analyze`) effectively
    - Tracking resource availability (`/cloud-status`)
    - Price alerts (email/Discord, target price semantics)
-   JSON-LD: `Article` + `BreadcrumbList` + `FAQPage` (3–6 real questions). Tone per
-   `seo-content-revamp.md` (pragmatic, no marketing-speak, don't invent features; facts about
-   Hetzner sourced from research, uncertain claims cut).
+     JSON-LD: `Article` + `BreadcrumbList` + `FAQPage` (3–6 real questions). Tone per
+     `seo-content-revamp.md` (pragmatic, no marketing-speak, don't invent features; facts about
+     Hetzner sourced from research, uncertain claims cut).
 6. Changelog entry for the guide page (noteworthy feature); technical SEO fixes get none.
 
 ## Trade-offs

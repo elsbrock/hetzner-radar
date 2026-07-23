@@ -55,42 +55,15 @@
 </script>
 
 <svelte:head>
-	<!-- Primary Meta Tags -->
-	<meta
-		name="description"
-		content="Server Radar helps you find the best deals on Hetzner dedicated servers. Monitor prices, set up email alerts, and make informed purchasing decisions effortlessly."
-	/>
-	<meta
-		name="keywords"
-		content="Hetzner servers, server deals, price tracking, email alerts, server monitoring, dedicated servers, notifications, server configurations, server price alerts"
-	/>
+	<!-- Global tags only — title, description, canonical, OG and robots are owned by each page
+	     (SvelteKit does not deduplicate meta tags between layout and page heads). -->
 	<meta name="author" content="Simon Elsbrock" />
 
 	<!-- Viewport -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-	<!-- Robots -->
-	<meta name="robots" content="index, follow" />
-
-	<!-- Canonical URL -->
-	<link rel="canonical" href="https://radar.iodev.org/" />
-
 	<!-- Favicon -->
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
-
-	<!-- Open Graph Meta Tags -->
-	<meta
-		property="og:title"
-		content="Server Radar - Track Hetzner Server Prices & Receive Email Alerts"
-	/>
-	<meta
-		property="og:description"
-		content="Discover the best deals on Hetzner dedicated servers with Server Radar. Monitor prices, set up email alerts, and make informed purchasing decisions effortlessly."
-	/>
-	<meta property="og:url" content="https://radar.iodev.org/" />
-	<meta property="og:type" content="website" />
-	<meta property="og:image" content="https://radar.iodev.org/images/og-image.webp" />
-	<meta property="og:image:alt" content="Server Radar Dashboard" />
 
 	<!-- Structured Data (JSON-LD) -->
 	<script type="application/ld+json">
