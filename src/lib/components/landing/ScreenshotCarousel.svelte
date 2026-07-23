@@ -6,28 +6,28 @@
 
 	const screenshots: { light: string; dark: string; alt: string }[] = [
 		{
-			light: '/images/screenshots/config-light.png',
-			dark: '/images/screenshots/config-dark.png',
+			light: '/images/screenshots/config-light.webp',
+			dark: '/images/screenshots/config-dark.webp',
 			alt: 'Curated server configurations'
 		},
 		{
-			light: '/images/screenshots/statistics-light.png',
-			dark: '/images/screenshots/statistics-dark.png',
+			light: '/images/screenshots/statistics-light.webp',
+			dark: '/images/screenshots/statistics-dark.webp',
 			alt: 'Market statistics and price trends'
 		},
 		{
-			light: '/images/screenshots/analyze-light.png',
-			dark: '/images/screenshots/analyze-dark.png',
+			light: '/images/screenshots/analyze-light.webp',
+			dark: '/images/screenshots/analyze-dark.webp',
 			alt: 'Server analysis with filters and price history'
 		},
 		{
-			light: '/images/screenshots/sidebar-light.png',
-			dark: '/images/screenshots/sidebar-dark.png',
+			light: '/images/screenshots/sidebar-light.webp',
+			dark: '/images/screenshots/sidebar-dark.webp',
 			alt: 'Filter sidebar with advanced options'
 		},
 		{
-			light: '/images/screenshots/cloud-status-light.png',
-			dark: '/images/screenshots/cloud-status-dark.png',
+			light: '/images/screenshots/cloud-status-light.webp',
+			dark: '/images/screenshots/cloud-status-dark.webp',
 			alt: 'Cloud server availability status'
 		}
 	];
