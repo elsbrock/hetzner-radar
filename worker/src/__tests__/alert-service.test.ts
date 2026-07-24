@@ -46,7 +46,6 @@ describe('AlertService', () => {
 			db: mockDb,
 			notificationService: mockNotificationService,
 			doId: testDoId,
-			notificationJitterMs: 0, // no dispatch delay in tests
 		});
 
 		vi.clearAllMocks();
@@ -453,8 +452,8 @@ describe('AlertService', () => {
 		});
 	});
 
-	describe('notification jitter', () => {
-		it('should select the new webhook columns', async () => {
+	describe('webhook channel wiring', () => {
+		it('should select the webhook columns', async () => {
 			const mockQueryStatement = {
 				bind: vi.fn().mockReturnThis(),
 				all: vi.fn().mockResolvedValue({ results: [] }),
@@ -466,44 +465,6 @@ describe('AlertService', () => {
 			const sql = mockDb.prepare.mock.calls[0][0] as string;
 			expect(sql).toContain('pa.webhook_notifications');
 			expect(sql).toContain('user.webhook_url');
-		});
-
-		it('should delay notification dispatch by a random amount below notificationJitterMs', async () => {
-			vi.useFakeTimers();
-			const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
-
-			try {
-				const jitteredService = new AlertService({
-					db: mockDb,
-					notificationService: mockNotificationService,
-					doId: testDoId,
-					notificationJitterMs: 10_000, // with random() = 0.5 -> 5s delay
-				});
-
-				const mockStatement = {
-					bind: vi.fn().mockReturnValue({
-						run: vi.fn().mockResolvedValue({ results: [], success: true }),
-					}),
-					all: vi.fn().mockResolvedValue({ results: mockMatchingAlertsQueryResult }),
-					run: vi.fn().mockResolvedValue({ results: [], success: true }),
-					first: vi.fn().mockResolvedValue(null),
-				};
-				mockDb.prepare.mockReturnValue(mockStatement);
-				mockDb.batch.mockResolvedValue([{ results: [], success: true }]);
-				vi.mocked(mockNotificationService.sendNotification).mockResolvedValue(mockNotificationResults);
-
-				const processing = jitteredService.processAlerts();
-
-				await vi.advanceTimersByTimeAsync(4_999);
-				expect(mockNotificationService.sendNotification).not.toHaveBeenCalled();
-
-				await vi.advanceTimersByTimeAsync(1);
-				await processing;
-				expect(mockNotificationService.sendNotification).toHaveBeenCalledTimes(1);
-			} finally {
-				randomSpy.mockRestore();
-				vi.useRealTimers();
-			}
 		});
 	});
 });

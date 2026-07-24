@@ -14,7 +14,6 @@ import { AlertNotificationService } from './notifications/alert-notification-ser
 interface AuctionImportEnv {
 	DB: D1Database;
 	AUCTION_IMPORT_INTERVAL_MS?: string;
-	NOTIFICATION_JITTER_MS?: string;
 	HETZNER_AUCTION_API_URL?: string;
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
 	FORWARDEMAIL_API_KEY?: string;
@@ -68,7 +67,6 @@ export class AuctionImportDO extends DurableObject {
 			db: env.DB,
 			notificationService: this.alertNotificationService,
 			doId: ctx.id.toString(),
-			notificationJitterMs: env.NOTIFICATION_JITTER_MS ? parseInt(env.NOTIFICATION_JITTER_MS) : undefined,
 		});
 
 		this.logEnvironmentInfo();

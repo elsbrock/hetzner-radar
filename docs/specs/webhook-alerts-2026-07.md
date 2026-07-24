@@ -9,13 +9,11 @@ POST to a user-provided URL), in addition to the existing email and Discord
 channels. This enables integrations with home automation, custom bots, ntfy,
 Slack-compatible relays, etc.
 
-At the same time, introduce **notification jitter**: a small random delay
-before an alert's notifications are dispatched. Webhook (and Discord) delivery
-is effectively instant; without jitter, users with automated webhook consumers
-would reliably snipe every good auction within seconds of the 5-minute import
-cycle, crowding out everyone else. A randomized delay of 0–30s per alert
-levels the playing field while remaining negligible relative to the 5-minute
-import interval.
+**Note on fairness/jitter:** a randomized dispatch delay was considered (and
+briefly implemented) to keep webhook consumers from sniping auctions, but was
+dropped: auction data is only polled every 5 minutes, so no notification is
+"live" to begin with — a 0–30s shuffle on top of 0–5 minutes of inherent
+staleness changes nothing about who wins an auction.
 
 ## Architecture
 
@@ -38,11 +36,7 @@ The feature mirrors the existing Discord channel end to end:
     existing Discord/email semantics. The duplicated per-channel try/catch is
     collapsed into a single `trySend()` helper.
   - `alert-service.ts` — `MATCH_ALERTS_SQL` selects `user.webhook_url` and
-    `pa.webhook_notifications`; history insert stores the flag. Before
-    dispatching notifications for a triggered alert, the service sleeps a
-    random `0..jitterMs` (default 30 000 ms, configurable via
-    `NOTIFICATION_JITTER_MS` env var). Alerts are processed in parallel, so
-    total added wall time per import run is bounded by the max jitter.
+    `pa.webhook_notifications`; history insert stores the flag.
 
 - **Webhook payload** (versioned, stable contract):
 
@@ -81,12 +75,8 @@ The feature mirrors the existing Discord channel end to end:
   state change on our side; consumers who need authenticity can use a secret
   path/query token in their URL. Signing can be added later behind the same
   `version` field.
-- **Jitter applies to the whole notification dispatch of an alert** (all
-  channels), not just webhooks — jittering only one channel would simply move
-  the sniping to Discord webhooks. Email latency dwarfs the jitter anyway.
-- **Jitter lives in `AlertService.processAlert`,** not in individual channels,
-  so one alert gets one consistent delay and DB bookkeeping (history insert,
-  alert deletion) stays in its current order relative to sending.
+- **No dispatch jitter** — see the note under Intent; the 5-minute polling
+  interval already dominates any delivery-timing differences between channels.
 - **Fallback semantics preserved:** email remains the safety net — it is sent
   whenever it is enabled and no instant channel delivered successfully.
 
@@ -94,9 +84,8 @@ The feature mirrors the existing Discord channel end to end:
 
 - [x] Spec
 - [x] Migration `0014_add_generic_webhook_support.sql`
-- [x] Worker: `WebhookChannel`, orchestration refactor, SQL + history changes,
-      jitter
-- [x] Worker tests (channel, orchestration, jitter bounds)
+- [x] Worker: `WebhookChannel`, orchestration refactor, SQL + history changes
+- [x] Worker tests (channel, orchestration)
 - [x] Backend API: user + alerts webhook fields, validation
 - [x] Settings UI: webhook section + test action
 - [x] Alerts UI: per-alert webhook toggle (create + edit)

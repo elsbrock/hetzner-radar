@@ -12,8 +12,6 @@ export interface AlertServiceConfig {
 	db: D1Database;
 	notificationService: AlertNotificationService;
 	doId: string;
-	/** Max random delay before dispatching an alert's notifications (default 30s) */
-	notificationJitterMs?: number;
 }
 
 export interface ProcessedAlert {
@@ -44,13 +42,10 @@ interface MatchedAlertData {
 	seen: string;
 }
 
-const DEFAULT_NOTIFICATION_JITTER_MS = 30_000;
-
 export class AlertService {
 	private db: D1Database;
 	private notificationService: AlertNotificationService;
 	private doId: string;
-	private notificationJitterMs: number;
 
 	// Constants
 	private readonly HETZNER_IPV4_COST_CENTS = 119; // €1.19 in cents
@@ -320,7 +315,6 @@ export class AlertService {
 		this.db = config.db;
 		this.notificationService = config.notificationService;
 		this.doId = config.doId;
-		this.notificationJitterMs = config.notificationJitterMs ?? DEFAULT_NOTIFICATION_JITTER_MS;
 	}
 
 	/**
@@ -451,16 +445,6 @@ export class AlertService {
 				matchedAuctions,
 				lowestAuctionPrice,
 			};
-
-			// Random dispatch delay: instant channels (webhook, Discord) would otherwise
-			// let automated consumers reliably snipe every matching auction the moment an
-			// import lands. Alerts are processed in parallel, so this bounds the added
-			// wall time per import run to notificationJitterMs.
-			const jitterMs = Math.floor(Math.random() * this.notificationJitterMs);
-			if (jitterMs > 0) {
-				console.log(`[AlertService ${this.doId}] Delaying notifications for alert ${alertInfo.id} by ${jitterMs}ms`);
-				await new Promise((resolve) => setTimeout(resolve, jitterMs));
-			}
 
 			const notificationResults = await this.notificationService.sendNotification(notification);
 

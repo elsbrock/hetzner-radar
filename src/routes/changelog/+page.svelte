@@ -123,8 +123,7 @@
 						Price alerts can now call your own HTTPS endpoint with a JSON payload — perfect for home
 						automation, ntfy, or custom bots. Configure the endpoint in
 						<a href="/settings" class="text-orange-500 hover:underline">Settings</a>, then enable it
-						per alert. To keep the auction fair, all alert notifications are dispatched with a short
-						random delay.
+						per alert.
 					</p>
 				</div>
 			</article>
