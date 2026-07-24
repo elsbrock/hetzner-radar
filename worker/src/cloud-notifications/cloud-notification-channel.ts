@@ -29,6 +29,7 @@ export interface CloudAlert {
 	alert_on: 'available' | 'unavailable' | 'both';
 	email_notifications: boolean;
 	discord_notifications: boolean;
+	webhook_notifications: boolean;
 	is_armed: boolean;
 	created_at: string;
 }
@@ -40,6 +41,7 @@ export interface CloudAlertUser {
 	id: string;
 	email: string;
 	discord_webhook_url?: string;
+	webhook_url?: string;
 }
 
 /**
@@ -59,6 +61,7 @@ export interface CloudNotification {
 	matches: CloudAlertMatch[];
 	emailEnabled: boolean;
 	discordEnabled: boolean;
+	webhookEnabled: boolean;
 }
 
 /**

@@ -236,6 +236,7 @@ describe('CloudAlertService', () => {
 						alert_on: 'available',
 						email_notifications: true,
 						discord_notifications: true,
+						webhook_notifications: false,
 						is_armed: true,
 						created_at: '2024-01-01T00:00:00Z',
 					},
@@ -537,7 +538,9 @@ describe('CloudAlertService', () => {
 			await service.processAvailabilityChanges(mockSingleAvailabilityChange);
 			await userLookupFunction!('user-1');
 
-			expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('SELECT id, email, discord_webhook_url FROM user WHERE id = ?'));
+			expect(mockDb.prepare).toHaveBeenCalledWith(
+				expect.stringContaining('SELECT id, email, discord_webhook_url, webhook_url FROM user WHERE id = ?'),
+			);
 		});
 	});
 });

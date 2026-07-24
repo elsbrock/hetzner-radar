@@ -60,8 +60,8 @@
 		if (alert) {
 			// Editing existing alert - use its notification settings, with fallbacks for migration case
 			emailSelected = alert.email_notifications ?? true; // Default to true if null/undefined
-			discordSelected = alert.discord_notifications ?? discordAvailable;
-			webhookSelected = alert.webhook_notifications ?? webhookAvailable;
+			discordSelected = (alert.discord_notifications ?? discordAvailable) && discordAvailable;
+			webhookSelected = (alert.webhook_notifications ?? webhookAvailable) && webhookAvailable;
 		} else {
 			// Creating new alert - use defaults based on user config
 			emailSelected = true; // Email always defaults to true
@@ -70,35 +70,31 @@
 		}
 	});
 
-	// Available notification methods based on user configuration
-	const availableNotificationMethods = $derived(
-		[
-			{
-				key: 'email',
-				label: 'Email',
-				icon: faEnvelope,
-				enabled: true, // Email is always available
-				description: 'Receive notifications via email',
-				checked: emailSelected
-			},
-			{
-				key: 'discord',
-				label: 'Discord',
-				icon: faDiscord,
-				enabled: discordAvailable,
-				description: 'Receive rich notifications in Discord',
-				checked: discordSelected
-			},
-			{
-				key: 'webhook',
-				label: 'Webhook',
-				icon: faLink,
-				enabled: webhookAvailable,
-				description: 'Send a JSON payload to your endpoint',
-				checked: webhookSelected
-			}
-		].filter((method) => method.enabled)
-	);
+	// All notification methods; unavailable ones are shown disabled with a
+	// pointer to Settings so users discover them
+	const notificationMethods = $derived([
+		{
+			key: 'email',
+			label: 'Email',
+			icon: faEnvelope,
+			enabled: true, // Email is always available
+			description: 'Receive notifications via email'
+		},
+		{
+			key: 'discord',
+			label: 'Discord',
+			icon: faDiscord,
+			enabled: discordAvailable,
+			description: 'Receive rich notifications in Discord'
+		},
+		{
+			key: 'webhook',
+			label: 'Webhook',
+			icon: faLink,
+			enabled: webhookAvailable,
+			description: 'Send a JSON payload to your endpoint'
+		}
+	]);
 
 	// Validation: at least one method must be selected
 	const hasValidNotificationSelection = $derived(
@@ -232,79 +228,74 @@
 			</Label>
 
 			<!-- Notification Method Selection -->
-			{#if availableNotificationMethods.length > 0}
-				<div class="space-y-3">
-					<Label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-						Notification Methods
-					</Label>
-					<p class="text-xs text-gray-500 dark:text-gray-400">
-						Your active notification methods (configured in <A href="/settings" class="underline"
-							>Settings</A
-						>)
-					</p>
-					<div class="space-y-2">
-						{#each availableNotificationMethods as method (method.key)}
-							<Label
-								class="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 dark:border-gray-600"
-							>
-								{#if method.key === 'email'}
-									<Checkbox
-										bind:checked={emailSelected}
-										class="text-orange-500 focus:ring-orange-500"
-									/>
-								{:else if method.key === 'discord'}
-									<Checkbox
-										bind:checked={discordSelected}
-										class="text-indigo-500 focus:ring-indigo-500"
-									/>
-								{:else}
-									<Checkbox
-										bind:checked={webhookSelected}
-										class="text-teal-500 focus:ring-teal-500"
-									/>
-								{/if}
-								<div class="flex flex-1 items-center space-x-2">
-									<FontAwesomeIcon
-										icon={method.icon}
-										class="h-4 w-4 {method.key === 'discord'
-											? 'text-indigo-500'
-											: method.key === 'webhook'
-												? 'text-teal-500'
-												: 'text-gray-600 dark:text-gray-300'}"
-									/>
-									<div>
-										<div class="text-sm font-medium text-gray-900 dark:text-white">
-											{method.label}
-										</div>
-										<div class="text-xs text-gray-500 dark:text-gray-400">
+			<div class="space-y-3">
+				<Label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+					Notification Methods
+				</Label>
+				<p class="text-xs text-gray-500 dark:text-gray-400">
+					Notification methods are configured in <A href="/settings" class="underline">Settings</A>
+				</p>
+				<div class="space-y-2">
+					{#each notificationMethods as method (method.key)}
+						<Label
+							class="flex items-center space-x-3 rounded-lg border border-gray-200 p-3 dark:border-gray-600 {!method.enabled
+								? 'opacity-60'
+								: ''}"
+						>
+							{#if method.key === 'email'}
+								<Checkbox
+									bind:checked={emailSelected}
+									class="text-orange-500 focus:ring-orange-500"
+								/>
+							{:else if method.key === 'discord'}
+								<Checkbox
+									bind:checked={discordSelected}
+									disabled={!method.enabled}
+									class="text-indigo-500 focus:ring-indigo-500"
+								/>
+							{:else}
+								<Checkbox
+									bind:checked={webhookSelected}
+									disabled={!method.enabled}
+									class="text-teal-500 focus:ring-teal-500"
+								/>
+							{/if}
+							<div class="flex flex-1 items-center space-x-2">
+								<FontAwesomeIcon
+									icon={method.icon}
+									class="h-4 w-4 {method.key === 'discord'
+										? 'text-indigo-500'
+										: method.key === 'webhook'
+											? 'text-teal-500'
+											: 'text-gray-600 dark:text-gray-300'}"
+								/>
+								<div>
+									<div class="text-sm font-medium text-gray-900 dark:text-white">
+										{method.label}
+									</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">
+										{#if method.enabled}
 											{method.description}
-										</div>
+										{:else}
+											Set up in <A href="/settings" class="underline">Settings</A> first
+										{/if}
 									</div>
 								</div>
-							</Label>
-						{/each}
-					</div>
+							</div>
+						</Label>
+					{/each}
+				</div>
 
-					{#if !hasValidNotificationSelection}
-						<div
-							class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-700 dark:bg-red-900/20"
-						>
-							<p class="text-sm text-red-900 dark:text-red-100">
-								Please select at least one notification method.
-							</p>
-						</div>
-					{/if}
-				</div>
-			{:else}
-				<div
-					class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-700 dark:bg-yellow-900/20"
-				>
-					<p class="text-sm text-yellow-900 dark:text-yellow-100">
-						No notification methods are configured. Please configure at least one notification
-						method in <A href="/settings" class="underline">Settings</A>.
-					</p>
-				</div>
-			{/if}
+				{#if !hasValidNotificationSelection}
+					<div
+						class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-700 dark:bg-red-900/20"
+					>
+						<p class="text-sm text-red-900 dark:text-red-100">
+							Please select at least one notification method.
+						</p>
+					</div>
+				{/if}
+			</div>
 
 			<!-- Error -->
 			{#if error}

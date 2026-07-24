@@ -37,7 +37,7 @@ export class CloudAlertService {
 	`;
 
 	private readonly GET_USER_SQL = `
-		SELECT id, email, discord_webhook_url FROM user WHERE id = ?
+		SELECT id, email, discord_webhook_url, webhook_url FROM user WHERE id = ?
 	`;
 
 	private readonly INSERT_ALERT_HISTORY_SQL = `
@@ -143,6 +143,7 @@ export class CloudAlertService {
 			id: result.id as string,
 			email: result.email as string,
 			discord_webhook_url: result.discord_webhook_url as string | undefined,
+			webhook_url: result.webhook_url as string | undefined,
 		};
 	}
 
@@ -205,6 +206,7 @@ export class CloudAlertService {
 			alert_on: raw.alert_on as CloudAlert['alert_on'],
 			email_notifications: Boolean(raw.email_notifications),
 			discord_notifications: Boolean(raw.discord_notifications),
+			webhook_notifications: Boolean(raw.webhook_notifications),
 			is_armed: Boolean(raw.is_armed),
 			created_at: raw.created_at as string,
 		};

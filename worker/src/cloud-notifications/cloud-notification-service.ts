@@ -15,6 +15,7 @@ import type {
 } from './cloud-notification-channel';
 import { CloudEmailChannel, type CloudEmailChannelConfig } from './cloud-email-channel';
 import { CloudDiscordChannel } from './cloud-discord-channel';
+import { CloudWebhookChannel } from './cloud-webhook-channel';
 
 export interface CloudNotificationServiceConfig {
 	email?: CloudEmailChannelConfig;
@@ -31,8 +32,9 @@ export class CloudNotificationService {
 			this.channels.push(new CloudEmailChannel(config.email));
 		}
 
-		// Discord channel doesn't need config - uses webhook URL from user
+		// Discord and webhook channels need no config — they use per-user URLs
 		this.channels.push(new CloudDiscordChannel());
+		this.channels.push(new CloudWebhookChannel());
 	}
 
 	/**
@@ -97,12 +99,14 @@ export class CloudNotificationService {
 			// Determine which notifications are enabled
 			const emailEnabled = userMatches.some((match) => match.alert.email_notifications);
 			const discordEnabled = userMatches.some((match) => match.alert.discord_notifications);
+			const webhookEnabled = userMatches.some((match) => match.alert.webhook_notifications);
 
 			const notification: CloudNotification = {
 				user,
 				matches: userMatches,
 				emailEnabled,
 				discordEnabled,
+				webhookEnabled,
 			};
 
 			const results = await this.sendNotification(notification);
@@ -124,60 +128,53 @@ export class CloudNotificationService {
 	}
 
 	/**
-	 * Send notification through all enabled channels with fallback logic
+	 * Send notification through all enabled channels.
+	 * Instant channels (Discord, webhook) run first; email is the fallback and
+	 * is sent whenever it is enabled and no instant channel delivered.
 	 */
 	private async sendNotification(notification: CloudNotification): Promise<CloudNotificationResult[]> {
-		const results: CloudNotificationResult[] = [];
+		const userId = notification.user.id;
 
-		// Log notification attempt
-		console.log(`[CloudNotificationService] Processing notifications for user ${notification.user.id}:`, {
+		console.log(`[CloudNotificationService] Processing notifications for user ${userId}:`, {
 			emailEnabled: notification.emailEnabled,
 			discordEnabled: notification.discordEnabled,
-			discord_webhook_url: notification.user.discord_webhook_url ? 'present' : 'missing',
+			webhookEnabled: notification.webhookEnabled,
 			email: notification.user.email ? 'present' : 'missing',
+			discord_webhook_url: notification.user.discord_webhook_url ? 'present' : 'missing',
+			webhook_url: notification.user.webhook_url ? 'present' : 'missing',
 			matches: notification.matches.length,
 		});
 
-		// Determine which channels should be used
-		const discordChannel = this.channels.find((c) => c.name === 'cloud-discord');
 		const emailChannel = this.channels.find((c) => c.name === 'cloud-email');
+		const instantChannels = this.channels.filter((c) => c.name !== 'cloud-email' && c.isEnabled(notification));
 
-		// Try Discord first if enabled
-		let discordSent = false;
-		if (discordChannel && discordChannel.isEnabled(notification)) {
-			const result = await discordChannel.send(notification);
-			results.push(result);
-			discordSent = result.success;
+		const results: CloudNotificationResult[] = await Promise.all(
+			instantChannels.map(async (channel) => {
+				const result = await channel.send(notification);
+				if (result.success) {
+					console.log(`[CloudNotificationService] ${channel.name} notification sent successfully for user ${userId}`);
+				} else {
+					console.error(`[CloudNotificationService] ${channel.name} notification failed for user ${userId}: ${result.error}`);
+				}
+				return result;
+			}),
+		);
+		const instantDelivered = results.some((r) => r.success);
 
-			if (discordSent) {
-				console.log(`[CloudNotificationService] Discord notification sent successfully for user ${notification.user.id}`);
-			} else {
-				console.error(`[CloudNotificationService] Discord notification failed for user ${notification.user.id}: ${result.error}`);
-			}
-		} else {
-			console.log(
-				`[CloudNotificationService] Discord notification skipped for user ${notification.user.id}: ${
-					!notification.discordEnabled ? 'disabled' : 'no webhook URL'
-				}`,
-			);
-		}
-
-		// Send email if enabled AND (Discord wasn't sent OR Discord failed)
-		if (emailChannel && emailChannel.isEnabled(notification) && !discordSent) {
+		// Email fallback: send when enabled and no instant channel got through
+		if (emailChannel && emailChannel.isEnabled(notification) && !instantDelivered) {
 			const result = await emailChannel.send(notification);
 			results.push(result);
 
 			if (result.success) {
-				console.log(`[CloudNotificationService] Email notification sent for user ${notification.user.id}`);
+				console.log(`[CloudNotificationService] Email notification sent for user ${userId}`);
 			} else {
-				console.error(`[CloudNotificationService] Email notification failed for user ${notification.user.id}: ${result.error}`);
+				console.error(`[CloudNotificationService] Email notification failed for user ${userId}: ${result.error}`);
 			}
 		}
 
-		// Check if any notification was sent
-		const anySent = results.some((r) => r.success);
-		if (!anySent) {
-			console.warn(`[CloudNotificationService] No notifications sent for user ${notification.user.id}: All methods disabled or failed`);
+		if (!results.some((r) => r.success)) {
+			console.warn(`[CloudNotificationService] No notifications sent for user ${userId}: All methods disabled or failed`);
 		}
 
 		return results;

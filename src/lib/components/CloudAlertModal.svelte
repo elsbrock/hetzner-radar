@@ -26,13 +26,23 @@
 		open = $bindable(false),
 		alert = null,
 		serverTypeOptions = [],
-		locationOptions = []
+		locationOptions = [],
+		user = null
 	}: {
 		open: boolean;
 		alert: CloudAvailabilityAlert | null;
 		serverTypeOptions: Option[];
 		locationOptions: Option[];
+		user?: {
+			discord_webhook_url?: string | null;
+			webhook_url?: string | null;
+		} | null;
 	} = $props();
+
+	// Channels are configurable in Settings; when we know the user has no URL
+	// for a channel we disable its toggle and point at Settings instead.
+	const discordConfigured = $derived(user === null || !!user.discord_webhook_url);
+	const webhookConfigured = $derived(user === null || !!user.webhook_url);
 
 	const dispatch = createEventDispatcher();
 
@@ -43,6 +53,7 @@
 	let alertOn: 'available' | 'unavailable' | 'both' = $state('available');
 	let emailNotifications = $state(true);
 	let discordNotifications = $state(false);
+	let webhookNotifications = $state(false);
 	let isSubmitting = $state(false);
 	let serverTypeSearchTerm = $state('');
 
@@ -73,7 +84,7 @@
 		alertName.trim().length > 0 &&
 			selectedServerTypeIds.length > 0 &&
 			selectedLocationIds.length > 0 &&
-			(emailNotifications || discordNotifications)
+			(emailNotifications || discordNotifications || webhookNotifications)
 	);
 
 	// Update form when alert changes (for editing)
@@ -84,7 +95,8 @@
 			selectedLocationIds = [...alert.location_ids];
 			alertOn = alert.alert_on;
 			emailNotifications = alert.email_notifications;
-			discordNotifications = alert.discord_notifications;
+			discordNotifications = alert.discord_notifications && discordConfigured;
+			webhookNotifications = alert.webhook_notifications && webhookConfigured;
 		} else {
 			resetForm();
 		}
@@ -97,6 +109,7 @@
 		alertOn = 'available';
 		emailNotifications = true;
 		discordNotifications = false;
+		webhookNotifications = false;
 	}
 
 	async function handleSubmit() {
@@ -114,7 +127,7 @@
 			return;
 		}
 
-		if (!emailNotifications && !discordNotifications) {
+		if (!emailNotifications && !discordNotifications && !webhookNotifications) {
 			addToast({
 				message: 'Please select at least one notification method',
 				type: 'error',
@@ -139,7 +152,8 @@
 					locationIds: selectedLocationIds,
 					alertOn,
 					emailNotifications,
-					discordNotifications
+					discordNotifications,
+					webhookNotifications
 				})
 			});
 
@@ -300,10 +314,13 @@
 					</div>
 				</Label>
 				<Label
-					class="flex items-center space-x-2 rounded-sm border border-gray-200 p-2 dark:border-gray-600"
+					class="flex items-center space-x-2 rounded-sm border border-gray-200 p-2 dark:border-gray-600 {!discordConfigured
+						? 'opacity-60'
+						: ''}"
 				>
 					<Toggle
 						bind:checked={discordNotifications}
+						disabled={!discordConfigured}
 						class="text-indigo-500 focus:ring-indigo-500"
 					/>
 					<div class="flex flex-1 items-center space-x-2">
@@ -311,14 +328,48 @@
 						<div>
 							<div class="text-sm font-medium text-gray-900 dark:text-white">Discord</div>
 							<div class="text-xs text-gray-500 dark:text-gray-400">
-								Receive rich notifications in Discord
+								{#if discordConfigured}
+									Receive rich notifications in Discord
+								{:else}
+									Set up your Discord webhook in <a
+										href="/settings"
+										class="text-orange-500 underline hover:text-orange-600">Settings</a
+									> first
+								{/if}
+							</div>
+						</div>
+					</div>
+				</Label>
+				<Label
+					class="flex items-center space-x-2 rounded-sm border border-gray-200 p-2 dark:border-gray-600 {!webhookConfigured
+						? 'opacity-60'
+						: ''}"
+				>
+					<Toggle
+						bind:checked={webhookNotifications}
+						disabled={!webhookConfigured}
+						class="text-teal-500 focus:ring-teal-500"
+					/>
+					<div class="flex flex-1 items-center space-x-2">
+						<InfoCircleSolid class="h-4 w-4 text-teal-500" />
+						<div>
+							<div class="text-sm font-medium text-gray-900 dark:text-white">Webhook</div>
+							<div class="text-xs text-gray-500 dark:text-gray-400">
+								{#if webhookConfigured}
+									Send a JSON payload to your own endpoint
+								{:else}
+									Set up your webhook endpoint in <a
+										href="/settings"
+										class="text-orange-500 underline hover:text-orange-600">Settings</a
+									> first
+								{/if}
 							</div>
 						</div>
 					</div>
 				</Label>
 			</div>
 
-			{#if !emailNotifications && !discordNotifications}
+			{#if !emailNotifications && !discordNotifications && !webhookNotifications}
 				<div
 					class="rounded-sm border border-red-200 bg-red-50 p-2 dark:border-red-700 dark:bg-red-900/20"
 				>

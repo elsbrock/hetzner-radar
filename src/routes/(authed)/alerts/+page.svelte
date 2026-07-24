@@ -85,12 +85,15 @@
 	let { data }: { data: AlertsPageData } = $props();
 	const cloudStatusData = $derived((data.cloudStatusData ?? null) as CloudStatusSummary | null);
 
-	// Tabs state
-	let activeTab = $state('price-alerts');
-	let priceAlertsTabOpen = $state(false);
-	let cloudAlertsTabOpen = $state(false);
+	// Tabs state — seed from the URL at init; Flowbite auto-opens the first
+	// TabItem when none is open, so the flags must be correct before mount.
+	const initialTab =
+		$page.url.searchParams.get('tab') === 'cloud-alerts' ? 'cloud-alerts' : 'price-alerts';
+	let activeTab = $state(initialTab);
+	let priceAlertsTabOpen = $state(initialTab === 'price-alerts');
+	let cloudAlertsTabOpen = $state(initialTab === 'cloud-alerts');
 
-	// Initialize and sync with URL
+	// Follow URL changes (back/forward navigation)
 	$effect(() => {
 		const tabParam = $page.url.searchParams.get('tab');
 		activeTab = tabParam === 'cloud-alerts' ? 'cloud-alerts' : 'price-alerts';
@@ -888,6 +891,7 @@
 <CloudAlertModal
 	bind:open={showCloudAlertModal}
 	alert={editingCloudAlert}
+	user={data.user}
 	{serverTypeOptions}
 	{locationOptions}
 	on:close={() => {

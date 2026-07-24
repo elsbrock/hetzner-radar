@@ -36,6 +36,12 @@ const mockCloudEmailChannel: CloudNotificationChannel = {
 	send: vi.fn(),
 };
 
+const mockCloudWebhookChannel: CloudNotificationChannel = {
+	name: 'cloud-webhook',
+	isEnabled: vi.fn(),
+	send: vi.fn(),
+};
+
 // Mock the channel modules using class syntax for Vitest 4.x compatibility
 vi.mock('../cloud-notifications/cloud-email-channel', () => ({
 	CloudEmailChannel: class MockCloudEmailChannel {
@@ -53,6 +59,14 @@ vi.mock('../cloud-notifications/cloud-discord-channel', () => ({
 	},
 }));
 
+vi.mock('../cloud-notifications/cloud-webhook-channel', () => ({
+	CloudWebhookChannel: class MockCloudWebhookChannel {
+		name = mockCloudWebhookChannel.name;
+		isEnabled = mockCloudWebhookChannel.isEnabled;
+		send = mockCloudWebhookChannel.send;
+	},
+}));
+
 describe('CloudNotificationService', () => {
 	let service: CloudNotificationService;
 	let mockGetUserById: vi.Mock;
@@ -67,22 +81,28 @@ describe('CloudNotificationService', () => {
 		service = new CloudNotificationService({ email: mockEmailConfig });
 		mockGetUserById = vi.fn() as CloudNotificationChannel;
 		vi.clearAllMocks();
+		// Baseline: all channels disabled so tests only opt in what they exercise
+		vi.mocked(mockCloudDiscordChannel.isEnabled).mockReturnValue(false);
+		vi.mocked(mockCloudEmailChannel.isEnabled).mockReturnValue(false);
+		vi.mocked(mockCloudWebhookChannel.isEnabled).mockReturnValue(false);
 	});
 
 	describe('constructor', () => {
-		it('should initialize with email and discord channels when email config provided', () => {
+		it('should initialize with email, discord and webhook channels when email config provided', () => {
 			const channels = service.getChannels();
 			expect(channels).toContain('cloud-email');
 			expect(channels).toContain('cloud-discord');
-			expect(channels).toHaveLength(2);
+			expect(channels).toContain('cloud-webhook');
+			expect(channels).toHaveLength(3);
 		});
 
-		it('should initialize with only discord channel when no email config provided', () => {
+		it('should initialize without email channel when no email config provided', () => {
 			const serviceWithoutEmail = new CloudNotificationService({});
 			const channels = serviceWithoutEmail.getChannels();
 			expect(channels).toContain('cloud-discord');
+			expect(channels).toContain('cloud-webhook');
 			expect(channels).not.toContain('cloud-email');
-			expect(channels).toHaveLength(1);
+			expect(channels).toHaveLength(2);
 		});
 	});
 
@@ -432,7 +452,7 @@ describe('CloudNotificationService', () => {
 			);
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
-				`[CloudNotificationService] Discord notification failed for user ${mockCloudNotification.user.id}: ${mockFailureResult.error}`,
+				`[CloudNotificationService] cloud-discord notification failed for user ${mockCloudNotification.user.id}: ${mockFailureResult.error}`,
 			);
 
 			expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -529,13 +549,13 @@ describe('CloudNotificationService', () => {
 	describe('channel management', () => {
 		it('should return correct channel names', () => {
 			const channels = service.getChannels();
-			expect(channels).toEqual(['cloud-email', 'cloud-discord']);
+			expect(channels).toEqual(['cloud-email', 'cloud-discord', 'cloud-webhook']);
 		});
 
 		it('should handle service with no email config', () => {
 			const serviceNoEmail = new CloudNotificationService({});
 			const channels = serviceNoEmail.getChannels();
-			expect(channels).toEqual(['cloud-discord']);
+			expect(channels).toEqual(['cloud-discord', 'cloud-webhook']);
 		});
 	});
 });

@@ -128,6 +128,10 @@ export const PATCH: RequestHandler = async ({
       validUpdates.discordNotifications = Boolean(updates.discordNotifications);
     }
 
+    if (updates.webhookNotifications !== undefined) {
+      validUpdates.webhookNotifications = Boolean(updates.webhookNotifications);
+    }
+
     // Handle re-arm request
     if (updates.isArmed === true) {
       await rearmCloudAlert(

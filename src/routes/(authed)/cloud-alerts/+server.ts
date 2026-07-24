@@ -107,6 +107,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
       data.alertOn,
       data.emailNotifications ?? true,
       data.discordNotifications ?? false,
+      data.webhookNotifications ?? false,
     );
 
     return json({ success: true, alertId });

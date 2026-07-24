@@ -10,6 +10,7 @@ export interface CloudAvailabilityAlert {
   alert_on: "available" | "unavailable" | "both";
   email_notifications: boolean;
   discord_notifications: boolean;
+  webhook_notifications: boolean;
   is_armed: boolean;
   created_at: Date;
 }
@@ -40,6 +41,7 @@ type CloudAlertRow = {
   alert_on: "available" | "unavailable" | "both";
   email_notifications: number | boolean;
   discord_notifications: number | boolean;
+  webhook_notifications: number | boolean;
   is_armed: number | boolean;
   created_at: string;
 };
@@ -63,6 +65,7 @@ function parseCloudAlert(raw: CloudAlertRow): CloudAvailabilityAlert {
     location_ids: JSON.parse(raw.location_ids),
     email_notifications: Boolean(raw.email_notifications),
     discord_notifications: Boolean(raw.discord_notifications),
+    webhook_notifications: Boolean(raw.webhook_notifications),
     is_armed: Boolean(raw.is_armed),
     created_at: new Date(raw.created_at),
   };
@@ -147,14 +150,15 @@ export async function createCloudAlert(
   alertOn: "available" | "unavailable" | "both",
   emailNotifications: boolean = true,
   discordNotifications: boolean = false,
+  webhookNotifications: boolean = false,
 ): Promise<string> {
   const alertId = crypto.randomUUID();
 
   await db
     .prepare(
       `INSERT INTO cloud_availability_alert 
-        (id, user_id, name, server_type_ids, location_ids, alert_on, email_notifications, discord_notifications) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, user_id, name, server_type_ids, location_ids, alert_on, email_notifications, discord_notifications, webhook_notifications) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       alertId,
@@ -165,6 +169,7 @@ export async function createCloudAlert(
       alertOn,
       emailNotifications ? 1 : 0,
       discordNotifications ? 1 : 0,
+      webhookNotifications ? 1 : 0,
     )
     .run();
 
@@ -182,6 +187,7 @@ export async function updateCloudAlert(
     alertOn?: "available" | "unavailable" | "both";
     emailNotifications?: boolean;
     discordNotifications?: boolean;
+    webhookNotifications?: boolean;
   },
 ): Promise<void> {
   const setClauses: string[] = [];
@@ -210,6 +216,10 @@ export async function updateCloudAlert(
   if (updates.discordNotifications !== undefined) {
     setClauses.push("discord_notifications = ?");
     values.push(updates.discordNotifications ? 1 : 0);
+  }
+  if (updates.webhookNotifications !== undefined) {
+    setClauses.push("webhook_notifications = ?");
+    values.push(updates.webhookNotifications ? 1 : 0);
   }
 
   if (setClauses.length === 0) return;
