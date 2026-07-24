@@ -96,8 +96,9 @@
 	class="flex min-h-screen flex-col"
 >
 	<div class="grow">
-		<Banner version={6} id="standard-servers">
-			<strong>New:</strong> <a href={resolve('/cloud-status?timeline=true')}>Availability Timeline</a> — see when Cloud servers come and go across locations 📊
+		<Banner version={7} id="standard-servers">
+			<strong>New:</strong> <a href={resolve('/settings')}>Webhook notifications</a> — get alerts
+			delivered straight to your own endpoint, ntfy, or home automation 🔔
 		</Banner>
 		<Nav />
 

@@ -9,7 +9,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
-		{ headline: 'Webhook notifications for price alerts', datePublished: '2026-07-24' },
+		{ headline: 'Webhook notifications for alerts', datePublished: '2026-07-24' },
 		{ headline: 'New guide: the Hetzner server auction, explained', datePublished: '2026-07-23' },
 		{ headline: 'Run your own SQL with the SQL Console', datePublished: '2026-06-17' },
 		{ headline: 'Availability heatmap shows uptime, not just in/out of stock', datePublished: '2026-06-16' },
@@ -117,11 +117,11 @@
 				>
 				<div>
 					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
-						Webhook notifications for price alerts
+						Webhook notifications for alerts
 					</h3>
 					<p class="text-base text-gray-500 dark:text-gray-400">
-						Price alerts can now call your own HTTPS endpoint with a JSON payload — perfect for home
-						automation, ntfy, or custom bots. Configure the endpoint in
+						Price and cloud availability alerts can now call your own HTTPS endpoint with a JSON
+						payload — perfect for home automation, ntfy, or custom bots. Configure the endpoint in
 						<a href="/settings" class="text-orange-500 hover:underline">Settings</a>, then enable it
 						per alert.
 					</p>
