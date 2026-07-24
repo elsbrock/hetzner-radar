@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { browser as _browser } from '$app/environment';
+	import { browser } from '$app/environment';
 	import AlertModal from '$lib/components/AlertModal.svelte';
 	import AlertAuctionsDrawer from '$lib/components/AlertAuctionsDrawer.svelte';
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
@@ -14,7 +14,7 @@
 	import { MAX_CLOUD_ALERTS } from '$lib/api/backend/cloud-alerts.js';
 	import type { CloudAvailabilityAlert } from '$lib/api/backend/cloud-alerts';
 	import { page } from '$app/stores';
-	import type { PriceAlert } from '$lib/api/backend/alerts';
+	import type { PriceAlert, PriceAlertHistory } from '$lib/api/backend/alerts';
 	import { currencySymbol, currentCurrency } from '$lib/stores/settings';
 	import { convertPrice } from '$lib/currency';
 
@@ -107,6 +107,21 @@
 		} else if (cloudAlertsTabOpen) {
 			activeTab = 'cloud-alerts';
 		}
+	});
+
+	// Keep the selected tab in the URL so it survives reloads and can be shared
+	$effect(() => {
+		if (!browser) return;
+		const urlTab =
+			$page.url.searchParams.get('tab') === 'cloud-alerts' ? 'cloud-alerts' : 'price-alerts';
+		if (activeTab === urlTab) return;
+		const url = new URL($page.url);
+		if (activeTab === 'cloud-alerts') {
+			url.searchParams.set('tab', 'cloud-alerts');
+		} else {
+			url.searchParams.delete('tab');
+		}
+		goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
 	});
 
 	// Price alerts state
@@ -283,6 +298,32 @@
 		}
 	}
 
+	async function openTriggeredAuctions(alert: PriceAlertHistory) {
+		try {
+			const response = await fetch(`/alerts/${alert.id}/auctions`);
+			if (!response.ok) {
+				addToast({
+					message: 'Alert not found or auctions unavailable.',
+					type: 'error',
+					dismissible: true,
+					timeout: 3000
+				});
+				return;
+			}
+			selectedAlertId = alert.id;
+			selectedVatRate = alert.vat_rate;
+			drawerOpen = true;
+		} catch (err) {
+			console.error('Error checking alert:', err);
+			addToast({
+				message: 'Failed to check alert. Please try again later.',
+				type: 'error',
+				dismissible: true,
+				timeout: 3000
+			});
+		}
+	}
+
 	function openCreateCloudAlertModal() {
 		editingCloudAlert = null;
 		showCloudAlertModal = true;
@@ -346,35 +387,15 @@
 
 				<div class="space-y-6">
 					<!-- Price Alerts Header -->
-					{#await data.alerts.active}
-						<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-							<div>
-								<h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Price Alerts</h2>
-								<p class="mt-1 text-gray-600 dark:text-gray-400">
-									Get notified when server prices drop below your target
-								</p>
-							</div>
-							<Button href="/analyze" class="rounded-xl px-6 py-3 font-medium">
-								<BellRingSolid class="mr-2 h-4 w-4" />
-								Create Price Alert
-							</Button>
-						</div>
-					{:then active}
-						<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-							<div>
-								<h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Price Alerts</h2>
-								<p class="mt-1 text-gray-600 dark:text-gray-400">
-									Get notified when server prices drop below your target
-								</p>
-							</div>
-							{#if active.length > 0}
-								<Button href="/analyze" class="rounded-xl px-6 py-3 font-medium">
-									<BellRingSolid class="mr-2 h-4 w-4" />
-									Create Price Alert
-								</Button>
-							{/if}
-						</div>
-					{/await}
+					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<p class="text-gray-600 dark:text-gray-400">
+							Get notified when server prices drop below your target.
+						</p>
+						<Button href="/analyze">
+							<BellRingSolid class="mr-2 h-4 w-4" />
+							Create Price Alert
+						</Button>
+					</div>
 
 					<!-- Active Price Alerts -->
 					{#await data.alerts.active}
@@ -389,13 +410,11 @@
 									Active Alerts ({active.length}/{MAX_ALERTS})
 								</h3>
 								<p class="mb-4 text-base text-gray-600 dark:text-gray-400">
-									All alerts that you have set up will be displayed here. Server Radar will
-									continuously monitor the prices and notify you once the trigger price has been
-									reached. You can edit or delete them at any time. New alerts can be created from
-									existing search results (head over to <a
+									Prices are monitored continuously; you are notified once your target is reached.
+									Create alerts from your search results on <a
 										href={resolve('/analyze')}
 										class="text-orange-500 underline hover:text-orange-600">analyze</a
-									>).
+									>.
 								</p>
 							</div>
 
@@ -403,11 +422,6 @@
 								<div class="rounded-lg bg-white p-4 text-center shadow-xs dark:bg-gray-800">
 									<p class="text-lg text-gray-700 dark:text-gray-300">
 										There are no active alerts.
-									</p>
-									<p class="mt-2">
-										<Button href="/analyze" color="primary" size="sm" class="shadow-xs">
-											Create Alert
-										</Button>
 									</p>
 								</div>
 							{:else}
@@ -441,11 +455,28 @@
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/3">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
-													>Created</span
+													>Notifications</span
 												>
-												<span class="text-lg font-semibold text-gray-900 dark:text-white">
-													{dayjs.utc(alert.created_at).local().format('MMM D, YYYY')}
-												</span>
+												<div class="mt-1 flex items-center gap-2 text-sm">
+													{#if alert.email_notifications}
+														<div class="flex items-center gap-1">
+															<CheckCircleSolid class="h-3 w-3 text-green-500" />
+															<span class="text-gray-900 dark:text-white">Email</span>
+														</div>
+													{/if}
+													{#if alert.discord_notifications}
+														<div class="flex items-center gap-1">
+															<CheckCircleSolid class="h-3 w-3 text-blue-500" />
+															<span class="text-gray-900 dark:text-white">Discord</span>
+														</div>
+													{/if}
+													{#if alert.webhook_notifications}
+														<div class="flex items-center gap-1">
+															<CheckCircleSolid class="h-3 w-3 text-teal-500" />
+															<span class="text-gray-900 dark:text-white">Webhook</span>
+														</div>
+													{/if}
+												</div>
 											</div>
 											<div class="mt-3 self-center md:mt-0">
 												<ButtonGroup>
@@ -461,6 +492,7 @@
 													</Button>
 													<Button
 														size="xs"
+														title="Edit alert"
 														onclick={() => {
 															selectedAlert = alert;
 															showEdit = true;
@@ -470,6 +502,8 @@
 													</Button>
 													<Button
 														size="xs"
+														color="red"
+														title="Delete alert"
 														onclick={() => openDeleteConfirmation('price', alert.id, alert.name)}
 													>
 														<FontAwesomeIcon icon={faTrash} />
@@ -506,9 +540,8 @@
 									Recently Triggered ({triggered.length})
 								</h3>
 								<p class="mb-4 text-base text-gray-600 dark:text-gray-400">
-									Once an alert has triggered you will be notified and it will show up here. An
-									alert that triggered will automatically be disabled and no more notifications will
-									be sent. You can recreate them any time. We show the last 10 triggered alerts.
+									A triggered alert notifies you once, then disables itself. You can recreate it any
+									time; the last 10 are shown here.
 								</p>
 							</div>
 
@@ -544,7 +577,7 @@
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
-													>Triggered At</span
+													>Trigger Price</span
 												>
 												<span class="text-lg font-semibold text-green-600 dark:text-green-400">
 													{$currencySymbol}{convertPrice(alert.trigger_price, 'EUR', $currentCurrency).toFixed(2)}
@@ -552,7 +585,7 @@
 											</div>
 											<div class="mb-3 w-full md:mb-0 md:w-1/5">
 												<span class="block text-sm font-medium text-gray-600 dark:text-gray-400"
-													>Date</span
+													>Triggered</span
 												>
 												<span class="text-lg font-semibold text-gray-900 dark:text-white">
 													{dayjs.utc(alert.triggered_at).local().format('MMM D, HH:mm')}
@@ -572,31 +605,8 @@
 													</Button>
 													<Button
 														size="xs"
-														onclick={async () => {
-															try {
-																const response = await fetch(`/alerts/${alert.id}/auctions`);
-																if (!response.ok) {
-																	addToast({
-																		message: 'Alert not found or auctions unavailable.',
-																		type: 'error',
-																		dismissible: true,
-																		timeout: 3000
-																	});
-																	return;
-																}
-																selectedAlertId = alert.id;
-																selectedVatRate = alert.vat_rate;
-																drawerOpen = true;
-															} catch (err) {
-																console.error('Error checking alert:', err);
-																addToast({
-																	message: 'Failed to check alert. Please try again later.',
-																	type: 'error',
-																	dismissible: true,
-																	timeout: 3000
-																});
-															}
-														}}
+														title="View matched auctions"
+														onclick={() => openTriggeredAuctions(alert)}
 													>
 														<FontAwesomeIcon icon={faBoxOpen} />
 													</Button>
@@ -629,13 +639,10 @@
 				<div class="space-y-6">
 					<!-- Cloud Alerts Header -->
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<div>
-							<h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Cloud Alerts</h2>
-							<p class="mt-1 text-gray-600 dark:text-gray-400">
-								Monitor cloud server availability changes in real-time
-							</p>
-						</div>
-						<Button onclick={openCreateCloudAlertModal} class="rounded-xl px-6 py-3 font-medium">
+						<p class="text-gray-600 dark:text-gray-400">
+							Get notified when cloud server availability changes.
+						</p>
+						<Button onclick={openCreateCloudAlertModal}>
 							<BellRingSolid class="mr-2 h-4 w-4" />
 							Create Cloud Alert
 						</Button>
@@ -650,10 +657,8 @@
 									Active Alerts ({data.cloudAlerts.activeAlerts.length}/{MAX_CLOUD_ALERTS})
 								</h3>
 								<p class="mb-4 text-base text-gray-600 dark:text-gray-400">
-									Monitor cloud server availability changes in real-time. Server Radar will notify
-									you when your selected server types become available or unavailable in your chosen
-									locations. Alerts automatically disarm after firing to prevent continuous
-									notifications. You can re-arm them at any time.
+									Notifies you when your selected server types become available or unavailable in
+									the chosen locations. Alerts disarm after firing; re-arm them any time.
 								</p>
 							</div>
 
@@ -661,16 +666,6 @@
 								<div class="rounded-lg bg-white p-4 text-center shadow-xs dark:bg-gray-800">
 									<p class="text-lg text-gray-700 dark:text-gray-300">
 										There are no active cloud alerts.
-									</p>
-									<p class="mt-2">
-										<Button
-											onclick={openCreateCloudAlertModal}
-											color="primary"
-											size="sm"
-											class="shadow-xs"
-										>
-											Create Alert
-										</Button>
 									</p>
 								</div>
 							{:else}
@@ -782,11 +777,17 @@
 															<FontAwesomeIcon icon={faRotateRight} class="h-4 w-4" />
 														</Button>
 													{/if}
-													<Button size="xs" onclick={() => openEditCloudAlertModal(alert)}>
+													<Button
+														size="xs"
+														title="Edit alert"
+														onclick={() => openEditCloudAlertModal(alert)}
+													>
 														<PenSolid class="h-4 w-4" />
 													</Button>
 													<Button
 														size="xs"
+														color="red"
+														title="Delete alert"
 														onclick={() => openDeleteConfirmation('cloud', alert.id, alert.name)}
 													>
 														<TrashBinSolid class="h-4 w-4" />
