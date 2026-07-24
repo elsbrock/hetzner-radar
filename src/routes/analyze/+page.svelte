@@ -829,7 +829,7 @@ let isSmallScreen: boolean = $state(false);
 	<AlertModal
 		bind:open={alertDialogOpen}
 		alert={selectedAlert}
-		user={data.user || { notification_preferences: { email: true, discord: false } }}
+		user={data.user || { notification_preferences: { email: true, discord: false, webhook: false } }}
 		on:success={() => invalidateAll()}
 	/>
 	{#if !Number.isNaN($dbInitProgress) && $dbInitProgress < 100}

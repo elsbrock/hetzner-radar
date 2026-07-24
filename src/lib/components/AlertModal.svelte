@@ -10,7 +10,7 @@
 	import { convertPrice } from '$lib/currency';
 	import { HETZNER_IPV4_COST_CENTS } from '$lib/constants';
 	import { A, Alert, Button, Input, Label, Modal, Spinner, Checkbox } from 'flowbite-svelte';
-	import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+	import { faEnvelope, faLink } from '@fortawesome/free-solid-svg-icons';
 	import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { createEventDispatcher } from 'svelte';
@@ -18,15 +18,17 @@
 	let {
 		alert = $bindable(null),
 		open = $bindable(false),
-		user = { notification_preferences: { email: true, discord: false } }
+		user = { notification_preferences: { email: true, discord: false, webhook: false } }
 	}: {
 		alert: PriceAlert | null;
 		open: boolean;
 		user?: {
 			discord_webhook_url?: string | null;
+			webhook_url?: string | null;
 			notification_preferences: {
 				email: boolean;
 				discord: boolean;
+				webhook: boolean;
 			};
 		};
 	} = $props();
@@ -44,19 +46,27 @@
 	// Notification method selection for this specific alert
 	let emailSelected = $state(true);
 	let discordSelected = $state(false);
+	let webhookSelected = $state(false);
+
+	const discordAvailable = $derived(
+		user.notification_preferences.discord && !!user.discord_webhook_url
+	);
+	const webhookAvailable = $derived(
+		user.notification_preferences.webhook && !!user.webhook_url
+	);
 
 	// Update notification selections when alert changes
 	$effect(() => {
 		if (alert) {
 			// Editing existing alert - use its notification settings, with fallbacks for migration case
 			emailSelected = alert.email_notifications ?? true; // Default to true if null/undefined
-			discordSelected =
-				alert.discord_notifications ??
-				(user.notification_preferences.discord && !!user.discord_webhook_url);
+			discordSelected = alert.discord_notifications ?? discordAvailable;
+			webhookSelected = alert.webhook_notifications ?? webhookAvailable;
 		} else {
 			// Creating new alert - use defaults based on user config
 			emailSelected = true; // Email always defaults to true
-			discordSelected = user.notification_preferences.discord && !!user.discord_webhook_url;
+			discordSelected = discordAvailable;
+			webhookSelected = webhookAvailable;
 		}
 	});
 
@@ -75,15 +85,25 @@
 				key: 'discord',
 				label: 'Discord',
 				icon: faDiscord,
-				enabled: user.notification_preferences.discord && !!user.discord_webhook_url,
+				enabled: discordAvailable,
 				description: 'Receive rich notifications in Discord',
 				checked: discordSelected
+			},
+			{
+				key: 'webhook',
+				label: 'Webhook',
+				icon: faLink,
+				enabled: webhookAvailable,
+				description: 'Send a JSON payload to your endpoint',
+				checked: webhookSelected
 			}
 		].filter((method) => method.enabled)
 	);
 
 	// Validation: at least one method must be selected
-	const hasValidNotificationSelection = $derived(emailSelected || discordSelected);
+	const hasValidNotificationSelection = $derived(
+		emailSelected || discordSelected || webhookSelected
+	);
 
 	const action = $derived(alert ? '/alerts?/edit' : '/alerts?/add');
 	const serializedFilter = $derived.by(() => {
@@ -179,6 +199,7 @@
 			{/if}
 			<input type="hidden" name="emailNotifications" value={emailSelected ? 'true' : 'false'} />
 			<input type="hidden" name="discordNotifications" value={discordSelected ? 'true' : 'false'} />
+			<input type="hidden" name="webhookNotifications" value={webhookSelected ? 'true' : 'false'} />
 
 			<Label class="flex flex-col space-y-1">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Name</span>
@@ -231,10 +252,15 @@
 										bind:checked={emailSelected}
 										class="text-orange-500 focus:ring-orange-500"
 									/>
-								{:else}
+								{:else if method.key === 'discord'}
 									<Checkbox
 										bind:checked={discordSelected}
 										class="text-indigo-500 focus:ring-indigo-500"
+									/>
+								{:else}
+									<Checkbox
+										bind:checked={webhookSelected}
+										class="text-teal-500 focus:ring-teal-500"
 									/>
 								{/if}
 								<div class="flex flex-1 items-center space-x-2">
@@ -242,7 +268,9 @@
 										icon={method.icon}
 										class="h-4 w-4 {method.key === 'discord'
 											? 'text-indigo-500'
-											: 'text-gray-600 dark:text-gray-300'}"
+											: method.key === 'webhook'
+												? 'text-teal-500'
+												: 'text-gray-600 dark:text-gray-300'}"
 									/>
 									<div>
 										<div class="text-sm font-medium text-gray-900 dark:text-white">

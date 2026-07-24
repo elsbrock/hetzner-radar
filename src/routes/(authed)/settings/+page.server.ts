@@ -6,16 +6,23 @@ import { createBlankSessionCookie } from "$lib/cookie";
 import { sendMail } from "$lib/mail";
 import { redirect, error } from "@sveltejs/kit";
 import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
   getUser,
   updateUserDiscordWebhook,
   updateUserNotificationPreferences,
+  updateUserWebhookUrl,
   validateDiscordWebhookUrl,
+  validateWebhookUrl,
   type UserNotificationPreferences,
 } from "$lib/api/backend/user";
 import {
   sendDiscordNotification,
   createTestDiscordEmbed,
 } from "$lib/api/backend/discord";
+import {
+  sendWebhookNotification,
+  createTestWebhookPayload,
+} from "$lib/api/backend/webhook";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async (event) => {
@@ -38,10 +45,9 @@ export const load: PageServerLoad = async (event) => {
     user: {
       email: user.email,
       discord_webhook_url: user.discord_webhook_url,
-      notification_preferences: user.notification_preferences || {
-        email: true,
-        discord: false,
-      },
+      webhook_url: user.webhook_url,
+      notification_preferences:
+        user.notification_preferences || DEFAULT_NOTIFICATION_PREFERENCES,
     },
   };
 };
@@ -88,6 +94,46 @@ export const actions: Actions = {
     }
   },
 
+  updateWebhookUrl: async (event) => {
+    if (!event.locals.user) {
+      return error(401, { message: "Authentication required." });
+    }
+
+    const env = event.platform?.env;
+    const db = env?.DB;
+    if (!db) {
+      return error(500, { message: "Database connection error." });
+    }
+
+    const formData = await event.request.formData();
+    const webhookUrl = formData.get("webhook_url") as string;
+
+    if (webhookUrl && !validateWebhookUrl(webhookUrl)) {
+      return {
+        success: false,
+        error: "Invalid webhook URL. Please provide a public HTTPS endpoint.",
+      };
+    }
+
+    try {
+      await updateUserWebhookUrl(
+        db,
+        event.locals.user.id.toString(),
+        webhookUrl || null,
+      );
+      return {
+        success: true,
+        message: "Webhook URL updated successfully.",
+      };
+    } catch (err) {
+      console.error("Error updating webhook URL:", err);
+      return {
+        success: false,
+        error: "Failed to update webhook URL. Please try again.",
+      };
+    }
+  },
+
   updateNotificationPreferences: async (event) => {
     if (!event.locals.user) {
       return error(401, { message: "Authentication required." });
@@ -102,15 +148,17 @@ export const actions: Actions = {
     const formData = await event.request.formData();
     // Email is always enabled as mandatory fallback - ignore form input
     const discordEnabled = formData.get("discord_notifications") === "on";
+    const webhookEnabled = formData.get("webhook_notifications") === "on";
 
     const preferences: UserNotificationPreferences = {
       email: true, // Email notifications are always enabled as fallback
       discord: discordEnabled,
+      webhook: webhookEnabled,
     };
 
     // Ensure at least one notification method is available
     // (This is guaranteed since email is always true, but explicit check for clarity)
-    if (!preferences.email && !preferences.discord) {
+    if (!preferences.email && !preferences.discord && !preferences.webhook) {
       return {
         success: false,
         error: "At least one notification method must be enabled.",
@@ -176,6 +224,53 @@ export const actions: Actions = {
       }
     } catch (err) {
       console.error("Error sending test notification:", err);
+      return {
+        success: false,
+        error:
+          "Failed to send test notification. Please check your webhook URL.",
+      };
+    }
+  },
+
+  testWebhook: async (event) => {
+    if (!event.locals.user) {
+      return error(401, { message: "Authentication required." });
+    }
+
+    const env = event.platform?.env;
+    const db = env?.DB;
+    if (!db) {
+      return error(500, { message: "Database connection error." });
+    }
+
+    const user = await getUser(db, event.locals.user.id.toString());
+    if (!user || !user.webhook_url) {
+      return {
+        success: false,
+        error: "No webhook URL configured. Please add one first.",
+      };
+    }
+
+    try {
+      const success = await sendWebhookNotification(
+        user.webhook_url,
+        createTestWebhookPayload(),
+      );
+
+      if (success) {
+        return {
+          success: true,
+          message: "Test notification sent successfully! Check your endpoint.",
+        };
+      } else {
+        return {
+          success: false,
+          error:
+            "Failed to send test notification. Please check your webhook URL.",
+        };
+      }
+    } catch (err) {
+      console.error("Error sending test webhook notification:", err);
       return {
         success: false,
         error:

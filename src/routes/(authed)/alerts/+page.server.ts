@@ -6,7 +6,10 @@ import {
   MAX_NAME_LENGTH,
   updateAlert,
 } from "$lib/api/backend/alerts";
-import { getUser } from "$lib/api/backend/user";
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  getUser,
+} from "$lib/api/backend/user";
 import { getCloudAlertsForUser } from "$lib/api/backend/cloud-alerts";
 import { MAX_PRICE, MIN_PRICE } from "$lib/constants";
 import { convertPrice, type CurrencyCode } from "$lib/currency";
@@ -54,10 +57,9 @@ export const load: ServerLoad = async (event: ServerLoadEvent) => {
     cloudStatusData,
     user: {
       discord_webhook_url: user?.discord_webhook_url,
-      notification_preferences: user?.notification_preferences || {
-        email: true,
-        discord: false,
-      },
+      webhook_url: user?.webhook_url,
+      notification_preferences:
+        user?.notification_preferences || DEFAULT_NOTIFICATION_PREFERENCES,
     },
   };
 };
@@ -110,13 +112,15 @@ export const actions: Actions = {
     const emailNotifications = formData.get("emailNotifications") === "true";
     const discordNotifications =
       formData.get("discordNotifications") === "true";
+    const webhookNotifications =
+      formData.get("webhookNotifications") === "true";
 
     // Convert price to EUR if entered in different currency
     const priceInEur = convertPrice(Number(priceInput), currency, "EUR");
     const price = Math.round(priceInEur).toString();
 
     // Validate that at least one notification method is selected
-    if (!emailNotifications && !discordNotifications) {
+    if (!emailNotifications && !discordNotifications && !webhookNotifications) {
       return fail(400, {
         success: false,
         error: "At least one notification method must be selected.",
@@ -157,6 +161,7 @@ export const actions: Actions = {
         vatRateNum,
         emailNotifications,
         discordNotifications,
+        webhookNotifications,
       );
     } catch (error) {
       console.error(error);
@@ -183,13 +188,15 @@ export const actions: Actions = {
     const emailNotifications = formData.get("emailNotifications") === "true";
     const discordNotifications =
       formData.get("discordNotifications") === "true";
+    const webhookNotifications =
+      formData.get("webhookNotifications") === "true";
 
     // Convert price to EUR if entered in different currency
     const priceInEur = convertPrice(Number(priceInput), currency, "EUR");
     const price = Math.round(priceInEur).toString();
 
     // Validate that at least one notification method is selected
-    if (!emailNotifications && !discordNotifications) {
+    if (!emailNotifications && !discordNotifications && !webhookNotifications) {
       return fail(400, {
         success: false,
         error: "At least one notification method must be selected.",
@@ -211,6 +218,7 @@ export const actions: Actions = {
         price,
         emailNotifications,
         discordNotifications,
+        webhookNotifications,
       );
     } catch (error) {
       console.error(error);

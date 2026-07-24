@@ -1,5 +1,8 @@
 import { getAlertForUser } from "$lib/api/backend/alerts";
-import { getUser } from "$lib/api/backend/user";
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  getUser,
+} from "$lib/api/backend/user";
 import { decodeFilterString } from "$lib/filter";
 import type { PageServerLoad } from "./$types";
 
@@ -20,10 +23,10 @@ export const load: PageServerLoad = async (event) => {
     const userRecord = await getUser(db, event.locals.user.id.toString());
     user = {
       discord_webhook_url: userRecord?.discord_webhook_url,
-      notification_preferences: userRecord?.notification_preferences || {
-        email: true,
-        discord: false,
-      },
+      webhook_url: userRecord?.webhook_url,
+      notification_preferences:
+        userRecord?.notification_preferences ||
+        DEFAULT_NOTIFICATION_PREFERENCES,
     };
 
     // Load alert data if filter is provided

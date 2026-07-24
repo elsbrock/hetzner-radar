@@ -10,11 +10,13 @@
 		faEnvelope,
 		faFlask,
 		faBell,
+		faLink,
 		faUser,
 		faDownload,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import type { ActionResult } from '@sveltejs/kit';
 
 	let { data } = $props();
 
@@ -23,12 +25,35 @@
 	let discordWebhookUrl = $state('');
 	let discordNotifications = $state(false);
 	let isTestingWebhook = $state(false);
+	let webhookUrl = $state('');
+	let webhookNotifications = $state(false);
+	let isTestingGenericWebhook = $state(false);
 
 	// Initialize form state from props (only on mount, not reactive to data changes)
 	$effect(() => {
 		discordWebhookUrl = data.user.discord_webhook_url || '';
 		discordNotifications = data.user.notification_preferences.discord;
+		webhookUrl = data.user.webhook_url || '';
+		webhookNotifications = data.user.notification_preferences.webhook;
 	});
+
+	// Shared toast handling for the settings form actions
+	function showActionToast(result: ActionResult) {
+		if (result.type !== 'success' || !result.data || typeof result.data !== 'object') return;
+		if ('success' in result.data && result.data.success) {
+			addToast({
+				color: 'green',
+				message: (result.data as { message: string }).message,
+				icon: 'success'
+			});
+		} else if ('error' in result.data) {
+			addToast({
+				color: 'red',
+				message: (result.data as { error: string }).error,
+				icon: 'error'
+			});
+		}
+	}
 
 	function handleDeleteClick() {
 		showConfirmModal = true;
@@ -128,30 +153,7 @@
 						action="?/updateNotificationPreferences"
 						use:enhance={() => {
 							return async ({ result, update }) => {
-								if (
-									result.type === 'success' &&
-									result.data &&
-									typeof result.data === 'object' &&
-									'success' in result.data &&
-									result.data.success
-								) {
-									addToast({
-										color: 'green',
-										message: (result.data as { message: string }).message,
-										icon: 'success'
-									});
-								} else if (
-									result.type === 'success' &&
-									result.data &&
-									typeof result.data === 'object' &&
-									'error' in result.data
-								) {
-									addToast({
-										color: 'red',
-										message: (result.data as { error: string }).error,
-										icon: 'error'
-									});
-								}
+								showActionToast(result);
 								update({ reset: false });
 							};
 						}}
@@ -204,6 +206,29 @@
 							Receive rich notifications in your Discord server
 						</p>
 
+						<div class="flex items-center space-x-3 {!webhookUrl ? 'opacity-60' : ''}">
+							<Checkbox
+								name="webhook_notifications"
+								bind:checked={webhookNotifications}
+								disabled={!webhookUrl}
+								class="text-teal-500 focus:ring-teal-500"
+							/>
+							<div class="flex items-center">
+								<FontAwesomeIcon icon={faLink} class="mr-2 h-4 w-4 text-teal-500" />
+								<Label class="mb-0! font-medium">Webhook Notifications</Label>
+								{#if !webhookUrl}
+									<span
+										class="ml-2 rounded-sm bg-amber-100 px-2 py-1 text-xs text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+									>
+										Setup required
+									</span>
+								{/if}
+							</div>
+						</div>
+						<p class="ml-6 text-sm text-gray-500 dark:text-gray-400">
+							Send a JSON payload to your own endpoint for custom integrations
+						</p>
+
 						<div class="pt-2">
 							<Button type="submit" color="primary">Save Preferences</Button>
 						</div>
@@ -246,30 +271,7 @@
 								if (isTest) {
 									isTestingWebhook = false;
 								}
-								if (
-									result.type === 'success' &&
-									result.data &&
-									typeof result.data === 'object' &&
-									'success' in result.data &&
-									result.data.success
-								) {
-									addToast({
-										color: 'green',
-										message: (result.data as { message: string }).message,
-										icon: 'success'
-									});
-								} else if (
-									result.type === 'success' &&
-									result.data &&
-									typeof result.data === 'object' &&
-									'error' in result.data
-								) {
-									addToast({
-										color: 'red',
-										message: (result.data as { error: string }).error,
-										icon: 'error'
-									});
-								}
+								showActionToast(result);
 								update({ reset: false });
 							};
 						}}
@@ -304,6 +306,87 @@
 							</div>
 							<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 								Leave empty to disable Discord notifications
+							</p>
+						</div>
+
+						<div class="pt-2">
+							<Button type="submit" color="primary">Save Webhook</Button>
+						</div>
+					</form>
+				</div>
+
+				<!-- Webhook Configuration Card -->
+				<div
+					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
+				>
+					<div class="mb-4 flex items-center">
+						<FontAwesomeIcon icon={faLink} class="mr-2 h-5 w-5 text-teal-500" />
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+							Webhook Configuration
+						</h2>
+					</div>
+
+					<div
+						class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20"
+					>
+						<h4 class="mb-2 font-medium text-blue-900 dark:text-blue-100">
+							Integrate with your own tools:
+						</h4>
+						<p class="text-sm text-blue-800 dark:text-blue-200">
+							When an alert triggers, Server Radar sends a JSON payload via HTTP POST to the
+							endpoint below — ideal for home automation, ntfy, or custom bots. Note that
+							notifications are dispatched with a short random delay to keep the auction fair for
+							everyone.
+						</p>
+					</div>
+
+					<form
+						method="POST"
+						action="?/updateWebhookUrl"
+						use:enhance={({ submitter }) => {
+							const isTest = submitter?.getAttribute('formaction') === '?/testWebhook';
+							if (isTest) {
+								isTestingGenericWebhook = true;
+							}
+							return async ({ result, update }) => {
+								if (isTest) {
+									isTestingGenericWebhook = false;
+								}
+								showActionToast(result);
+								update({ reset: false });
+							};
+						}}
+						class="space-y-4"
+					>
+						<div>
+							<Label for="webhook_url" class="mb-2">Webhook URL</Label>
+							<div class="flex gap-2">
+								<Input
+									id="webhook_url"
+									name="webhook_url"
+									type="url"
+									bind:value={webhookUrl}
+									placeholder="https://example.com/hooks/server-radar"
+									class="flex-1 font-mono"
+								/>
+								<Button
+									type="submit"
+									color="alternative"
+									size="sm"
+									disabled={!webhookUrl || isTestingGenericWebhook}
+									formaction="?/testWebhook"
+								>
+									{#if isTestingGenericWebhook}
+										<Spinner size="4" class="mr-1" />
+										Test
+									{:else}
+										<FontAwesomeIcon icon={faFlask} class="mr-1 h-4 w-4" />
+										Test
+									{/if}
+								</Button>
+							</div>
+							<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+								Must be a public HTTPS endpoint. Leave empty to disable webhook notifications.
 							</p>
 						</div>
 

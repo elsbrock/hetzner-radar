@@ -10,6 +10,7 @@ export interface PriceAlert {
   vat_rate: number; // Added VAT rate
   email_notifications: boolean;
   discord_notifications: boolean;
+  webhook_notifications: boolean;
   created_at: Date;
 }
 
@@ -24,6 +25,7 @@ export interface PriceAlertHistory {
   vat_rate: number; // Added VAT rate
   email_notifications: boolean;
   discord_notifications: boolean;
+  webhook_notifications: boolean;
   triggered_at: Date;
 }
 
@@ -41,6 +43,7 @@ type PriceAlertRow = {
   vat_rate: number;
   email_notifications: number | boolean;
   discord_notifications: number | boolean;
+  webhook_notifications: number | boolean;
   created_at: string;
 };
 
@@ -55,6 +58,7 @@ type PriceAlertHistoryRow = {
   vat_rate: number;
   email_notifications: number | boolean;
   discord_notifications: number | boolean;
+  webhook_notifications: number | boolean;
   triggered_at: string;
 };
 
@@ -63,6 +67,7 @@ function parsePriceAlert(raw: PriceAlertRow): PriceAlert {
     ...raw,
     email_notifications: Boolean(raw.email_notifications),
     discord_notifications: Boolean(raw.discord_notifications),
+    webhook_notifications: Boolean(raw.webhook_notifications),
     created_at: new Date(raw.created_at),
   };
 }
@@ -72,6 +77,7 @@ function parsePriceAlertHistory(raw: PriceAlertHistoryRow): PriceAlertHistory {
     ...raw,
     email_notifications: Boolean(raw.email_notifications),
     discord_notifications: Boolean(raw.discord_notifications),
+    webhook_notifications: Boolean(raw.webhook_notifications),
     triggered_at: new Date(raw.triggered_at),
   };
 }
@@ -144,6 +150,7 @@ export async function createAlert(
   vatRate: number,
   emailNotifications: boolean = true,
   discordNotifications: boolean = false,
+  webhookNotifications: boolean = false,
 ): Promise<void> {
   try {
     // Convert price from string to integer (cents)
@@ -154,7 +161,7 @@ export async function createAlert(
 
     await db
       .prepare(
-        "INSERT INTO price_alert (user_id, name, filter, price, vat_rate, includes_ipv4_cost, email_notifications, discord_notifications) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO price_alert (user_id, name, filter, price, vat_rate, includes_ipv4_cost, email_notifications, discord_notifications, webhook_notifications) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       )
       .bind(
         userId,
@@ -162,10 +169,11 @@ export async function createAlert(
         filter,
         priceInt,
         vatRate,
-        true,
+        true, // includes_ipv4_cost defaults to true for new alerts
         emailNotifications,
         discordNotifications,
-      ) // Default to true for new alerts
+        webhookNotifications,
+      )
       .run();
   } catch (error) {
     console.error(`Failed to create alert for user ${userId}:`, error);
@@ -183,6 +191,7 @@ export async function updateAlert(
   price: string,
   emailNotifications?: boolean,
   discordNotifications?: boolean,
+  webhookNotifications?: boolean,
 ): Promise<void> {
   try {
     // Convert price from string to integer (cents)
@@ -202,6 +211,10 @@ export async function updateAlert(
     if (discordNotifications !== undefined) {
       sql += ", discord_notifications = ?";
       params.push(discordNotifications ? 1 : 0);
+    }
+    if (webhookNotifications !== undefined) {
+      sql += ", webhook_notifications = ?";
+      params.push(webhookNotifications ? 1 : 0);
     }
 
     sql += " WHERE user_id = ? AND id = ?";
