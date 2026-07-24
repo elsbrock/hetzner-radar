@@ -1,13 +1,15 @@
 /**
  * Alert Notification Service
  *
- * Orchestrates notification delivery across multiple channels
- * Handles fallback logic and ensures at least one notification is sent
+ * Orchestrates notification delivery across multiple channels.
+ * Instant channels (Discord, webhook) are attempted first; email acts as the
+ * fallback and is sent whenever it is enabled and no instant channel delivered.
  */
 
 import type { NotificationChannel, AlertNotification, NotificationResult } from './notification-channel';
 import { EmailChannel, type EmailChannelConfig } from './email-channel';
 import { DiscordChannel } from './discord-channel';
+import { WebhookChannel } from './webhook-channel';
 
 export interface NotificationServiceConfig {
 	email?: EmailChannelConfig;
@@ -24,91 +26,72 @@ export class AlertNotificationService {
 			this.channels.push(new EmailChannel(config.email));
 		}
 
-		// Discord channel doesn't need config - uses webhook URL from alert
+		// Discord and webhook channels need no config — they use per-user URLs from the alert
 		this.channels.push(new DiscordChannel());
+		this.channels.push(new WebhookChannel());
 	}
 
 	/**
-	 * Send alert notification through all enabled channels
-	 * Implements fallback logic: if Discord fails or is disabled, send email
+	 * Send alert notification through all enabled channels.
+	 * Instant channels run in parallel; email is sent only if none of them delivered.
 	 */
 	async sendNotification(notification: AlertNotification): Promise<NotificationResult[]> {
-		const results: NotificationResult[] = [];
 		const alert = notification.alert;
 
-		// Log notification attempt
 		console.log(`[AlertNotificationService] Processing notifications for alert ${alert.id}:`, {
-			discord_notifications: alert.discord_notifications,
 			email_notifications: alert.email_notifications,
-			discord_webhook_url: alert.discord_webhook_url ? 'present' : 'missing',
+			discord_notifications: alert.discord_notifications,
+			webhook_notifications: alert.webhook_notifications,
 			email: alert.email ? 'present' : 'missing',
+			discord_webhook_url: alert.discord_webhook_url ? 'present' : 'missing',
+			webhook_url: alert.webhook_url ? 'present' : 'missing',
 		});
 
-		// Determine which channels should be used
-		const discordChannel = this.channels.find((c) => c.name === 'discord');
 		const emailChannel = this.channels.find((c) => c.name === 'email');
+		const instantChannels = this.channels.filter((c) => c.name !== 'email' && c.isEnabled(alert));
 
-		// Try Discord first if enabled
-		let discordSent = false;
-		if (discordChannel && discordChannel.isEnabled(alert)) {
-			try {
-				const result = await discordChannel.send(notification);
-				results.push(result);
-				discordSent = result.success;
+		const results: NotificationResult[] = await Promise.all(instantChannels.map((channel) => this.trySend(channel, notification)));
+		const instantDelivered = results.some((r) => r.success);
 
-				if (discordSent) {
-					console.log(`[AlertNotificationService] Discord notification sent successfully for alert ${alert.id}`);
-				} else {
-					console.error(`[AlertNotificationService] Discord notification failed for alert ${alert.id}: ${result.error}`);
-				}
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-				console.error(`[AlertNotificationService] Discord channel threw error for alert ${alert.id}: ${errorMessage}`);
-				results.push({
-					channel: 'discord',
-					success: false,
-					error: errorMessage,
-					timestamp: new Date().toISOString(),
-				});
-			}
-		} else {
-			console.log(
-				`[AlertNotificationService] Discord notification skipped for alert ${alert.id}: ${
-					!alert.discord_notifications ? 'disabled' : 'no webhook URL'
-				}`,
-			);
+		// Email fallback: send when enabled and no instant channel got through
+		if (emailChannel && emailChannel.isEnabled(alert) && !instantDelivered) {
+			results.push(await this.trySend(emailChannel, notification));
 		}
 
-		// Send email if enabled AND (Discord wasn't sent OR Discord failed)
-		if (emailChannel && emailChannel.isEnabled(alert) && !discordSent) {
-			try {
-				const result = await emailChannel.send(notification);
-				results.push(result);
-
-				if (result.success) {
-					console.log(`[AlertNotificationService] Email notification sent for alert ${alert.id}`);
-				} else {
-					console.error(`[AlertNotificationService] Email notification failed for alert ${alert.id}: ${result.error}`);
-				}
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-				console.error(`[AlertNotificationService] Email channel threw error for alert ${alert.id}: ${errorMessage}`);
-				results.push({
-					channel: 'email',
-					success: false,
-					error: errorMessage,
-					timestamp: new Date().toISOString(),
-				});
-			}
-		}
-
-		// Check if any notification was sent
-		const anySent = results.some((r) => r.success);
-		if (!anySent) {
+		if (!results.some((r) => r.success)) {
 			console.warn(`[AlertNotificationService] No notifications sent for alert ${alert.id}: All methods disabled or failed`);
 		}
 
 		return results;
+	}
+
+	/**
+	 * Send through a single channel, converting thrown errors into a failed result
+	 */
+	private async trySend(channel: NotificationChannel, notification: AlertNotification): Promise<NotificationResult> {
+		const alertId = notification.alert.id;
+
+		try {
+			const result = await channel.send(notification);
+
+			if (result.success) {
+				console.log(`[AlertNotificationService] ${channel.name} notification sent successfully for alert ${alertId}`);
+			} else {
+				console.error(`[AlertNotificationService] ${channel.name} notification failed for alert ${alertId}: ${result.error}`);
+			}
+
+			return result;
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			console.error(`[AlertNotificationService] ${channel.name} channel threw error for alert ${alertId}: ${errorMessage}`);
+
+			return {
+				channel: channel.name,
+				success: false,
+				error: errorMessage,
+				timestamp: new Date().toISOString(),
+			};
+		}
 	}
 
 	/**

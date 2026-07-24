@@ -12,6 +12,8 @@ export interface AlertServiceConfig {
 	db: D1Database;
 	notificationService: AlertNotificationService;
 	doId: string;
+	/** Max random delay before dispatching an alert's notifications (default 30s) */
+	notificationJitterMs?: number;
 }
 
 export interface ProcessedAlert {
@@ -21,28 +23,34 @@ export interface ProcessedAlert {
 	error?: string;
 }
 
+// Field names mirror the column aliases of MATCH_ALERTS_SQL
 interface MatchedAlertData {
 	alert_id: number;
-	alert_name: string;
-	alert_filter: string;
-	alert_price: number;
-	alert_vat_rate: number;
-	alert_user_id: string;
-	alert_includes_ipv4_cost: boolean;
-	alert_email: string | null;
-	alert_discord_webhook_url: string | null;
-	alert_email_notifications: boolean;
-	alert_discord_notifications: boolean;
-	alert_created_at: string;
+	name: string;
+	filter: string;
+	price: number;
+	vat_rate: number;
+	user_id: string;
+	includes_ipv4_cost: boolean;
+	email: string | null;
+	discord_webhook_url: string | null;
+	webhook_url: string | null;
+	email_notifications: boolean;
+	discord_notifications: boolean;
+	webhook_notifications: boolean;
+	created_at: string;
 	auction_id: number;
 	auction_price: number;
-	auction_seen: string;
+	seen: string;
 }
+
+const DEFAULT_NOTIFICATION_JITTER_MS = 30_000;
 
 export class AlertService {
 	private db: D1Database;
 	private notificationService: AlertNotificationService;
 	private doId: string;
+	private notificationJitterMs: number;
 
 	// Constants
 	private readonly HETZNER_IPV4_COST_CENTS = 119; // €1.19 in cents
@@ -78,8 +86,10 @@ export class AlertService {
 			pa.includes_ipv4_cost,
 			pa.email_notifications,
 			pa.discord_notifications,
+			pa.webhook_notifications,
 			user.email,
 			user.discord_webhook_url,
+			user.webhook_url,
 			pa.created_at,
 			pa.filter,
 			c.id AS auction_id,
@@ -295,8 +305,8 @@ export class AlertService {
 	`;
 
 	private readonly ALERT_HISTORY_INSERT_SQL = `
-		INSERT INTO price_alert_history (id, name, filter, price, vat_rate, trigger_price, user_id, created_at, triggered_at, email_notifications, discord_notifications)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, ?, ?)
+		INSERT INTO price_alert_history (id, name, filter, price, vat_rate, trigger_price, user_id, created_at, triggered_at, email_notifications, discord_notifications, webhook_notifications)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, ?, ?, ?)
 	`;
 
 	private readonly ALERT_DELETE_SQL = `DELETE FROM price_alert WHERE id = ?`;
@@ -310,6 +320,7 @@ export class AlertService {
 		this.db = config.db;
 		this.notificationService = config.notificationService;
 		this.doId = config.doId;
+		this.notificationJitterMs = config.notificationJitterMs ?? DEFAULT_NOTIFICATION_JITTER_MS;
 	}
 
 	/**
@@ -383,7 +394,7 @@ export class AlertService {
 			matchedAuctions: MatchedAuction[];
 		}
 	> {
-		const alertMap = new Map();
+		const alertMap = new Map<number, { alertInfo: AlertInfo; matchedAuctions: MatchedAuction[] }>();
 
 		for (const match of matchedAlerts) {
 			if (!alertMap.has(match.alert_id)) {
@@ -398,8 +409,10 @@ export class AlertService {
 						includes_ipv4_cost: match.includes_ipv4_cost,
 						email: match.email,
 						discord_webhook_url: match.discord_webhook_url,
+						webhook_url: match.webhook_url,
 						email_notifications: match.email_notifications,
 						discord_notifications: match.discord_notifications,
+						webhook_notifications: match.webhook_notifications,
 						created_at: match.created_at,
 					},
 					matchedAuctions: [],
@@ -407,7 +420,7 @@ export class AlertService {
 			}
 
 			// Add this auction to the alert's matched auctions
-			alertMap.get(match.alert_id).matchedAuctions.push({
+			alertMap.get(match.alert_id)!.matchedAuctions.push({
 				auction_id: match.auction_id,
 				price: match.auction_price,
 				seen: match.seen,
@@ -438,6 +451,16 @@ export class AlertService {
 				matchedAuctions,
 				lowestAuctionPrice,
 			};
+
+			// Random dispatch delay: instant channels (webhook, Discord) would otherwise
+			// let automated consumers reliably snipe every matching auction the moment an
+			// import lands. Alerts are processed in parallel, so this bounds the added
+			// wall time per import run to notificationJitterMs.
+			const jitterMs = Math.floor(Math.random() * this.notificationJitterMs);
+			if (jitterMs > 0) {
+				console.log(`[AlertService ${this.doId}] Delaying notifications for alert ${alertInfo.id} by ${jitterMs}ms`);
+				await new Promise((resolve) => setTimeout(resolve, jitterMs));
+			}
 
 			const notificationResults = await this.notificationService.sendNotification(notification);
 
@@ -487,6 +510,7 @@ export class AlertService {
 				alertInfo.created_at,
 				alertInfo.email_notifications ?? true,
 				alertInfo.discord_notifications ?? false,
+				alertInfo.webhook_notifications ?? false,
 			),
 		);
 

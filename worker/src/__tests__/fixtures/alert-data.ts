@@ -38,8 +38,10 @@ export const mockAlertInfo: AlertInfo = {
 	includes_ipv4_cost: true,
 	email: 'test@example.com',
 	discord_webhook_url: 'https://discord.com/api/webhooks/test',
+	webhook_url: null,
 	email_notifications: true,
 	discord_notifications: true,
+	webhook_notifications: false,
 	created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -69,6 +71,18 @@ export const mockAlertInfoDiscordOnly: AlertInfo = {
 	name: 'Discord Only Alert',
 	email_notifications: false,
 	discord_notifications: true,
+};
+
+// Mock alert info with generic webhook only
+export const mockAlertInfoWebhookOnly: AlertInfo = {
+	...mockAlertInfo,
+	id: 5,
+	name: 'Webhook Only Alert',
+	email_notifications: false,
+	discord_notifications: false,
+	discord_webhook_url: null,
+	webhook_url: 'https://example.com/hooks/radar',
+	webhook_notifications: true,
 };
 
 // Mock matched auctions
@@ -115,6 +129,8 @@ export const mockMatchingAlertsQueryResult = [
 		discord_notifications: 1,
 		email: 'test@example.com',
 		discord_webhook_url: 'https://discord.com/api/webhooks/test',
+		webhook_url: null,
+		webhook_notifications: 0,
 		created_at: '2024-01-01T00:00:00Z',
 		filter: JSON.stringify(mockAlertFilter),
 		auction_id: 12345,
@@ -132,6 +148,8 @@ export const mockMatchingAlertsQueryResult = [
 		discord_notifications: 1,
 		email: 'test@example.com',
 		discord_webhook_url: 'https://discord.com/api/webhooks/test',
+		webhook_url: null,
+		webhook_notifications: 0,
 		created_at: '2024-01-01T00:00:00Z',
 		filter: JSON.stringify(mockAlertFilter),
 		auction_id: 12346,
@@ -157,6 +175,8 @@ export const mockMultipleAlertsQueryResult = [
 		discord_notifications: 0,
 		email: 'user2@example.com',
 		discord_webhook_url: null,
+		webhook_url: null,
+		webhook_notifications: 0,
 		created_at: '2024-01-01T01:00:00Z',
 		filter: JSON.stringify(mockAlertFilter),
 		auction_id: 12347,

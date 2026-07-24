@@ -5,7 +5,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AlertNotificationService } from '../notifications/alert-notification-service';
 import type { NotificationChannel, AlertNotification, NotificationResult } from '../notifications/notification-channel';
-import { mockAlertInfo, mockAlertInfoEmailOnly, mockAlertInfoDiscordOnly, mockAlertNotification } from './fixtures/alert-data';
+import {
+	mockAlertInfo,
+	mockAlertInfoEmailOnly,
+	mockAlertInfoDiscordOnly,
+	mockAlertInfoWebhookOnly,
+	mockAlertNotification,
+} from './fixtures/alert-data';
 
 // Mock notification channels
 const mockDiscordChannel: NotificationChannel = {
@@ -16,6 +22,12 @@ const mockDiscordChannel: NotificationChannel = {
 
 const mockEmailChannel: NotificationChannel = {
 	name: 'email',
+	isEnabled: vi.fn(),
+	send: vi.fn(),
+};
+
+const mockWebhookChannel: NotificationChannel = {
+	name: 'webhook',
 	isEnabled: vi.fn(),
 	send: vi.fn(),
 };
@@ -37,6 +49,14 @@ vi.mock('../notifications/discord-channel', () => ({
 	},
 }));
 
+vi.mock('../notifications/webhook-channel', () => ({
+	WebhookChannel: class MockWebhookChannel {
+		name = mockWebhookChannel.name;
+		isEnabled = mockWebhookChannel.isEnabled;
+		send = mockWebhookChannel.send;
+	},
+}));
+
 describe('AlertNotificationService', () => {
 	let service: AlertNotificationService;
 	const mockEmailConfig = {
@@ -48,22 +68,28 @@ describe('AlertNotificationService', () => {
 	beforeEach(() => {
 		service = new AlertNotificationService({ email: mockEmailConfig });
 		vi.clearAllMocks();
+		// Baseline: all channels disabled so describe blocks only opt in what they test
+		vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(false);
+		vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(false);
+		vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(false);
 	});
 
 	describe('constructor', () => {
-		it('should initialize with email and discord channels when email config provided', () => {
+		it('should initialize with email, discord and webhook channels when email config provided', () => {
 			const channels = service.getChannels();
 			expect(channels).toContain('email');
 			expect(channels).toContain('discord');
-			expect(channels).toHaveLength(2);
+			expect(channels).toContain('webhook');
+			expect(channels).toHaveLength(3);
 		});
 
-		it('should initialize with only discord channel when no email config provided', () => {
+		it('should initialize without email channel when no email config provided', () => {
 			const serviceWithoutEmail = new AlertNotificationService({});
 			const channels = serviceWithoutEmail.getChannels();
 			expect(channels).toContain('discord');
+			expect(channels).toContain('webhook');
 			expect(channels).not.toContain('email');
-			expect(channels).toHaveLength(1);
+			expect(channels).toHaveLength(2);
 		});
 	});
 
@@ -85,8 +111,10 @@ describe('AlertNotificationService', () => {
 			// Set default mock behavior
 			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(false);
 			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(false);
+			vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(false);
 			vi.mocked(mockDiscordChannel.send).mockResolvedValue(mockSuccessResult);
 			vi.mocked(mockEmailChannel.send).mockResolvedValue({ ...mockSuccessResult, channel: 'email' });
+			vi.mocked(mockWebhookChannel.send).mockResolvedValue({ ...mockSuccessResult, channel: 'webhook' });
 		});
 
 		it('should send Discord notification when enabled and available', async () => {
@@ -226,14 +254,10 @@ describe('AlertNotificationService', () => {
 				expect.objectContaining({
 					discord_notifications: mockAlertInfo.discord_notifications,
 					email_notifications: mockAlertInfo.email_notifications,
+					webhook_notifications: mockAlertInfo.webhook_notifications,
 					discord_webhook_url: 'present',
 					email: 'present',
 				}),
-			);
-
-			// Should log Discord skip
-			expect(consoleSpy).toHaveBeenCalledWith(
-				expect.stringContaining(`[AlertNotificationService] Discord notification skipped for alert ${mockAlertInfo.id}`),
 			);
 
 			// Should warn about no notifications sent
@@ -251,7 +275,7 @@ describe('AlertNotificationService', () => {
 			await service.sendNotification(mockAlertNotification);
 
 			expect(consoleSpy).toHaveBeenCalledWith(
-				`[AlertNotificationService] Discord notification sent successfully for alert ${mockAlertInfo.id}`,
+				`[AlertNotificationService] discord notification sent successfully for alert ${mockAlertInfo.id}`,
 			);
 		});
 
@@ -264,7 +288,7 @@ describe('AlertNotificationService', () => {
 			await service.sendNotification(mockAlertNotification);
 
 			expect(_consoleErrorSpy).toHaveBeenCalledWith(
-				`[AlertNotificationService] Discord notification failed for alert ${mockAlertInfo.id}: ${mockFailureResult.error}`,
+				`[AlertNotificationService] discord notification failed for alert ${mockAlertInfo.id}: ${mockFailureResult.error}`,
 			);
 		});
 
@@ -286,8 +310,6 @@ describe('AlertNotificationService', () => {
 					discord_webhook_url: 'missing',
 				}),
 			);
-
-			expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('no webhook URL'));
 		});
 
 		it('should handle missing email correctly in logs', async () => {
@@ -306,6 +328,88 @@ describe('AlertNotificationService', () => {
 					email: 'missing',
 				}),
 			);
+		});
+	});
+
+	describe('webhook channel orchestration', () => {
+		const webhookSuccess: NotificationResult = {
+			channel: 'webhook',
+			success: true,
+			timestamp: new Date().toISOString(),
+		};
+
+		const webhookFailure: NotificationResult = {
+			channel: 'webhook',
+			success: false,
+			error: 'Endpoint returned 500',
+			timestamp: new Date().toISOString(),
+		};
+
+		beforeEach(() => {
+			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(false);
+			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(false);
+			vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(false);
+		});
+
+		it('should skip email when webhook succeeds', async () => {
+			vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockWebhookChannel.send).mockResolvedValue(webhookSuccess);
+
+			const notification: AlertNotification = { ...mockAlertNotification, alert: mockAlertInfoWebhookOnly };
+			const results = await service.sendNotification(notification);
+
+			expect(results).toEqual([webhookSuccess]);
+			expect(mockWebhookChannel.send).toHaveBeenCalledWith(notification);
+			expect(mockEmailChannel.send).not.toHaveBeenCalled();
+		});
+
+		it('should fall back to email when webhook fails', async () => {
+			vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockWebhookChannel.send).mockResolvedValue(webhookFailure);
+
+			const emailResult: NotificationResult = { channel: 'email', success: true, timestamp: new Date().toISOString() };
+			vi.mocked(mockEmailChannel.send).mockResolvedValue(emailResult);
+
+			const results = await service.sendNotification(mockAlertNotification);
+
+			expect(results).toEqual([webhookFailure, emailResult]);
+		});
+
+		it('should attempt both discord and webhook when both are enabled', async () => {
+			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
+
+			const discordResult: NotificationResult = { channel: 'discord', success: true, timestamp: new Date().toISOString() };
+			vi.mocked(mockDiscordChannel.send).mockResolvedValue(discordResult);
+			vi.mocked(mockWebhookChannel.send).mockResolvedValue(webhookSuccess);
+
+			const results = await service.sendNotification(mockAlertNotification);
+
+			expect(results).toEqual([discordResult, webhookSuccess]);
+			expect(mockEmailChannel.send).not.toHaveBeenCalled();
+		});
+
+		it('should skip email if at least one instant channel delivered', async () => {
+			vi.mocked(mockDiscordChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockWebhookChannel.isEnabled).mockReturnValue(true);
+			vi.mocked(mockEmailChannel.isEnabled).mockReturnValue(true);
+
+			const discordFailure: NotificationResult = {
+				channel: 'discord',
+				success: false,
+				error: 'Rate limited',
+				timestamp: new Date().toISOString(),
+			};
+			vi.mocked(mockDiscordChannel.send).mockResolvedValue(discordFailure);
+			vi.mocked(mockWebhookChannel.send).mockResolvedValue(webhookSuccess);
+
+			const results = await service.sendNotification(mockAlertNotification);
+
+			expect(results).toEqual([discordFailure, webhookSuccess]);
+			expect(mockEmailChannel.send).not.toHaveBeenCalled();
 		});
 	});
 
@@ -370,13 +474,13 @@ describe('AlertNotificationService', () => {
 	describe('channel management', () => {
 		it('should return correct channel names', () => {
 			const channels = service.getChannels();
-			expect(channels).toEqual(['email', 'discord']);
+			expect(channels).toEqual(['email', 'discord', 'webhook']);
 		});
 
 		it('should handle service with no email config', () => {
 			const serviceNoEmail = new AlertNotificationService({});
 			const channels = serviceNoEmail.getChannels();
-			expect(channels).toEqual(['discord']);
+			expect(channels).toEqual(['discord', 'webhook']);
 		});
 	});
 

@@ -104,10 +104,11 @@ beforeEach(() => {
 		CREATE TABLE price_alert (
 			id INTEGER PRIMARY KEY,
 			name TEXT, filter TEXT, price REAL, vat_rate REAL, user_id TEXT,
-			includes_ipv4_cost INTEGER, email_notifications INTEGER, discord_notifications INTEGER, created_at TEXT
+			includes_ipv4_cost INTEGER, email_notifications INTEGER, discord_notifications INTEGER,
+			webhook_notifications INTEGER DEFAULT 0, created_at TEXT
 		);
-		CREATE TABLE user (id TEXT PRIMARY KEY, email TEXT, discord_webhook_url TEXT);
-		INSERT INTO user (id, email, discord_webhook_url) VALUES ('u1', 'u@example.com', NULL);
+		CREATE TABLE user (id TEXT PRIMARY KEY, email TEXT, discord_webhook_url TEXT, webhook_url TEXT);
+		INSERT INTO user (id, email, discord_webhook_url, webhook_url) VALUES ('u1', 'u@example.com', NULL, NULL);
 	`);
 });
 

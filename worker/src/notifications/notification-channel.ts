@@ -18,8 +18,10 @@ export interface AlertInfo {
 	includes_ipv4_cost: boolean;
 	email: string | null;
 	discord_webhook_url?: string | null;
+	webhook_url?: string | null;
 	email_notifications: boolean;
 	discord_notifications: boolean;
+	webhook_notifications: boolean;
 	created_at: string;
 }
 
