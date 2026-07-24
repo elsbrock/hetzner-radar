@@ -228,7 +228,7 @@
 	placement="right"
 	{transitionParams}
 	id="sql-console-drawer"
-	class="w-full border-l border-zinc-200 bg-white sm:w-[40rem] lg:w-[52rem] dark:border-zinc-700 dark:bg-zinc-900"
+	class="w-full border-l border-gray-200 bg-white sm:w-[40rem] lg:w-[52rem] dark:border-gray-700 dark:bg-gray-800"
 	outsideclose={true}
 	dismissable={false}
 >
@@ -236,25 +236,25 @@
 		<!-- Header -->
 		<div class="mb-3 flex items-start justify-between gap-2">
 			<div class="min-w-0">
-				<h3 class="flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-50">
+				<h3 class="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-gray-50">
 					<Fa icon={faDatabase} class="h-4 w-4 text-primary-600 dark:text-primary-400" />
 					SQL Console
 				</h3>
-				<p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+				<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
 					Query the auction dataset directly — read-only, runs entirely in your browser.
 				</p>
 			</div>
 			<CloseButton
 				onclick={() => (open = false)}
-				class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+				class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
 			/>
 		</div>
 
 		<!-- Schema browser -->
-		<div class="mb-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
+		<div class="mb-3 rounded-lg border border-gray-200 dark:border-gray-700">
 			<button
 				type="button"
-				class="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300"
+				class="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-gray-600 dark:text-gray-300"
 				onclick={() => (schemaOpen = !schemaOpen)}
 			>
 				<span class="flex items-center gap-2">
@@ -264,11 +264,11 @@
 				<Fa icon={schemaOpen ? faChevronDown : faChevronRight} class="h-3 w-3" />
 			</button>
 			{#if schemaOpen}
-				<div class="max-h-40 overflow-auto border-t border-zinc-200 px-3 py-2 dark:border-zinc-700">
+				<div class="max-h-40 overflow-auto border-t border-gray-200 px-3 py-2 dark:border-gray-700">
 					{#if !schemaReady}
-						<p class="text-xs text-zinc-400">Loading schema…</p>
+						<p class="text-xs text-gray-400">Loading schema…</p>
 					{:else if schema.length === 0}
-						<p class="text-xs text-zinc-400">No tables found.</p>
+						<p class="text-xs text-gray-400">No tables found.</p>
 					{:else}
 						{#each schema as table (table.name)}
 							<div class="mb-2 last:mb-0">
@@ -283,7 +283,7 @@
 								<div class="mt-1 flex flex-wrap gap-1">
 									{#each table.columns as col (col.name)}
 										<span
-											class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+											class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-600 dark:bg-gray-700 dark:text-gray-400"
 											title={col.type}>{col.name}</span
 										>
 									{/each}
@@ -298,29 +298,29 @@
 		<!-- Scrollback (REPL output) -->
 		<div bind:this={scrollback} class="min-h-0 flex-1 space-y-3 overflow-auto">
 			{#if entries.length === 0}
-				<div class="rounded-lg border border-dashed border-zinc-200 p-4 dark:border-zinc-700">
-					<p class="mb-3 text-xs text-zinc-600 dark:text-zinc-300">
+				<div class="rounded-lg border border-dashed border-gray-200 p-4 dark:border-gray-700">
+					<p class="mb-3 text-xs text-gray-600 dark:text-gray-300">
 						Query <span
-							class="rounded bg-zinc-100 px-1 font-mono text-[10px] dark:bg-zinc-800">available</span
+							class="rounded bg-gray-100 px-1 font-mono text-[10px] dark:bg-gray-700">available</span
 						>
 						for current listings (with an order
 						<span
-							class="rounded bg-zinc-100 px-1 font-mono text-[10px] dark:bg-zinc-800">link</span
+							class="rounded bg-gray-100 px-1 font-mono text-[10px] dark:bg-gray-700">link</span
 						>) or
 						<span
-							class="rounded bg-zinc-100 px-1 font-mono text-[10px] dark:bg-zinc-800"
+							class="rounded bg-gray-100 px-1 font-mono text-[10px] dark:bg-gray-700"
 							>server_history</span
 						>
 						for prices over time. The <span
-							class="rounded bg-zinc-100 px-1 font-mono text-[10px] dark:bg-zinc-800">price</span
+							class="rounded bg-gray-100 px-1 font-mono text-[10px] dark:bg-gray-700">price</span
 						> column includes IPv4 + your VAT in your selected currency.
 					</p>
-					<p class="mb-2 text-xs text-zinc-500 dark:text-zinc-400">Try an example:</p>
+					<p class="mb-2 text-xs text-gray-500 dark:text-gray-400">Try an example:</p>
 					<div class="flex flex-wrap gap-2">
 						{#each EXAMPLES as ex (ex.label)}
 							<button
 								type="button"
-								class="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600 hover:border-primary-400 hover:text-primary-700 dark:border-zinc-700 dark:text-zinc-300 dark:hover:text-primary-400"
+								class="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:border-primary-400 hover:text-primary-700 dark:border-gray-700 dark:text-gray-300 dark:hover:text-primary-400"
 								onclick={() => runExample(ex.sql)}
 							>
 								{ex.label}
@@ -328,12 +328,12 @@
 						{/each}
 					</div>
 					{#if history.length > 0}
-						<p class="mt-4 mb-2 text-xs text-zinc-500 dark:text-zinc-400">Recent queries:</p>
+						<p class="mt-4 mb-2 text-xs text-gray-500 dark:text-gray-400">Recent queries:</p>
 						<div class="space-y-1">
 							{#each history.slice(0, 8) as h (h)}
 								<button
 									type="button"
-									class="block w-full truncate rounded px-2 py-1 text-left font-mono text-[11px] text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+									class="block w-full truncate rounded px-2 py-1 text-left font-mono text-[11px] text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
 									title={h}
 									onclick={() => loadIntoEditor(h)}>{h.replace(/\s+/g, ' ')}</button
 								>
@@ -344,16 +344,16 @@
 			{/if}
 
 			{#each entries as entry (entry.id)}
-				<div class="rounded-lg border border-zinc-200 dark:border-zinc-700">
+				<div class="rounded-lg border border-gray-200 dark:border-gray-700">
 					<!-- Echoed query -->
 					<div
-						class="flex items-start justify-between gap-2 border-b border-zinc-100 bg-zinc-50 px-3 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/50"
+						class="flex items-start justify-between gap-2 border-b border-gray-100 bg-gray-50 px-3 py-1.5 dark:border-gray-700 dark:bg-gray-700/50"
 					>
 						<pre
-							class="overflow-x-auto font-mono text-[11px] whitespace-pre-wrap text-zinc-600 dark:text-zinc-300">{entry.sql}</pre>
+							class="overflow-x-auto font-mono text-[11px] whitespace-pre-wrap text-gray-600 dark:text-gray-300">{entry.sql}</pre>
 						<button
 							type="button"
-							class="shrink-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+							class="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
 							title="Edit in console"
 							onclick={() => loadIntoEditor(entry.sql)}
 						>
@@ -371,7 +371,7 @@
 					{:else if entry.result}
 						<div class="px-3 py-2">
 							<div class="mb-1.5 flex items-center justify-between">
-								<span class="text-[11px] text-zinc-500 dark:text-zinc-400">
+								<span class="text-[11px] text-gray-500 dark:text-gray-400">
 									{entry.result.rowCount}
 									{entry.result.rowCount === 1 ? 'row' : 'rows'}
 									{#if entry.result.truncated}<span class="text-amber-600 dark:text-amber-400"
@@ -382,14 +382,14 @@
 								<div class="flex items-center gap-2">
 									<button
 										type="button"
-										class="flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+										class="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
 										onclick={() => copyJSON(entry.result!)}
 									>
 										<Fa icon={faCopy} class="h-3 w-3" /> Copy
 									</button>
 									<button
 										type="button"
-										class="flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+										class="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
 										onclick={() =>
 											download(`query-${entry.id}.csv`, toCSV(entry.result!), 'text/csv')}
 									>
@@ -398,12 +398,12 @@
 								</div>
 							</div>
 							{#if entry.result.columns.length === 0}
-								<p class="text-xs text-zinc-400">Query returned no columns.</p>
+								<p class="text-xs text-gray-400">Query returned no columns.</p>
 							{:else}
-								<div class="max-h-80 overflow-auto rounded border border-zinc-200 dark:border-zinc-700">
+								<div class="max-h-80 overflow-auto rounded border border-gray-200 dark:border-gray-700">
 									<table class="w-full border-collapse text-left text-[11px]">
 										<thead
-											class="sticky top-0 bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+											class="sticky top-0 bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
 										>
 											<tr>
 												{#each entry.result.columns as col (col)}
@@ -413,10 +413,10 @@
 										</thead>
 										<tbody>
 											{#each entry.result.rows as row, i (i)}
-												<tr class="border-t border-zinc-100 dark:border-zinc-800">
+												<tr class="border-t border-gray-100 dark:border-gray-700">
 													{#each entry.result.columns as col (col)}
 														<td
-															class="max-w-xs truncate px-2 py-1 font-mono whitespace-nowrap text-zinc-700 dark:text-zinc-300"
+															class="max-w-xs truncate px-2 py-1 font-mono whitespace-nowrap text-gray-700 dark:text-gray-300"
 															title={formatCell(row[col])}
 														>
 															{#if isUrl(row[col])}
@@ -445,14 +445,14 @@
 		</div>
 
 		<!-- Editor + actions -->
-		<div class="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+		<div class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
 			{#if !dbReady}
-				<div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-					<p class="mb-2 text-xs text-zinc-500 dark:text-zinc-400">Loading dataset…</p>
+				<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+					<p class="mb-2 text-xs text-gray-500 dark:text-gray-400">Loading dataset…</p>
 					<Progressbar progress={$dbInitProgress} animate={true} size="h-2" />
 				</div>
 			{:else}
-				<div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 					{#key schemaReady}
 						<CodeEditor
 							bind:value={queryText}
@@ -464,13 +464,13 @@
 					{/key}
 				</div>
 				<div class="mt-2 flex items-center justify-between">
-					<span class="text-[11px] text-zinc-400">
+					<span class="text-[11px] text-gray-400">
 						Read-only · ⌘/Ctrl+Enter · capped at 1000 rows ·
 						<a
 							href={DUCKDB_DOCS}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="underline hover:text-zinc-600 dark:hover:text-zinc-300">DuckDB SQL ↗</a
+							class="underline hover:text-gray-600 dark:hover:text-gray-300">DuckDB SQL ↗</a
 						>
 					</span>
 					<div class="flex items-center gap-2">

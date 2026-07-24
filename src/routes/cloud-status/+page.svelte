@@ -921,7 +921,7 @@
 									</TableHeadCell>
 								{/each}
 								<TableHeadCell
-									class="bg-gray-100 px-4 pt-4 pb-3 text-center align-middle whitespace-nowrap dark:bg-gray-600"
+									class="bg-gray-100 px-4 pt-4 pb-3 text-center align-middle whitespace-nowrap dark:bg-gray-700"
 								>
 									Available In
 								</TableHeadCell>
@@ -1060,7 +1060,7 @@
 														</TableBodyCell>
 													{/each}
 													<TableBodyCell
-														class="bg-gray-100 px-4 py-4 text-center font-medium dark:bg-gray-600"
+														class="bg-gray-100 px-4 py-4 text-center font-medium dark:bg-gray-700"
 													>
 														{availableCount} / {data.statusData.locations.length}
 													</TableBodyCell>
@@ -1073,10 +1073,10 @@
 								<!-- Location totals row -->
 								{#if summaryStats}
 									<TableBodyRow
-										class="border-t-2 border-gray-300 bg-gray-100 dark:border-gray-500 dark:bg-gray-600"
+										class="border-t-2 border-gray-300 bg-gray-100 dark:border-gray-500 dark:bg-gray-700"
 									>
 										<TableBodyCell
-											class="sticky left-0 z-10 bg-gray-100 px-4 py-3 text-sm font-bold uppercase dark:bg-gray-600"
+											class="sticky left-0 z-10 bg-gray-100 px-4 py-3 text-sm font-bold uppercase dark:bg-gray-700"
 										>
 											Availability %
 										</TableBodyCell>

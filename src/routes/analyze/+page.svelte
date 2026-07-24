@@ -1115,13 +1115,13 @@ let isSmallScreen: boolean = $state(false);
 								<SortControls bind:sortField bind:sortDirection />
 								<!-- View mode toggle (grid / list) -->
 								<div
-									class="inline-flex h-8 overflow-hidden rounded-md ring-1 ring-zinc-200 dark:ring-zinc-700"
+									class="inline-flex h-8 overflow-hidden rounded-md ring-1 ring-gray-200 dark:ring-gray-700"
 									role="group"
 									aria-label="View mode"
 								>
 									<button
 										type="button"
-										class={`flex items-center justify-center px-3 transition-colors ${viewMode === 'grid' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'bg-white text-zinc-400 hover:text-zinc-600 dark:bg-zinc-900 dark:text-zinc-500'}`}
+										class={`flex items-center justify-center px-3 transition-colors ${viewMode === 'grid' ? 'bg-gray-100 text-gray-900 dark:bg-gray-600 dark:text-gray-100' : 'bg-white text-gray-400 hover:text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}
 										onclick={() => setViewMode('grid')}
 										aria-pressed={viewMode === 'grid'}
 										aria-label="Grid view"
@@ -1130,7 +1130,7 @@ let isSmallScreen: boolean = $state(false);
 									</button>
 									<button
 										type="button"
-										class={`flex items-center justify-center px-3 transition-colors ${viewMode === 'list' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'bg-white text-zinc-400 hover:text-zinc-600 dark:bg-zinc-900 dark:text-zinc-500'}`}
+										class={`flex items-center justify-center px-3 transition-colors ${viewMode === 'list' ? 'bg-gray-100 text-gray-900 dark:bg-gray-600 dark:text-gray-100' : 'bg-white text-gray-400 hover:text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}
 										onclick={() => setViewMode('list')}
 										aria-pressed={viewMode === 'list'}
 										aria-label="List view"

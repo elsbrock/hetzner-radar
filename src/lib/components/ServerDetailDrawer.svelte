@@ -309,7 +309,7 @@
 	placement="right"
 	transitionParams={transitionParamsRight}
 	id="server-detail-drawer"
-	class="w-96 border-l border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+	class="w-96 border-l border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
 	outsideclose={true}
 	dismissable={false}
 >
@@ -324,7 +324,7 @@
 		<!-- Chrome strip: freshness · type · close -->
 		<div class="mb-3 flex items-center justify-between text-[10px]">
 			<div class="flex items-center gap-2">
-				<span class="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+				<span class="inline-flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
 					<span class="relative flex h-1.5 w-1.5">
 						{#if isFresh}
 							<span
@@ -332,7 +332,7 @@
 							></span>
 						{/if}
 						<span
-							class={`relative inline-flex h-1.5 w-1.5 rounded-full ${isFresh ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+							class={`relative inline-flex h-1.5 w-1.5 rounded-full ${isFresh ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-500'}`}
 						></span>
 					</span>
 					<span class="tabular-nums">
@@ -348,32 +348,32 @@
 					</span>
 				{:else if isAuction}
 					<span
-						class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400"
+						class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-gray-500 dark:text-gray-400"
 					>
 						Auction
 					</span>
 				{:else}
 					<span
-						class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400"
+						class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-gray-500 dark:text-gray-400"
 					>
 						Standard
 					</span>
 				{/if}
 			</div>
-			<CloseButton onclick={closeDrawer} class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+			<CloseButton onclick={closeDrawer} class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
 		</div>
 
 		<!-- Title -->
 		<div class="mb-4 flex items-start justify-between gap-2">
 			<div class="min-w-0 flex-1">
 				<h3
-					class="truncate font-mono text-base leading-tight font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+					class="truncate font-mono text-base leading-tight font-semibold tracking-tight text-gray-900 dark:text-gray-50"
 					title={config.cpu}
 				>
 					{config.cpu}
 				</h3>
 				{#if config.cpu_generation}
-					<p class="mt-1 truncate text-xs text-zinc-400 dark:text-zinc-500">
+					<p class="mt-1 truncate text-xs text-gray-400 dark:text-gray-400">
 						{config.cpu_generation}
 					</p>
 				{/if}
@@ -405,7 +405,7 @@
 		<div class="mb-4">
 			<div class="flex items-baseline gap-1.5 leading-none">
 				<span
-					class="text-3xl font-semibold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-50"
+					class="text-3xl font-semibold tabular-nums tracking-tight text-gray-900 dark:text-gray-50"
 				>
 					{#if selectedTimeUnit === 'perMonth'}
 						{displayPrice.toFixed(2)}
@@ -413,17 +413,17 @@
 						{(displayPrice / (30 * 24)).toFixed(4)}
 					{/if}
 				</span>
-				<span class="text-base font-medium text-zinc-500 dark:text-zinc-400"
+				<span class="text-base font-medium text-gray-500 dark:text-gray-400"
 					>{$currencySymbol}</span
 				>
-				<span class="text-xs text-zinc-400 dark:text-zinc-500"
+				<span class="text-xs text-gray-400 dark:text-gray-400"
 					>/{selectedTimeUnit === 'perMonth' ? 'mo' : 'hr'}</span
 				>
 			</div>
-			<div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+			<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 				{vatLabel}
 				{#if config.server_type === 'standard' && config.setup_price && config.setup_price > 0}
-					<span class="mx-1 text-zinc-300 dark:text-zinc-600">·</span>
+					<span class="mx-1 text-gray-300 dark:text-gray-500">·</span>
 					<span class="whitespace-nowrap tabular-nums"
 						>+{convertPrice(
 							config.setup_price * (1 + selectedOption.rate),
@@ -451,12 +451,12 @@
 			<!-- Auction stats: lowest + supply -->
 			<div class="mb-4 grid grid-cols-2 gap-1.5">
 				<div
-					class="rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+					class="rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 				>
 					<div class="flex items-center gap-1.5">
 						<Fa icon={faArrowDown} class="h-3 w-3 text-emerald-500" />
 						<span
-							class="font-mono text-sm leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+							class="font-mono text-sm leading-tight font-semibold tabular-nums text-gray-900 dark:text-gray-100"
 						>
 							{lowestPrice !== null
 								? convertPrice(
@@ -467,18 +467,18 @@
 								: '—'}
 						</span>
 					</div>
-					<div class="mt-0.5 text-[9px] text-zinc-400 dark:text-zinc-500">
+					<div class="mt-0.5 text-[9px] text-gray-400 dark:text-gray-400">
 						lowest{#if lowestPriceDate} · {lowestPriceDate.format('MMM D')}{/if}
 					</div>
 				</div>
 
 				<div
-					class="rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+					class="rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 				>
 					<div class="flex items-center gap-1.5">
 						<Fa icon={faChartLine} class="h-3 w-3 text-sky-500" />
 						<span
-							class="font-mono text-sm leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+							class="font-mono text-sm leading-tight font-semibold tabular-nums text-gray-900 dark:text-gray-100"
 						>
 							{averageSupply !== null ? averageSupply : '—'}
 						</span>
@@ -489,7 +489,7 @@
 							>
 						{/if}
 					</div>
-					<div class="mt-0.5 text-[9px] text-zinc-400 dark:text-zinc-500">avg supply / day</div>
+					<div class="mt-0.5 text-[9px] text-gray-400 dark:text-gray-400">avg supply / day</div>
 				</div>
 			</div>
 		{/if}
@@ -498,65 +498,65 @@
 		<div class="mb-3 grid grid-cols-2 gap-1.5">
 			<!-- Cores / threads -->
 			<div
-				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 			>
 				<Fa
 					icon={faMicrochip}
-					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500"
 				/>
 				<div
-					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100"
+					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-gray-900 dark:text-gray-100"
 				>
-					{config.cpu_cores ?? '?'}<span class="text-zinc-300 dark:text-zinc-600"
+					{config.cpu_cores ?? '?'}<span class="text-gray-300 dark:text-gray-500"
 						>/</span
 					>{config.cpu_threads ?? '?'}
 				</div>
-				<div class="text-[9px] tracking-wide text-zinc-400 dark:text-zinc-500">cores · threads</div>
+				<div class="text-[9px] tracking-wide text-gray-400 dark:text-gray-400">cores · threads</div>
 			</div>
 
 			<!-- RAM -->
 			<div
-				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 			>
 				<Fa
 					icon={faMemory}
-					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500"
 				/>
 				<div
-					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100"
+					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-gray-900 dark:text-gray-100"
 				>
-					{config.ram_size}<span class="ml-0.5 text-xs font-medium text-zinc-400 dark:text-zinc-500"
+					{config.ram_size}<span class="ml-0.5 text-xs font-medium text-gray-400 dark:text-gray-400"
 						>GB</span
 					>
 				</div>
-				<div class="text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+				<div class="text-[9px] tabular-nums text-gray-400 dark:text-gray-400">
 					{ramPricePerGb > 0 ? `${ramPricePerGb.toFixed(2)} ${$currencySymbol}/GB` : 'memory'}
 				</div>
 			</div>
 
 			<!-- Storage -->
 			<div
-				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 			>
 				<Fa
 					icon={storageIcon}
-					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500"
 				/>
 				{#if storageRows.length === 0}
 					<div
-						class="truncate pr-5 font-mono text-xs leading-tight font-semibold text-zinc-400 dark:text-zinc-500"
+						class="truncate pr-5 font-mono text-xs leading-tight font-semibold text-gray-400 dark:text-gray-400"
 					>
 						—
 					</div>
-					<div class="text-[9px] text-zinc-400 dark:text-zinc-500">no storage</div>
+					<div class="text-[9px] text-gray-400 dark:text-gray-400">no storage</div>
 				{:else if storageRows.length === 1}
 					<div
-						class="truncate pr-5 font-mono text-xs leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+						class="truncate pr-5 font-mono text-xs leading-tight font-semibold tabular-nums text-gray-900 dark:text-gray-100"
 						title={storageRows[0].text}
 					>
 						{storageRows[0].text}
 					</div>
-					<div class="truncate text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+					<div class="truncate text-[9px] tabular-nums text-gray-400 dark:text-gray-400">
 						{storageRows[0].label.toLowerCase()}{storageRows[0].pricePerTb > 0
 							? ` · ${storageRows[0].pricePerTb.toFixed(0)} ${$currencySymbol}/TB`
 							: ''}
@@ -564,11 +564,11 @@
 				{:else}
 					{#each storageRows as row (row.label)}
 						<div
-							class="truncate pr-5 font-mono text-[10px] leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+							class="truncate pr-5 font-mono text-[10px] leading-tight font-semibold tabular-nums text-gray-900 dark:text-gray-100"
 							title={`${row.text} ${row.label}`}
 						>
 							{row.text}<span
-								class="ml-0.5 text-[9px] font-medium lowercase text-zinc-400 dark:text-zinc-500"
+								class="ml-0.5 text-[9px] font-medium lowercase text-gray-400 dark:text-gray-400"
 								>{row.label}</span
 							>
 						</div>
@@ -578,27 +578,27 @@
 
 			<!-- Performance (GB6) -->
 			<div
-				class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 			>
 				<Fa
 					icon={faGaugeHigh}
-					class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600"
+					class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500"
 				/>
 				<div
-					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100"
+					class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-gray-900 dark:text-gray-100"
 				>
 					{#if config.cpu_score || config.cpu_multicore_score}
-						<span class={config.cpu_score ? '' : 'text-zinc-400 dark:text-zinc-500'}
+						<span class={config.cpu_score ? '' : 'text-gray-400 dark:text-gray-400'}
 							>{config.cpu_score ? compact(config.cpu_score) : '—'}</span
-						><span class="text-zinc-300 dark:text-zinc-600">/</span><span
-							class={config.cpu_multicore_score ? '' : 'text-zinc-400 dark:text-zinc-500'}
+						><span class="text-gray-300 dark:text-gray-500">/</span><span
+							class={config.cpu_multicore_score ? '' : 'text-gray-400 dark:text-gray-400'}
 							>{config.cpu_multicore_score ? compact(config.cpu_multicore_score) : '—'}</span
 						>
 					{:else}
-						<span class="text-zinc-400 dark:text-zinc-500">—</span>
+						<span class="text-gray-400 dark:text-gray-400">—</span>
 					{/if}
 				</div>
-				<div class="text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+				<div class="text-[9px] tabular-nums text-gray-400 dark:text-gray-400">
 					GB6 single · multi
 				</div>
 			</div>
@@ -609,10 +609,10 @@
 			<div class="mb-4 flex flex-wrap gap-1">
 				{#each extras as ext (ext.label)}
 					<span
-						class="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+						class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
 						title={ext.title}
 					>
-						<Fa icon={ext.icon} class="h-2.5 w-2.5 text-zinc-400 dark:text-zinc-500" />
+						<Fa icon={ext.icon} class="h-2.5 w-2.5 text-gray-400 dark:text-gray-400" />
 						{ext.label}
 					</span>
 				{/each}
@@ -622,17 +622,17 @@
 		<!-- Standard server: order CTA -->
 		{#if config.server_type === 'standard'}
 			<div
-				class="mb-4 rounded-lg bg-zinc-50 p-3 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+				class="mb-4 rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 			>
 				{#if config.datacenter}
 					<div class="mb-2 flex items-baseline justify-between text-xs">
-						<span class="text-zinc-500 dark:text-zinc-400">Datacenter</span>
-						<span class="font-mono font-medium text-zinc-900 dark:text-zinc-100"
+						<span class="text-gray-500 dark:text-gray-400">Datacenter</span>
+						<span class="font-mono font-medium text-gray-900 dark:text-gray-100"
 							>{config.datacenter}</span
 						>
 					</div>
 				{/if}
-				<p class="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
+				<p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
 					Standard server with fixed pricing — always available from Hetzner.
 				</p>
 				<Button
@@ -651,7 +651,7 @@
 			<!-- Auctions section -->
 			<div class="mb-2 flex items-center justify-between">
 				<h6
-					class="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] text-zinc-400 uppercase dark:text-zinc-500"
+					class="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] text-gray-400 uppercase dark:text-gray-400"
 				>
 					<Fa icon={faGavel} class="h-3 w-3" />
 					Live auctions
@@ -673,7 +673,7 @@
 				<div class="space-y-1.5">
 					{#each Array(3) as _, i (i)}
 						<div
-							class="h-12 animate-pulse rounded-lg bg-zinc-50 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40"
+							class="h-12 animate-pulse rounded-lg bg-gray-50 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40"
 						></div>
 					{/each}
 				</div>
@@ -684,7 +684,7 @@
 							href={`https://www.hetzner.com/sb/?utm_source=server-radar&utm_medium=referral&utm_campaign=auction#search=${auction.id}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="group flex items-center justify-between gap-2 rounded-lg bg-zinc-50 px-2.5 py-2 ring-1 ring-zinc-100 transition-colors hover:bg-zinc-100 hover:ring-zinc-200 dark:bg-zinc-800/50 dark:ring-zinc-700/40 dark:hover:bg-zinc-800 dark:hover:ring-zinc-700"
+							class="group flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-2.5 py-2 ring-1 ring-gray-100 transition-colors hover:bg-gray-100 hover:ring-gray-200 dark:bg-gray-700/50 dark:ring-gray-700/40 dark:hover:bg-gray-700 dark:hover:ring-gray-700"
 						>
 							<div class="min-w-0 flex-1">
 								<div class="flex items-center gap-1.5">
@@ -696,59 +696,59 @@
 											<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"
 											></span>
 										{:else}
-											<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600"
+											<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-500"
 											></span>
 										{/if}
 									</span>
 									<span
-										class="font-mono text-xs font-medium tabular-nums text-zinc-900 dark:text-zinc-100"
+										class="font-mono text-xs font-medium tabular-nums text-gray-900 dark:text-gray-100"
 										>#{auction.id}</span
 									>
-									<span class="text-[10px] text-zinc-400 dark:text-zinc-500"
+									<span class="text-[10px] text-gray-400 dark:text-gray-400"
 										>· {auction.datacenter}</span
 									>
 								</div>
-								<div class="mt-0.5 text-[10px] text-zinc-400 dark:text-zinc-500">
+								<div class="mt-0.5 text-[10px] text-gray-400 dark:text-gray-400">
 									{auction.lastSeen ? dayjs.unix(auction.lastSeen).fromNow() : 'unknown'}
 								</div>
 							</div>
 							<div class="text-right">
 								<div
-									class="font-mono text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-100"
+									class="font-mono text-sm font-semibold tabular-nums text-gray-900 dark:text-gray-100"
 								>
 									{convertPrice(
 										auction.lastPrice * (1 + selectedOption.rate),
 										'EUR',
 										$currentCurrency
 									).toFixed(2)}
-									<span class="text-[10px] font-normal text-zinc-400 dark:text-zinc-500"
+									<span class="text-[10px] font-normal text-gray-400 dark:text-gray-400"
 										>{$currencySymbol}</span
 									>
 								</div>
 								<Fa
 									icon={faExternalLinkAlt}
-									class="ml-auto h-2.5 w-2.5 text-zinc-300 group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+									class="ml-auto h-2.5 w-2.5 text-gray-300 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400"
 								/>
 							</div>
 						</a>
 					{/each}
 				</div>
 				{#if auctions.length > 5}
-					<p class="mt-2 text-[10px] text-zinc-400 dark:text-zinc-500">
+					<p class="mt-2 text-[10px] text-gray-400 dark:text-gray-400">
 						Showing 5 most recent of {auctions.length} matching auctions.
 					</p>
 				{/if}
 			{:else}
 				<div
-					class="rounded-lg border border-dashed border-zinc-200 px-3 py-4 text-center dark:border-zinc-700"
+					class="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-center dark:border-gray-700"
 				>
-					<p class="text-xs text-zinc-400 dark:text-zinc-500">No matching auctions found.</p>
+					<p class="text-xs text-gray-400 dark:text-gray-400">No matching auctions found.</p>
 				</div>
 			{/if}
 		{/if}
 
 		<!-- Fine print -->
-		<div class="mt-5 border-t border-zinc-100 pt-3 text-[10px] leading-relaxed text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
+		<div class="mt-5 border-t border-gray-100 pt-3 text-[10px] leading-relaxed text-gray-400 dark:border-gray-700 dark:text-gray-400">
 			{#if config.server_type === 'standard'}
 				<p>
 					Prices include VAT based on your selection. Hetzner's final price may vary based on
@@ -763,7 +763,7 @@
 		</div>
 	{:else}
 		<div class="flex h-full items-center justify-center">
-			<p class="text-sm text-zinc-400 dark:text-zinc-500">No server selected.</p>
+			<p class="text-sm text-gray-400 dark:text-gray-400">No server selected.</p>
 		</div>
 	{/if}
 </Drawer>

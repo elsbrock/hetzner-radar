@@ -22,7 +22,7 @@
 
 <!-- Social proof — a full-width band flush under the hero (a grounded "stat shelf"). -->
 <section
-	class="-mx-8 border-b border-gray-200 bg-gray-50 px-8 py-5 dark:border-gray-800 dark:bg-gray-900/50"
+	class="-mx-8 border-b border-gray-200 bg-gray-50 px-8 py-5 dark:border-gray-700 dark:bg-gray-900/50"
 	style="width: calc(100% + 4rem);"
 >
 	<div

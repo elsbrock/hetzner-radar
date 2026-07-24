@@ -153,11 +153,11 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
-	class={`group relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-white text-left ring-1 transition-all duration-200 dark:bg-zinc-900
+	class={`group relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-white text-left ring-1 transition-all duration-200 dark:bg-gray-800
 		${
 			isBestDeal
 				? 'shadow-[0_1px_3px_rgba(234,88,12,0.10)] ring-amber-300/70 hover:ring-amber-400 dark:ring-amber-500/40'
-				: 'shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-zinc-200/80 hover:ring-zinc-300 dark:ring-zinc-700/60'
+				: 'shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-gray-200/80 hover:ring-gray-300 dark:ring-gray-700/60'
 		}
 		${clickable ? 'hover:cursor-pointer hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:outline-none' : ''}`}
 	data-testid="server-card"
@@ -180,20 +180,20 @@
 		<div class="flex flex-1 animate-pulse flex-col p-4" aria-busy="true" aria-live="polite">
 			<!-- Chrome strip -->
 			<div class="mb-2.5 flex items-center justify-between">
-				<div class="h-2.5 w-20 rounded bg-zinc-200/80 dark:bg-zinc-700/60"></div>
-				<div class="h-3.5 w-14 rounded-full bg-zinc-200/80 dark:bg-zinc-700/60"></div>
+				<div class="h-2.5 w-20 rounded bg-gray-200/80 dark:bg-gray-600/60"></div>
+				<div class="h-3.5 w-14 rounded-full bg-gray-200/80 dark:bg-gray-600/60"></div>
 			</div>
 			<!-- Title (matches real card: cpu name + codename row) -->
 			<div class="mb-3 min-h-[2.6rem]">
-				<div class="h-3.5 w-3/5 rounded bg-zinc-200/80 dark:bg-zinc-700/60"></div>
-				<div class="mt-1 h-2.5 w-1/3 rounded bg-zinc-200/50 dark:bg-zinc-700/40"></div>
+				<div class="h-3.5 w-3/5 rounded bg-gray-200/80 dark:bg-gray-600/60"></div>
+				<div class="mt-1 h-2.5 w-1/3 rounded bg-gray-200/50 dark:bg-gray-600/40"></div>
 			</div>
 			<!-- 2x2 tile grid -->
 			<div class="grid grid-cols-2 gap-1.5">
 				{#each Array(4) as _, i (i)}
-					<div class="rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40">
-						<div class="h-3 w-1/2 rounded bg-zinc-200/70 dark:bg-zinc-700/50"></div>
-						<div class="mt-1 h-2 w-2/3 rounded bg-zinc-200/50 dark:bg-zinc-700/40"></div>
+					<div class="rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40">
+						<div class="h-3 w-1/2 rounded bg-gray-200/70 dark:bg-gray-600/50"></div>
+						<div class="mt-1 h-2 w-2/3 rounded bg-gray-200/50 dark:bg-gray-600/40"></div>
 					</div>
 				{/each}
 			</div>
@@ -201,12 +201,12 @@
 			<!-- Footer -->
 			<div class="mt-3 flex items-end justify-between gap-3">
 				<div class="flex gap-1">
-					<div class="h-4 w-9 rounded-md bg-zinc-200/70 dark:bg-zinc-700/50"></div>
-					<div class="h-4 w-9 rounded-md bg-zinc-200/70 dark:bg-zinc-700/50"></div>
+					<div class="h-4 w-9 rounded-md bg-gray-200/70 dark:bg-gray-600/50"></div>
+					<div class="h-4 w-9 rounded-md bg-gray-200/70 dark:bg-gray-600/50"></div>
 				</div>
 				<div class="flex flex-col items-end gap-1">
-					<div class="h-5 w-20 rounded bg-zinc-200/80 dark:bg-zinc-700/60"></div>
-					<div class="h-2 w-14 rounded bg-zinc-200/50 dark:bg-zinc-700/40"></div>
+					<div class="h-5 w-20 rounded bg-gray-200/80 dark:bg-gray-600/60"></div>
+					<div class="h-2 w-14 rounded bg-gray-200/50 dark:bg-gray-600/40"></div>
 				</div>
 			</div>
 		</div>
@@ -214,12 +214,12 @@
 		<div class="flex flex-1 flex-col p-4">
 			<!-- Chrome strip -->
 			<div class="mb-2.5 flex items-center justify-between text-[10px]">
-				<span class="inline-flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
+				<span class="inline-flex items-center gap-1.5 text-gray-400 dark:text-gray-400">
 					<span class="relative flex h-1.5 w-1.5">
 						{#if isFresh}
 							<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
 						{/if}
-						<span class={`relative inline-flex h-1.5 w-1.5 rounded-full ${isFresh ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}></span>
+						<span class={`relative inline-flex h-1.5 w-1.5 rounded-full ${isFresh ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-500'}`}></span>
 					</span>
 					<span class="tabular-nums">
 						{config.last_seen ? dayjs.unix(config.last_seen).fromNow() : 'never'}
@@ -231,11 +231,11 @@
 						Best
 					</span>
 				{:else if isAuction}
-					<span class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400">
+					<span class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-gray-500 dark:text-gray-400">
 						Auction
 					</span>
 				{:else}
-					<span class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-500 dark:text-zinc-400">
+					<span class="rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase text-gray-500 dark:text-gray-400">
 						Standard
 					</span>
 				{/if}
@@ -243,10 +243,10 @@
 
 			<!-- Title (fixed 2-line height: cpu name + codename row) -->
 			<div class="mb-3 min-h-[2.6rem]">
-				<h3 class="truncate font-mono text-[14px] leading-tight font-semibold tracking-tight text-zinc-900 dark:text-zinc-50" title={config.cpu}>
+				<h3 class="truncate font-mono text-[14px] leading-tight font-semibold tracking-tight text-gray-900 dark:text-gray-50" title={config.cpu}>
 					{config.cpu}
 				</h3>
-				<p class="mt-1 truncate text-[11px] text-zinc-400 dark:text-zinc-500" title={config.cpu_generation ?? ''}>
+				<p class="mt-1 truncate text-[11px] text-gray-400 dark:text-gray-400" title={config.cpu_generation ?? ''}>
 					{config.cpu_generation ?? '\u00a0'}
 				</p>
 			</div>
@@ -254,59 +254,59 @@
 			<!-- Stat tiles: 2x2 grid -->
 			<div class="grid grid-cols-2 gap-1.5">
 				<!-- Cores / threads -->
-				<div class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40">
-					<FontAwesomeIcon icon={faMicrochip} class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600" />
-					<div class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100">
-						{config.cpu_cores ?? '?'}<span class="text-zinc-300 dark:text-zinc-600">/</span>{config.cpu_threads ?? '?'}
+				<div class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40">
+					<FontAwesomeIcon icon={faMicrochip} class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500" />
+					<div class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-gray-900 dark:text-gray-100">
+						{config.cpu_cores ?? '?'}<span class="text-gray-300 dark:text-gray-500">/</span>{config.cpu_threads ?? '?'}
 					</div>
-					<div class="text-[9px] tracking-wide text-zinc-400 dark:text-zinc-500">cores · threads</div>
+					<div class="text-[9px] tracking-wide text-gray-400 dark:text-gray-400">cores · threads</div>
 				</div>
 
 				<!-- RAM -->
-				<div class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40">
-					<FontAwesomeIcon icon={faMemory} class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600" />
-					<div class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100">
-						{config.ram_size}<span class="ml-0.5 text-xs font-medium text-zinc-400 dark:text-zinc-500">GB</span>
+				<div class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40">
+					<FontAwesomeIcon icon={faMemory} class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500" />
+					<div class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-gray-900 dark:text-gray-100">
+						{config.ram_size}<span class="ml-0.5 text-xs font-medium text-gray-400 dark:text-gray-400">GB</span>
 					</div>
-					<div class="text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+					<div class="text-[9px] tabular-nums text-gray-400 dark:text-gray-400">
 						{ramPricePerGb > 0 ? `${ramPricePerGb.toFixed(2)} ${$currencySymbol}/GB` : 'memory'}
 					</div>
 				</div>
 
 				<!-- Storage (icon implies type; truncate guards against long mixed-size strings) -->
-				<div class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40">
-					<FontAwesomeIcon icon={storageIcon} class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600" />
+				<div class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40">
+					<FontAwesomeIcon icon={storageIcon} class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500" />
 					{#if storageRows.length === 0}
-						<div class="truncate pr-5 font-mono text-xs leading-tight font-semibold text-zinc-400 dark:text-zinc-500">—</div>
-						<div class="text-[9px] text-zinc-400 dark:text-zinc-500">no storage</div>
+						<div class="truncate pr-5 font-mono text-xs leading-tight font-semibold text-gray-400 dark:text-gray-400">—</div>
+						<div class="text-[9px] text-gray-400 dark:text-gray-400">no storage</div>
 					{:else if storageRows.length === 1}
-						<div class="truncate pr-5 font-mono text-xs leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100" title={storageRows[0].text}>
+						<div class="truncate pr-5 font-mono text-xs leading-tight font-semibold tabular-nums text-gray-900 dark:text-gray-100" title={storageRows[0].text}>
 							{storageRows[0].text}
 						</div>
-						<div class="truncate text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">
+						<div class="truncate text-[9px] tabular-nums text-gray-400 dark:text-gray-400">
 							{storageRows[0].label.toLowerCase()}{storageRows[0].pricePerTb > 0 ? ` · ${storageRows[0].pricePerTb.toFixed(0)} ${$currencySymbol}/TB` : ''}
 						</div>
 					{:else}
 						<!-- Multi-type: stack each disk type, very compact -->
 						{#each storageRows as row (row.label)}
-							<div class="truncate pr-5 font-mono text-[10px] leading-tight font-semibold tabular-nums text-zinc-900 dark:text-zinc-100" title={`${row.text} ${row.label}`}>
-								{row.text}<span class="ml-0.5 text-[9px] font-medium lowercase text-zinc-400 dark:text-zinc-500">{row.label}</span>
+							<div class="truncate pr-5 font-mono text-[10px] leading-tight font-semibold tabular-nums text-gray-900 dark:text-gray-100" title={`${row.text} ${row.label}`}>
+								{row.text}<span class="ml-0.5 text-[9px] font-medium lowercase text-gray-400 dark:text-gray-400">{row.label}</span>
 							</div>
 						{/each}
 					{/if}
 				</div>
 
 				<!-- Performance (GB6 single/multi) -->
-				<div class="relative rounded-lg bg-zinc-50 px-2.5 py-1.5 ring-1 ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-700/40">
-					<FontAwesomeIcon icon={faGaugeHigh} class="absolute top-1.5 right-1.5 h-3 w-3 text-zinc-300 dark:text-zinc-600" />
-					<div class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-zinc-100">
+				<div class="relative rounded-lg bg-gray-50 px-2.5 py-1.5 ring-1 ring-gray-100 dark:bg-gray-700/50 dark:ring-gray-700/40">
+					<FontAwesomeIcon icon={faGaugeHigh} class="absolute top-1.5 right-1.5 h-3 w-3 text-gray-300 dark:text-gray-500" />
+					<div class="overflow-hidden pr-5 font-mono text-sm leading-tight font-semibold tabular-nums whitespace-nowrap text-gray-900 dark:text-gray-100">
 						{#if config.cpu_score || config.cpu_multicore_score}
-							<span class={config.cpu_score ? '' : 'text-zinc-400 dark:text-zinc-500'}>{config.cpu_score ? compact(config.cpu_score) : '—'}</span><span class="text-zinc-300 dark:text-zinc-600">/</span><span class={config.cpu_multicore_score ? '' : 'text-zinc-400 dark:text-zinc-500'}>{config.cpu_multicore_score ? compact(config.cpu_multicore_score) : '—'}</span>
+							<span class={config.cpu_score ? '' : 'text-gray-400 dark:text-gray-400'}>{config.cpu_score ? compact(config.cpu_score) : '—'}</span><span class="text-gray-300 dark:text-gray-500">/</span><span class={config.cpu_multicore_score ? '' : 'text-gray-400 dark:text-gray-400'}>{config.cpu_multicore_score ? compact(config.cpu_multicore_score) : '—'}</span>
 						{:else}
-							<span class="text-zinc-400 dark:text-zinc-500">—</span>
+							<span class="text-gray-400 dark:text-gray-400">—</span>
 						{/if}
 					</div>
-					<div class="text-[9px] tabular-nums text-zinc-400 dark:text-zinc-500">GB6 single · multi</div>
+					<div class="text-[9px] tabular-nums text-gray-400 dark:text-gray-400">GB6 single · multi</div>
 				</div>
 			</div>
 
@@ -319,10 +319,10 @@
 				<div class="flex min-w-0 flex-wrap items-center gap-1 self-start">
 					{#each extras as ext (ext.label)}
 						<span
-							class="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+							class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
 							title={ext.title}
 						>
-							<FontAwesomeIcon icon={ext.icon} class="h-2.5 w-2.5 text-zinc-400 dark:text-zinc-500" />
+							<FontAwesomeIcon icon={ext.icon} class="h-2.5 w-2.5 text-gray-400 dark:text-gray-400" />
 							{ext.label}
 						</span>
 					{/each}
@@ -331,20 +331,20 @@
 				<!-- Price (right) -->
 				<div class="shrink-0 text-right">
 					<div class="flex items-baseline justify-end gap-1 leading-none">
-						<span class="text-xl font-semibold tracking-tight tabular-nums text-zinc-900 dark:text-zinc-50">
+						<span class="text-xl font-semibold tracking-tight tabular-nums text-gray-900 dark:text-gray-50">
 							{#if timeUnitPrice === 'perMonth'}
 								{displayPrice.toFixed(2)}
 							{:else}
 								{(displayPrice / (30 * 24)).toFixed(4)}
 							{/if}
 						</span>
-						<span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">{$currencySymbol}</span>
-						<span class="text-[11px] text-zinc-400 dark:text-zinc-500">/{timeUnitPrice === 'perMonth' ? 'mo' : 'hr'}</span>
+						<span class="text-sm font-medium text-gray-500 dark:text-gray-400">{$currencySymbol}</span>
+						<span class="text-[11px] text-gray-400 dark:text-gray-400">/{timeUnitPrice === 'perMonth' ? 'mo' : 'hr'}</span>
 					</div>
-					<div class="mt-0.5 text-[10px] whitespace-nowrap text-zinc-500 dark:text-zinc-400">
+					<div class="mt-0.5 text-[10px] whitespace-nowrap text-gray-500 dark:text-gray-400">
 						{vatLabel}
 						{#if !isAuction && config.setup_price && config.setup_price > 0}
-							<span class="mx-0.5 text-zinc-300 dark:text-zinc-600">·</span>
+							<span class="mx-0.5 text-gray-300 dark:text-gray-500">·</span>
 							<span class="tabular-nums">+{convertPrice(config.setup_price * (1 + selectedOption.rate), 'EUR', $currentCurrency).toFixed(0)} {$currencySymbol} setup</span>
 						{/if}
 					</div>

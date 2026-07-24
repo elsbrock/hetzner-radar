@@ -379,7 +379,10 @@
 		</div>
 
 		<!-- Tabs -->
-		<Tabs tabStyle="underline" contentClass="mt-6">
+		<Tabs
+			tabStyle="underline"
+			contentClass="mt-6 p-0 rounded-none bg-transparent dark:bg-transparent"
+		>
 			<TabItem bind:open={priceAlertsTabOpen}>
 				{#snippet titleSlot()}
 					<div class="flex items-center gap-2">

@@ -295,7 +295,7 @@
                                  focus:ring-orange-500
                                  focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 md:text-3xl
                                  lg:size-[55px] dark:border-gray-600
-                                 dark:bg-gray-700 dark:text-neutral-400 dark:placeholder-neutral-500
+                                 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-neutral-500
                                 dark:focus:ring-neutral-600 dark:focus:ring-orange-400
                                 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 							type="tel"
