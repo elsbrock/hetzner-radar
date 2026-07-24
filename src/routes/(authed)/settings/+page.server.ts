@@ -52,137 +52,91 @@ export const load: PageServerLoad = async (event) => {
   };
 };
 
-export const actions: Actions = {
-  updateDiscordWebhook: async (event) => {
-    if (!event.locals.user) {
-      return error(401, { message: "Authentication required." });
-    }
-
-    const env = event.platform?.env;
-    const db = env?.DB;
-    if (!db) {
-      return error(500, { message: "Database connection error." });
-    }
-
-    const formData = await event.request.formData();
-    const webhookUrl = formData.get("discord_webhook_url") as string;
-
-    if (webhookUrl && !validateDiscordWebhookUrl(webhookUrl)) {
-      return {
-        success: false,
-        error:
-          "Invalid Discord webhook URL. Please provide a valid Discord webhook URL.",
-      };
-    }
-
-    try {
-      await updateUserDiscordWebhook(
-        db,
-        event.locals.user.id.toString(),
-        webhookUrl || null,
-      );
-      return {
-        success: true,
-        message: "Discord webhook updated successfully.",
-      };
-    } catch (err) {
-      console.error("Error updating Discord webhook:", err);
-      return {
-        success: false,
-        error: "Failed to update Discord webhook. Please try again.",
-      };
-    }
+/**
+ * Shared handler for the per-channel notification forms: persists the
+ * channel's endpoint URL and its enabled flag in one submit. The channel is
+ * only marked enabled when a URL is present.
+ */
+async function updateChannelSettings(
+  event: Parameters<NonNullable<Actions[string]>>[0],
+  channel: {
+    label: string;
+    prefKey: "discord" | "webhook";
+    urlField: string;
+    enabledField: string;
+    validate: (url: string) => boolean;
+    invalidMessage: string;
+    persistUrl: typeof updateUserWebhookUrl;
   },
+) {
+  if (!event.locals.user) {
+    return error(401, { message: "Authentication required." });
+  }
 
-  updateWebhookUrl: async (event) => {
-    if (!event.locals.user) {
-      return error(401, { message: "Authentication required." });
-    }
+  const env = event.platform?.env;
+  const db = env?.DB;
+  if (!db) {
+    return error(500, { message: "Database connection error." });
+  }
 
-    const env = event.platform?.env;
-    const db = env?.DB;
-    if (!db) {
-      return error(500, { message: "Database connection error." });
-    }
+  const formData = await event.request.formData();
+  const url = (formData.get(channel.urlField) as string) || "";
+  const enabled = formData.get(channel.enabledField) === "on";
 
-    const formData = await event.request.formData();
-    const webhookUrl = formData.get("webhook_url") as string;
+  if (url && !channel.validate(url)) {
+    return { success: false, error: channel.invalidMessage };
+  }
 
-    if (webhookUrl && !validateWebhookUrl(webhookUrl)) {
-      return {
-        success: false,
-        error: "Invalid webhook URL. Please provide a public HTTPS endpoint.",
-      };
-    }
+  const userId = event.locals.user.id.toString();
 
-    try {
-      await updateUserWebhookUrl(
-        db,
-        event.locals.user.id.toString(),
-        webhookUrl || null,
-      );
-      return {
-        success: true,
-        message: "Webhook URL updated successfully.",
-      };
-    } catch (err) {
-      console.error("Error updating webhook URL:", err);
-      return {
-        success: false,
-        error: "Failed to update webhook URL. Please try again.",
-      };
-    }
-  },
+  try {
+    await channel.persistUrl(db, userId, url || null);
 
-  updateNotificationPreferences: async (event) => {
-    if (!event.locals.user) {
-      return error(401, { message: "Authentication required." });
-    }
-
-    const env = event.platform?.env;
-    const db = env?.DB;
-    if (!db) {
-      return error(500, { message: "Database connection error." });
-    }
-
-    const formData = await event.request.formData();
-    // Email is always enabled as mandatory fallback - ignore form input
-    const discordEnabled = formData.get("discord_notifications") === "on";
-    const webhookEnabled = formData.get("webhook_notifications") === "on";
-
+    const user = await getUser(db, userId);
     const preferences: UserNotificationPreferences = {
-      email: true, // Email notifications are always enabled as fallback
-      discord: discordEnabled,
-      webhook: webhookEnabled,
+      ...DEFAULT_NOTIFICATION_PREFERENCES,
+      ...user?.notification_preferences,
+      [channel.prefKey]: enabled && !!url,
     };
+    await updateUserNotificationPreferences(db, userId, preferences);
 
-    // Ensure at least one notification method is available
-    // (This is guaranteed since email is always true, but explicit check for clarity)
-    if (!preferences.email && !preferences.discord && !preferences.webhook) {
-      return {
-        success: false,
-        error: "At least one notification method must be enabled.",
-      };
-    }
+    return {
+      success: true,
+      message: `${channel.label} settings updated successfully.`,
+    };
+  } catch (err) {
+    console.error(`Error updating ${channel.label} settings:`, err);
+    return {
+      success: false,
+      error: `Failed to update ${channel.label} settings. Please try again.`,
+    };
+  }
+}
 
-    try {
-      await updateUserNotificationPreferences(
-        db,
-        event.locals.user.id.toString(),
-        preferences,
-      );
-      return {
-        success: true,
-        message: "Notification preferences updated successfully.",
-      };
-    } catch (err) {
-      console.error("Error updating notification preferences:", err);
-      return {
-        success: false,
-        error: "Failed to update notification preferences. Please try again.",
-      };
-    }
-  },
+export const actions: Actions = {
+  updateDiscordSettings: (event) =>
+    updateChannelSettings(event, {
+      label: "Discord",
+      prefKey: "discord",
+      urlField: "discord_webhook_url",
+      enabledField: "discord_notifications",
+      validate: validateDiscordWebhookUrl,
+      invalidMessage:
+        "Invalid Discord webhook URL. Please provide a valid Discord webhook URL.",
+      persistUrl: updateUserDiscordWebhook,
+    }),
+
+  updateWebhookSettings: (event) =>
+    updateChannelSettings(event, {
+      label: "Webhook",
+      prefKey: "webhook",
+      urlField: "webhook_url",
+      enabledField: "webhook_notifications",
+      validate: validateWebhookUrl,
+      invalidMessage:
+        "Invalid webhook URL. Please provide a public HTTPS endpoint.",
+      persistUrl: updateUserWebhookUrl,
+    }),
 
   testDiscordWebhook: async (event) => {
     if (!event.locals.user) {

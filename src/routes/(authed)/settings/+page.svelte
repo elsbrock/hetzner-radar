@@ -24,10 +24,10 @@
 	let deleteForm: HTMLFormElement | null = $state(null);
 	let discordWebhookUrl = $state('');
 	let discordNotifications = $state(false);
-	let isTestingWebhook = $state(false);
+	let isTestingDiscord = $state(false);
 	let webhookUrl = $state('');
 	let webhookNotifications = $state(false);
-	let isTestingGenericWebhook = $state(false);
+	let isTestingWebhook = $state(false);
 
 	// Initialize form state from props (only on mount, not reactive to data changes)
 	$effect(() => {
@@ -132,138 +132,105 @@
 					</div>
 				</div>
 
-				<!-- Notification Preferences Card -->
+				<!-- Notifications Card -->
 				<div
 					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div class="mb-4 flex items-center">
 						<FontAwesomeIcon icon={faBell} class="mr-2 h-5 w-5 text-gray-500" />
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-							Notification Preferences
-						</h2>
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Notifications</h2>
 					</div>
 
 					<p class="mb-6 text-gray-600 dark:text-gray-300">
-						Configure your preferred notification method. Discord will be used if enabled and
-						working, with email as automatic fallback.
+						Choose how alert notifications reach you. Email is always on and acts as fallback when
+						other channels fail or are disabled.
 					</p>
 
+					<!-- Email -->
+					<div class="flex items-center space-x-3">
+						<FontAwesomeIcon icon={faEnvelope} class="h-4 w-4 text-gray-600 dark:text-gray-300" />
+						<span class="font-medium text-gray-900 dark:text-white">Email</span>
+						<span
+							class="rounded-sm bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+						>
+							Always enabled
+						</span>
+					</div>
+					<p class="mt-1 ml-7 text-sm text-gray-500 dark:text-gray-400">
+						Sent to {data.user.email}
+					</p>
+
+					<hr class="my-6 border-gray-200 dark:border-gray-700" />
+
+					<!-- Discord -->
 					<form
 						method="POST"
-						action="?/updateNotificationPreferences"
-						use:enhance={() => {
+						action="?/updateDiscordSettings"
+						use:enhance={({ submitter }) => {
+							const isTest = submitter?.getAttribute('formaction') === '?/testDiscordWebhook';
+							if (isTest) {
+								isTestingDiscord = true;
+							}
 							return async ({ result, update }) => {
+								if (isTest) {
+									isTestingDiscord = false;
+								}
 								showActionToast(result);
 								update({ reset: false });
 							};
 						}}
-						class="space-y-4"
+						class="space-y-3"
 					>
 						<div class="flex items-center space-x-3">
-							<Checkbox
-								name="email_notifications"
-								checked={true}
-								disabled
-								class="text-orange-500 focus:ring-orange-500"
-							/>
-							<div class="flex items-center">
-								<FontAwesomeIcon
-									icon={faEnvelope}
-									class="mr-2 h-4 w-4 text-gray-600 dark:text-gray-300"
-								/>
-								<Label class="mb-0! font-medium">Email Notifications</Label>
-								<span
-									class="ml-2 rounded-sm bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-								>
-									Always enabled
-								</span>
-							</div>
-						</div>
-						<p class="ml-6 text-sm text-gray-500 dark:text-gray-400">
-							Email serves as fallback when Discord notifications fail or are disabled
-						</p>
-
-						<div class="flex items-center space-x-3 {!discordWebhookUrl ? 'opacity-60' : ''}">
+							<FontAwesomeIcon icon={faDiscord} class="h-4 w-4 text-indigo-500" />
+							<span class="font-medium text-gray-900 dark:text-white">Discord</span>
 							<Checkbox
 								name="discord_notifications"
 								bind:checked={discordNotifications}
 								disabled={!discordWebhookUrl}
-								class="text-indigo-500 focus:ring-indigo-500"
-							/>
-							<div class="flex items-center">
-								<FontAwesomeIcon icon={faDiscord} class="mr-2 h-4 w-4 text-indigo-500" />
-								<Label class="mb-0! font-medium">Discord Notifications</Label>
-								{#if !discordWebhookUrl}
-									<span
-										class="ml-2 rounded-sm bg-amber-100 px-2 py-1 text-xs text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-									>
-										Setup required
-									</span>
-								{/if}
-							</div>
+								class="ml-auto text-indigo-500 focus:ring-indigo-500">Enabled</Checkbox
+							>
 						</div>
-						<p class="ml-6 text-sm text-gray-500 dark:text-gray-400">
-							Receive rich notifications in your Discord server
+						<p class="ml-7 text-sm text-gray-500 dark:text-gray-400">
+							Rich notifications in your Discord server. Create a webhook under Server Settings →
+							Integrations → Webhooks and paste its URL below.
 						</p>
-
-						<div class="flex items-center space-x-3 {!webhookUrl ? 'opacity-60' : ''}">
-							<Checkbox
-								name="webhook_notifications"
-								bind:checked={webhookNotifications}
-								disabled={!webhookUrl}
-								class="text-teal-500 focus:ring-teal-500"
+						<div class="ml-7 flex gap-2">
+							<Input
+								id="discord_webhook"
+								name="discord_webhook_url"
+								type="url"
+								bind:value={discordWebhookUrl}
+								placeholder="https://discord.com/api/webhooks/..."
+								class="flex-1 font-mono"
 							/>
-							<div class="flex items-center">
-								<FontAwesomeIcon icon={faLink} class="mr-2 h-4 w-4 text-teal-500" />
-								<Label class="mb-0! font-medium">Webhook Notifications</Label>
-								{#if !webhookUrl}
-									<span
-										class="ml-2 rounded-sm bg-amber-100 px-2 py-1 text-xs text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-									>
-										Setup required
-									</span>
+							<Button
+								type="submit"
+								color="alternative"
+								size="sm"
+								disabled={!discordWebhookUrl || isTestingDiscord}
+								formaction="?/testDiscordWebhook"
+							>
+								{#if isTestingDiscord}
+									<Spinner size="4" class="mr-1" />
+									Test
+								{:else}
+									<FontAwesomeIcon icon={faFlask} class="mr-1 h-4 w-4" />
+									Test
 								{/if}
-							</div>
-						</div>
-						<p class="ml-6 text-sm text-gray-500 dark:text-gray-400">
-							Send a JSON payload to your own endpoint for custom integrations
-						</p>
-
-						<div class="pt-2">
-							<Button type="submit" color="primary">Save Preferences</Button>
+							</Button>
+							<Button type="submit" color="primary" size="sm">Save</Button>
 						</div>
 					</form>
-				</div>
 
-				<!-- Discord Configuration Card -->
-				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
-				>
-					<div class="mb-4 flex items-center">
-						<FontAwesomeIcon icon={faDiscord} class="mr-2 h-5 w-5 text-indigo-500" />
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-							Discord Configuration
-						</h2>
-					</div>
+					<hr class="my-6 border-gray-200 dark:border-gray-700" />
 
-					<div
-						class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20"
-					>
-						<h4 class="mb-2 font-medium text-blue-900 dark:text-blue-100">
-							How to get a Discord webhook URL:
-						</h4>
-						<ol class="list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-200">
-							<li>Go to Discord server settings → Integrations → Webhooks</li>
-							<li>Click "New Webhook" and choose your notification channel</li>
-							<li>Copy the webhook URL and paste it below</li>
-						</ol>
-					</div>
-
+					<!-- Custom webhook -->
 					<form
 						method="POST"
-						action="?/updateDiscordWebhook"
+						action="?/updateWebhookSettings"
 						use:enhance={({ submitter }) => {
-							const isTest = submitter?.getAttribute('formaction') === '?/testDiscordWebhook';
+							const isTest = submitter?.getAttribute('formaction') === '?/testWebhook';
 							if (isTest) {
 								isTestingWebhook = true;
 							}
@@ -275,123 +242,47 @@
 								update({ reset: false });
 							};
 						}}
-						class="space-y-4"
+						class="space-y-3"
 					>
-						<div>
-							<Label for="discord_webhook" class="mb-2">Discord Webhook URL</Label>
-							<div class="flex gap-2">
-								<Input
-									id="discord_webhook"
-									name="discord_webhook_url"
-									type="url"
-									bind:value={discordWebhookUrl}
-									placeholder="https://discord.com/api/webhooks/..."
-									class="flex-1 font-mono"
-								/>
-								<Button
-									type="submit"
-									color="alternative"
-									size="sm"
-									disabled={!discordWebhookUrl || isTestingWebhook}
-									formaction="?/testDiscordWebhook"
-								>
-									{#if isTestingWebhook}
-										<Spinner size="4" class="mr-1" />
-										Test
-									{:else}
-										<FontAwesomeIcon icon={faFlask} class="mr-1 h-4 w-4" />
-										Test
-									{/if}
-								</Button>
-							</div>
-							<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-								Leave empty to disable Discord notifications
-							</p>
+						<div class="flex items-center space-x-3">
+							<FontAwesomeIcon icon={faLink} class="h-4 w-4 text-teal-500" />
+							<span class="font-medium text-gray-900 dark:text-white">Webhook</span>
+							<Checkbox
+								name="webhook_notifications"
+								bind:checked={webhookNotifications}
+								disabled={!webhookUrl}
+								class="ml-auto text-teal-500 focus:ring-teal-500">Enabled</Checkbox
+							>
 						</div>
-
-						<div class="pt-2">
-							<Button type="submit" color="primary">Save Webhook</Button>
-						</div>
-					</form>
-				</div>
-
-				<!-- Webhook Configuration Card -->
-				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
-				>
-					<div class="mb-4 flex items-center">
-						<FontAwesomeIcon icon={faLink} class="mr-2 h-5 w-5 text-teal-500" />
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-							Webhook Configuration
-						</h2>
-					</div>
-
-					<div
-						class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20"
-					>
-						<h4 class="mb-2 font-medium text-blue-900 dark:text-blue-100">
-							Integrate with your own tools:
-						</h4>
-						<p class="text-sm text-blue-800 dark:text-blue-200">
-							When an alert triggers, Server Radar sends a JSON payload via HTTP POST to the
-							endpoint below — ideal for home automation, ntfy, or custom bots. Note that
-							notifications are dispatched with a short random delay to keep the auction fair for
-							everyone.
+						<p class="ml-7 text-sm text-gray-500 dark:text-gray-400">
+							A JSON payload sent via HTTP POST to your own endpoint — ideal for home automation,
+							ntfy, or custom bots. Must be a public HTTPS URL.
 						</p>
-					</div>
-
-					<form
-						method="POST"
-						action="?/updateWebhookUrl"
-						use:enhance={({ submitter }) => {
-							const isTest = submitter?.getAttribute('formaction') === '?/testWebhook';
-							if (isTest) {
-								isTestingGenericWebhook = true;
-							}
-							return async ({ result, update }) => {
-								if (isTest) {
-									isTestingGenericWebhook = false;
-								}
-								showActionToast(result);
-								update({ reset: false });
-							};
-						}}
-						class="space-y-4"
-					>
-						<div>
-							<Label for="webhook_url" class="mb-2">Webhook URL</Label>
-							<div class="flex gap-2">
-								<Input
-									id="webhook_url"
-									name="webhook_url"
-									type="url"
-									bind:value={webhookUrl}
-									placeholder="https://example.com/hooks/server-radar"
-									class="flex-1 font-mono"
-								/>
-								<Button
-									type="submit"
-									color="alternative"
-									size="sm"
-									disabled={!webhookUrl || isTestingGenericWebhook}
-									formaction="?/testWebhook"
-								>
-									{#if isTestingGenericWebhook}
-										<Spinner size="4" class="mr-1" />
-										Test
-									{:else}
-										<FontAwesomeIcon icon={faFlask} class="mr-1 h-4 w-4" />
-										Test
-									{/if}
-								</Button>
-							</div>
-							<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-								Must be a public HTTPS endpoint. Leave empty to disable webhook notifications.
-							</p>
-						</div>
-
-						<div class="pt-2">
-							<Button type="submit" color="primary">Save Webhook</Button>
+						<div class="ml-7 flex gap-2">
+							<Input
+								id="webhook_url"
+								name="webhook_url"
+								type="url"
+								bind:value={webhookUrl}
+								placeholder="https://example.com/hooks/server-radar"
+								class="flex-1 font-mono"
+							/>
+							<Button
+								type="submit"
+								color="alternative"
+								size="sm"
+								disabled={!webhookUrl || isTestingWebhook}
+								formaction="?/testWebhook"
+							>
+								{#if isTestingWebhook}
+									<Spinner size="4" class="mr-1" />
+									Test
+								{:else}
+									<FontAwesomeIcon icon={faFlask} class="mr-1 h-4 w-4" />
+									Test
+								{/if}
+							</Button>
+							<Button type="submit" color="primary" size="sm">Save</Button>
 						</div>
 					</form>
 				</div>
