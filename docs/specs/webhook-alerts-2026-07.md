@@ -1,6 +1,6 @@
 # Generic Webhook Notifications for Price Alerts
 
-Status: in progress (July 2026)
+Status: implemented (July 2026)
 
 ## Intent
 
@@ -93,11 +93,14 @@ The feature mirrors the existing Discord channel end to end:
 ## Implementation steps
 
 - [x] Spec
-- [ ] Migration `0014_add_generic_webhook_support.sql`
-- [ ] Worker: `WebhookChannel`, orchestration refactor, SQL + history changes,
+- [x] Migration `0014_add_generic_webhook_support.sql`
+- [x] Worker: `WebhookChannel`, orchestration refactor, SQL + history changes,
       jitter
-- [ ] Worker tests (channel, orchestration, jitter bounds)
-- [ ] Backend API: user + alerts webhook fields, validation
-- [ ] Settings UI: webhook section + test action
-- [ ] Alerts UI: per-alert webhook toggle (create + edit)
-- [ ] `npm run check` / lint / tests green
+- [x] Worker tests (channel, orchestration, jitter bounds)
+- [x] Backend API: user + alerts webhook fields, validation
+- [x] Settings UI: webhook section + test action
+- [x] Alerts UI: per-alert webhook toggle (create + edit)
+- [x] `npm run check` / lint / tests green
+
+Out of scope for v1 (possible follow-ups): webhook support for cloud
+availability alerts, HMAC payload signing, multiple endpoints per user.

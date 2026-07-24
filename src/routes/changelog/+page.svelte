@@ -9,6 +9,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'Webhook notifications for price alerts', datePublished: '2026-07-24' },
 		{ headline: 'New guide: the Hetzner server auction, explained', datePublished: '2026-07-23' },
 		{ headline: 'Run your own SQL with the SQL Console', datePublished: '2026-06-17' },
 		{ headline: 'Availability heatmap shows uptime, not just in/out of stock', datePublished: '2026-06-16' },
@@ -110,6 +111,23 @@
 			2026
 		</h2>
 		<div class="space-y-10">
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jul 24</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Webhook notifications for price alerts
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Price alerts can now call your own HTTPS endpoint with a JSON payload — perfect for home
+						automation, ntfy, or custom bots. Configure the endpoint in
+						<a href="/settings" class="text-orange-500 hover:underline">Settings</a>, then enable it
+						per alert. To keep the auction fair, all alert notifications are dispatched with a short
+						random delay.
+					</p>
+				</div>
+			</article>
 			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
 				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
 					>Jul 23</time
