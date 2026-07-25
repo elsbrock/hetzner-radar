@@ -132,14 +132,24 @@ for users, and the read tools stay reachable regardless of auth state.
 
 ### Tools
 
-| Tool                 | Auth | Source           |
-| -------------------- | ---- | ---------------- |
-| `search_auctions`    | no   | KV snapshot      |
-| `get_auction`        | no   | KV snapshot      |
-| `cloud_availability` | no   | `RADAR_WORKER`   |
-| `list_alerts`        | yes  | D1 `price_alert` |
-| `create_alert`       | yes  | D1 `price_alert` |
-| `delete_alert`       | yes  | D1 `price_alert` |
+| Tool                  | Auth | Source           |
+| --------------------- | ---- | ---------------- |
+| `search_auctions`     | no   | KV snapshot      |
+| `list_filter_options` | no   | KV snapshot      |
+| `get_auction`         | no   | KV snapshot      |
+| `cloud_availability`  | no   | `RADAR_WORKER`   |
+| `list_alerts`         | yes  | D1 `price_alert` |
+| `create_alert`        | yes  | D1 `price_alert` |
+| `delete_alert`        | yes  | D1 `price_alert` |
+
+**Discovery.** `cpu_models` and `datacenters` match _exactly_, so a model
+guessing a name that is not listed gets silence rather than an error.
+`list_filter_options` reports the live vocabulary (27 CPU models, 27
+datacenters at time of writing) with counts, plus observed price/RAM/core
+ranges. `tools/list` additionally attaches that vocabulary as JSON Schema
+`examples`, so clients surface it to the model without a round trip.
+Deliberately `examples` and not `enum`: inventory turns over every few minutes,
+and a hard enum in a client-cached schema would start rejecting valid values.
 
 Explicitly **not** exposing raw SQL. The browser SQL console is free because the
 database sits on the user's machine; server-side it would be a metered,

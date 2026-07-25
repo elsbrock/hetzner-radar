@@ -58,7 +58,7 @@ const QUERY_PROPERTIES: Record<string, unknown> = {
     type: "array",
     items: { type: "string" },
     description:
-      "Exact CPU model names; a server matches if it is any of them, e.g. ['AMD Ryzen 9 3900'].",
+      "Exact CPU model names — matched exactly, so a misspelling returns nothing. Call list_filter_options first to see which models are actually listed right now; use `cpu` for loose substring matching instead.",
   },
   cpu_vendor: {
     type: "string",
@@ -169,7 +169,7 @@ const QUERY_PROPERTIES: Record<string, unknown> = {
     type: "array",
     items: { type: "string" },
     description:
-      "Exact datacenters such as 'FSN1-DC14', or city prefixes: FSN (Falkenstein), NBG (Nuremberg), HEL (Helsinki).",
+      "Exact datacenters such as 'FSN1-DC14', or city prefixes: FSN (Falkenstein), NBG (Nuremberg), HEL (Helsinki). Call list_filter_options for the datacenters currently holding stock.",
   },
 
   // ---- Price ----
@@ -341,8 +341,66 @@ export const cloudAvailabilityTool: ToolDefinition = {
   },
 };
 
+export const listFilterOptionsTool: ToolDefinition = {
+  name: "list_filter_options",
+  description:
+    "Discover what values the search filters can actually take right now: every CPU model, datacenter and location currently listed, each with a count, plus the observed price, RAM and disk ranges. " +
+    "Call this before using cpu_models or datacenters, which match EXACTLY — guessing a name that is not listed returns nothing. " +
+    "Also useful for calibrating a budget before searching or creating an alert.",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    additionalProperties: false,
+  },
+  async handler(_args, ctx) {
+    const snapshot = await snapshotFor(ctx);
+    const a = snapshot.auctions;
+
+    const tally = (values: string[]) => {
+      const counts = new Map<string, number>();
+      for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+      // Most stock first: a model scanning the list sees the common options.
+      return [...counts.entries()]
+        .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+        .map(([value, count]) => ({ value, count }));
+    };
+
+    const numeric = (values: number[]) =>
+      values.length
+        ? { min: Math.min(...values), max: Math.max(...values) }
+        : null;
+
+    const prices = a.map((x) => x.pricing.total_monthly_net);
+
+    return {
+      snapshot_taken_at: snapshot.generated_at,
+      total_auctions: a.length,
+      // These three are exact-match filters, hence the explicit vocabulary.
+      cpu_models: tally(a.map((x) => x.cpu)),
+      datacenters: tally(a.map((x) => x.datacenter)),
+      locations: tally(a.map((x) => x.location)),
+      cpu_vendors: tally(a.map((x) => x.cpu_vendor)),
+      ranges: {
+        // Net of VAT, including IPv4 — the basis max_price_eur filters on.
+        total_monthly_net_eur: numeric(prices),
+        ram_gb: numeric(a.map((x) => x.ram_size)),
+        cpu_cores: numeric(
+          a.map((x) => x.cpu_cores).filter((v): v is number => v !== null),
+        ),
+        drive_count: numeric(
+          a.map((x) => x.nvme_count + x.sata_count + x.hdd_count),
+        ),
+      },
+      available_ram_sizes_gb: [...new Set(a.map((x) => x.ram_size))].sort(
+        (x, y) => x - y,
+      ),
+    };
+  },
+};
+
 export const PUBLIC_TOOLS: ToolDefinition[] = [
   searchAuctionsTool,
+  listFilterOptionsTool,
   getAuctionTool,
   cloudAvailabilityTool,
 ];

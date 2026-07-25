@@ -11,7 +11,10 @@
  */
 
 import { resolveMcpUser } from "$lib/server/mcp/auth";
-import { SnapshotUnavailableError } from "$lib/server/mcp/snapshot";
+import {
+  getSnapshot,
+  SnapshotUnavailableError,
+} from "$lib/server/mcp/snapshot";
 import { lookupTool, toolsFor } from "$lib/server/mcp/registry";
 import type { ToolContext } from "$lib/server/mcp/tools";
 import type { RequestHandler } from "./$types";
@@ -30,6 +33,9 @@ const INSTRUCTIONS =
   "Tracks Hetzner's dedicated server auction (Serverbörse) and Hetzner Cloud availability. " +
   "Use search_auctions to find currently listed dedicated servers by hardware and price, " +
   "get_auction for one listing by ID, and cloud_availability for Hetzner Cloud plans. " +
+  "list_filter_options reports which CPU models, datacenters and locations are actually " +
+  "listed right now, plus the observed price and hardware ranges — call it before using " +
+  "cpu_models or datacenters, which match exactly. " +
   "All prices are EUR and net of VAT; total_monthly_net already includes the mandatory IPv4 address. " +
   "Auction data refreshes about every 5 minutes. " +
   "Server Radar is an independent project and is not affiliated with Hetzner.";
@@ -116,6 +122,69 @@ function toolErrorResult(error: unknown) {
   };
 }
 
+/**
+ * The advertised tool list, with the exact-match filters' current vocabulary
+ * attached as `examples`.
+ *
+ * `cpu_models` and `datacenters` match exactly, so a model guessing a name that
+ * is not listed gets silence. Most clients surface `examples` straight to the
+ * model, which fixes that without requiring it to call `list_filter_options`
+ * first. Deliberately `examples` rather than `enum`: inventory turns over every
+ * few minutes, and a hard enum in a client-cached schema would start rejecting
+ * values that are perfectly valid.
+ *
+ * Falls back to the plain schema if the snapshot cannot be read — discovery is
+ * a nicety, and tools/list must not fail because of it.
+ */
+async function describeTools(ctx: ToolContext) {
+  const tools = toolsFor(ctx.userId);
+
+  let examples: { cpu_models: string[]; datacenters: string[] } | null = null;
+  try {
+    const snapshot = await getSnapshot(ctx.env.SNAPSHOT);
+    examples = {
+      cpu_models: [...new Set(snapshot.auctions.map((a) => a.cpu))].sort(),
+      datacenters: [
+        ...new Set(snapshot.auctions.map((a) => a.datacenter)),
+      ].sort(),
+    };
+  } catch (error) {
+    console.warn("[mcp] tools/list could not attach live examples:", error);
+  }
+
+  return tools.map((tool) => {
+    const schema = tool.inputSchema as {
+      properties?: Record<string, Record<string, unknown>>;
+    };
+
+    if (!examples || !schema.properties) {
+      return {
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+      };
+    }
+
+    // Copy rather than mutate: the schema objects are shared module state and
+    // would otherwise accumulate stale examples across requests.
+    const properties: Record<string, unknown> = { ...schema.properties };
+    for (const key of ["cpu_models", "datacenters"] as const) {
+      if (properties[key]) {
+        properties[key] = {
+          ...schema.properties[key],
+          examples: examples[key],
+        };
+      }
+    }
+
+    return {
+      name: tool.name,
+      description: tool.description,
+      inputSchema: { ...schema, properties },
+    };
+  });
+}
+
 async function handleRpc(
   request: JsonRpcRequest,
   ctx: ToolContext,
@@ -141,11 +210,7 @@ async function handleRpc(
 
     case "tools/list":
       return rpcResult(id, {
-        tools: toolsFor(ctx.userId).map((tool) => ({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema,
-        })),
+        tools: await describeTools(ctx),
       });
 
     case "tools/call": {
