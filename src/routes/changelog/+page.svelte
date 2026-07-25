@@ -9,6 +9,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'Ask your AI assistant about Hetzner servers', datePublished: '2026-07-26' },
 		{ headline: 'Availability history, straight from the grid', datePublished: '2026-07-25' },
 		{ headline: 'Webhook notifications for alerts', datePublished: '2026-07-24' },
 		{ headline: 'New guide: the Hetzner server auction, explained', datePublished: '2026-07-23' },
@@ -112,6 +113,25 @@
 			2026
 		</h2>
 		<div class="space-y-10">
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jul 26</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Ask your AI assistant about Hetzner servers
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						Server Radar now speaks the Model Context Protocol, so Claude and other MCP clients can
+						search the auction directly — "cheapest 64&nbsp;GB EPYC in Falkenstein", "servers with
+						exactly three disks under €50". Searching needs no account. Connect one and your
+						assistant can also create and manage price and cloud availability alerts, after you
+						approve exactly what it may do; access is revocable any time from
+						<a href="/settings" class="text-orange-500 hover:underline">Settings</a>. See the
+						<a href="/guide#mcp" class="text-orange-500 hover:underline">guide</a> to connect.
+					</p>
+				</div>
+			</article>
 			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
 				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
 					>Jul 25</time
