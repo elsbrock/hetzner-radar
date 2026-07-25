@@ -1,5 +1,3 @@
-import { generateIdFromEntropySize } from "./session";
-
 export interface UserNotificationPreferences {
   email: boolean;
   discord: boolean;
@@ -19,15 +17,6 @@ export interface User {
   webhook_url?: string | null;
   notification_preferences?: UserNotificationPreferences | null;
   created_at: string;
-}
-
-export async function getUserId(db: DB, email: string): Promise<string | null> {
-  const id = await db
-    .prepare("SELECT id FROM user WHERE email = ?")
-    .bind(email)
-    .first<string>("id");
-
-  return id ?? null;
 }
 
 export async function getUser(db: DB, userId: string): Promise<User | null> {
@@ -59,15 +48,6 @@ export async function getUser(db: DB, userId: string): Promise<User | null> {
         : {}),
     },
   };
-}
-
-export async function createUser(db: DB, email: string) {
-  const userId = generateIdFromEntropySize(10);
-  await db
-    .prepare("INSERT INTO user (id, email) VALUES (?, ?)")
-    .bind(userId, email)
-    .run();
-  return userId;
 }
 
 export async function updateUserDiscordWebhook(
