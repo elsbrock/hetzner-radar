@@ -6,6 +6,60 @@ import { sequence } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { Handle } from "@sveltejs/kit";
 
+/**
+ * Same content types SvelteKit protects — the ones a cross-site HTML form can
+ * produce without triggering a CORS preflight.
+ */
+const FORM_CONTENT_TYPES = [
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/plain",
+];
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+/**
+ * Paths exempt from the origin check.
+ *
+ * OAuth token and dynamic-registration requests are server-to-server: form
+ * encoded, cross-origin, and carrying no Origin header at all. They cannot
+ * satisfy an origin check, and they are not CSRF-shaped either — there is no
+ * ambient credential to abuse, since every call must present a client secret or
+ * a PKCE verifier that a third-party site cannot know.
+ */
+const CSRF_EXEMPT_PREFIX = "/api/auth/";
+
+/**
+ * Replaces SvelteKit's built-in CSRF origin check, which is disabled in
+ * svelte.config.js (see the comment there for why). Identical logic, except it
+ * skips the OAuth endpoints instead of being all-or-nothing.
+ */
+const csrfHandle: Handle = async ({ event, resolve }) => {
+  const { request, url } = event;
+
+  if (!url.pathname.startsWith(CSRF_EXEMPT_PREFIX)) {
+    const contentType = request.headers
+      .get("content-type")
+      ?.split(";", 1)[0]
+      .trim()
+      .toLowerCase();
+
+    const forbidden =
+      !!contentType &&
+      FORM_CONTENT_TYPES.includes(contentType) &&
+      MUTATING_METHODS.has(request.method) &&
+      request.headers.get("origin") !== url.origin;
+
+    if (forbidden) {
+      return new Response(
+        `Cross-site ${request.method} form submissions are forbidden`,
+        { status: 403, headers: { "content-type": "text/plain" } },
+      );
+    }
+  }
+
+  return resolve(event);
+};
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export async function handleError({ error, event }) {
   const errorId = crypto.randomUUID();
@@ -88,4 +142,6 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
   return svelteKitHandler({ event, resolve, auth, building });
 };
 
-export const handle = sequence(metricsHandle, sessionHandle);
+// csrfHandle must run first — it is the replacement for a check SvelteKit
+// would otherwise have applied before any hook.
+export const handle = sequence(csrfHandle, metricsHandle, sessionHandle);
