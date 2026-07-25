@@ -262,10 +262,10 @@
 								icon: 'success'
 							});
 							const target = (result.data?.redirectTo as string) ?? resolve('/analyze');
-							// An OAuth resume points at a server route rather than a
-							// SvelteKit page, so it needs a real navigation — goto() would
-							// try to client-side route to something that is not a page.
-							if (target.startsWith('/api/')) {
+							// Resuming OAuth lands either on a server route (/api/auth/...)
+							// or straight on the client's absolute callback URL. Neither is
+							// a SvelteKit page, so goto() cannot route to them.
+							if (target.startsWith('/api/') || /^https?:\/\//.test(target)) {
 								window.location.assign(target);
 							} else {
 								await goto(target);

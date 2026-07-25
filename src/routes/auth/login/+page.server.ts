@@ -29,6 +29,37 @@ const OAUTH_PARAMS = [
   "prompt",
 ];
 
+/**
+ * Strips Better Auth's `oidc_login_prompt` cookie from headers forwarded to the
+ * sign-in API.
+ *
+ * The mcp plugin registers an after-hook on every response that sets a session
+ * cookie: when that cookie is present it tries to finish the pending
+ * authorization itself, reaching `authorize()`, which throws
+ * `UNAUTHORIZED / "request not found"` because a server-side `auth.api` call has
+ * no `ctx.request`. The sign-in then surfaces as a bogus "invalid code".
+ *
+ * Passing `request` through satisfies that check but makes the call return `{}`
+ * instead of `{ token, user }`, leaving the client with no session. Hiding the
+ * cookie instead keeps the normal return shape and leaves the redirect to
+ * `buildOAuthResume`, which reconstructs it from the form anyway.
+ */
+function withoutOidcPrompt(headers: Headers): Headers {
+  const cookie = headers.get("cookie");
+  if (!cookie?.includes("oidc_login_prompt")) return headers;
+
+  const filtered = cookie
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => !part.startsWith("oidc_login_prompt="))
+    .join("; ");
+
+  const copy = new Headers(headers);
+  if (filtered) copy.set("cookie", filtered);
+  else copy.delete("cookie");
+  return copy;
+}
+
 function buildOAuthResume(source: URLSearchParams): string | null {
   // client_id is what distinguishes an OAuth hand-off from a plain sign-in.
   if (!source.get("client_id")) return null;
@@ -158,9 +189,13 @@ export const actions: Actions = {
       try {
         signedIn = await getAuth(env).api.signInEmailOTP({
           body: { email, otp: code },
-          headers: event.request.headers,
+          headers: withoutOidcPrompt(event.request.headers),
         });
-      } catch {
+      } catch (error) {
+        // Logged rather than swallowed: a bad code and a genuine fault both
+        // land here, and reporting "invalid code" for the latter sends people
+        // chasing a typo that does not exist.
+        console.error("signInEmailOTP failed:", error);
         return fail(400, {
           error: "Invalid code, please try again.",
         });
@@ -183,7 +218,7 @@ export const actions: Actions = {
           }
         : null;
 
-      // Resume an OAuth authorization if this sign-in interrupted one.
+      // Resume an interrupted OAuth authorization, otherwise carry on to the app.
       destination =
         buildOAuthResume(
           new URLSearchParams(String(formData.get("oauth_resume") ?? "")),
