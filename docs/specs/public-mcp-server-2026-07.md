@@ -37,9 +37,14 @@ Verified against the live feed and the repo, July 2026:
 - `current_auctions.price` is **EUR as REAL**, net of IPv4;
   `src/routes/api/auctions/+server.ts` adds `HETZNER_IPV4_COST_CENTS / 100` at
   read time and VAT is applied client-side.
-- `price_alert.price` is **INTEGER cents** (`parseInt(price, 10)` in
-  `createAlert`), alongside `vat_rate` and `includes_ipv4_cost`. Same concept,
-  different unit, different table.
+- `price_alert.price` is **GROSS whole euros**, and `vat_rate` is a
+  **percentage**, not a decimal. (An earlier draft of this spec claimed cents;
+  that was wrong. `MATCH_ALERTS_SQL` compares
+  `pa.price >= (c.price + ipv4) * (1 + pa.vat_rate / 100.0)`, and the alerts UI
+  stores `Math.round(priceInEur)`. Verified against production: `price` ranges
+  20-250 and `vat_rate` 0-25 — cents would be 2000-25000.) So an alert target is
+  on a different basis to `current_auctions.price`, which is net EUR excluding
+  IPv4.
 - `price_alert.filter` is a serialized `ServerFilter` (`src/lib/filter.ts:5-50`)
   — 30 fields including tuple ranges, tri-state booleans (`extrasECC`) and mode
   enums (`diskMode`, `ssdNvmeSizeMode`). `idx_price_alert_user_id_filter` is
@@ -154,8 +159,26 @@ free, hides `version` / `diskMode` / `ssdNvmeSizeMode` entirely, and produces th
 flow worth having: search, then create an alert from the identical parameters.
 
 `MAX_ALERTS = 5` must surface via `isBelowMaxAlerts()` as an actionable error, not
-a generic failure. Price inputs are EUR in the tool schema, converted to cents at
-the D1 boundary.
+a generic failure.
+
+**Price basis.** `create_alert` takes `max_price_eur` on the _same_ basis as
+`search_auctions` — net, server + IPv4, before VAT — and converts to the gross
+whole-euro figure the column stores using `vat_rate_percent`. Without this the
+two tools would silently disagree: an agent searching "under €40" and then
+alerting at 40 would be setting two different thresholds. The filter encodings
+come from `MATCH_ALERTS_SQL`, not the UI:
+
+| Filter field           | Encoding                                    |
+| ---------------------- | ------------------------------------------- |
+| `ramInternalSize`      | log2 of GB (`log2(64) = 6`)                 |
+| `*InternalSize` (disk) | units of 500 GB (`1000 GB -> 2`)            |
+| `*SizeMode`            | `total` for MCP-built filters               |
+| `price`                | gross whole EUR; `vat_rate` is a percentage |
+
+`min_largest_drive_gb` and `min_cpu_multicore_score` exist on `search_auctions`
+but are deliberately absent from `create_alert`: `ServerFilter` has no
+equivalent, and accepting-then-dropping them would produce an alert that does
+not match what was asked for.
 
 ### Auth — Better Auth migration (implemented, July 2026)
 
@@ -271,21 +294,29 @@ Hetzner" positioning in the server's `initialize` response.
 
 ## Implementation steps
 
-**Phase 1 — snapshot pipeline**
+**Phase 1 — snapshot pipeline** (implemented on `feat/public-mcp`)
 
-- [ ] Add KV namespace; bind to worker (write) and main app (read)
-- [ ] Resolve pricing per auction at import (`ip_price`, `setup_price`,
-      `fixed_price`, `hourly_price`, `next_reduce_timestamp`)
-- [ ] Write gzipped snapshot to `snapshot:current` after `db.batch()` succeeds
-- [ ] Module-scope read cache with 5 min TTL
+- [x] KV namespace `SNAPSHOT` (`aa8acd63…`), bound to worker (write) and app (read)
+- [x] Resolve pricing per auction at import. `ip_price` turned out to be an
+      **object** (`{Monthly, Hourly, Amount}`), not a scalar — read `.Monthly`.
+- [x] Write snapshot to `snapshot:current` after the D1 batch succeeds.
+      Deliberately non-fatal: a KV failure must not fail an import that alerting
+      depends on.
+- [x] Module-scope read cache with 5 min TTL, falling back to the stale copy
+      rather than erroring
+- [x] Measured on live data: **152 auctions, 127.5 KB JSON, 6.2 KB gzipped**,
+      all 152 CPU-enriched — comfortably under the 8-20 KB estimate
 
-**Phase 2 — public read tools**
+**Phase 2 — public read tools** (implemented on `feat/public-mcp`)
 
-- [ ] `POST /mcp` — `initialize`, `tools/list`, `tools/call`
-- [ ] `search_auctions` (flat schema, optional `vat_rate`), `get_auction`
-- [ ] `cloud_availability` via `RADAR_WORKER`
-- [ ] Result caps, `Cache-Control`, revisit `RATE_LIMIT` for MCP traffic
-- [ ] Verify against a real MCP client
+- [x] `POST /mcp` — `initialize`, `tools/list`, `tools/call`, `ping`,
+      notifications, batches, CORS; `GET` declines (stateless, 405)
+- [x] `search_auctions` (flat schema, optional `vat_rate`), `get_auction`
+- [x] `cloud_availability` via `RADAR_WORKER`
+- [x] Result caps (default 20, max 50), `total_matched` reported separately from
+      the page so a model can tell "only 3 exist" from "cheapest 20 of 300"
+- [x] Verified end-to-end against a dev server with real snapshot data
+- [ ] Revisit `RATE_LIMIT` (currently 3 req/60s) for MCP traffic
 
 **Phase 3 — Better Auth** (implemented on `feat/better-auth`)
 
@@ -325,15 +356,23 @@ migration was still ~7 minutes out, so new code briefly ran against the old
 schema. The correct order is **migrate first, then push** — the reverse of what
 the manual-deploy assumption implies.
 
-**Phase 4 — alert tools**
+**Phase 4 — alert tools** (implemented on `feat/public-mcp`)
 
-- [ ] Flat-schema → normalized `ServerFilter` builder with stable key order
-- [ ] `list_alerts`, `create_alert`, `delete_alert`
-- [ ] `MAX_ALERTS` surfaced as an actionable error
-- [ ] EUR → cents conversion at the D1 boundary
-- [ ] Conditional tool listing on `Authorization`
+- [x] Flat-schema → normalized `ServerFilter` builder in `defaultFilter` key
+      order, with the log2 / 500-GB encodings taken from `MATCH_ALERTS_SQL`
+- [x] `list_alerts`, `create_alert`, `delete_alert`
+- [x] `MAX_ALERTS` surfaced as an actionable error naming `delete_alert`
+- [x] Net EUR → **gross whole EUR** at the D1 boundary (not cents — see the
+      corrected note above)
+- [x] `mcp()` plugin enabled; migration 0017 adds the OAuth tables
+- [x] Conditional tool listing on `Authorization`; an invalid token degrades to
+      the public surface rather than erroring
+- [ ] Apply migration 0017 to remote D1 (**before** pushing — the push deploys)
+- [ ] Walk the OAuth connect flow with a real MCP client end to end
 
 **Deferred**
 
 - [ ] `price_history` via pre-aggregated KV blob
 - [ ] Per-auction historical price context in `search_auctions` results
+- [ ] Snapshot currently stores plain JSON; KV compresses in transit, so gzipping
+      the value only matters if the dataset grows substantially
