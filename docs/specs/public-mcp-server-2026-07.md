@@ -303,10 +303,27 @@ Hetzner" positioning in the server's `initialize` response.
       `FORWARDEMAIL_API_KEY` lives too)
 - [x] Apply migration 0016 to **local** D1 via `wrangler d1 migrations apply`,
       confirming wrangler's own SQL splitter handles the file
-- [ ] Apply migration 0016 to **remote** D1 (`--remote`) — not yet done
-- [ ] Exercise the login flow against a real deployment (so far: typecheck,
-      lint, unit tests, production build, and a local D1 migration)
-- [ ] Communicate forced logout
+- [x] Apply migration 0016 to **remote** D1 — 14 commands, 2026-07-25. All data
+      preserved (2702 users, 182 price alerts, 989 alert history, 1346 cloud
+      alerts, 35296 cloud history); 1019 sessions cleared as designed; backfill
+      complete (0 empty names, 0 unbackfilled `updated_at`);
+      `PRAGMA foreign_key_check` clean.
+- [x] Verify live: `/api/auth/get-session` returns `200 null`, which only
+      resolves with Better Auth mounted and its tables present.
+- [ ] Exercise a full sign-in end to end (sending a real OTP email was left to
+      a human rather than triggered from here)
+- [ ] Communicate forced logout — 1019 sessions were dropped
+
+**Deploy mechanism (learned the hard way):** pushing to `main` **auto-deploys**
+via Cloudflare's git integration. `wrangler deployments list` reports
+`Source: Unknown (deployment)` and attributes the deploy to a human, which reads
+like a manual `wrangler deploy` — it is not. CI (`frontend.yml`) runs only
+check/lint/test and has no deploy job, which reinforces the wrong conclusion.
+
+Consequence on 2026-07-25: the push deployed the new auth at 17:42:51 while the
+migration was still ~7 minutes out, so new code briefly ran against the old
+schema. The correct order is **migrate first, then push** — the reverse of what
+the manual-deploy assumption implies.
 
 **Phase 4 — alert tools**
 
