@@ -1,22 +1,19 @@
-import {
-  SESSION_COOKIE_NAME,
-  invalidateSession,
-} from "$lib/api/backend/session";
-import { createBlankSessionCookie } from "$lib/cookie";
+import { SESSION_COOKIE_NAME } from "$lib/api/backend/session";
+import { getAuth } from "$lib/server/auth";
 import type { Actions } from "./$types";
 
 export const actions: Actions = {
   default: async (event) => {
-    const blankCookie = createBlankSessionCookie(SESSION_COOKIE_NAME);
-    event.cookies.set(blankCookie.name, blankCookie.value, {
-      path: "/",
-      ...blankCookie.attributes,
-    });
-    if (event.locals.session?.id) {
-      const db = event.platform?.env?.DB;
-      if (db) {
-        await invalidateSession(db, event.locals.session.id);
-      }
+    // Clear any leftover pre-Better-Auth cookie alongside the real sign-out.
+    event.cookies.delete(SESSION_COOKIE_NAME, { path: "/" });
+
+    const env = event.platform?.env;
+    if (!env?.DB || !event.locals.session) {
+      return;
     }
+
+    // Revokes the session row and clears the Better Auth cookie via the
+    // sveltekitCookies plugin.
+    await getAuth(env).api.signOut({ headers: event.request.headers });
   },
 };

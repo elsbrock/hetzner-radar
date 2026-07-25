@@ -1,10 +1,9 @@
-import {
-  SESSION_COOKIE_NAME,
-  validateSessionToken,
-} from "$lib/api/backend/session";
-import { createBlankSessionCookie, createSessionCookie } from "$lib/cookie";
+import { building } from "$app/environment";
+import { SESSION_COOKIE_NAME } from "$lib/api/backend/session";
+import { getAuth } from "$lib/server/auth";
 import { createMetrics } from "@else42/cf-worker-otel";
 import { sequence } from "@sveltejs/kit/hooks";
+import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { Handle } from "@sveltejs/kit";
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
@@ -49,73 +48,44 @@ const metricsHandle: Handle = async ({ event, resolve }) => {
 
 const sessionHandle: Handle = async ({ event, resolve }) => {
   const env = event.platform?.env;
-  const db = env?.DB;
 
-  // Retrieve the session token from cookies
-  const sessionToken = event.cookies.get(SESSION_COOKIE_NAME);
-
-  if (!db) {
+  if (!env?.DB) {
     event.locals.user = null;
     event.locals.session = null;
     return resolve(event);
   }
 
-  if (!sessionToken) {
-    // No session token present
-    event.locals.user = null;
-    event.locals.session = null;
-    return resolve(event);
+  const auth = getAuth(env);
+
+  // The pre-Better-Auth cookie. Its backing rows are gone after migration
+  // 0016, so it can only ever be dead weight — drop it on sight.
+  if (event.cookies.get(SESSION_COOKIE_NAME)) {
+    event.cookies.delete(SESSION_COOKIE_NAME, { path: "/" });
   }
 
-  // Validate the session token
-  const { session, user } = await validateSessionToken(db, sessionToken);
+  // Better Auth handles expiry and rolling renewal (`session.updateAge`)
+  // internally, and refreshes its own cookie via the sveltekitCookies plugin.
+  const result = await auth.api.getSession({ headers: event.request.headers });
 
-  if (session && user) {
-    // At this point, validateSessionToken has already checked for expiration
-    // and renewed the session if it's nearing expiration.
-
-    // Assign the user and session to locals
-    event.locals.user = user;
-    event.locals.session = session;
-
-    // Refresh the session cookie with the updated expiresAt from the session
-    const refreshedCookie = createSessionCookie(
-      SESSION_COOKIE_NAME,
-      sessionToken,
-      {
-        expires: session.expiresAt, // Use the updated expiresAt from the session
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-      },
-    );
-
-    event.cookies.set(refreshedCookie.name, refreshedCookie.value, {
-      path: "/",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: refreshedCookie.expires, // Ensure expires is set correctly
-      ...refreshedCookie.attributes,
-    });
+  if (result?.session && result.user) {
+    // Narrowed to the App.Locals contract so the rest of the app is unchanged.
+    event.locals.user = {
+      id: result.user.id,
+      email: result.user.email,
+    };
+    event.locals.session = {
+      id: result.session.id,
+      userId: result.session.userId,
+      email: result.user.email,
+      expiresAt: new Date(result.session.expiresAt),
+    };
   } else {
-    // Invalid or expired session token
     event.locals.user = null;
     event.locals.session = null;
-
-    // Clear the session cookie
-    const blankCookie = createBlankSessionCookie(SESSION_COOKIE_NAME);
-    event.cookies.set(blankCookie.name, blankCookie.value, {
-      path: "/",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      ...blankCookie.attributes,
-    });
   }
 
-  return resolve(event);
+  // Mounts Better Auth's own routes under /api/auth/*.
+  return svelteKitHandler({ event, resolve, auth, building });
 };
 
 export const handle = sequence(metricsHandle, sessionHandle);

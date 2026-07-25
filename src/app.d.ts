@@ -75,6 +75,8 @@ declare global {
     RATE_LIMIT: RateLimitNamespace;
     RADAR_WORKER?: RadarWorkerService;
     FORWARDEMAIL_API_KEY?: string;
+    BETTER_AUTH_SECRET?: string;
+    BETTER_AUTH_URL?: string;
     VITE_BUILD_STAMP?: string;
     OTLP_ENDPOINT?: string;
     OTLP_AUTH_TOKEN?: string;

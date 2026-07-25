@@ -1,19 +1,4 @@
-import { dev } from "$app/environment";
-import {
-  deleteExpiredVerificationCodes,
-  deleteVerificationCodes,
-  generateEmailVerificationCode,
-  verifyCodeExists,
-} from "$lib/api/backend/auth";
-import {
-  createSession,
-  generateSessionToken,
-  SESSION_COOKIE_NAME,
-  validateSessionToken,
-} from "$lib/api/backend/session";
-import { createUser, getUserId } from "$lib/api/backend/user";
-import { createSessionCookie } from "$lib/cookie";
-import { sendMail } from "$lib/mail";
+import { getAuth } from "$lib/server/auth";
 import { rateLimit } from "$lib/session";
 import { fail, redirect } from "@sveltejs/kit";
 import validator from "validator";
@@ -61,29 +46,12 @@ export const actions: Actions = {
         });
       }
 
-      const verificationCode = await generateEmailVerificationCode(db, email);
-
+      // Better Auth generates and stores the OTP, then hands it to the
+      // `sendVerificationOTP` callback configured in $lib/server/auth.
       try {
-        await sendMail(env, {
-          from: {
-            name: "Server Radar",
-            email: "no-reply@radar.iodev.org",
-          },
-          to: email,
-          subject: "Your Magic Sign-In Code",
-          text: `Greetings!
-
-You've requested to sign in to Server Radar. Here's your magic code:
-
-  ${verificationCode}
-
-You've got 15 minutes to use it before it expires. If you didn't request
-this, just ignore this email – no action needed on your part.
-
-Cheers,
-Server Radar
---
-https://radar.iodev.org/`,
+        await getAuth(env).api.sendVerificationOTP({
+          body: { email, type: "sign-in" },
+          headers: event.request.headers,
         });
       } catch (mailError) {
         console.error("Failed to send verification email:", mailError);
@@ -134,42 +102,45 @@ https://radar.iodev.org/`,
         });
       }
 
-      await deleteExpiredVerificationCodes(db);
-
-      const codeExists = await verifyCodeExists(db, email, code);
-      if (!codeExists) {
+      // Verifies the OTP, creates the user on first sign-in, and issues the
+      // session cookie via the sveltekitCookies plugin. Throws on a bad or
+      // expired code.
+      let signedIn;
+      try {
+        signedIn = await getAuth(env).api.signInEmailOTP({
+          body: { email, otp: code },
+          headers: event.request.headers,
+        });
+      } catch {
         return fail(400, {
           error: "Invalid code, please try again.",
         });
       }
 
-      let userId = await getUserId(db, email);
-      if (!userId) {
-        userId = await createUser(db, email);
-      }
+      // signInEmailOTP returns only { token, user }. The client store expects
+      // an App.Session, so resolve the row the token just created — `token` is
+      // UNIQUE, so this is a single indexed lookup.
+      const row = await db
+        .prepare("SELECT id, user_id, expires_at FROM session WHERE token = ?")
+        .bind(signedIn.token)
+        .first<{ id: string; user_id: string; expires_at: string }>();
 
-      await deleteVerificationCodes(db, email);
-
-      const sessionToken = generateSessionToken();
-      const session = await createSession(db, sessionToken, userId, email);
-
-      const cookie = createSessionCookie(SESSION_COOKIE_NAME, sessionToken, {
-        secure: !dev,
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-      });
-      event.cookies.set(cookie.name, cookie.value, {
-        path: "/",
-        ...cookie.attributes,
-      });
+      const session: App.Session | null = row
+        ? {
+            id: row.id,
+            userId: row.user_id,
+            email: signedIn.user.email,
+            expiresAt: new Date(row.expires_at),
+          }
+        : null;
 
       // If application/json, return JSON. Else, redirect to /analyze
       if (event.request.headers.get("accept")?.includes("application/json")) {
-        const { user } = await validateSessionToken(db, sessionToken);
-        return { success: true, session, user };
-      } else {
-        throw redirect(303, "/analyze");
+        return {
+          success: true,
+          session,
+          user: { id: signedIn.user.id, email: signedIn.user.email },
+        };
       }
     } catch (error) {
       console.error("Authenticate action error:", error);
@@ -177,5 +148,9 @@ https://radar.iodev.org/`,
         error: "An unexpected error occurred. Please try again later.",
       });
     }
+
+    // Only reachable once sign-in has succeeded and the caller wants a redirect
+    // rather than JSON. Thrown outside the try so the catch cannot swallow it.
+    redirect(303, "/analyze");
   }),
 };

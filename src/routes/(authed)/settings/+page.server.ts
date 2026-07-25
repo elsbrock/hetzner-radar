@@ -1,8 +1,5 @@
-import {
-  SESSION_COOKIE_NAME,
-  invalidateSession,
-} from "$lib/api/backend/session";
-import { createBlankSessionCookie } from "$lib/cookie";
+import { SESSION_COOKIE_NAME } from "$lib/api/backend/session";
+import { getAuth } from "$lib/server/auth";
 import { sendMail } from "$lib/mail";
 import { redirect, error } from "@sveltejs/kit";
 import {
@@ -259,12 +256,10 @@ export const actions: Actions = {
       return error(500, { message: "Could not retrieve user email." });
     }
 
-    const blankCookie = createBlankSessionCookie(SESSION_COOKIE_NAME);
-    await invalidateSession(db, event.locals.session.id);
-    event.cookies.set(blankCookie.name, blankCookie.value, {
-      path: "/",
-      ...blankCookie.attributes,
-    });
+    // Sign out first so Better Auth revokes the session and clears its cookie;
+    // deleting the user afterwards cascades away any rows that remain.
+    await getAuth(env).api.signOut({ headers: event.request.headers });
+    event.cookies.delete(SESSION_COOKIE_NAME, { path: "/" });
     await db
       .prepare("DELETE FROM user WHERE id = ?")
       .bind(event.locals.user.id)
