@@ -7,10 +7,17 @@
  * free to drop.
  */
 
-import { AUTHED_TOOLS } from "./alert-tools";
+import { AUTHED_TOOLS as PRICE_ALERT_TOOLS } from "./alert-tools";
+import { CLOUD_ALERT_TOOLS } from "./cloud-alert-tools";
 import { PUBLIC_TOOLS, type ToolDefinition } from "./tools";
 
-export { AUTHED_TOOLS, PUBLIC_TOOLS };
+/** Everything gated behind an MCP access token. */
+export const AUTHED_TOOLS: ToolDefinition[] = [
+  ...PRICE_ALERT_TOOLS,
+  ...CLOUD_ALERT_TOOLS,
+];
+
+export { PUBLIC_TOOLS };
 
 /**
  * Tools visible for a given request. The server is public by default:

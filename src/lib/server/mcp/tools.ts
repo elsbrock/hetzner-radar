@@ -326,7 +326,8 @@ export const cloudAvailabilityTool: ToolDefinition = {
   name: "cloud_availability",
   description:
     "Current availability of Hetzner Cloud server types per location — which cloud plans (CX, CPX, CAX, CCX) can actually be ordered right now. " +
-    "This is Hetzner Cloud, which is separate from the dedicated server auction covered by search_auctions.",
+    "This is Hetzner Cloud, which is separate from the dedicated server auction covered by search_auctions. " +
+    "Also the lookup table for cloud alerts: it returns the numeric server type and location IDs that create_cloud_alert requires.",
   inputSchema: {
     type: "object",
     properties: {},

@@ -47,6 +47,7 @@ export default [
         App: "readonly",
         PlatformEnv: "readonly",
         SnapshotNamespace: "readonly",
+        RadarWorkerService: "readonly",
       },
     },
   },
