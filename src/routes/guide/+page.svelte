@@ -16,7 +16,8 @@
 		{ id: 'monitoring', label: 'How we monitor the market' },
 		{ id: 'search', label: 'Using the auction search' },
 		{ id: 'cloud', label: 'Cloud availability' },
-		{ id: 'alerts', label: 'Price & availability alerts' }
+		{ id: 'alerts', label: 'Price & availability alerts' },
+		{ id: 'mcp', label: 'Using AI assistants (MCP)' }
 	];
 
 	let activeId = $state('');
@@ -328,6 +329,51 @@
 					available in a location you care about, and can disarm themselves after firing so you
 					aren't spammed. All alert features are free — you only need an account so we know where to
 					send the notification.
+				</p>
+			</section>
+
+			<!-- MCP -->
+			<section id="mcp" class="mb-12 scroll-mt-24">
+				<h2 class="mb-4 text-3xl font-semibold text-gray-800 dark:text-gray-100">
+					Using AI assistants (MCP)
+				</h2>
+				<p class="mb-4">
+					Server Radar exposes a
+					<a href="https://modelcontextprotocol.io" class={linkClass} rel="noopener noreferrer"
+						>Model Context Protocol</a
+					>
+					server, so an AI assistant can query the auction on your behalf instead of you translating
+					a question into filter sliders. Add
+					<code
+						class="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-sm dark:border-gray-600 dark:bg-gray-900"
+						>https://radar.iodev.org/mcp</code
+					>
+					as a custom connector in Claude (Settings → Connectors → Add custom connector), or point any
+					other MCP client at the same URL.
+				</p>
+				<p class="mb-4">
+					Searching needs <strong>no account at all</strong>. You can ask things like "cheapest
+					64&nbsp;GB EPYC in Falkenstein", "servers with exactly three disks under €50", or "which
+					Cloud plans are sold out in Helsinki right now", and the assistant queries live data —
+					refreshed about every five minutes, the same feed the site uses.
+				</p>
+				<p class="mb-4">
+					Managing alerts needs an account. The first time your assistant tries, you are sent here to
+					sign in and then shown exactly which application is asking and what it will be able to do.
+					Nothing is granted until you press <em>Allow</em>. You can withdraw it later under
+					<a href="/settings" class={linkClass}>settings → connected applications</a>, which takes
+					effect immediately.
+				</p>
+				<p class="mb-4">
+					One thing worth knowing when you read prices back from an assistant: every figure the MCP
+					server returns is <strong>net of VAT</strong> and already includes the mandatory IPv4
+					address. That is the same basis the alert tools use, so "alert me under €40" means the
+					same number you saw in the search results. Ask for a VAT rate and it will report the gross
+					figure alongside, rather than quietly changing what the number means.
+				</p>
+				<p>
+					Server Radar is an independent project and is not affiliated with Hetzner — the assistant
+					is told so too, so it should not present these numbers as coming from Hetzner directly.
 				</p>
 			</section>
 		</article>

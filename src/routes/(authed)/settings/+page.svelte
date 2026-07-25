@@ -13,6 +13,7 @@
 		faLink,
 		faUser,
 		faDownload,
+		faPlug,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -27,6 +28,9 @@
 	let isTestingDiscord = $state(false);
 	let webhookUrl = $state('');
 	let webhookNotifications = $state(false);
+
+	/** clientId currently being revoked, so only that row's button disables. */
+	let revoking: string | null = $state(null);
 	let isTestingWebhook = $state(false);
 
 	// Initialize form state from props (only on mount, not reactive to data changes)
@@ -297,14 +301,87 @@
 					</div>
 
 					<p class="mb-4 text-gray-600 dark:text-gray-300">
-						Download all your account information, including your profile, sessions, price alerts,
-						and alert history, as a JSON file.
+						Download all your account information — profile, notification settings, sessions, price
+						and availability alerts with their history, and any connected applications — as a JSON
+						file.
 					</p>
 
-					<Button href="/settings/export" color="alternative">
+					<!--
+						data-sveltekit-reload is required: this endpoint replies with a file
+						download rather than a page, so the client router would otherwise
+						start a navigation that never completes and leave the loading bar
+						animating forever.
+					-->
+					<Button
+						href="/settings/export"
+						color="alternative"
+						data-sveltekit-reload
+						download
+					>
 						<FontAwesomeIcon icon={faDownload} class="mr-2 h-4 w-4" />
 						Export My Data
 					</Button>
+				</div>
+
+				<!-- Connected Applications Card -->
+				<div
+					class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
+				>
+					<div class="mb-4 flex items-center">
+						<FontAwesomeIcon icon={faPlug} class="mr-2 h-5 w-5 text-orange-500" />
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+							Connected Applications
+						</h2>
+					</div>
+
+					<p class="mb-4 text-gray-600 dark:text-gray-300">
+						Apps you have allowed to read your data and manage your alerts through Server Radar's
+						MCP server. Revoking takes effect immediately and the app must ask again.
+					</p>
+
+					{#if data.connectedApps.length === 0}
+						<p class="text-sm text-gray-500 dark:text-gray-400">
+							No applications are connected.
+						</p>
+					{:else}
+						<ul class="divide-y divide-gray-200 dark:divide-gray-700">
+							{#each data.connectedApps as app (app.clientId)}
+								<li class="flex items-center justify-between gap-4 py-3">
+									<div class="min-w-0">
+										<p class="truncate font-medium text-gray-900 dark:text-white">
+											{app.name}
+										</p>
+										<p class="text-xs text-gray-500 dark:text-gray-400">
+											Connected {new Date(app.authorizedAt).toLocaleDateString()}
+											{#if !app.active}· access expired{/if}
+											{#if app.scopes.length}· {app.scopes.join(', ')}{/if}
+										</p>
+									</div>
+									<form
+										method="POST"
+										action="?/revokeApp"
+										use:enhance={() => {
+											revoking = app.clientId;
+											return async ({ update }) => {
+												await update();
+												revoking = null;
+											};
+										}}
+									>
+										<input type="hidden" name="client_id" value={app.clientId} />
+										<Button
+											type="submit"
+											color="red"
+											size="xs"
+											disabled={revoking === app.clientId}
+										>
+											{revoking === app.clientId ? 'Revoking…' : 'Revoke'}
+										</Button>
+									</form>
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				</div>
 
 				<!-- Danger Zone Card -->

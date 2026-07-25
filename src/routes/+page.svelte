@@ -7,6 +7,7 @@
 	import FeaturesSection from '$lib/components/landing/FeaturesSection.svelte';
 	import HeroSection from '$lib/components/landing/HeroSection.svelte';
 	import LiveMetrics from '$lib/components/landing/LiveMetrics.svelte';
+	import McpSection from '$lib/components/landing/McpSection.svelte';
 	import OpenSourceBanner from '$lib/components/landing/OpenSourceBanner.svelte';
 	import ScreenshotCarousel from '$lib/components/landing/ScreenshotCarousel.svelte';
 	import StatisticsTeaser from '$lib/components/landing/StatisticsTeaser.svelte';
@@ -119,6 +120,8 @@
 	<ConfigurationsTeaser />
 
 	<StatisticsTeaser />
+
+	<McpSection />
 
 	<FAQSection />
 

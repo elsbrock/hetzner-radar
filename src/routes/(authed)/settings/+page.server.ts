@@ -1,7 +1,11 @@
+import {
+  getConnectedApps,
+  revokeConnectedApp,
+} from "$lib/api/backend/connected-apps";
 import { SESSION_COOKIE_NAME } from "$lib/api/backend/session";
 import { getAuth } from "$lib/server/auth";
 import { sendMail } from "$lib/mail";
-import { redirect, error } from "@sveltejs/kit";
+import { fail, redirect, error } from "@sveltejs/kit";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   getUser,
@@ -46,6 +50,7 @@ export const load: PageServerLoad = async (event) => {
       notification_preferences:
         user.notification_preferences || DEFAULT_NOTIFICATION_PREFERENCES,
     },
+    connectedApps: await getConnectedApps(db, event.locals.user.id.toString()),
   };
 };
 
@@ -228,6 +233,40 @@ export const actions: Actions = {
           "Failed to send test notification. Please check your webhook URL.",
       };
     }
+  },
+
+  /**
+   * Revokes an MCP client's access to this account: its access tokens and the
+   * stored consent, so a future authorization must be approved again rather
+   * than resumed silently. The oauthApplication row is left alone — it is
+   * shared with any other user who connected the same client.
+   */
+  revokeApp: async (event) => {
+    if (!event.locals.user) {
+      return error(401, { message: "Authentication required." });
+    }
+    const db = event.platform?.env?.DB;
+    if (!db) {
+      return error(500, { message: "Database connection error." });
+    }
+
+    const formData = await event.request.formData();
+    const clientId = String(formData.get("client_id") ?? "").trim();
+    if (!clientId) {
+      return fail(400, { success: false, error: "Missing application." });
+    }
+
+    try {
+      await revokeConnectedApp(db, event.locals.user.id.toString(), clientId);
+    } catch (err) {
+      console.error("Failed to revoke connected app:", err);
+      return fail(500, {
+        success: false,
+        error: "Could not revoke access. Please try again.",
+      });
+    }
+
+    return { success: true, revoked: clientId };
   },
 
   delete: async (event) => {
