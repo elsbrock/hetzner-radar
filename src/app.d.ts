@@ -70,10 +70,18 @@ declare global {
     ): Promise<Array<QueryResult<unknown>>>;
   }
 
+  interface SnapshotNamespace {
+    get(key: string, type: "json"): Promise<unknown | null>;
+    get(key: string): Promise<string | null>;
+    put(key: string, value: string): Promise<void>;
+  }
+
   interface PlatformEnv {
     DB: DB;
     RATE_LIMIT: RateLimitNamespace;
     RADAR_WORKER?: RadarWorkerService;
+    /** Auction snapshot published by the worker; read by /mcp. */
+    SNAPSHOT?: SnapshotNamespace;
     FORWARDEMAIL_API_KEY?: string;
     BETTER_AUTH_SECRET?: string;
     BETTER_AUTH_URL?: string;

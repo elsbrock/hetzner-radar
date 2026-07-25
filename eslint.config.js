@@ -46,6 +46,7 @@ export default [
         // Globals declared in src/app.d.ts
         App: "readonly",
         PlatformEnv: "readonly",
+        SnapshotNamespace: "readonly",
       },
     },
   },

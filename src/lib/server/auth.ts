@@ -1,7 +1,7 @@
 import { getRequestEvent } from "$app/server";
 import { sendMail } from "$lib/mail";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { emailOTP } from "better-auth/plugins";
+import { emailOTP, mcp } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
 
 /**
@@ -24,6 +24,27 @@ const SESSION_REFRESH_SECONDS = 60 * 60 * 24 * 15;
 const DEFAULT_BASE_URL = "https://radar.iodev.org";
 
 /**
+ * Better Auth mounts its routes by matching the request against `baseURL`, and
+ * `isAuthPath()` rejects anything whose **origin** differs. A hardcoded
+ * production URL therefore 404s every /api/auth/* route on localhost and on
+ * preview deployments — auth appears to vanish entirely off production.
+ *
+ * So: prefer an explicit BETTER_AUTH_URL, otherwise adopt the origin of the
+ * request being served. The instance is memoised per D1 binding and a given
+ * deployment only ever serves one origin, so resolving this once is safe.
+ */
+function resolveBaseUrl(env: PlatformEnv): string {
+  if (env.BETTER_AUTH_URL) return env.BETTER_AUTH_URL;
+
+  try {
+    return getRequestEvent().url.origin;
+  } catch {
+    // Outside a request context (build, tests) there is no origin to read.
+    return DEFAULT_BASE_URL;
+  }
+}
+
+/**
  * `app.d.ts` hand-rolls a minimal `DB` interface that omits `exec`, so it does
  * not structurally satisfy Better Auth's `D1Database` union member. The runtime
  * object *is* a real D1Database — Better Auth detects it via `batch`/`exec`/
@@ -38,7 +59,7 @@ const instances = new WeakMap<object, Auth>();
 function createAuth(env: PlatformEnv) {
   return betterAuth({
     database: env.DB as unknown as BetterAuthDatabase,
-    baseURL: env.BETTER_AUTH_URL ?? DEFAULT_BASE_URL,
+    baseURL: resolveBaseUrl(env),
     secret: env.BETTER_AUTH_SECRET,
 
     // Sign-in is email OTP only — there are no passwords in this app.
@@ -126,6 +147,12 @@ https://radar.iodev.org/`,
           });
         },
       }),
+      /**
+       * Makes this app an OAuth provider for MCP clients: discovery metadata,
+       * dynamic client registration and PKCE. Only the alert tools require it —
+       * the read tools at /mcp stay reachable with no credentials at all.
+       */
+      mcp({ loginPage: "/auth/login" }),
       // Must stay last so it can observe cookies set by other plugins.
       sveltekitCookies(getRequestEvent),
     ],
