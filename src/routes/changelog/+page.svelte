@@ -9,6 +9,7 @@
 
 	type Entry = { headline: string; datePublished: string };
 	const entries: Entry[] = [
+		{ headline: 'Availability history, straight from the grid', datePublished: '2026-07-25' },
 		{ headline: 'Webhook notifications for alerts', datePublished: '2026-07-24' },
 		{ headline: 'New guide: the Hetzner server auction, explained', datePublished: '2026-07-23' },
 		{ headline: 'Run your own SQL with the SQL Console', datePublished: '2026-06-17' },
@@ -111,6 +112,22 @@
 			2026
 		</h2>
 		<div class="space-y-10">
+			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
+				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
+					>Jul 25</time
+				>
+				<div>
+					<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+						Availability history, straight from the grid
+					</h3>
+					<p class="text-base text-gray-500 dark:text-gray-400">
+						On <a href="/cloud-status" class="text-orange-500 hover:underline">Cloud Status</a>, click
+						any server type, location column or single cell to open its availability history right
+						below the table — no more picking the same thing twice from a separate dropdown. The
+						heatmap also gained previous/next buttons to step back through earlier intervals.
+					</p>
+				</div>
+			</article>
 			<article class="sm:grid sm:grid-cols-[8.5rem_1fr] sm:gap-6">
 				<time class="mb-1 block text-sm text-gray-400 sm:pt-0.5 sm:text-right dark:text-gray-500"
 					>Jul 24</time

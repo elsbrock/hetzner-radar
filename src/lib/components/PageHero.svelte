@@ -50,7 +50,7 @@
 					{title}
 				</h1>
 				{#if tagline}
-					<p class="max-w-2xl text-lg text-gray-600 dark:text-gray-300">
+					<p class="max-w-3xl text-lg text-gray-600 dark:text-gray-300">
 						{tagline}
 					</p>
 				{/if}

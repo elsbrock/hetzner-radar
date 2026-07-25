@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Spinner, Alert } from 'flowbite-svelte';
+	import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons';
 	import {
 		Chart,
 		CategoryScale,
@@ -31,7 +32,12 @@
 		serverTypeId?: number;
 		locationId?: number;
 		granularity?: 'hour' | 'day' | 'week';
-		viewMode: 'location' | 'serverType';
+		/**
+		 * Which axis the rows represent. `location` → one row per server type at the
+		 * selected location, `serverType` → one row per location for the selected
+		 * type, `pair` → a single row for one (server type × location) combination.
+		 */
+		viewMode: 'location' | 'serverType' | 'pair';
 		selectedLocationId?: number;
 		selectedServerTypeId?: number;
 		serverTypes?: { id: number; name: string }[];
@@ -40,6 +46,15 @@
 		supported?: Record<number, number[]>;
 		/** Map of locationId → list of serverTypeIds currently available there. */
 		availability?: Record<number, number[]>;
+		/**
+		 * Step the window one interval back (-1) or forward (+1). The caller owns
+		 * the date maths; when omitted, no navigation controls render.
+		 */
+		onNavigate?: (direction: -1 | 1) => void;
+		/** Whether stepping further back is within the retained history. */
+		canGoBack?: boolean;
+		/** False once the window ends at "now" — there is no future to show. */
+		canGoForward?: boolean;
 	}
 
 	let {
@@ -56,7 +71,10 @@
 		serverTypes = [],
 		locations = [],
 		supported = {},
-		availability = {}
+		availability = {},
+		onNavigate,
+		canGoBack = false,
+		canGoForward = false
 	}: Props = $props();
 
 	let loading = $state(true);
@@ -74,6 +92,10 @@
 		y: string; // entity row label
 		v: number; // uptime fraction 0..1
 	}
+
+	// In `pair` mode every event belongs to the one and only row, so events are
+	// keyed by this sentinel instead of a server-type or location id.
+	const PAIR_ROW_ID = -1;
 
 	let rowLabels = $state<string[]>([]);
 	let matrixData = $state<MatrixDatum[]>([]);
@@ -98,13 +120,18 @@
 		typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
 	);
 
+	// A window that ends at (or within a minute of) now is the live one; older
+	// windows must not claim to be the "last" anything.
+	const isLiveWindow = $derived(endDate.getTime() >= Date.now() - 60_000);
+
 	// Human-readable banner with the absolute range bounds.
 	const rangeBanner = $derived.by(() => {
 		const days = (endDate.getTime() - startDate.getTime()) / 86_400_000;
+		const prefix = isLiveWindow ? 'Last ' : '';
 		let label: string;
-		if (days >= 25) label = 'Last 30 days';
-		else if (days >= 5) label = 'Last 7 days';
-		else label = 'Last 24 hours';
+		if (days >= 25) label = `${prefix}30 days`;
+		else if (days >= 5) label = `${prefix}7 days`;
+		else label = `${prefix}24 hours`;
 
 		const fmt =
 			days >= 5
@@ -124,6 +151,7 @@
 	$effect(() => {
 		if (viewMode === 'location' && !selectedLocationId) return;
 		if (viewMode === 'serverType' && !selectedServerTypeId) return;
+		if (viewMode === 'pair' && !(selectedLocationId && selectedServerTypeId)) return;
 		fetchData();
 	});
 
@@ -146,9 +174,12 @@
 				granularity: 'hour'
 			});
 
-			if (viewMode === 'location' && selectedLocationId) {
+			// `pair` narrows on both axes; the other modes narrow on one and fan the
+			// other one out across rows.
+			if (viewMode !== 'serverType' && selectedLocationId) {
 				params.append('locationId', selectedLocationId.toString());
-			} else if (viewMode === 'serverType' && selectedServerTypeId) {
+			}
+			if (viewMode !== 'location' && selectedServerTypeId) {
 				params.append('serverTypeId', selectedServerTypeId.toString());
 			}
 
@@ -194,7 +225,19 @@
 	// transitions in the window still render, seeded with their current state.
 	function expectedEntities(): { id: number; label: string; currentlyAvailable: boolean }[] {
 		const out: { id: number; label: string; currentlyAvailable: boolean }[] = [];
-		if (viewMode === 'location' && selectedLocationId !== undefined) {
+		if (
+			viewMode === 'pair' &&
+			selectedLocationId !== undefined &&
+			selectedServerTypeId !== undefined
+		) {
+			const st = serverTypes.find((s) => s.id === selectedServerTypeId);
+			const loc = locations.find((l) => l.id === selectedLocationId);
+			out.push({
+				id: PAIR_ROW_ID,
+				label: `${st?.name ?? `Server ${selectedServerTypeId}`} · ${loc?.city ?? `Location ${selectedLocationId}`}`,
+				currentlyAvailable: (availability[selectedLocationId] || []).includes(selectedServerTypeId)
+			});
+		} else if (viewMode === 'location' && selectedLocationId !== undefined) {
 			const currentlyAvailable = new Set(availability[selectedLocationId] || []);
 			for (const stId of supported[selectedLocationId] || []) {
 				const st = serverTypes.find((s) => s.id === stId);
@@ -242,16 +285,27 @@
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const labelById = new Map<number, string>();
 		for (const point of data) {
-			const id = viewMode === 'location' ? point.serverTypeId : point.locationId;
+			const typeLabel =
+				serverTypes.find((s) => s.id === point.serverTypeId)?.name ||
+				point.serverTypeName ||
+				`Server ${point.serverTypeId}`;
+			const cityLabel =
+				locations.find((l) => l.id === point.locationId)?.city ||
+				point.locationName ||
+				`Location ${point.locationId}`;
+			const id =
+				viewMode === 'pair'
+					? PAIR_ROW_ID
+					: viewMode === 'location'
+						? point.serverTypeId
+						: point.locationId;
 			if (!labelById.has(id)) {
 				const label =
-					viewMode === 'location'
-						? serverTypes.find((s) => s.id === point.serverTypeId)?.name ||
-							point.serverTypeName ||
-							`Server ${point.serverTypeId}`
-						: locations.find((l) => l.id === point.locationId)?.city ||
-							point.locationName ||
-							`Location ${point.locationId}`;
+					viewMode === 'pair'
+						? `${typeLabel} · ${cityLabel}`
+						: viewMode === 'location'
+							? typeLabel
+							: cityLabel;
 				labelById.set(id, label);
 			}
 			const up = point.available || (point.availabilityRate ?? 0) > 0;
@@ -324,6 +378,20 @@
 		return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
 	}
 
+	// Full span of a bucket, not just its start — buckets are sub-day at every
+	// range (≈2 h at 7d, ≈8.5 h at 30d), so a lone timestamp is ambiguous.
+	function formatBucketRange(startMs: number, endMs: number): string {
+		const a = new Date(startMs);
+		const b = new Date(endMs);
+		const time = (d: Date) =>
+			d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+		const day = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' });
+
+		return a.toDateString() === b.toDateString()
+			? `${day(a)}, ${time(a)} – ${time(b)}`
+			: `${day(a)} ${time(a)} – ${day(b)} ${time(b)}`;
+	}
+
 	// Watch for theme changes so canvas colours track light/dark.
 	$effect(() => {
 		if (typeof window === 'undefined') return;
@@ -348,6 +416,9 @@
 		const cols = nCols;
 		const rows = nRows;
 		const dark = isDarkMode;
+		// Needed by the tooltip to state each bucket's span, not just its start.
+		const step = stepMs;
+		const windowEndMs = endDate.getTime();
 		// Match the app's other charts (GenericChart) so axes look consistent
 		// across light/dark themes.
 		const tickColor = dark ? '#F3F4F6' : '#374151';
@@ -421,7 +492,11 @@
 						callbacks: {
 							title: (items: TooltipItem<'matrix'>[]) => {
 								const raw = items[0]?.raw as MatrixDatum | undefined;
-								return raw ? `${raw.y} · ${formatBucket(buckets[raw.x] ?? 0)}` : '';
+								if (!raw) return '';
+								const bStart = buckets[raw.x] ?? 0;
+								// The final bucket is clipped to the window end.
+								const bEnd = Math.min(bStart + step, windowEndMs);
+								return `${raw.y} · ${formatBucketRange(bStart, bEnd)}`;
 							},
 							label: (item: TooltipItem<'matrix'>) => {
 								const raw = item.raw as MatrixDatum | undefined;
@@ -463,7 +538,36 @@
 			No availability data found for the selected time period and filters.
 		</Alert>
 	{:else}
-		<div class="mb-3 text-xs text-gray-500 dark:text-gray-400">{rangeBanner}</div>
+		<div class="mb-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+			{#if onNavigate}
+				<button
+					type="button"
+					class="rounded-sm px-1.5 py-0.5 enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:opacity-30 dark:enabled:hover:bg-gray-700"
+					disabled={!canGoBack}
+					aria-label="Previous interval"
+					title="Previous interval"
+					onclick={() => onNavigate?.(-1)}
+				>
+					<AngleLeftOutline class="h-3.5 w-3.5" />
+				</button>
+			{/if}
+			<span>{rangeBanner}</span>
+			{#if onNavigate}
+				<button
+					type="button"
+					class="rounded-sm px-1.5 py-0.5 enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:opacity-30 dark:enabled:hover:bg-gray-700"
+					disabled={!canGoForward}
+					aria-label="Next interval"
+					title="Next interval"
+					onclick={() => onNavigate?.(1)}
+				>
+					<AngleRightOutline class="h-3.5 w-3.5" />
+				</button>
+				{#if !isLiveWindow && canGoForward}
+					<span class="text-gray-400 dark:text-gray-500">· not live</span>
+				{/if}
+			{/if}
+		</div>
 		<div class="relative w-full" style="height: {chartHeight};">
 			<canvas bind:this={canvasElement}></canvas>
 		</div>

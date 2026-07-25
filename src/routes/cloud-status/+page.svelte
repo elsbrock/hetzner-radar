@@ -26,9 +26,7 @@
 		Input,
 		Select,
 		Toggle,
-		Card,
-		ButtonGroup,
-		Label
+		ButtonGroup
 	} from 'flowbite-svelte';
 	import {
 		CheckCircleSolid,
@@ -39,9 +37,12 @@
 		QuestionCircleSolid,
 		ChevronDownOutline,
 		ChevronRightOutline,
+		CloseOutline,
 		FilterSolid
 	} from 'flowbite-svelte-icons';
 	import PageHero from '$lib/components/PageHero.svelte';
+	import PageInsights from '$lib/components/PageInsights.svelte';
+	import { SUPPORTED_VS_AVAILABLE_NOTE } from './insights';
 
 	const { data }: { data: PageData } = $props();
 
@@ -57,8 +58,49 @@
 	const initialCpuTypeFilter = params.get('cpu') || 'all';
 	const initialCategoryFilter = params.get('category') || 'all';
 	const initialSearchQuery = params.get('search') || '';
-	
-	const enableAvailabilityPatterns = true;
+
+	// Which slice of the grid the historic heatmap below the table is showing.
+	// Set by clicking a server-type row, a location column, or a single cell.
+	type HistScope =
+		| { kind: 'location'; locationId: number }
+		| { kind: 'serverType'; serverTypeId: number }
+		| { kind: 'pair'; serverTypeId: number; locationId: number };
+
+	// `hist` is serialised as `st:<id>`, `loc:<id>`, or `st:<id>,loc:<id>`.
+	function parseHistScope(raw: string | null): HistScope | null {
+		if (!raw) return null;
+		let serverTypeId: number | undefined;
+		let locationId: number | undefined;
+		for (const part of raw.split(',')) {
+			const [key, value] = part.split(':');
+			const id = Number(value);
+			if (!Number.isFinite(id)) continue;
+			if (key === 'st') serverTypeId = id;
+			if (key === 'loc') locationId = id;
+		}
+		if (serverTypeId !== undefined && locationId !== undefined) {
+			return { kind: 'pair', serverTypeId, locationId };
+		}
+		if (serverTypeId !== undefined) return { kind: 'serverType', serverTypeId };
+		if (locationId !== undefined) return { kind: 'location', locationId };
+		return null;
+	}
+
+	function serialiseHistScope(scope: HistScope): string {
+		switch (scope.kind) {
+			case 'location':
+				return `loc:${scope.locationId}`;
+			case 'serverType':
+				return `st:${scope.serverTypeId}`;
+			case 'pair':
+				return `st:${scope.serverTypeId},loc:${scope.locationId}`;
+		}
+	}
+
+	const initialHistScope = parseHistScope(params.get('hist'));
+	const rawInitialRange = params.get('range');
+	const initialRange: '24h' | '7d' | '30d' =
+		rawInitialRange === '24h' || rawInitialRange === '30d' ? rawInitialRange : '7d';
 
 	const CATEGORY_LABELS: Record<string, string> = {
 		regular_purpose: 'Regular Purpose',
@@ -77,13 +119,11 @@
 
 	// Collapsed groups state
 	let collapsedGroups = $state(new Set<string>());
-	
-	// Availability patterns state
-	let availabilityViewMode = $state<'location' | 'serverType'>('location');
-	let selectedPatternLocationId = $state<number | undefined>();
-	let selectedPatternServerTypeId = $state<number | undefined>();
-	let patternDateRange = $state<'24h' | '7d' | '30d'>('7d');
-	let _patternGranularity = $state<'hour' | 'day' | 'week'>('hour');
+
+	// Historic heatmap state
+	let histScope = $state<HistScope | null>(initialHistScope);
+	let patternDateRange = $state<'24h' | '7d' | '30d'>(initialRange);
+	let histPanelElement = $state<HTMLElement | null>(null);
 
 	// Update URL when filters change
 	$effect(() => {
@@ -99,7 +139,10 @@
 		if (cpuTypeFilter !== 'all') params.set('cpu', cpuTypeFilter);
 		if (categoryFilter !== 'all') params.set('category', categoryFilter);
 		if (searchQuery) params.set('search', searchQuery);
-		
+		if (histScope) params.set('hist', serialiseHistScope(histScope));
+		if (histScope && patternDateRange !== '7d') params.set('range', patternDateRange);
+		if (histScope && effectiveHistOffset > 0) params.set('off', String(effectiveHistOffset));
+
 		// Construct the new URL
 		const newUrl = params.toString() ? `?${params.toString()}` : $page.url.pathname;
 		
@@ -141,28 +184,102 @@
 		})()
 	);
 	
-	// Compute date ranges for patterns
-	const patternDateRanges = $derived(() => {
-		const now = new Date();
-		const ranges = {
-			'24h': {
-				start: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-				end: now,
-				granularity: 'hour' as const
-			},
-			'7d': {
-				start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-				end: now,
-				granularity: 'hour' as const
-			},
-			'30d': {
-				start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-				end: now,
-				granularity: 'day' as const
-			}
-		};
-		return ranges[patternDateRange];
+	const RANGE_SPANS = {
+		'24h': { ms: 24 * 60 * 60 * 1000, granularity: 'hour' as const },
+		'7d': { ms: 7 * 24 * 60 * 60 * 1000, granularity: 'hour' as const },
+		'30d': { ms: 30 * 24 * 60 * 60 * 1000, granularity: 'day' as const }
+	};
+
+	// Analytics Engine only retains ~30 days of transitions, so stepping further
+	// back than that would just render empty windows.
+	const RETAINED_MS = 30 * 24 * 60 * 60 * 1000;
+
+	// How many whole windows back from now we are currently showing. 0 = live.
+	let histOffset = $state(Math.max(0, Number(params.get('off')) || 0));
+
+	const maxHistOffset = $derived(
+		Math.max(0, Math.floor(RETAINED_MS / RANGE_SPANS[patternDateRange].ms) - 1)
+	);
+
+	// Clamped here rather than on assignment, so a hand-edited `off=` in the URL
+	// (or one left over from a wider range) can't point outside retained history.
+	const effectiveHistOffset = $derived(Math.min(Math.max(0, histOffset), maxHistOffset));
+
+	// One object per (range, offset) change — not a function, so the three template
+	// reads can't each land on a slightly different `now`.
+	const patternRange = $derived.by(() => {
+		const { ms, granularity } = RANGE_SPANS[patternDateRange];
+		const end = new Date(Date.now() - effectiveHistOffset * ms);
+		return { start: new Date(end.getTime() - ms), end, granularity };
 	});
+
+	function stepHistWindow(direction: -1 | 1) {
+		// -1 goes further into the past, so it increases the offset.
+		histOffset = Math.min(maxHistOffset, Math.max(0, histOffset - direction));
+	}
+
+	// Changing the window size or the selection invalidates the current offset.
+	function selectRange(range: '24h' | '7d' | '30d') {
+		patternDateRange = range;
+		histOffset = 0;
+	}
+
+	// The grid axes the current historic scope touches: used both to pass ids down
+	// to the chart and to highlight the active row/column/cell in the table.
+	const histServerTypeId = $derived(
+		histScope && histScope.kind !== 'location' ? histScope.serverTypeId : undefined
+	);
+	const histLocationId = $derived(
+		histScope && histScope.kind !== 'serverType' ? histScope.locationId : undefined
+	);
+
+	const histScopeLabel = $derived.by(() => {
+		if (!histScope) return '';
+		const st = data.statusData?.serverTypes.find((s) => s.id === histServerTypeId);
+		const loc = data.statusData?.locations.find((l) => l.id === histLocationId);
+		const stLabel = st ? st.name.toUpperCase() : null;
+		const locLabel = loc ? `${loc.city}, ${loc.country}` : null;
+		switch (histScope.kind) {
+			case 'location':
+				return locLabel ?? 'Location';
+			case 'serverType':
+				return stLabel ?? 'Server type';
+			case 'pair':
+				return [stLabel, locLabel].filter(Boolean).join(' in ');
+		}
+	});
+
+	// Clicking the active target again turns the historic view back off.
+	function setHistScope(next: HistScope) {
+		const same =
+			histScope?.kind === next.kind &&
+			histServerTypeId === (next.kind === 'location' ? undefined : next.serverTypeId) &&
+			histLocationId === (next.kind === 'serverType' ? undefined : next.locationId);
+		histScope = same ? null : next;
+		histOffset = 0;
+		if (histScope) {
+			// No-op when the panel is already on screen, which it usually is since it
+			// sits directly under the table.
+			requestAnimationFrame(() =>
+				histPanelElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+			);
+		}
+	}
+
+	function highlightClass(locationId?: number, serverTypeId?: number): string {
+		if (!histScope) return '';
+		const rowMatch = serverTypeId === undefined || histServerTypeId === serverTypeId;
+		const colMatch = locationId === undefined || histLocationId === locationId;
+		// A cell only lights up when both axes match; a header when its own axis does.
+		if (!rowMatch || !colMatch) return '';
+		if (histScope.kind === 'pair' && locationId !== undefined && serverTypeId !== undefined) {
+			return 'ring-2 ring-inset ring-orange-500 dark:ring-orange-400';
+		}
+		const ownAxisSelected =
+			(serverTypeId !== undefined && histServerTypeId === serverTypeId) ||
+			(locationId !== undefined && histLocationId === locationId);
+		return ownAxisSelected ? 'ring-1 ring-inset ring-orange-400/60' : '';
+	}
 
 	function openCreateAlertModal() {
 		editingCloudAlert = null;
@@ -799,9 +916,26 @@
 	{@html `<script type="application/ld+json">${jsonLdSafe(datasetJsonLd)}<` + `/script>`}
 </svelte:head>
 
+{#snippet statusCell(
+	status: 'available' | 'supported' | 'unsupported',
+	lastSeenText: string,
+	lastSeenColor: string,
+	city: string,
+	lastSeenTitle: string
+)}
+	{#if status === 'available'}
+		<CheckCircleSolid size="lg" color="green" class="h-5 w-5" aria-label="Available in {city}" />
+	{:else if status === 'supported'}
+		<CloseCircleSolid size="lg" color="red" class="h-5 w-5" aria-label="Unavailable in {city}" />
+	{:else}
+		<QuestionCircleSolid size="lg" color="gray" class="h-5 w-5" aria-label="Not supported in {city}" />
+	{/if}
+	<span class="text-xs {lastSeenColor}" title={lastSeenTitle}>{lastSeenText}</span>
+{/snippet}
+
 <PageHero
 	title="Hetzner Cloud availability"
-	tagline="Live stock for every Hetzner Cloud server type, across every location. Refreshed once a minute, with availability patterns over the past 24 hours, 7 days, or 30 days."
+	tagline="Live stock for every Hetzner Cloud server type in every location, refreshed once a minute. Click any type, location or cell for its availability history."
 	breadcrumbs={[
 		{ label: 'Home', href: '/' },
 		{ label: 'Cloud Status' }
@@ -823,7 +957,7 @@
 	{/snippet}
 </PageHero>
 
-<div class="mx-auto max-w-6xl px-6 py-10 dark:text-gray-100">
+<div class="w-full px-4 py-10 sm:px-6 dark:text-gray-100">
 
 	{#if data.error}
 		<Badge color="red" class="w-full justify-center p-4 text-lg">
@@ -831,55 +965,55 @@
 			{data.error}
 		</Badge>
 	{:else if data.statusData}
-		<div class="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
+		<div class="mx-auto mb-8 max-w-6xl text-center text-sm text-gray-500 dark:text-gray-400">
 			<span class="cursor-help" title={formatTimestamp(data.statusData.lastUpdated)}>
 				Last Updated: {formatRelativeTime(data.statusData.lastUpdated)}
 			</span>
 		</div>
 
-		<!-- Wrapper for Map and Table -->
-		<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
+		<!-- Frameless: map, filters, grid and history sit straight on the page,
+		     separated by hairlines rather than boxed in a card. -->
+		<div class="mx-auto w-full max-w-[110rem]">
 			<!-- Map Container -->
-			<div
-				class="w-full overflow-hidden rounded-t-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
-			>
+			<div class="w-full overflow-hidden rounded-lg">
 				{#if browser}
-					<div id="map" class="h-96 w-full"></div>
+					<div id="map" class="h-80 w-full"></div>
 				{:else}
-					<div class="flex h-96 w-full items-center justify-center bg-gray-200 dark:bg-gray-700">
+					<div class="flex h-80 w-full items-center justify-center bg-gray-100 dark:bg-gray-800">
 						<p class="text-gray-500 dark:text-gray-400">Map loading...</p>
 					</div>
 				{/if}
 			</div>
 
 			<!-- Filters Section -->
-			<div class="border-x border-b bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700">
-				<div class="flex flex-wrap items-center gap-4">
-					<div class="flex items-center gap-2">
-						<FilterSolid class="h-5 w-5 text-gray-500 dark:text-gray-400" />
-						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
-					</div>
+			<div class="mt-6 border-b border-gray-200 pb-3 dark:border-gray-700">
+				<div class="flex flex-wrap items-center gap-x-4 gap-y-3 xl:flex-nowrap">
+					<FilterSolid class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
 
-					<Toggle bind:checked={showAvailableOnly} class="text-sm">Show Available Only</Toggle>
+					<Toggle bind:checked={showAvailableOnly} class="shrink-0 text-sm">Available only</Toggle>
 
-					<Toggle bind:checked={showRecentlyAvailable} class="text-sm">
-						Show Recently Available
+					<Toggle bind:checked={showRecentlyAvailable} class="shrink-0 text-sm">
+						Recently available
 					</Toggle>
 
-					<Select bind:value={architectureFilter} class="py-2 text-sm" size="sm">
-						<option value="all">All Architectures</option>
+					<Select
+						bind:value={architectureFilter}
+						class="w-auto shrink-0 py-1.5 text-sm"
+						size="sm"
+					>
+						<option value="all">All architectures</option>
 						<option value="x86">x86</option>
 						<option value="arm">ARM</option>
 					</Select>
 
-					<Select bind:value={cpuTypeFilter} class="py-2 text-sm" size="sm">
-						<option value="all">All CPU Types</option>
+					<Select bind:value={cpuTypeFilter} class="w-auto shrink-0 py-1.5 text-sm" size="sm">
+						<option value="all">All CPU types</option>
 						<option value="shared">Shared</option>
 						<option value="dedicated">Dedicated</option>
 					</Select>
 
-					<Select bind:value={categoryFilter} class="py-2 text-sm" size="sm">
-						<option value="all">All Categories</option>
+					<Select bind:value={categoryFilter} class="w-auto shrink-0 py-1.5 text-sm" size="sm">
+						<option value="all">All categories</option>
 						{#each categoryOptions as option (option.value)}
 							<option value={option.value}>{option.name}</option>
 						{/each}
@@ -888,7 +1022,7 @@
 					<Input
 						bind:value={searchQuery}
 						placeholder="Search server types..."
-						class="py-2 text-sm"
+						class="min-w-36 py-1.5 text-sm"
 						size="sm"
 					/>
 
@@ -900,10 +1034,8 @@
 			</div>
 
 			<!-- Table Container -->
-			<div class="overflow-x-auto">
-				<div class="inline-block min-w-full align-middle">
-					<div class="overflow-hidden rounded-b-lg border-r border-b border-l dark:border-gray-700">
-						<Table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+			<div class="w-full overflow-x-auto">
+				<Table class="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-600">
 							<TableHead
 								class="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400"
 							>
@@ -912,12 +1044,27 @@
 									>Server Type</TableHeadCell
 								>
 								{#each data.statusData.locations as location (location.id)}
-									<TableHeadCell class="px-4 pt-4 pb-3 text-center align-middle whitespace-nowrap">
-										<span class="block md:hidden">{location.city}</span>
-										<span class="hidden md:block">{location.city}, {location.country}</span>
-										<span class="text-xs font-normal text-gray-500 dark:text-gray-400"
-											>({location.name})</span
+									<TableHeadCell
+										class="px-1 pt-2 pb-1 text-center align-middle whitespace-nowrap {highlightClass(
+											location.id,
+											undefined
+										)}"
+									>
+										<button
+											type="button"
+											class="w-full cursor-pointer rounded-sm px-3 py-2 uppercase transition-colors hover:bg-gray-200 dark:hover:bg-gray-600 {histLocationId ===
+											location.id
+												? 'text-orange-600 dark:text-orange-400'
+												: ''}"
+											title="Show availability history for {location.city}"
+											onclick={() => setHistScope({ kind: 'location', locationId: location.id })}
 										>
+											<span class="block md:hidden">{location.city}</span>
+											<span class="hidden md:block">{location.city}, {location.country}</span>
+											<span class="text-xs font-normal text-gray-500 dark:text-gray-400"
+												>({location.name})</span
+											>
+										</button>
 									</TableHeadCell>
 								{/each}
 								<TableHeadCell
@@ -958,9 +1105,18 @@
 													summaryStats?.serverTypeAvailability.get(serverType.id)?.locations || 0}
 												<TableBodyRow class="bg-white text-sm dark:bg-gray-800">
 													<TableBodyCell
-														class="sticky left-0 z-10 flex items-center bg-white px-4 py-4 font-medium whitespace-nowrap text-gray-900 dark:bg-gray-800 dark:text-white"
+														class="sticky left-0 z-10 flex items-center bg-white px-2 py-2 font-medium whitespace-nowrap text-gray-900 dark:bg-gray-800 dark:text-white {highlightClass(
+															undefined,
+															serverType.id
+														)}"
 													>
-														<div class="flex flex-col">
+														<button
+															type="button"
+															class="flex w-full cursor-pointer flex-col rounded-sm px-2 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+															title="Show availability history for {serverType.name.toUpperCase()} across all locations"
+															onclick={() =>
+																setHistScope({ kind: 'serverType', serverTypeId: serverType.id })}
+														>
 								<div class="flex items-center space-x-2">
 									<span class="text-base font-semibold"
 										>{serverType.name.toUpperCase()}</span
@@ -987,11 +1143,13 @@
 										</Badge>
 									{/if}
 								</div>
-															<span class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+															<span
+																class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
+															>
 																{serverType.cores} Cores / {serverType.memory} GB RAM / {serverType.disk}
 																GB Disk
 															</span>
-														</div>
+														</button>
 														<Tooltip triggeredBy="#{serverType.name}-tooltip" class="z-50"
 															>{serverType.description}</Tooltip
 														>
@@ -1001,62 +1159,46 @@
 														{@const status = getServerStatus(location.id, serverType.id)}
 														{@const lastSeenText = formatLastSeen(location.id, serverType.id)}
 														{@const lastSeenColor = getLastSeenColor(location.id, serverType.id)}
+														{@const clickable = status !== 'unsupported'}
+														{@const lastSeenTitle = getLastSeenAvailable(location.id, serverType.id)
+															? formatTimestamp(getLastSeenAvailable(location.id, serverType.id))
+															: 'Never seen available'}
+														{@const cellId = `cell-${location.id}-${serverType.id}`}
+														{@const cellTip =
+															status === 'available'
+																? `Available in ${location.city}`
+																: status === 'supported'
+																	? `Supported but currently unavailable in ${location.city}`
+																	: `Not supported in ${location.city}`}
 														<TableBodyCell
-															class="px-2 py-4 text-center {status === 'available'
+															class="p-1 text-center {status === 'available'
 																? 'bg-green-50 dark:bg-green-900/20'
 																: status === 'supported'
 																	? 'bg-red-50 dark:bg-red-900/20'
-																	: 'bg-gray-50 dark:bg-gray-900/20'}"
+																	: 'bg-gray-50 dark:bg-gray-900/20'} {highlightClass(location.id, serverType.id)}"
 														>
-															<div class="flex flex-col items-center gap-1">
-																<div>
-																	{#if status === 'available'}
-																		<CheckCircleSolid
-																			size="lg"
-																			color="green"
-																			class="inline-block h-5 w-5"
-																			id="avail-{location.id}-{serverType.id}"
-																		/>
-																		<Tooltip
-																			triggeredBy="#avail-{location.id}-{serverType.id}"
-																			class="z-50">Available in {location.city}</Tooltip
-																		>
-																	{:else if status === 'supported'}
-																		<CloseCircleSolid
-																			size="lg"
-																			color="red"
-																			class="inline-block h-5 w-5"
-																			id="notavail-{location.id}-{serverType.id}"
-																		/>
-																		<Tooltip
-																			triggeredBy="#notavail-{location.id}-{serverType.id}"
-																			class="z-50"
-																			>Supported but currently unavailable in {location.city}</Tooltip
-																		>
-																	{:else}
-																		<QuestionCircleSolid
-																			size="lg"
-																			color="gray"
-																			class="inline-block h-5 w-5"
-																			id="unsupported-{location.id}-{serverType.id}"
-																		/>
-																		<Tooltip
-																			triggeredBy="#unsupported-{location.id}-{serverType.id}"
-																			class="z-50">Not supported in {location.city}</Tooltip
-																		>
-																	{/if}
-																</div>
-																<div
-																	class="text-xs {lastSeenColor}"
-																	title={getLastSeenAvailable(location.id, serverType.id)
-																		? formatTimestamp(
-																				getLastSeenAvailable(location.id, serverType.id)
-																			)
-																		: 'Never seen available'}
+															{#if clickable}
+																<button
+																	type="button"
+																	id={cellId}
+																	class="flex w-full cursor-pointer flex-col items-center gap-1 rounded-sm px-1 py-3 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+																	onclick={() =>
+																		setHistScope({
+																			kind: 'pair',
+																			serverTypeId: serverType.id,
+																			locationId: location.id
+																		})}
 																>
-																	{lastSeenText}
+																	{@render statusCell(status, lastSeenText, lastSeenColor, location.city, lastSeenTitle)}
+																</button>
+															{:else}
+																<div id={cellId} class="flex flex-col items-center gap-1 px-1 py-3">
+																	{@render statusCell(status, lastSeenText, lastSeenColor, location.city, lastSeenTitle)}
 																</div>
-															</div>
+															{/if}
+															<Tooltip triggeredBy="#{cellId}" class="z-50">
+																{cellTip}{clickable ? ' · click for history' : ''}
+															</Tooltip>
 														</TableBodyCell>
 													{/each}
 													<TableBodyCell
@@ -1095,9 +1237,70 @@
 								{/if}
 							</TableBody>
 						</Table>
-					</div>
-				</div>
 			</div>
+
+			<!-- Historic view: scope comes from clicking the grid above -->
+			{#if histScope}
+				<div bind:this={histPanelElement} class="bg-white p-4 dark:bg-gray-800">
+					<div class="mb-3 flex flex-wrap items-start justify-between gap-3">
+						<div>
+							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+								{histScopeLabel} · availability history
+							</h3>
+							<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+								{#if histScope.kind === 'location'}
+									One row per server type offered here.
+								{:else if histScope.kind === 'serverType'}
+									One row per location offering this type.
+								{:else}
+									Shaded by how much of each interval it was in stock.
+								{/if}
+							</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<ButtonGroup>
+								{#each ['24h', '7d', '30d'] as const as range (range)}
+									<Button
+										size="xs"
+										color={patternDateRange === range ? 'primary' : 'light'}
+										onclick={() => selectRange(range)}
+									>
+										{range}
+									</Button>
+								{/each}
+							</ButtonGroup>
+							<Button
+								size="xs"
+								color="light"
+								title="Close historic view"
+								onclick={() => (histScope = null)}
+							>
+								<CloseOutline class="h-4 w-4" />
+							</Button>
+						</div>
+					</div>
+
+					<CloudAvailabilityChart
+						startDate={patternRange.start}
+						endDate={patternRange.end}
+						granularity={patternRange.granularity}
+						onNavigate={stepHistWindow}
+						canGoBack={effectiveHistOffset < maxHistOffset}
+						canGoForward={effectiveHistOffset > 0}
+						viewMode={histScope.kind}
+						selectedLocationId={histLocationId}
+						selectedServerTypeId={histServerTypeId}
+						serverTypes={data.statusData.serverTypes}
+						locations={data.statusData.locations}
+						supported={data.statusData.supported}
+						availability={data.statusData.availability}
+					/>
+				</div>
+			{:else}
+				<p class="bg-gray-50/80 px-4 py-3 text-xs text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+					Click a server type, a location column, or a single cell to see its availability history.
+				</p>
+			{/if}
 		</div>
 	{:else}
 		<div class="flex items-center justify-center p-10">
@@ -1106,138 +1309,10 @@
 		</div>
 	{/if}
 
-	<!-- Availability Patterns Section -->
-	{#if data.statusData && !data.error && enableAvailabilityPatterns}
-		<section class="mt-8 mb-8">
-			<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
-				<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-					Availability Patterns
-				</h3>
-				<Card class="max-w-none! p-4!">
-					<!-- Selectors row -->
-					<div class="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:flex-wrap md:gap-6">
-						<div class="md:w-56">
-							<Label class="mb-1">View by</Label>
-							<ButtonGroup class="w-full">
-								<Button
-									size="xs"
-									class="flex-1 whitespace-nowrap"
-									color={availabilityViewMode === 'location' ? 'primary' : 'light'}
-									onclick={() => {
-										availabilityViewMode = 'location';
-										selectedPatternServerTypeId = undefined;
-									}}
-								>
-									Location
-								</Button>
-								<Button
-									size="xs"
-									class="flex-1 whitespace-nowrap"
-									color={availabilityViewMode === 'serverType' ? 'primary' : 'light'}
-									onclick={() => {
-										availabilityViewMode = 'serverType';
-										selectedPatternLocationId = undefined;
-									}}
-								>
-									Server Type
-								</Button>
-							</ButtonGroup>
-						</div>
-
-						<div class="min-w-0 flex-1 md:max-w-sm">
-							<Label class="mb-1">
-								{availabilityViewMode === 'location' ? 'Location' : 'Server type'}
-							</Label>
-							{#if availabilityViewMode === 'location'}
-								<Select
-									bind:value={selectedPatternLocationId}
-									size="sm"
-									placeholder="Select a location"
-								>
-									<option value={undefined} disabled>Select a location</option>
-									{#each locationOptions as location (location.value)}
-										<option value={location.value}>{location.name}</option>
-									{/each}
-								</Select>
-							{:else}
-								<Select
-									bind:value={selectedPatternServerTypeId}
-									size="sm"
-									placeholder="Select a server type"
-								>
-									<option value={undefined} disabled>Select a server type</option>
-									{#each serverTypeOptions as serverType (serverType.value)}
-										<option value={serverType.value}>{serverType.name}</option>
-									{/each}
-								</Select>
-							{/if}
-						</div>
-
-						<div class="md:w-44">
-							<Label class="mb-1">Time range</Label>
-							<ButtonGroup class="w-full">
-								<Button
-									size="xs"
-									class="flex-1"
-									color={patternDateRange === '24h' ? 'primary' : 'light'}
-									onclick={() => (patternDateRange = '24h')}
-								>
-									24h
-								</Button>
-								<Button
-									size="xs"
-									class="flex-1"
-									color={patternDateRange === '7d' ? 'primary' : 'light'}
-									onclick={() => (patternDateRange = '7d')}
-								>
-									7d
-								</Button>
-								<Button
-									size="xs"
-									class="flex-1"
-									color={patternDateRange === '30d' ? 'primary' : 'light'}
-									onclick={() => (patternDateRange = '30d')}
-								>
-									30d
-								</Button>
-							</ButtonGroup>
-						</div>
-					</div>
-
-					<!-- Chart -->
-					{#if (availabilityViewMode === 'location' && selectedPatternLocationId) || (availabilityViewMode === 'serverType' && selectedPatternServerTypeId)}
-						<CloudAvailabilityChart
-							startDate={patternDateRanges().start}
-							endDate={patternDateRanges().end}
-							granularity={patternDateRanges().granularity}
-							viewMode={availabilityViewMode}
-							selectedLocationId={selectedPatternLocationId}
-							selectedServerTypeId={selectedPatternServerTypeId}
-							serverTypes={data.statusData.serverTypes}
-							locations={data.statusData.locations}
-							supported={data.statusData.supported}
-							availability={data.statusData.availability}
-						/>
-					{:else}
-						<div
-							class="flex h-64 items-center justify-center text-gray-500 dark:text-gray-400"
-						>
-							<p>
-								{#if availabilityViewMode === 'location'}
-									Select a location to view availability patterns
-								{:else}
-									Select a server type to view availability patterns
-								{/if}
-							</p>
-						</div>
-					{/if}
-				</Card>
-			</div>
-		</section>
-	{/if}
+	<PageInsights insights={data.insights ?? []} note={SUPPORTED_VS_AVAILABLE_NOTE} />
 
 	<section class="mt-12 mb-8">
-		<div class="mx-4 md:mx-8 lg:mx-auto lg:max-w-7xl">
+		<div class="mx-auto max-w-4xl">
 			<div
 				class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800"
 			>
