@@ -118,11 +118,9 @@
 				await tick();
 				codeInputs[focusIndex].focus();
 
-				// Auto-submit if we have a complete code
-				if (code.length === codeInputs.length) {
-					await tick();
-					authForm?.requestSubmit();
-				}
+				// No auto-submit here: assigning `code` above already triggers the
+				// $effect below, which submits once the code is complete. Doing it
+				// here as well fired two requests with the same OTP.
 			}
 		} catch (err) {
 			console.error('Failed to handle paste: ', err);
@@ -144,8 +142,13 @@
 		codeInputs[index] = node;
 	}
 
+	// Deliberately NOT $state: the $effect below reads it as a guard, and making
+	// it reactive would re-run the effect when it flips back to false — with a
+	// still-complete `code` that would submit a second time.
+	let submitting = false;
+
 	$effect(() => {
-		if (code.length === 6) {
+		if (code.length === 6 && !submitting) {
 			tick().then(() => authForm?.requestSubmit());
 		}
 	});
@@ -246,7 +249,9 @@
 				use:enhance={({ formData }) => {
 					// Correctly access formData
 					form = undefined; // Clear form state before submission attempt
+					submitting = true;
 					return async ({ result }) => {
+						submitting = false;
 						// Check result type before accessing data
 						if (result.type === 'success' && result.data?.success === true) {
 							// Assuming result.data.session is of type Session | null
