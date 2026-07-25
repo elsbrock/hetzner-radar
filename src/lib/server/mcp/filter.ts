@@ -56,10 +56,16 @@ function range(
   open: [number, number],
   encode: (v: number) => number = (v) => v,
 ): [number, number] {
-  return [
-    min !== undefined ? encode(min) : open[0],
-    max !== undefined ? encode(max) : open[1],
-  ];
+  const lo = min !== undefined ? encode(min) : open[0];
+  const hi = max !== undefined ? encode(max) : open[1];
+
+  // A caller's minimum can exceed the UI's default ceiling — 64 TB of HDD
+  // encodes to 128 units against a default max of 44. Left inverted, the
+  // matcher runs `hdd_size >= 64000 AND hdd_size <= 22000`, which matches
+  // nothing, so the alert silently never fires. Raising the ceiling to the
+  // floor keeps "at least this much, no upper limit stated" meaning what it
+  // says.
+  return [lo, Math.max(lo, hi)];
 }
 
 /**

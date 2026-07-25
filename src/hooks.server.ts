@@ -60,6 +60,43 @@ const csrfHandle: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
+const MCP_AUTHORIZE_PATH = "/api/auth/mcp/authorize";
+
+/**
+ * Forces every MCP authorization through the consent screen.
+ *
+ * Better Auth's mcp plugin only asks for consent when the request carries
+ * `prompt=consent` (`requireConsent: query.prompt === "consent"` in
+ * plugins/mcp/authorize.mjs) — otherwise it issues an authorization code
+ * immediately. Clients do not send it, and cannot be made to.
+ *
+ * That default is unsafe here because client registration is open: anyone can
+ * register a client pointing at their own redirect_uri, lure a signed-in user
+ * to /authorize, and receive a code with no interaction at all. PKCE does not
+ * help, since the attacker is the client and picks the verifier.
+ *
+ * Adding the parameter here means the user always sees who is asking and for
+ * what. `prompt` is carried through the login round-trip by the OAuth
+ * parameter whitelist in the sign-in action.
+ */
+const forceConsentHandle: Handle = async ({ event, resolve }) => {
+  const { url } = event;
+
+  if (
+    url.pathname === MCP_AUTHORIZE_PATH &&
+    url.searchParams.get("prompt") !== "consent"
+  ) {
+    const target = new URL(url);
+    target.searchParams.set("prompt", "consent");
+    return new Response(null, {
+      status: 302,
+      headers: { location: `${target.pathname}${target.search}` },
+    });
+  }
+
+  return resolve(event);
+};
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export async function handleError({ error, event }) {
   const errorId = crypto.randomUUID();
@@ -143,5 +180,11 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 };
 
 // csrfHandle must run first — it is the replacement for a check SvelteKit
-// would otherwise have applied before any hook.
-export const handle = sequence(csrfHandle, metricsHandle, sessionHandle);
+// would otherwise have applied before any hook. forceConsentHandle must run
+// before sessionHandle, which is where Better Auth's routes are mounted.
+export const handle = sequence(
+  csrfHandle,
+  forceConsentHandle,
+  metricsHandle,
+  sessionHandle,
+);

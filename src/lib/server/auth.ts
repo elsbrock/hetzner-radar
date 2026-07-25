@@ -160,6 +160,19 @@ https://radar.iodev.org/`,
       mcp({
         loginPage: "/auth/login",
         resource: `${resolveBaseUrl(env)}/mcp`,
+        /**
+         * Without a consent page the plugin hands out an authorization code the
+         * moment a signed-in user hits /authorize. Since client registration is
+         * open, that would let anyone register a client and silently obtain a
+         * token for any signed-in visitor they can lure to a URL.
+         *
+         * The plugin only asks for consent when the request carries
+         * `prompt=consent`, which clients do not send; `forceConsentHandle` in
+         * hooks.server.ts adds it.
+         */
+        // `loginPage` is required by OIDCOptions' type; the plugin overwrites
+        // it with the value above regardless.
+        oidcConfig: { loginPage: "/auth/login", consentPage: "/auth/consent" },
       }),
       // Must stay last so it can observe cookies set by other plugins.
       sveltekitCookies(getRequestEvent),

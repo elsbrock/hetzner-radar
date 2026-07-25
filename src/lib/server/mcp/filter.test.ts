@@ -40,6 +40,43 @@ describe("buildServerFilter", () => {
     expect(filter.hddSizeMode).toBe("total");
   });
 
+  /**
+   * A minimum above the UI's default ceiling used to produce an inverted range
+   * such as hddInternalSize [128, 44]. MATCH_ALERTS_SQL then evaluates
+   * `hdd_size >= 64000 AND hdd_size <= 22000`, which is never true, so the
+   * alert silently never fires.
+   */
+  describe("ranges are never inverted", () => {
+    it("raises the ceiling when a disk minimum exceeds the default max", () => {
+      const filter = buildServerFilter({ min_hdd_size_gb: 64000 });
+      const [lo, hi] = filter.hddInternalSize;
+      expect(lo).toBe(128);
+      expect(hi).toBeGreaterThanOrEqual(lo);
+    });
+
+    it("raises the ceiling when a RAM minimum exceeds the default max", () => {
+      // 4 TB of RAM is log2 = 12, above the default ceiling of 10.
+      const [lo, hi] = buildServerFilter({ min_ram_gb: 4096 }).ramInternalSize;
+      expect(lo).toBe(12);
+      expect(hi).toBeGreaterThanOrEqual(lo);
+    });
+
+    it("raises the ceiling when a count minimum exceeds the default max", () => {
+      const [lo, hi] = buildServerFilter({ min_hdd_count: 40 }).hddCount;
+      expect(lo).toBe(40);
+      expect(hi).toBeGreaterThanOrEqual(lo);
+    });
+
+    it("still honours an explicit maximum above the minimum", () => {
+      const [lo, hi] = buildServerFilter({
+        min_hdd_size_gb: 2000,
+        max_hdd_size_gb: 8000,
+      }).hddInternalSize;
+      expect(lo).toBe(4);
+      expect(hi).toBe(16);
+    });
+  });
+
   it("leaves upper bounds at the defaults", () => {
     const filter = buildServerFilter({ min_ram_gb: 64 });
     expect(filter.ramInternalSize[1]).toBe(defaultFilter.ramInternalSize[1]);
