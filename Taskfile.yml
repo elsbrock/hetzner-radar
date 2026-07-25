@@ -1,0 +1,201 @@
+version: "3"
+
+# Local development orchestration for Hetzner Server Radar.
+#
+# Two processes make up a working dev environment:
+#   * the worker  (worker/, wrangler dev)   — cloud availability + auction import
+#   * the backend (root, vite dev)          — the SvelteKit app
+#
+# Two things make running them by hand unreliable, and both are handled here:
+#
+#   1. Start order. The app reaches the worker through the RADAR_WORKER service
+#      binding, which is resolved via wrangler's local dev registry when the
+#      SvelteKit dev server boots. If the worker isn't listening yet, the binding
+#      stays unresolved and /cloud-status errors out. `task dev` therefore starts
+#      the worker first and waits for it before booting the app.
+#   2. Split local D1. `wrangler dev` inside worker/ defaults its Miniflare state
+#      to worker/.wrangler/state, while the app's platform proxy uses
+#      <root>/.wrangler/state — so each side gets its *own* local database and
+#      neither sees the other's rows. Every task below pins the worker to the
+#      root state dir, which is where the app already looks.
+
+vars:
+  APP_PORT: '{{.APP_PORT | default "5173"}}'
+  WORKER_PORT: '{{.WORKER_PORT | default "8787"}}'
+  # Absolute so it resolves identically from root and from worker/.
+  STATE_DIR: "{{.TASKFILE_DIR}}/.wrangler/state"
+
+tasks:
+  default:
+    desc: Run the full dev environment (alias for `task dev`)
+    cmds:
+      - task: dev
+
+  dev:
+    desc: Run worker + backend together, in the right order
+    deps: [dev:worker, dev:backend]
+
+  dev:worker:
+    desc: Run the Cloudflare worker (:8787, dev HTTP debug routes enabled)
+    dir: worker
+    deps: [check:devvars]
+    env:
+      # worker/src/index.ts only mounts its HTTP debug routes outside production.
+      NODE_ENV: development
+    cmds:
+      - npx wrangler dev --port {{.WORKER_PORT}} --persist-to {{.STATE_DIR}}
+
+  dev:backend:
+    desc: Run the SvelteKit dev server, once the worker is reachable
+    deps: [wait:worker]
+    cmds:
+      - npm run dev -- --port {{.APP_PORT}} --strictPort
+
+  dev:backend:solo:
+    desc: Run only the SvelteKit dev server (cloud status features will be degraded)
+    cmds:
+      - npm run dev -- --port {{.APP_PORT}} --strictPort
+
+  wait:worker:
+    desc: Block until the worker answers on its port
+    internal: true
+    silent: true
+    cmds:
+      - |
+        for i in $(seq 1 120); do
+          if curl -s -o /dev/null -m 1 http://127.0.0.1:{{.WORKER_PORT}}/; then
+            echo "worker is up on :{{.WORKER_PORT}}"
+            exit 0
+          fi
+          sleep 0.5
+        done
+        echo "worker did not come up on :{{.WORKER_PORT}} within 60s" >&2
+        exit 1
+
+  setup:
+    desc: Scaffold worker/.dev.vars from the committed example
+    silent: true
+    cmds:
+      - |
+        if [ -f worker/.dev.vars ]; then
+          echo "worker/.dev.vars already exists — leaving it alone."
+        else
+          cp worker/.dev.vars.example worker/.dev.vars
+          echo "created worker/.dev.vars — fill in the values you need (see the comments in it)."
+        fi
+    status:
+      - test -f worker/.dev.vars
+
+  check:devvars:
+    # Warn, don't block: every value is optional for booting, and someone working
+    # on the frontend shouldn't need Hetzner credentials to start the stack. The
+    # warning names what will be broken so an empty page isn't mistaken for a bug.
+    desc: Report which worker secrets are missing
+    internal: true
+    silent: true
+    cmds:
+      - |
+        if [ ! -f worker/.dev.vars ]; then
+          echo "⚠ worker/.dev.vars is missing — run \`task setup\`, then fill it in." >&2
+          echo "  Without it: no live cloud availability, and the history heatmap stays empty." >&2
+          exit 0
+        fi
+        missing=""
+        for key in HETZNER_API_TOKEN CF_ACCOUNT_ID CF_BEARER_TOKEN; do
+          grep -qE "^${key}=." worker/.dev.vars || missing="${missing} ${key}"
+        done
+        if [ -n "$missing" ]; then
+          echo "⚠ worker/.dev.vars has no value for:${missing}" >&2
+          case "$missing" in
+            *HETZNER_API_TOKEN*) echo "  HETZNER_API_TOKEN  → cloud availability polling will throw" >&2 ;;
+          esac
+          case "$missing" in
+            *CF_ACCOUNT_ID*|*CF_BEARER_TOKEN*) echo "  CF_ACCOUNT_ID/CF_BEARER_TOKEN → /cloud-status history heatmap returns no data" >&2 ;;
+          esac
+        fi
+
+  db:migrate:
+    desc: Apply D1 migrations to the shared local database
+    cmds:
+      - npx wrangler d1 migrations apply DB --local --persist-to {{.STATE_DIR}}
+
+  db:query:
+    desc: 'Run SQL against the local D1, e.g. task db:query -- "select count(*) from users"'
+    cmds:
+      # CLI_ARGS arrives already shell-quoted, so it must not be quoted again.
+      - npx wrangler d1 execute DB --local --persist-to {{.STATE_DIR}} --command {{.CLI_ARGS}}
+
+  doctor:
+    desc: Report what is currently holding the dev ports and where local state lives
+    silent: true
+    cmds:
+      # ss (iproute2) rather than lsof — lsof isn't installed everywhere, and a
+      # missing tool must not be reported as "port free".
+      - |
+        if command -v ss >/dev/null 2>&1; then
+          for port in {{.WORKER_PORT}} {{.APP_PORT}}; do
+            holder=$(ss -ltnpH "sport = :$port" 2>/dev/null | grep -o 'pid=[0-9]*' | head -1 | cut -d= -f2)
+            if [ -n "$holder" ]; then
+              echo ":$port  in use by pid $holder ($(ps -p "$holder" -o comm= 2>/dev/null | tr -d ' '))"
+            else
+              echo ":$port  free"
+            fi
+          done
+        else
+          echo 'ports  unknown (ss not found — install iproute2)'
+        fi
+        echo "state   {{.STATE_DIR}}"
+        if [ -d worker/.wrangler/state ]; then
+          echo "note    worker/.wrangler/state exists and is NOT used by these tasks (stale local D1/DO state, safe to delete)"
+        fi
+        [ -f worker/.dev.vars ] && echo "secrets worker/.dev.vars present" || echo "secrets worker/.dev.vars MISSING"
+
+  stop:
+    desc: Stop whatever is listening on the dev ports
+    prompt: Kill the processes listening on :{{.WORKER_PORT}} and :{{.APP_PORT}}?
+    silent: true
+    cmds:
+      # fuser handles this in one step and, unlike lsof, is present by default on
+      # far more systems. `|| true` so a free port isn't a task failure.
+      - |
+        for port in {{.WORKER_PORT}} {{.APP_PORT}}; do
+          if fuser -k -n tcp "$port" 2>/dev/null; then
+            echo "stopped whatever held :$port"
+          else
+            echo ":$port was free"
+          fi
+        done
+
+  install:
+    desc: Install dependencies (npm workspaces covers the worker)
+    cmds:
+      - npm install
+
+  check:
+    desc: svelte-check over the repo
+    cmds:
+      - npm run check
+
+  lint:
+    desc: Prettier + eslint over the repo
+    cmds:
+      - npm run lint
+
+  test:
+    desc: Run backend and worker unit tests
+    cmds:
+      - npm run test -- --run
+      - npm run test --workspace worker -- --run
+
+  verify:
+    desc: Everything CI cares about — run before pushing
+    cmds:
+      - task: lint
+      - task: check
+      - task: test
+
+  clean:state:
+    desc: Delete local Miniflare state (D1, Durable Objects, cache)
+    prompt: Delete all local D1/DO state under .wrangler/state? This cannot be undone.
+    cmds:
+      - rm -rf {{.STATE_DIR}}

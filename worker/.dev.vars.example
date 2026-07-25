@@ -1,0 +1,34 @@
+# Local secrets for `wrangler dev` in this directory.
+#
+# Copy to `.dev.vars` (gitignored) and fill in what you need:
+#     task setup
+#
+# The worker boots without any of these — each missing value just disables the
+# feature noted below, so you can fill in only what you're working on.
+
+# --- Cloud availability (/cloud-status) -------------------------------------
+# Required for polling Hetzner Cloud availability. Without it the poll throws
+# ("HETZNER_API_TOKEN is not configured") and /cloud-status has no live data.
+# Create a read-only token in the Hetzner Cloud console.
+HETZNER_API_TOKEN=
+
+# --- Availability history (the /cloud-status heatmap) -----------------------
+# The history query hits the Analytics Engine SQL API, which is not reachable
+# through the worker binding, so it needs real account credentials. Without
+# these the endpoint returns an empty result set and the heatmap renders as
+# "No availability data found" — it is NOT a frontend bug.
+# Token needs the "Account Analytics: Read" permission.
+CF_ACCOUNT_ID=
+CF_BEARER_TOKEN=
+
+# --- Notifications ----------------------------------------------------------
+# Internal key used when the worker calls back into the app.
+API_KEY=
+
+# Email delivery for alert notifications (ForwardEmail). Unset = no emails sent.
+FORWARDEMAIL_API_KEY=
+
+# --- Tracing (optional) -----------------------------------------------------
+# OpenTelemetry export. Unset = tracing disabled, which is fine locally.
+OTLP_ENDPOINT=
+OTLP_AUTH_TOKEN=
