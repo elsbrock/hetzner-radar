@@ -50,9 +50,10 @@ split (DuckDB WASM in the browser for price math; D1 for user data).
   ```
 
   Show the current-equivalent price and savings € / % (`equivalent − user's
-  price`). When no confident match exists, show "no current equivalent found"
+price`). When no confident match exists, show "no current equivalent found"
   instead of a misleading number — the same heuristic and honesty rule as the
   marketplace.
+
 - **Interest capture (D1):** a soft CTA — "Notify me when a legacy-server
   marketplace launches" — collecting email + role (buyer/seller/both) and,
   optionally, the computed spec + savings snapshot for demand analytics.
@@ -80,12 +81,12 @@ This probe ships first, so it takes migration `0016`; the marketplace's
 
 `POST /api/marketplace-interest` (`+server.ts`) — validate email, dedupe on
 email, rate-limit per IP (reuse the existing rate-limit pattern). Capture only —
-no email is *sent* here; the eventual "we launched" notification is a manual
+no email is _sent_ here; the eventual "we launched" notification is a manual
 one-off send. This deliberately avoids wiring up the notification/email plumbing.
 
 ### Discoverability / entry points
 
-Placement matters here because it *is* the demand signal — bury the page and low
+Placement matters here because it _is_ the demand signal — bury the page and low
 traffic reads as "no demand" when it may just be "not seen." Drive it, but
 reversibly:
 
@@ -100,14 +101,14 @@ reversibly:
   view the marketplace spec loosely called the "auction/pricing view"; there is
   no `/pricing` route). Targets deal-hunters directly if a second surface helps.
 - **Not** a primary nav pill. That's a permanent slot; reserve it for the real
-  marketplace *after* the probe validates. Spending nav real estate on an
+  marketplace _after_ the probe validates. Spending nav real estate on an
   experiment both over-invests and muddies the "was it wanted" read.
 
 ## Decisions & trade-offs
 
 - **Capture only, no send.** The probe measures intent; it doesn't need the email
   channels wired. Keeps the build to a page + one table + one endpoint.
-- **Reuse the marketplace math verbatim.** The calculator *is* the marketplace's
+- **Reuse the marketplace math verbatim.** The calculator _is_ the marketplace's
   savings engine with the listing layer removed — building it now de-risks and
   pre-writes the hardest part of Phase 1.
 - **Optional context snapshot.** Storing `(spec, price, equivalent)` with each

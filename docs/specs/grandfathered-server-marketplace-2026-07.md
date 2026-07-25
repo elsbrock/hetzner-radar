@@ -56,7 +56,7 @@ Hetzner forum. Findings:
 
 - **No anti-circumvention or anti-resale language anywhere.** Not in the AGB, the
   standardization FAQ/press release, the cloud billing FAQ, or the transfer docs.
-  The cloud FAQ enumerates repricing *triggers* (currency change, rescale,
+  The cloud FAQ enumerates repricing _triggers_ (currency change, rescale,
   restore) as plain billing mechanics, not as an anti-abuse posture. (This
   corrects the "explicit anti-circumvention posture" framing that used to be in
   "Why not a full brokerage" — that posture does not exist.)
@@ -70,16 +70,16 @@ Hetzner forum. Findings:
   splits at the transfer moment (seller pays before, buyer after). No
   relationship or commercial-purpose restriction.
 - **AGB §2.8** requires Hetzner's consent to transfer contractual rights to a
-  third party — but the token flow *is* that consent mechanism (Hetzner-issued
+  third party — but the token flow _is_ that consent mechanism (Hetzner-issued
   tooling that creates a fresh contract for the buyer). Not a blocker.
 - **Grandfathered price survival:**
-  - *Cloud* — verified. A same-currency project transfer preserves legacy
+  - _Cloud_ — verified. A same-currency project transfer preserves legacy
     pricing; a different currency, a rescale, or restoring a deleted server
     reprices to current rates.
-  - *Dedicated* — strong inference, **not yet a verbatim guarantee.** "Existing
+  - _Dedicated_ — strong inference, **not yet a verbatim guarantee.** "Existing
     contracts keep their terms and conditions"; new prices apply only to "new
     orders and rescales"; a transfer is neither. No Hetzner sentence explicitly
-    states that a transferred server keeps its old price *for the new owner*.
+    states that a transferred server keeps its old price _for the new owner_.
     **Open action:** confirm via a support ticket or one real Marktplatz trade
     before betting the dedicated MVP on it.
 
@@ -181,7 +181,7 @@ Mirrors `alerts.ts` / `cloud-alerts.ts`:
 
 ## Safety & trust
 
-Radar never touches money or executes the transfer, so it can't *guarantee*
+Radar never touches money or executes the transfer, so it can't _guarantee_
 safety — but the transaction is two strangers moving a server off-platform,
 which is the classic fraud setup (buyer pays and gets no transfer; seller
 transfers and gets no payment; misrepresented specs; a silent rescale or
@@ -193,7 +193,7 @@ Keeping it "reasonably safe" is layered:
    the deal, so it carries no financial-intermediary or dispute liability. This
    is the foundation; everything else is hygiene on top.
 2. **Platform hygiene (build in Phase 1).**
-   - Auth-gate listing *and* contact: only logged-in, email-verified accounts can
+   - Auth-gate listing _and_ contact: only logged-in, email-verified accounts can
      post or reach a seller. Raises the cost of throwaway scam accounts.
    - Contact relay over exposed emails (see "Contact / anti-abuse"): no scrapable
      seller addresses; rate-limited per user/IP.
@@ -201,7 +201,7 @@ Keeping it "reasonably safe" is layered:
      stops the board filling with stale/abandoned bait.
    - Report/flag on every listing → manual moderation at current volume.
 3. **Scam-prevention UX (the part that actually protects users).**
-   - A short, unmissable safety note *at the point of contact*, not buried in
+   - A short, unmissable safety note _at the point of contact_, not buried in
      Terms: "Radar handles no money and no transfers. Agree terms, then use
      Hetzner's official token flow. Never pay before the transfer shows up in
      your own Hetzner account."
@@ -217,7 +217,7 @@ Keeping it "reasonably safe" is layered:
      when matching is uncertain (see the equivalent-price section).
    - A standing caveat that legacy-price survival is Hetzner's call, not Radar's —
      especially for dedicated (see ToS review open action). Radar shows the
-     *potential* saving, never a promise.
+     _potential_ saving, never a promise.
 5. **Legal posture.** Disclaimer banner (unaffiliated; used hardware; Radar not a
    party) + Terms/Privacy update + GDPR-clean handling of seller contact data
    (relay minimizes what's stored/exposed) + a pointer to Hetzner's official docs.
@@ -261,6 +261,7 @@ would create the reliance it can't back.
 ## Implementation steps
 
 Phase 0 — validate before building (cheap; no marketplace schema):
+
 - [x] Spec (this document)
 - [x] Confirm no ToS blocker — done 2026-07 (see "ToS & Hetzner-relationship
       review"): no anti-resale / anti-circumvention language; Hetzner hosts its
@@ -277,6 +278,7 @@ Phase 0 — validate before building (cheap; no marketplace schema):
 - [ ] Go/no-go on Phase 1 from probe signal (interest sign-ups vs. calculator use)
 
 Phase 1 — dedicated MVP (classifieds board):
+
 - [ ] Migration `0017_add_marketplace_listings.sql`
 - [ ] Backend API `marketplace.ts` (CRUD + caps + validation)
 - [ ] `/marketplace` browse page + in-browser savings computation
@@ -287,18 +289,22 @@ Phase 1 — dedicated MVP (classifieds board):
 - [ ] `npm run check` / lint / tests green
 
 Phase 2 — buyer-side match alerts:
+
 - [ ] Reuse the `price_alert` filter to notify buyers when a new listing matches
       their criteria (new notification event `marketplace_listing.matched`,
       wired through the existing channel plumbing)
 
 Phase 3 — cloud listings:
+
 - [ ] Ingest Hetzner Cloud pricing (server-type prices) into a queryable store
 - [ ] Cloud current-equivalent + savings, with same-currency transfer caveat
 - [ ] Cloud listing create/browse
 
 Out of scope (explicitly not building): escrow/payments, transfer execution or
 automation, identity verification, dispute resolution, any per-transaction fee.
+
 ```
 
 Monetization, if pursued later, is a listing/subscription model layered on top —
 never a cut of the transaction.
+```
