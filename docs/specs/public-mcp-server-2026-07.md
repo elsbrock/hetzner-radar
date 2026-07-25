@@ -224,10 +224,11 @@ origin.
 D1 load is roughly neutral: `sessionHandle` in `hooks.server.ts` already reads D1
 on every request, and Better Auth's cookie caching may reduce that.
 
-Now orphaned but deliberately left in place (deleting is a separate, reviewable
-change): `src/lib/cookie.ts` entirely, plus the session/verification-code
-helpers in `src/lib/api/backend/{session,auth}.ts` and `createUser`/`getUserId`
-in `user.ts`. The `email_verification_code` table is likewise dead — Better Auth
+Superseded code has been removed: `src/lib/cookie.ts` and
+`src/lib/api/backend/auth.ts` are deleted, `api/backend/session.ts` is reduced to
+`SESSION_COOKIE_NAME` (still needed to clear stale pre-cutover cookies), and
+`createUser`/`getUserId` are gone from `user.ts`. The `email_verification_code`
+**table** is intentionally kept even though nothing writes to it — Better Auth
 stores OTPs in `verification`.
 
 ### Abuse
@@ -296,10 +297,15 @@ Hetzner" positioning in the server's `initialize` response.
 - [x] Verify all five FK relationships survive on a seeded copy of the schema
       (row counts preserved, `user.id` unchanged, `foreign_key_check` clean,
       zero residual diff from `getMigrations()`)
-- [ ] Set `BETTER_AUTH_SECRET` in Cloudflare before deploying
-- [ ] Apply migration 0016 to D1
-- [ ] Exercise the login flow against a real deployment (only checked by
-      typecheck, lint, unit tests and a production build so far)
+- [x] Remove superseded auth code (table kept)
+- [x] Set `BETTER_AUTH_SECRET` on the `server-radar` Worker (top-level env —
+      there is no `server-radar-production` Worker; that is where
+      `FORWARDEMAIL_API_KEY` lives too)
+- [x] Apply migration 0016 to **local** D1 via `wrangler d1 migrations apply`,
+      confirming wrangler's own SQL splitter handles the file
+- [ ] Apply migration 0016 to **remote** D1 (`--remote`) — not yet done
+- [ ] Exercise the login flow against a real deployment (so far: typecheck,
+      lint, unit tests, production build, and a local D1 migration)
 - [ ] Communicate forced logout
 
 **Phase 4 — alert tools**
