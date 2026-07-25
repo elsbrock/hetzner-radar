@@ -43,8 +43,9 @@ export default [
     files: ["src/**/*.ts", "src/**/*.svelte"],
     languageOptions: {
       globals: {
-        // SvelteKit App namespace declared in src/app.d.ts
+        // Globals declared in src/app.d.ts
         App: "readonly",
+        PlatformEnv: "readonly",
       },
     },
   },

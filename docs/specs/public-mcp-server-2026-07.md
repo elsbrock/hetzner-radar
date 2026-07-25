@@ -157,32 +157,78 @@ flow worth having: search, then create an alert from the identical parameters.
 a generic failure. Price inputs are EUR in the tool schema, converted to cents at
 the D1 boundary.
 
-### Auth — Better Auth migration
+### Auth — Better Auth migration (implemented, July 2026)
 
 Chosen over hand-rolled bearer tokens: Better Auth's MCP/OIDC provider plugin
 covers discovery metadata, dynamic client registration, PKCE and the token
 endpoints — the expensive half of OAuth 2.1, and the half that makes one-click
 "Connect" work in Claude and ChatGPT. Building bearer tokens first would mean
-writing token management twice.
+writing token management twice. The plugin was confirmed against Better Auth
+1.6.25: it exists, serves the discovery routes, and ships `withMcpAuth` /
+`auth.api.getMcpSession()`. It is **not enabled yet** — it belongs to the MCP
+phases and carries its own three tables (`oauthApplication`, `oauthAccessToken`,
+`oauthConsent`), so it gets its own migration.
+
+Findings that shaped the implementation:
+
+- **D1 is natively supported.** Better Auth 1.6.25 accepts a `D1Database`
+  directly in its `database` union and auto-selects a built-in `D1SqliteDialect`
+  (detected via `batch`/`exec`/`prepare`). No `kysely-d1`, no
+  `better-auth-cloudflare`.
+- **`database.casing` is dead.** Declared `"snake" | "camel"` in the types but
+  never read at runtime in 1.6.25 — verified by grep across the shipped
+  bundles. Column names are therefore mapped **explicitly per model** via
+  `fields` to keep the schema snake_case.
+- **The instance cannot live at module scope**, since the D1 binding only exists
+  per-request. `getAuth(env)` memoises against the binding object in a WeakMap,
+  so it constructs once per isolate rather than once per request.
+- The generated schema was taken from Better Auth's own `getMigrations()`
+  diffed against a SQLite copy of the production schema, rather than
+  hand-written from docs. The CLI (1.4.21) was too far behind the library
+  (1.6.25) to trust.
 
 Migration `0016_better_auth_schema.sql`:
 
-- **Preserve existing `user.id` values.** This is the sharp edge — the five
-  `ON DELETE CASCADE` FKs mean regenerated IDs would cascade-delete every user's
-  alerts. Additive columns on `user`, no ID churn.
-- New `account` and `verification` tables; extend `session` to Better Auth's
-  shape.
-- Email OTP plugin replicates the existing email-code flow, so the login UX does
-  not regress.
-- Straighten the `TEXT` / `INTEGER` FK declaration mismatch while rewriting
-  tables.
+- **`user` is ALTERed additively and never rebuilt.** Four tables reference
+  `user(id)` `ON DELETE CASCADE`; dropping and recreating it under enforced
+  foreign keys would cascade-delete every user's alerts. Existing `user.id`
+  values are untouched.
+- Two SQLite rules the generator does not account for: `ADD COLUMN NOT NULL`
+  needs a non-NULL **constant** default, and `CURRENT_TIMESTAMP` is not a legal
+  `ADD COLUMN` default. Hence add-with-placeholder, then backfill.
+- `session` is rebuilt — Better Auth requires a `NOT NULL UNIQUE` token that
+  existing rows cannot supply. Nothing references `session`, so the DROP cannot
+  cascade into user data.
+- New `account` and `verification` tables.
+- Email OTP replicates the previous flow exactly (6 digits, 15 minutes, same
+  mail copy), so the login UI is unchanged — the form actions now call
+  `auth.api.sendVerificationOTP` / `auth.api.signInEmailOTP` internally.
+
+**Deviation from the original plan:** only `session`'s `user_id` declared type
+was corrected to `TEXT`. `price_alert` and `price_alert_history` still declare
+`user_id INTEGER` against a `TEXT` primary key. Straightening those would mean
+rebuilding tables that hold real user data, for a cosmetic fix that SQLite's
+loose typing already tolerates — not worth the risk. Better Auth surfaces the
+same mismatch as a startup warning for `user.created_at` (`DATETIME` vs its
+expected `date`), which is likewise harmless and unavoidable without rebuilding
+`user`.
 
 **Cutover logs everyone out** — session semantics differ and there is no
 dual-read path worth building at this scale. A known, communicated decision, not
 a surprise.
 
+**Deploy requirement:** `BETTER_AUTH_SECRET` must be set (`wrangler secret put`)
+before this ships. `BETTER_AUTH_URL` is optional and defaults to the production
+origin.
+
 D1 load is roughly neutral: `sessionHandle` in `hooks.server.ts` already reads D1
 on every request, and Better Auth's cookie caching may reduce that.
+
+Now orphaned but deliberately left in place (deleting is a separate, reviewable
+change): `src/lib/cookie.ts` entirely, plus the session/verification-code
+helpers in `src/lib/api/backend/{session,auth}.ts` and `createUser`/`getUserId`
+in `user.ts`. The `email_verification_code` table is likewise dead — Better Auth
+stores OTPs in `verification`.
 
 ### Abuse
 
@@ -240,13 +286,20 @@ Hetzner" positioning in the server's `initialize` response.
 - [ ] Result caps, `Cache-Control`, revisit `RATE_LIMIT` for MCP traffic
 - [ ] Verify against a real MCP client
 
-**Phase 3 — Better Auth**
+**Phase 3 — Better Auth** (implemented on `feat/better-auth`)
 
-- [ ] Confirm MCP/OIDC plugin shape against current docs
-- [ ] `0016_better_auth_schema.sql`, preserving `user.id`; fix FK type decls
-- [ ] Email OTP to replace the existing code flow; port `login` / `logout`
-- [ ] Rewrite `hooks.server.ts` `sessionHandle`
-- [ ] Verify all five FK relationships survive on a copy of production
+- [x] Confirm MCP/OIDC plugin shape against current docs
+- [x] `0016_better_auth_schema.sql`, preserving `user.id`; `session.user_id`
+      corrected to `TEXT` (see deviation above re: `price_alert`)
+- [x] Email OTP to replace the existing code flow; port `login` / `logout`
+- [x] Rewrite `hooks.server.ts` `sessionHandle`
+- [x] Verify all five FK relationships survive on a seeded copy of the schema
+      (row counts preserved, `user.id` unchanged, `foreign_key_check` clean,
+      zero residual diff from `getMigrations()`)
+- [ ] Set `BETTER_AUTH_SECRET` in Cloudflare before deploying
+- [ ] Apply migration 0016 to D1
+- [ ] Exercise the login flow against a real deployment (only checked by
+      typecheck, lint, unit tests and a production build so far)
 - [ ] Communicate forced logout
 
 **Phase 4 — alert tools**
