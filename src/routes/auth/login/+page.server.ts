@@ -2,7 +2,55 @@ import { getAuth } from "$lib/server/auth";
 import { rateLimit } from "$lib/session";
 import { fail, redirect } from "@sveltejs/kit";
 import validator from "validator";
-import type { Actions } from "./$types";
+import type { Actions, PageServerLoad } from "./$types";
+
+const DEFAULT_DESTINATION = "/analyze";
+const OAUTH_AUTHORIZE_PATH = "/api/auth/mcp/authorize";
+
+/**
+ * OAuth parameters forwarded when resuming an interrupted authorization.
+ *
+ * Whitelisted rather than passed through wholesale: the value reaching the
+ * action comes from a form field, so only known-good keys are rebuilt onto our
+ * own authorize path. Combined with the fixed path that makes an open redirect
+ * impossible — a caller cannot steer the browser anywhere but back into Better
+ * Auth, which independently validates client_id and redirect_uri.
+ */
+const OAUTH_PARAMS = [
+  "response_type",
+  "client_id",
+  "redirect_uri",
+  "code_challenge",
+  "code_challenge_method",
+  "scope",
+  "state",
+  "nonce",
+  "resource",
+  "prompt",
+];
+
+function buildOAuthResume(source: URLSearchParams): string | null {
+  // client_id is what distinguishes an OAuth hand-off from a plain sign-in.
+  if (!source.get("client_id")) return null;
+
+  const params = new URLSearchParams();
+  for (const key of OAUTH_PARAMS) {
+    const value = source.get(key);
+    if (value) params.set(key, value);
+  }
+  return `${OAUTH_AUTHORIZE_PATH}?${params.toString()}`;
+}
+
+/**
+ * `mcp({ loginPage })` sends unauthenticated authorization requests here with
+ * the OAuth query intact. The sign-in form posts to `?/authenticate`, which
+ * replaces the query string, so the parameters are surfaced to the page and
+ * sent back as a hidden field — otherwise the flow is lost at sign-in and the
+ * client reports "Authorization failed".
+ */
+export const load: PageServerLoad = async ({ url }) => ({
+  oauthResume: buildOAuthResume(url.searchParams),
+});
 
 export const actions: Actions = {
   identify: rateLimit(async (event) => {
@@ -70,6 +118,7 @@ export const actions: Actions = {
   }),
 
   authenticate: rateLimit(async (event) => {
+    let destination: string | undefined;
     try {
       const env = event.platform?.env;
       const db = env?.DB;
@@ -134,12 +183,19 @@ export const actions: Actions = {
           }
         : null;
 
-      // If application/json, return JSON. Else, redirect to /analyze
+      // Resume an OAuth authorization if this sign-in interrupted one.
+      destination =
+        buildOAuthResume(
+          new URLSearchParams(String(formData.get("oauth_resume") ?? "")),
+        ) ?? DEFAULT_DESTINATION;
+
+      // If application/json, return JSON. Else, redirect.
       if (event.request.headers.get("accept")?.includes("application/json")) {
         return {
           success: true,
           session,
           user: { id: signedIn.user.id, email: signedIn.user.email },
+          redirectTo: destination,
         };
       }
     } catch (error) {
@@ -151,6 +207,6 @@ export const actions: Actions = {
 
     // Only reachable once sign-in has succeeded and the caller wants a redirect
     // rather than JSON. Thrown outside the try so the catch cannot swallow it.
-    redirect(303, "/analyze");
+    redirect(303, destination ?? DEFAULT_DESTINATION);
   }),
 };

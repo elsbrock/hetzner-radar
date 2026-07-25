@@ -15,10 +15,10 @@
 		StepIndicator
 	} from 'flowbite-svelte';
 	import { tick } from 'svelte';
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 	let email: string = $state('');
 
-	let { form }: { form: ActionData | undefined } = $props();
+	let { form, data }: { form: ActionData | undefined; data: PageData } = $props();
 	let authForm: HTMLFormElement | undefined = $state();
 
 	let identifying = $state(false);
@@ -261,7 +261,15 @@
 								message: 'Signed in successfully.',
 								icon: 'success'
 							});
-							await goto(resolve('/analyze'));
+							const target = (result.data?.redirectTo as string) ?? resolve('/analyze');
+							// An OAuth resume points at a server route rather than a
+							// SvelteKit page, so it needs a real navigation — goto() would
+							// try to client-side route to something that is not a page.
+							if (target.startsWith('/api/')) {
+								window.location.assign(target);
+							} else {
+								await goto(target);
+							}
 						} else if (result.type === 'failure') {
 							// Construct ActionData for failure case
 							form = {
@@ -292,6 +300,9 @@
 				<div class="flex justify-center gap-x-3 py-2 md:text-lg">
 					<input type="hidden" name="email" bind:value={email} />
 					<input type="hidden" name="code" bind:value={code} />
+					{#if data.oauthResume}
+						<input type="hidden" name="oauth_resume" value={data.oauthResume.split('?')[1] ?? ''} />
+					{/if}
 					{#each Array(6) as _, index (index)}
 						<input
 							use:registerInput={index}
