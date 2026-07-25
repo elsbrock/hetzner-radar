@@ -1,4 +1,5 @@
 import type { PageServerLoad } from "./$types";
+import { buildConfigurationInsights } from "./insights";
 import {
   CONFIGURATION_CATEGORIES,
   type ConfigurationCategoryId,
@@ -169,5 +170,6 @@ export const load: PageServerLoad = async ({ platform }) => {
     categories,
     lastUpdatedAt,
     gpuServerCount,
+    insights: buildConfigurationInsights(categories, gpuServerCount),
   };
 };

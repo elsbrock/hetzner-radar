@@ -12,6 +12,8 @@
     type ConfigurationCategoryId,
   } from "$lib/api/shared/configurations";
   import PageHero from "$lib/components/PageHero.svelte";
+  import PageInsights from "$lib/components/PageInsights.svelte";
+  import { AUCTION_PRICING_NOTE } from "./insights";
   import PriceControls from "$lib/components/PriceControls.svelte";
   import ServerCard from "$lib/components/ServerCard.svelte";
   import { defaultFilter, encodeFilter } from "$lib/filter";
@@ -401,6 +403,8 @@
       </a>
     </div>
   </section>
+
+  <PageInsights insights={data.insights ?? []} note={AUCTION_PRICING_NOTE} />
 
   <!-- Call to Action -->
   <section class="mx-auto my-12 max-w-7xl text-center">

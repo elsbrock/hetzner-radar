@@ -1,5 +1,6 @@
 import { dev } from "$app/environment";
 import type { PageServerLoad } from "./$types";
+import { buildCloudStatusInsights } from "./insights";
 
 interface LocationInfo {
   id: number;
@@ -42,6 +43,8 @@ interface LoadOutput {
   statusData: CloudStatusData | null;
   error?: string;
   user?: unknown;
+  /** Statements computed from statusData; empty when there is nothing to say. */
+  insights?: string[];
 }
 
 export const load: PageServerLoad = async ({
@@ -63,6 +66,7 @@ export const load: PageServerLoad = async ({
       const normalizedStatusData = normalizeStatusData(statusData);
       return {
         statusData: normalizedStatusData,
+        insights: buildCloudStatusInsights(normalizedStatusData),
         user: locals.user,
       };
     }
@@ -84,6 +88,7 @@ export const load: PageServerLoad = async ({
 
     return {
       statusData: normalizedStatusData,
+      insights: buildCloudStatusInsights(normalizedStatusData),
       user: locals.user,
     };
   } catch (err) {
