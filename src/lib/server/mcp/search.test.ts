@@ -72,23 +72,160 @@ describe("matchesQuery", () => {
   });
 
   it("matches a datacenter city prefix as well as an exact name", () => {
-    expect(matchesQuery(auction(), { datacenter: "FSN" })).toBe(true);
-    expect(matchesQuery(auction(), { datacenter: "fsn" })).toBe(true);
-    expect(matchesQuery(auction(), { datacenter: "FSN1-DC14" })).toBe(true);
-    expect(matchesQuery(auction(), { datacenter: "NBG" })).toBe(false);
+    expect(matchesQuery(auction(), { datacenters: ["FSN"] })).toBe(true);
+    expect(matchesQuery(auction(), { datacenters: ["fsn"] })).toBe(true);
+    expect(matchesQuery(auction(), { datacenters: ["FSN1-DC14"] })).toBe(true);
+    expect(matchesQuery(auction(), { datacenters: ["NBG"] })).toBe(false);
     // An exact name must not match a different datacenter in the same city.
-    expect(matchesQuery(auction(), { datacenter: "FSN1-DC15" })).toBe(false);
+    expect(matchesQuery(auction(), { datacenters: ["FSN1-DC15"] })).toBe(false);
   });
 
   it("compares drive capacity as a total across drives", () => {
-    expect(matchesQuery(auction(), { min_nvme_total_gb: 1024 })).toBe(true);
-    expect(matchesQuery(auction(), { min_nvme_total_gb: 2048 })).toBe(false);
+    expect(matchesQuery(auction(), { min_nvme_size_gb: 1024 })).toBe(true);
+    expect(matchesQuery(auction(), { min_nvme_size_gb: 2048 })).toBe(false);
   });
 
-  it("distinguishes largest single drive from total capacity", () => {
-    // 2x512 totals 1024 but the largest drive is only 512.
-    expect(matchesQuery(auction(), { min_largest_drive_gb: 512 })).toBe(true);
-    expect(matchesQuery(auction(), { min_largest_drive_gb: 1024 })).toBe(false);
+  it("counts drives across all types, not per type", () => {
+    // 1 NVMe + 2 SATA is three disks; no per-type filter would find it.
+    const mixed = auction({
+      nvme_count: 1,
+      nvme_drives: [512],
+      sata_count: 2,
+      sata_drives: [1000, 1000],
+    });
+    expect(matchesQuery(mixed, { min_drive_count: 3 })).toBe(true);
+    expect(matchesQuery(mixed, { min_drive_count: 4 })).toBe(false);
+    expect(matchesQuery(mixed, { min_nvme_count: 3 })).toBe(false);
+  });
+
+  it("matches an exact drive count when both bounds are given", () => {
+    const three = auction({ nvme_count: 3, nvme_drives: [512, 512, 512] });
+    const four = auction({ nvme_count: 4, nvme_drives: [512, 512, 512, 512] });
+    const query = { min_drive_count: 3, max_drive_count: 3 };
+    expect(matchesQuery(three, query)).toBe(true);
+    expect(matchesQuery(four, query)).toBe(false);
+  });
+
+  /**
+   * Ported from src/lib/api/frontend/filter.ts, which is what the UI runs:
+   *   per-disk => array_filter(drives, in range).length === drives.length
+   *   total    => sum(drives) in range
+   */
+  describe("size modes", () => {
+    const mixed = auction({
+      nvme_count: 2,
+      nvme_drives: [512, 2048],
+      nvme_size: 2560,
+    });
+
+    it("sums the drives in total mode", () => {
+      expect(
+        matchesQuery(mixed, {
+          min_nvme_size_gb: 2000,
+          nvme_size_mode: "total",
+        }),
+      ).toBe(true);
+    });
+
+    it("requires every drive to fit in per-disk mode", () => {
+      // The 512 GB drive is below the floor, so the server does not qualify
+      // even though the total is comfortably above it.
+      expect(
+        matchesQuery(mixed, {
+          min_nvme_size_gb: 1000,
+          nvme_size_mode: "per-disk",
+        }),
+      ).toBe(false);
+      expect(
+        matchesQuery(mixed, {
+          min_nvme_size_gb: 500,
+          nvme_size_mode: "per-disk",
+        }),
+      ).toBe(true);
+    });
+
+    it("passes per-disk trivially when the server has none of that type", () => {
+      // Mirrors SQL where array_filter and array_length are both 0.
+      expect(
+        matchesQuery(auction(), {
+          min_hdd_size_gb: 4000,
+          hdd_size_mode: "per-disk",
+        }),
+      ).toBe(true);
+    });
+  });
+
+  describe("disk_mode", () => {
+    // 2 NVMe, no HDDs.
+    const nvmeOnly = auction();
+
+    it("requires every constrained type in and mode", () => {
+      expect(
+        matchesQuery(nvmeOnly, {
+          min_nvme_count: 2,
+          min_hdd_count: 2,
+          disk_mode: "and",
+        }),
+      ).toBe(false);
+    });
+
+    it("accepts a server satisfying either type in or mode", () => {
+      expect(
+        matchesQuery(nvmeOnly, {
+          min_nvme_count: 2,
+          min_hdd_count: 2,
+          disk_mode: "or",
+        }),
+      ).toBe(true);
+    });
+
+    it("still rejects when no constrained type matches in or mode", () => {
+      expect(
+        matchesQuery(nvmeOnly, {
+          min_nvme_count: 8,
+          min_hdd_count: 2,
+          disk_mode: "or",
+        }),
+      ).toBe(false);
+    });
+
+    it("ignores unconstrained types in or mode", () => {
+      // Only NVMe is constrained, so OR must not be satisfied by the absent
+      // SATA/HDD clauses trivially passing.
+      expect(
+        matchesQuery(nvmeOnly, { min_nvme_count: 8, disk_mode: "or" }),
+      ).toBe(false);
+    });
+  });
+
+  it("supports upper bounds, not just minimums", () => {
+    expect(matchesQuery(auction(), { max_ram_gb: 64 })).toBe(true);
+    expect(matchesQuery(auction(), { max_ram_gb: 32 })).toBe(false);
+    expect(
+      matchesQuery(auction(), { min_cpu_cores: 8, max_cpu_cores: 16 }),
+    ).toBe(true);
+    expect(matchesQuery(auction(), { max_cpu_cores: 8 })).toBe(false);
+  });
+
+  it("matches exact CPU models", () => {
+    expect(matchesQuery(auction(), { cpu_models: ["AMD Ryzen 9 3900"] })).toBe(
+      true,
+    );
+    expect(
+      matchesQuery(auction(), { cpu_models: ["Intel Core i7-6700"] }),
+    ).toBe(false);
+  });
+
+  it("filters on socket count", () => {
+    expect(matchesQuery(auction(), { cpu_count: 1 })).toBe(true);
+    expect(matchesQuery(auction(), { cpu_count: 2 })).toBe(false);
+  });
+
+  it("accepts multiple locations", () => {
+    expect(matchesQuery(auction(), { locations: ["Germany", "Finland"] })).toBe(
+      true,
+    );
+    expect(matchesQuery(auction(), { locations: ["Finland"] })).toBe(false);
   });
 
   it("only filters booleans when a preference is expressed", () => {

@@ -34,72 +34,156 @@ export interface ToolDefinition {
   ) => Promise<unknown>;
 }
 
-/** Reused by search_auctions and the alert tools so the two stay interchangeable. */
+const SIZE_MODE = {
+  type: "string",
+  enum: ["total", "per-disk"],
+  description:
+    "How the size range is applied. 'total' (default) sums the drives of this type; 'per-disk' requires EVERY drive of this type to fall inside the range.",
+};
+
+/**
+ * Mirrors the web UI's filter feature-for-feature, so anything expressible
+ * there is expressible here — and an alert created via MCP behaves identically
+ * to one created in the UI. Shared by search_auctions and create_alert so an
+ * agent can search and then alert on the same parameters.
+ */
 const QUERY_PROPERTIES: Record<string, unknown> = {
+  // ---- CPU ----
   cpu: {
     type: "string",
     description:
-      "Case-insensitive substring of the CPU name, e.g. 'epyc', 'ryzen 9', '7302'.",
+      "Case-insensitive substring of the CPU name, e.g. 'epyc', 'ryzen 9', '7302'. For exact models use cpu_models.",
+  },
+  cpu_models: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      "Exact CPU model names; a server matches if it is any of them, e.g. ['AMD Ryzen 9 3900'].",
   },
   cpu_vendor: {
     type: "string",
     enum: ["Intel", "AMD"],
-    description: "Restrict to one CPU vendor.",
+    description: "Restrict to one CPU vendor. Omit for either.",
+  },
+  cpu_count: {
+    type: "integer",
+    description: "Number of physical CPUs (sockets), e.g. 2 for dual-socket.",
   },
   min_cpu_cores: { type: "integer", description: "Minimum physical cores." },
+  max_cpu_cores: { type: "integer", description: "Maximum physical cores." },
   min_cpu_threads: { type: "integer", description: "Minimum threads." },
+  max_cpu_threads: { type: "integer", description: "Maximum threads." },
   min_cpu_multicore_score: {
     type: "integer",
     description:
       "Minimum Geekbench multi-core score. Servers whose CPU is not in the benchmark database are excluded when this is set.",
   },
+
+  // ---- Memory ----
   min_ram_gb: { type: "integer", description: "Minimum RAM in GB." },
+  max_ram_gb: { type: "integer", description: "Maximum RAM in GB." },
+  ecc: {
+    type: "boolean",
+    description: "Require (true) or exclude (false) ECC memory.",
+  },
+
+  // ---- Disks ----
+  min_nvme_count: {
+    type: "integer",
+    description: "Minimum number of NVMe drives.",
+  },
+  max_nvme_count: {
+    type: "integer",
+    description: "Maximum number of NVMe drives.",
+  },
+  min_nvme_size_gb: {
+    type: "integer",
+    description: "Minimum NVMe capacity in GB, interpreted per nvme_size_mode.",
+  },
+  max_nvme_size_gb: {
+    type: "integer",
+    description: "Maximum NVMe capacity in GB, interpreted per nvme_size_mode.",
+  },
+  nvme_size_mode: SIZE_MODE,
+
+  min_sata_count: {
+    type: "integer",
+    description: "Minimum number of SATA SSDs.",
+  },
+  max_sata_count: {
+    type: "integer",
+    description: "Maximum number of SATA SSDs.",
+  },
+  min_sata_size_gb: {
+    type: "integer",
+    description: "Minimum SATA capacity in GB, interpreted per sata_size_mode.",
+  },
+  max_sata_size_gb: {
+    type: "integer",
+    description: "Maximum SATA capacity in GB, interpreted per sata_size_mode.",
+  },
+  sata_size_mode: SIZE_MODE,
+
+  min_hdd_count: { type: "integer", description: "Minimum number of HDDs." },
+  max_hdd_count: { type: "integer", description: "Maximum number of HDDs." },
+  min_hdd_size_gb: {
+    type: "integer",
+    description: "Minimum HDD capacity in GB, interpreted per hdd_size_mode.",
+  },
+  max_hdd_size_gb: {
+    type: "integer",
+    description: "Maximum HDD capacity in GB, interpreted per hdd_size_mode.",
+  },
+  hdd_size_mode: SIZE_MODE,
+
+  disk_mode: {
+    type: "string",
+    enum: ["and", "or"],
+    description:
+      "How the NVMe/SATA/HDD constraints combine. 'and' (default) requires all of them; 'or' matches a server satisfying any one — use for 'either 2 NVMe or 4 HDDs'.",
+  },
+
+  min_drive_count: {
+    type: "integer",
+    description:
+      "Minimum TOTAL drives across all types. Use for a plain 'three disks' — a machine with 1 NVMe and 2 SATA has three drives and no per-type filter finds it.",
+  },
+  max_drive_count: {
+    type: "integer",
+    description:
+      "Maximum total drives across all types. Set equal to min_drive_count for an exact count.",
+  },
+
+  // ---- Location ----
+  location: {
+    type: "string",
+    enum: ["Germany", "Finland"],
+    description: "Single country shorthand. Omit for either.",
+  },
+  locations: {
+    type: "array",
+    items: { type: "string", enum: ["Germany", "Finland"] },
+    description: "Countries to allow. Takes precedence over `location`.",
+  },
+  datacenters: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      "Exact datacenters such as 'FSN1-DC14', or city prefixes: FSN (Falkenstein), NBG (Nuremberg), HEL (Helsinki).",
+  },
+
+  // ---- Price ----
   max_price_eur: {
     type: "number",
     description:
       "Maximum monthly price in EUR, matched against total_monthly_net (server + IPv4, BEFORE VAT). Setting vat_rate does not change what this filters on.",
   },
-  location: {
-    type: "string",
-    enum: ["Germany", "Finland"],
-    description: "Country the datacenter is in.",
+  min_price_eur: {
+    type: "number",
+    description: "Minimum monthly price in EUR, on the same net basis.",
   },
-  datacenter: {
-    type: "string",
-    description:
-      "Exact datacenter such as 'FSN1-DC14', or a city prefix: FSN (Falkenstein), NBG (Nuremberg), HEL (Helsinki).",
-  },
-  min_nvme_count: {
-    type: "integer",
-    description: "Minimum number of NVMe drives.",
-  },
-  min_nvme_total_gb: {
-    type: "integer",
-    description:
-      "Minimum combined NVMe capacity in GB (sum of all NVMe drives).",
-  },
-  min_sata_count: {
-    type: "integer",
-    description: "Minimum number of SATA SSDs.",
-  },
-  min_sata_total_gb: {
-    type: "integer",
-    description: "Minimum combined SATA SSD capacity in GB.",
-  },
-  min_hdd_count: { type: "integer", description: "Minimum number of HDDs." },
-  min_hdd_total_gb: {
-    type: "integer",
-    description: "Minimum combined HDD capacity in GB.",
-  },
-  min_largest_drive_gb: {
-    type: "integer",
-    description:
-      "Minimum capacity of the single largest drive, GB. Use for 'one big disk' rather than 'lots of total space'.",
-  },
-  ecc: {
-    type: "boolean",
-    description: "Require (true) or exclude (false) ECC memory.",
-  },
+
+  // ---- Extras ----
   gpu: { type: "boolean", description: "Require or exclude a GPU." },
   inic: { type: "boolean", description: "Require or exclude Intel NIC." },
   hwr: { type: "boolean", description: "Require or exclude hardware RAID." },
@@ -108,6 +192,31 @@ const QUERY_PROPERTIES: Record<string, unknown> = {
     description: "Require or exclude redundant power supply.",
   },
 };
+
+/**
+ * Search-only parameters that `ServerFilter` cannot express. Accepting them on
+ * create_alert and then dropping them would produce an alert that does not
+ * match what was asked for, so they are omitted from its schema entirely.
+ */
+const SEARCH_ONLY_KEYS = [
+  "cpu",
+  "min_cpu_multicore_score",
+  "min_drive_count",
+  "max_drive_count",
+  "min_price_eur",
+  "max_price_eur",
+];
+
+/** The subset of QUERY_PROPERTIES that maps cleanly onto ServerFilter. */
+export const ALERT_QUERY_PROPERTIES: Record<string, unknown> =
+  Object.fromEntries(
+    Object.entries(QUERY_PROPERTIES).filter(
+      ([key]) => !SEARCH_ONLY_KEYS.includes(key),
+    ),
+  );
+
+/** Every query key, for reading arguments off a tool call. */
+export const QUERY_KEYS = Object.keys(QUERY_PROPERTIES);
 
 const PRICING_NOTE =
   "All prices are EUR and NET of VAT. pricing.monthly_net is the server alone; " +

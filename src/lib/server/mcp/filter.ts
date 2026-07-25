@@ -1,37 +1,65 @@
 /**
- * Builds a normalised `ServerFilter` from the flat MCP query schema.
+ * Builds a normalised `ServerFilter` from the MCP query schema.
  *
  * Two reasons this exists rather than letting a model emit a ServerFilter
  * directly:
  *
- * 1. `ServerFilter` has 30 fields with encoded units (RAM is log2 of GB, disk
- *    sizes are in units of 500 GB) and tri-state booleans. A model asked to
- *    produce one directly gets it wrong routinely.
+ * 1. `ServerFilter` encodes its ranges — RAM as log2 of GB, disk sizes in units
+ *    of 500 GB — and uses tri-state booleans. A model asked to produce one
+ *    directly gets it wrong routinely. The MCP schema speaks plain GB and the
+ *    encoding happens here.
  * 2. `idx_price_alert_user_id_filter` is UNIQUE on the raw filter *string*, so
  *    two semantically identical filters with different key order become two
- *    rows instead of a conflict. Building here, in a fixed key order, makes
- *    that index behave.
+ *    rows instead of a conflict. Building here, in a fixed key order, makes that
+ *    index behave.
  *
- * The encodings below are taken from the code that actually matches alerts —
- * `worker/src/alert-service.ts` `MATCH_ALERTS_SQL` — not from the UI.
+ * Encodings are taken from the code that actually matches alerts —
+ * `worker/src/alert-service.ts` `MATCH_ALERTS_SQL` — cross-checked against the
+ * UI's query builder in `src/lib/api/frontend/filter.ts`.
  */
 
 import { defaultFilter, type ServerFilter } from "$lib/filter";
-import type { AuctionQuery } from "./search";
+import { CITY_PREFIXES, type AuctionQuery } from "./search";
 
 /** Disk size ranges in ServerFilter are expressed in units of 500 GB. */
 const DISK_UNIT_GB = 500;
 
-/** Datacenter city prefixes the filter understands. */
-const CITY_PREFIXES = ["FSN", "NBG", "HEL"];
+/**
+ * Permissive bounds, used whenever the caller did not constrain a dimension.
+ *
+ * Deliberately NOT `defaultFilter`'s values: those encode the UI's opinionated
+ * starting position (e.g. `hddInternalSize` starts at 4, i.e. 2000 GB), which
+ * would silently exclude servers the caller never asked to exclude. Upper bounds
+ * do come from `defaultFilter` so the ranges stay inside what the UI sliders can
+ * express.
+ */
+const OPEN = {
+  cpuCores: [0, defaultFilter.cpuCores[1]] as [number, number],
+  cpuThreads: [0, defaultFilter.cpuThreads[1]] as [number, number],
+  ram: [0, defaultFilter.ramInternalSize[1]] as [number, number],
+  nvmeCount: [0, defaultFilter.ssdNvmeCount[1]] as [number, number],
+  nvmeSize: [0, defaultFilter.ssdNvmeInternalSize[1]] as [number, number],
+  sataCount: [0, defaultFilter.ssdSataCount[1]] as [number, number],
+  sataSize: [0, defaultFilter.ssdSataInternalSize[1]] as [number, number],
+  hddCount: [0, defaultFilter.hddCount[1]] as [number, number],
+  hddSize: [0, defaultFilter.hddInternalSize[1]] as [number, number],
+};
 
-function gbToDiskUnits(gb: number): number {
-  return gb / DISK_UNIT_GB;
-}
+const gbToDiskUnits = (gb: number): number => gb / DISK_UNIT_GB;
 
 /** RAM range is log2 of gigabytes: `ramInternalSize[0] <= log2(ram_size)`. */
-function gbToLog2(gb: number): number {
-  return Math.log2(gb);
+const gbToLog2 = (gb: number): number => (gb > 0 ? Math.log2(gb) : 0);
+
+function range(
+  min: number | undefined,
+  max: number | undefined,
+  open: [number, number],
+  encode: (v: number) => number = (v) => v,
+): [number, number] {
+  return [
+    min !== undefined ? encode(min) : open[0],
+    max !== undefined ? encode(max) : open[1],
+  ];
 }
 
 /**
@@ -39,24 +67,27 @@ function gbToLog2(gb: number): number {
  * them, so `JSON.stringify` is stable across calls. Do not reorder.
  */
 export function buildServerFilter(query: AuctionQuery): ServerFilter {
-  const d = defaultFilter;
+  const locations = query.locations?.length
+    ? query.locations.map((l) => l.toLowerCase())
+    : query.location
+      ? [query.location.toLowerCase()]
+      : null;
 
-  // Absent location means "either"; naming one restricts to it.
-  const wantsGermany = !query.location || query.location === "Germany";
-  const wantsFinland = !query.location || query.location === "Finland";
+  // No location constraint means "either", matching search behaviour.
+  const wantsGermany = !locations || locations.includes("germany");
+  const wantsFinland = !locations || locations.includes("finland");
 
   const vendor = query.cpu_vendor?.toLowerCase();
   const wantsIntel = !vendor || vendor === "intel";
   const wantsAmd = !vendor || vendor === "amd";
 
-  const datacenters: string[] = [];
-  if (query.datacenter) {
-    const dc = query.datacenter.toUpperCase();
-    datacenters.push(CITY_PREFIXES.includes(dc) ? dc : query.datacenter);
-  }
+  const datacenters = (query.datacenters ?? []).map((d) => {
+    const upper = d.toUpperCase();
+    return CITY_PREFIXES.includes(upper) ? upper : d;
+  });
 
   return {
-    version: d.version,
+    version: defaultFilter.version,
 
     recentlySeen: true,
 
@@ -66,60 +97,64 @@ export function buildServerFilter(query: AuctionQuery): ServerFilter {
     showAuction: true,
     showStandard: false,
 
-    cpuCount: d.cpuCount,
+    cpuCount: query.cpu_count ?? defaultFilter.cpuCount,
     cpuIntel: wantsIntel,
     cpuAMD: wantsAmd,
 
-    cpuCores: [query.min_cpu_cores ?? d.cpuCores[0], d.cpuCores[1]],
-    cpuThreads: [query.min_cpu_threads ?? d.cpuThreads[0], d.cpuThreads[1]],
+    cpuCores: range(query.min_cpu_cores, query.max_cpu_cores, OPEN.cpuCores),
+    cpuThreads: range(
+      query.min_cpu_threads,
+      query.max_cpu_threads,
+      OPEN.cpuThreads,
+    ),
 
-    ramInternalSize: [
-      query.min_ram_gb !== undefined
-        ? gbToLog2(query.min_ram_gb)
-        : d.ramInternalSize[0],
-      d.ramInternalSize[1],
-    ],
+    ramInternalSize: range(
+      query.min_ram_gb,
+      query.max_ram_gb,
+      OPEN.ram,
+      gbToLog2,
+    ),
 
-    ssdNvmeCount: [
-      query.min_nvme_count ?? d.ssdNvmeCount[0],
-      d.ssdNvmeCount[1],
-    ],
-    ssdNvmeInternalSize: [
-      query.min_nvme_total_gb !== undefined
-        ? gbToDiskUnits(query.min_nvme_total_gb)
-        : d.ssdNvmeInternalSize[0],
-      d.ssdNvmeInternalSize[1],
-    ],
+    ssdNvmeCount: range(
+      query.min_nvme_count,
+      query.max_nvme_count,
+      OPEN.nvmeCount,
+    ),
+    ssdNvmeInternalSize: range(
+      query.min_nvme_size_gb,
+      query.max_nvme_size_gb,
+      OPEN.nvmeSize,
+      gbToDiskUnits,
+    ),
 
-    ssdSataCount: [
-      query.min_sata_count ?? d.ssdSataCount[0],
-      d.ssdSataCount[1],
-    ],
-    ssdSataInternalSize: [
-      query.min_sata_total_gb !== undefined
-        ? gbToDiskUnits(query.min_sata_total_gb)
-        : d.ssdSataInternalSize[0],
-      d.ssdSataInternalSize[1],
-    ],
+    ssdSataCount: range(
+      query.min_sata_count,
+      query.max_sata_count,
+      OPEN.sataCount,
+    ),
+    ssdSataInternalSize: range(
+      query.min_sata_size_gb,
+      query.max_sata_size_gb,
+      OPEN.sataSize,
+      gbToDiskUnits,
+    ),
 
-    hddCount: [query.min_hdd_count ?? d.hddCount[0], d.hddCount[1]],
-    hddInternalSize: [
-      query.min_hdd_total_gb !== undefined
-        ? gbToDiskUnits(query.min_hdd_total_gb)
-        : d.hddInternalSize[0],
-      d.hddInternalSize[1],
-    ],
+    hddCount: range(query.min_hdd_count, query.max_hdd_count, OPEN.hddCount),
+    hddInternalSize: range(
+      query.min_hdd_size_gb,
+      query.max_hdd_size_gb,
+      OPEN.hddSize,
+      gbToDiskUnits,
+    ),
 
-    // The MCP query expresses capacity as a total across drives, so the filter
-    // must interpret the ranges the same way rather than per-disk.
-    ssdNvmeSizeMode: "total",
-    ssdSataSizeMode: "total",
-    hddSizeMode: "total",
+    ssdNvmeSizeMode: query.nvme_size_mode ?? "total",
+    ssdSataSizeMode: query.sata_size_mode ?? "total",
+    hddSizeMode: query.hdd_size_mode ?? "total",
 
-    diskMode: "and",
+    diskMode: query.disk_mode ?? "and",
 
     selectedDatacenters: datacenters,
-    selectedCpuModels: [],
+    selectedCpuModels: query.cpu_models ?? [],
 
     extrasECC: query.ecc ?? null,
     extrasINIC: query.inic ?? null,

@@ -23,18 +23,18 @@ describe("buildServerFilter", () => {
 
   it("encodes disk capacity in units of 500 GB", () => {
     expect(
-      buildServerFilter({ min_nvme_total_gb: 1000 }).ssdNvmeInternalSize[0],
+      buildServerFilter({ min_nvme_size_gb: 1000 }).ssdNvmeInternalSize[0],
     ).toBe(2);
     expect(
-      buildServerFilter({ min_sata_total_gb: 500 }).ssdSataInternalSize[0],
+      buildServerFilter({ min_sata_size_gb: 500 }).ssdSataInternalSize[0],
     ).toBe(1);
     expect(
-      buildServerFilter({ min_hdd_total_gb: 8000 }).hddInternalSize[0],
+      buildServerFilter({ min_hdd_size_gb: 8000 }).hddInternalSize[0],
     ).toBe(16);
   });
 
   it("interprets capacity as a total, matching the query schema", () => {
-    const filter = buildServerFilter({ min_nvme_total_gb: 1000 });
+    const filter = buildServerFilter({ min_nvme_size_gb: 1000 });
     expect(filter.ssdNvmeSizeMode).toBe("total");
     expect(filter.ssdSataSizeMode).toBe("total");
     expect(filter.hddSizeMode).toBe("total");
@@ -79,13 +79,13 @@ describe("buildServerFilter", () => {
 
   it("passes a city prefix through uppercased", () => {
     expect(
-      buildServerFilter({ datacenter: "fsn" }).selectedDatacenters,
+      buildServerFilter({ datacenters: ["fsn"] }).selectedDatacenters,
     ).toEqual(["FSN"]);
   });
 
   it("keeps an exact datacenter as given", () => {
     expect(
-      buildServerFilter({ datacenter: "FSN1-DC14" }).selectedDatacenters,
+      buildServerFilter({ datacenters: ["FSN1-DC14"] }).selectedDatacenters,
     ).toEqual(["FSN1-DC14"]);
   });
 

@@ -23,61 +23,13 @@ import {
 import type { AuctionQuery } from "./search";
 import type { ToolDefinition } from "./tools";
 
-/**
- * Subset of the search schema that maps cleanly onto ServerFilter.
- * `min_largest_drive_gb` and `min_cpu_multicore_score` are deliberately absent:
- * ServerFilter has no equivalent, and silently dropping them would produce an
- * alert that does not match what was asked for.
- */
-const ALERT_QUERY_PROPERTIES: Record<string, unknown> = {
-  cpu_vendor: {
-    type: "string",
-    enum: ["Intel", "AMD"],
-    description: "Restrict to one CPU vendor.",
-  },
-  min_cpu_cores: { type: "integer", description: "Minimum physical cores." },
-  min_cpu_threads: { type: "integer", description: "Minimum threads." },
-  min_ram_gb: { type: "integer", description: "Minimum RAM in GB." },
-  location: {
-    type: "string",
-    enum: ["Germany", "Finland"],
-    description: "Country the datacenter is in. Omit to allow both.",
-  },
-  datacenter: {
-    type: "string",
-    description: "Datacenter or city prefix: FSN, NBG, HEL.",
-  },
-  min_nvme_count: {
-    type: "integer",
-    description: "Minimum number of NVMe drives.",
-  },
-  min_nvme_total_gb: {
-    type: "integer",
-    description: "Minimum combined NVMe capacity in GB.",
-  },
-  min_sata_count: {
-    type: "integer",
-    description: "Minimum number of SATA SSDs.",
-  },
-  min_sata_total_gb: {
-    type: "integer",
-    description: "Minimum combined SATA SSD capacity in GB.",
-  },
-  min_hdd_count: { type: "integer", description: "Minimum number of HDDs." },
-  min_hdd_total_gb: {
-    type: "integer",
-    description: "Minimum combined HDD capacity in GB.",
-  },
-  ecc: { type: "boolean", description: "Require or exclude ECC memory." },
-  gpu: { type: "boolean", description: "Require or exclude a GPU." },
-  inic: { type: "boolean", description: "Require or exclude Intel NIC." },
-  hwr: { type: "boolean", description: "Require or exclude hardware RAID." },
-  rps: {
-    type: "boolean",
-    description: "Require or exclude redundant power supply.",
-  },
-};
+import { ALERT_QUERY_PROPERTIES } from "./tools";
 
+/**
+ * Reads only the keys the alert schema advertises. Search-only parameters are
+ * absent from that schema, so they cannot leak into a filter that could not
+ * honour them.
+ */
 function readAlertQuery(args: Record<string, unknown>): AuctionQuery {
   const q: AuctionQuery = {};
   for (const key of Object.keys(ALERT_QUERY_PROPERTIES)) {
