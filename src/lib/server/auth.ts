@@ -151,8 +151,16 @@ https://radar.iodev.org/`,
        * Makes this app an OAuth provider for MCP clients: discovery metadata,
        * dynamic client registration and PKCE. Only the alert tools require it —
        * the read tools at /mcp stay reachable with no credentials at all.
+       *
+       * `resource` must identify the protected resource itself (RFC 9728), not
+       * the origin. Left unset it defaults to the bare origin, and clients that
+       * check the metadata against the endpoint they actually connected to
+       * (/mcp) see a mismatch.
        */
-      mcp({ loginPage: "/auth/login" }),
+      mcp({
+        loginPage: "/auth/login",
+        resource: `${resolveBaseUrl(env)}/mcp`,
+      }),
       // Must stay last so it can observe cookies set by other plugins.
       sveltekitCookies(getRequestEvent),
     ],
