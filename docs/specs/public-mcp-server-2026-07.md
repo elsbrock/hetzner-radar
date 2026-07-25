@@ -1,6 +1,6 @@
 # Public MCP Server (Model Context Protocol)
 
-Status: proposed (July 2026)
+Status: implemented (July 2026); OAuth connect flow not yet exercised end to end
 
 ## Intent
 
@@ -325,7 +325,11 @@ Hetzner" positioning in the server's `initialize` response.
 - [x] `cloud_availability` via `RADAR_WORKER`
 - [x] Result caps (default 20, max 50), `total_matched` reported separately from
       the page so a model can tell "only 3 exist" from "cheapest 20 of 300"
-- [x] Verified end-to-end against a dev server with real snapshot data
+- [x] Verified end-to-end against a dev server, then in production: worker
+      deployed 19:18:22Z, published its first snapshot 19:22:43Z, refreshing on
+      the 5-minute cadence. `search_auctions` returns 140/152 matches with
+      correct net and gross pricing; `list_filter_options` reports 27 CPU models
+      and 27 datacenters.
 - [ ] Revisit `RATE_LIMIT` (currently 3 req/60s) for MCP traffic
 
 **Phase 3 — Better Auth** (implemented on `feat/better-auth`)
@@ -377,7 +381,9 @@ the manual-deploy assumption implies.
 - [x] `mcp()` plugin enabled; migration 0017 adds the OAuth tables
 - [x] Conditional tool listing on `Authorization`; an invalid token degrades to
       the public surface rather than erroring
-- [ ] Apply migration 0017 to remote D1 (**before** pushing — the push deploys)
+- [x] Apply migration 0017 to remote D1 **before** pushing — 9 commands,
+      2026-07-25. Three empty OAuth tables; 2704 users and 182 alerts untouched;
+      `PRAGMA foreign_key_check` clean.
 - [ ] Walk the OAuth connect flow with a real MCP client end to end
 
 **Deferred**
