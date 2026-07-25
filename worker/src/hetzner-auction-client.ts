@@ -32,6 +32,17 @@ export interface HetznerAuctionServer {
 	fixed_price: boolean;
 	next_reduce_timestamp: number;
 	next_reduce: number;
+	/**
+	 * Pricing fields the transformer drops but the MCP snapshot resolves.
+	 * `ip_price` is an object in the live feed, not a scalar.
+	 */
+	ip_price?: {
+		Monthly: number;
+		Hourly: number;
+		Amount: number;
+	};
+	setup_price?: number;
+	hourly_price?: number;
 }
 
 export class HetznerAuctionClient {

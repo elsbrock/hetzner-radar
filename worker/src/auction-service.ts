@@ -7,6 +7,7 @@
 import { HetznerAuctionClient } from './hetzner-auction-client';
 import { AuctionDataTransformer } from './auction-data-transformer';
 import { AuctionDatabaseService } from './auction-db-service';
+import { buildSnapshot, SNAPSHOT_KEY } from './auction-snapshot';
 
 interface AuctionImportResult {
 	fetched: number;
@@ -25,12 +26,42 @@ export class AuctionService {
 	private db: D1Database;
 	private storage: DurableObjectStorage;
 	private doId: string;
+	private snapshotKv?: KVNamespace;
 
-	constructor(auctionApiUrl: string, db: D1Database, storage: DurableObjectStorage, doId: string) {
+	constructor(auctionApiUrl: string, db: D1Database, storage: DurableObjectStorage, doId: string, snapshotKv?: KVNamespace) {
 		this.auctionApiUrl = auctionApiUrl;
 		this.db = db;
 		this.storage = storage;
 		this.doId = doId;
+		this.snapshotKv = snapshotKv;
+	}
+
+	/**
+	 * Publishes the auction snapshot consumed by the public MCP server.
+	 *
+	 * Deliberately non-fatal: the snapshot is a read-optimisation for /mcp, so a
+	 * KV failure must never fail an import that already committed to D1 (which
+	 * is what alerting depends on). A stale snapshot degrades MCP freshness by
+	 * one cycle; a thrown error would cost an alert run.
+	 */
+	private async publishSnapshot(
+		transformed: Awaited<ReturnType<typeof AuctionDataTransformer.transformServers>>,
+		rawServers: Parameters<typeof buildSnapshot>[1],
+		generatedAt: string,
+	): Promise<void> {
+		if (!this.snapshotKv) {
+			console.warn(`[AuctionService ${this.doId}] SNAPSHOT KV not bound; skipping snapshot write`);
+			return;
+		}
+
+		try {
+			const snapshot = buildSnapshot(transformed, rawServers, generatedAt);
+			const body = JSON.stringify(snapshot);
+			await this.snapshotKv.put(SNAPSHOT_KEY, body);
+			console.log(`[AuctionService ${this.doId}] Published snapshot: ${snapshot.count} auctions, ${body.length} bytes`);
+		} catch (error) {
+			console.error(`[AuctionService ${this.doId}] Failed to publish snapshot:`, error);
+		}
 	}
 
 	async fetchAndImportAuctions(): Promise<AuctionImportResult> {
@@ -76,6 +107,9 @@ export class AuctionService {
 			// Update last import timestamp
 			const importTimestamp = new Date().toISOString();
 			await this.storage.put('lastAuctionImport', importTimestamp);
+
+			// Publish the MCP snapshot from the data already in memory.
+			await this.publishSnapshot(valid, rawServers, importTimestamp);
 
 			const duration = Date.now() - startTime;
 			console.log(`[AuctionService ${this.doId}] Auction import completed successfully in ${duration}ms:`, {

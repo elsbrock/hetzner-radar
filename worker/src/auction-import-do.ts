@@ -19,6 +19,8 @@ interface AuctionImportEnv {
 	FORWARDEMAIL_API_KEY?: string;
 	OTLP_ENDPOINT?: string;
 	OTLP_AUTH_TOKEN?: string;
+	/** Auction snapshot consumed by the public MCP server. */
+	SNAPSHOT?: KVNamespace;
 }
 
 const DEFAULT_AUCTION_IMPORT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -48,7 +50,7 @@ export class AuctionImportDO extends DurableObject {
 		this.hetznerAuctionApiUrl = env.HETZNER_AUCTION_API_URL || DEFAULT_HETZNER_AUCTION_API_URL;
 
 		// Initialize services
-		this.auctionService = new AuctionService(this.hetznerAuctionApiUrl, env.DB, ctx.storage, ctx.id.toString());
+		this.auctionService = new AuctionService(this.hetznerAuctionApiUrl, env.DB, ctx.storage, ctx.id.toString(), env.SNAPSHOT);
 		this.notificationService = new NotificationService(ctx.storage, ctx.id.toString(), env.ANALYTICS_ENGINE);
 
 		// Initialize alert notification service

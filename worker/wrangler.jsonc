@@ -60,6 +60,17 @@
 		},
 	],
 	/**
+	 * Auction snapshot for the public MCP server. Written here after each
+	 * import; read by the SvelteKit app's /mcp endpoint so MCP reads never
+	 * touch D1.
+	 */
+	"kv_namespaces": [
+		{
+			"binding": "SNAPSHOT",
+			"id": "aa8acd635f004b6fa19b2037bf6fc4f1",
+		},
+	],
+	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */

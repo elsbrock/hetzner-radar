@@ -28,6 +28,14 @@
       "service": "server-radar-worker",
     },
   ],
+  // Read-only here: the worker writes the auction snapshot after each import,
+  // /mcp reads it so MCP traffic never hits D1.
+  "kv_namespaces": [
+    {
+      "binding": "SNAPSHOT",
+      "id": "aa8acd635f004b6fa19b2037bf6fc4f1",
+    },
+  ],
   "unsafe": {
     "bindings": [
       {
@@ -57,6 +65,13 @@
           "database_name": "DB",
         },
       ],
+      // Environments do not inherit top-level bindings, so this is repeated.
+      "kv_namespaces": [
+        {
+          "binding": "SNAPSHOT",
+          "id": "aa8acd635f004b6fa19b2037bf6fc4f1",
+        },
+      ],
     },
     "preview": {
       "compatibility_date": "2024-09-23",
@@ -72,6 +87,12 @@
           "database_id": "31a2a0e5-80cf-4a2c-a338-e1ad04aaa61f",
           "binding": "DB",
           "database_name": "DB",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "SNAPSHOT",
+          "id": "aa8acd635f004b6fa19b2037bf6fc4f1",
         },
       ],
     },
