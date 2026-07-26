@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAuctionMatchQuery, parseMatchRequest } from "./+server";
+import { buildAuctionMatchQuery, parseMatchRequest } from "./auction-match";
 
 /**
  * The datacenter clause of this endpoint used to interpolate request strings

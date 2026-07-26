@@ -83,56 +83,53 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 		diskSizeCeiling(filter.hddSizeMode, HDD_PER_DISK_MAX, HDD_MAX_DEVICES)
 	);
 
-	// Track previous size modes to detect changes and clamp values
-	let prevNvmeSizeMode = $state<string | undefined>(undefined);
-	let prevSataSizeMode = $state<string | undefined>(undefined);
-	let prevHddSizeMode = $state<string | undefined>(undefined);
+	/**
+	 * The three disk types, which differ only in which filter fields they read.
+	 * This replaces three byte-identical clamp effects.
+	 */
+	const DISK_SIZE_FIELDS = [
+		{
+			mode: 'ssdNvmeSizeMode',
+			size: 'ssdNvmeInternalSize',
+			perDiskMax: NVME_PER_DISK_MAX
+		},
+		{
+			mode: 'ssdSataSizeMode',
+			size: 'ssdSataInternalSize',
+			perDiskMax: SATA_PER_DISK_MAX
+		},
+		{ mode: 'hddSizeMode', size: 'hddInternalSize', perDiskMax: HDD_PER_DISK_MAX }
+	] as const satisfies ReadonlyArray<{
+		mode: keyof ServerFilter;
+		size: keyof ServerFilter;
+		perDiskMax: number;
+	}>;
 
-	// Clamp slider values when switching from total to per-disk mode
+	// Deliberately a plain object, not $state: the effect below both reads and
+	// writes it, and reactive prev-value trackers make an effect retrigger itself.
+	const prevSizeModes: Partial<Record<string, string>> = {};
+
+	/**
+	 * Clamps size sliders when a disk type switches from `total` back to per-disk.
+	 *
+	 * This genuinely is an effect rather than a `$derived` — it writes corrected
+	 * values back into `filter` in response to a transition, which derivation
+	 * cannot express. The duplication was the problem, not the `$effect`.
+	 */
 	$effect(() => {
-		const currentMode = filter.ssdNvmeSizeMode;
-		if (prevNvmeSizeMode !== undefined && prevNvmeSizeMode === 'total' && currentMode !== 'total') {
-			// Switching from total to per-disk - clamp values
-			const clamped = filter.ssdNvmeInternalSize.map((v) =>
-				Math.min(v, NVME_PER_DISK_MAX)
-			) as [number, number];
-			if (
-				clamped[0] !== filter.ssdNvmeInternalSize[0] ||
-				clamped[1] !== filter.ssdNvmeInternalSize[1]
-			) {
-				filter = { ...filter, ssdNvmeInternalSize: clamped };
+		for (const { mode, size, perDiskMax } of DISK_SIZE_FIELDS) {
+			const currentMode = filter[mode] as string;
+			const wasTotal = prevSizeModes[mode] === 'total';
+			prevSizeModes[mode] = currentMode;
+
+			if (!wasTotal || currentMode === 'total') continue;
+
+			const [lo, hi] = filter[size] as [number, number];
+			const clamped: [number, number] = [Math.min(lo, perDiskMax), Math.min(hi, perDiskMax)];
+			if (clamped[0] !== lo || clamped[1] !== hi) {
+				filter = { ...filter, [size]: clamped };
 			}
 		}
-		prevNvmeSizeMode = currentMode;
-	});
-
-	$effect(() => {
-		const currentMode = filter.ssdSataSizeMode;
-		if (prevSataSizeMode !== undefined && prevSataSizeMode === 'total' && currentMode !== 'total') {
-			const clamped = filter.ssdSataInternalSize.map((v) =>
-				Math.min(v, SATA_PER_DISK_MAX)
-			) as [number, number];
-			if (
-				clamped[0] !== filter.ssdSataInternalSize[0] ||
-				clamped[1] !== filter.ssdSataInternalSize[1]
-			) {
-				filter = { ...filter, ssdSataInternalSize: clamped };
-			}
-		}
-		prevSataSizeMode = currentMode;
-	});
-
-	$effect(() => {
-		const currentMode = filter.hddSizeMode;
-		if (prevHddSizeMode !== undefined && prevHddSizeMode === 'total' && currentMode !== 'total') {
-			const clamped = filter.hddInternalSize.map((v) =>
-				Math.min(v, HDD_PER_DISK_MAX)
-			) as [number, number];
-			if (clamped[0] !== filter.hddInternalSize[0] || clamped[1] !== filter.hddInternalSize[1]) {
-				filter = { ...filter, hddInternalSize: clamped };
-			}
-		}
-		prevHddSizeMode = currentMode;
 	});
 
 	// Initialize the filter store immediately with default values if it's null
@@ -282,27 +279,30 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 		}
 	});
 
-	// Variables for displaying formatted sizes - using $state to satisfy linter/reactivity tracking
-	let ramSizeLower = $state<SliderSizeType>('');
-	let ramSizeUpper = $state<SliderSizeType>('');
-	let ssdNvmeSizeLower = $state<SliderSizeType>('');
-	let ssdNvmeSizeUpper = $state<SliderSizeType>('');
-	let ssdSataSizeLower = $state<SliderSizeType>('');
-	let ssdSataSizeUpper = $state<SliderSizeType>('');
-	let hddSizeLower = $state<SliderSizeType>('');
-	let hddSizeUpper = $state<SliderSizeType>('');
-
-	$effect(() => {
-		// Update formatted sizes when filter changes
-		ramSizeLower = getFormattedMemorySize(filter.ramInternalSize[0]);
-		ramSizeUpper = getFormattedMemorySize(filter.ramInternalSize[1]);
-		ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0], DISK_UNIT_GB);
-		ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1], DISK_UNIT_GB);
-		ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0], DISK_UNIT_GB);
-		ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1], DISK_UNIT_GB);
-		hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], DISK_UNIT_GB);
-		hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], DISK_UNIT_GB);
-	});
+	// Formatted slider labels. These are pure functions of `filter`, so they are
+	// derived rather than assigned from an effect — the previous version declared
+	// them as $state "to satisfy linter/reactivity tracking" and wrote all eight
+	// from a single $effect, which is derivation spelled as a side effect.
+	let ramSizeLower: SliderSizeType = $derived(getFormattedMemorySize(filter.ramInternalSize[0]));
+	let ramSizeUpper: SliderSizeType = $derived(getFormattedMemorySize(filter.ramInternalSize[1]));
+	let ssdNvmeSizeLower: SliderSizeType = $derived(
+		getFormattedDiskSize(filter.ssdNvmeInternalSize[0], DISK_UNIT_GB)
+	);
+	let ssdNvmeSizeUpper: SliderSizeType = $derived(
+		getFormattedDiskSize(filter.ssdNvmeInternalSize[1], DISK_UNIT_GB)
+	);
+	let ssdSataSizeLower: SliderSizeType = $derived(
+		getFormattedDiskSize(filter.ssdSataInternalSize[0], DISK_UNIT_GB)
+	);
+	let ssdSataSizeUpper: SliderSizeType = $derived(
+		getFormattedDiskSize(filter.ssdSataInternalSize[1], DISK_UNIT_GB)
+	);
+	let hddSizeLower: SliderSizeType = $derived(
+		getFormattedDiskSize(filter.hddInternalSize[0], DISK_UNIT_GB)
+	);
+	let hddSizeUpper: SliderSizeType = $derived(
+		getFormattedDiskSize(filter.hddInternalSize[1], DISK_UNIT_GB)
+	);
 </script>
 
 <!-- Header and Toggle Button - Always Render -->
