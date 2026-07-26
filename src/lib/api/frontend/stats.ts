@@ -2,6 +2,7 @@
  * Statistics
  */
 
+import { CITY_PREFIXES } from "@server-radar/filter-spec/constants";
 import { getData } from "$lib/api/frontend/dbapi";
 import { generateFilterQuery } from "$lib/api/frontend/filter";
 import type { ServerFilter } from "$lib/filter";
@@ -28,15 +29,27 @@ export async function getDatacenters(
 
   // Query city prefixes from ALL historical data (ignoring recentlySeen filter)
   // This ensures users can filter by city even if no servers are currently available
+  // Built from CITY_PREFIXES so adding a city does not mean editing SQL in three
+  // places. The values are compile-time constants from the shared spec, never
+  // user input.
+  const prefixCases = CITY_PREFIXES.map(
+    (p) => `WHEN datacenter LIKE '${p}%' THEN '${p}'`,
+  ).join("\n        ");
+  const prefixMatches = CITY_PREFIXES.map(
+    (p) => `datacenter LIKE '${p}%'`,
+  ).join(" OR ");
   const prefixes_query = SQL`
     SELECT DISTINCT
       CASE
-        WHEN datacenter LIKE 'FSN%' THEN 'FSN'
-        WHEN datacenter LIKE 'NBG%' THEN 'NBG'
-        WHEN datacenter LIKE 'HEL%' THEN 'HEL'
+        `
+    .append(prefixCases)
+    .append(
+      `
       END as name
     FROM server
-    WHERE datacenter LIKE 'FSN%' OR datacenter LIKE 'NBG%' OR datacenter LIKE 'HEL%'`;
+    WHERE `,
+    )
+    .append(prefixMatches);
 
   const [specificDatacenters, prefixes] = await Promise.all([
     getData<NameValuePair>(conn, datacenters_query),

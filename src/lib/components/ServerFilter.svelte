@@ -12,6 +12,16 @@ type SliderSizeType = string | number | FilesizeArray | FilesizeObject;
 		loadFilter,
 		type ServerFilter
 	} from '$lib/filter';
+	import {
+		DISK_UNIT_GB,
+		HDD_MAX_DEVICES,
+		HDD_PER_DISK_MAX,
+		NVME_MAX_DEVICES,
+		NVME_PER_DISK_MAX,
+		SATA_MAX_DEVICES,
+		SATA_PER_DISK_MAX,
+		diskSizeCeiling
+	} from '@server-radar/filter-spec/constants';
 	import { filter as filterStore } from '$lib/stores/filter';
 	import { addToast } from '$lib/stores/toast';
 	import { debounce } from '$lib/util';
@@ -58,28 +68,19 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 	let hddCollapsed = $state(true);
 	let extrasCollapsed = $state(true);
 
-	// Per-disk size slider max values
-	const NVME_PER_DISK_MAX = 18;
-	const SATA_PER_DISK_MAX = 14;
-	const HDD_PER_DISK_MAX = 44;
-
-	// Max device counts
-	const NVME_MAX_DEVICES = 8;
-	const SATA_MAX_DEVICES = 4;
-	const HDD_MAX_DEVICES = 15;
-
 	let filter = $state(createDefaultFilter());
-	let _hasStoredFilter = false;
 
-	// Dynamic slider max based on size mode
+	// Dynamic slider max based on size mode. `diskSizeCeiling` encodes the
+	// per-disk/total distinction once, in the shared spec, rather than three times
+	// here — the alert matcher reads the same geometry.
 	let nvmeSizeMax = $derived(
-		filter.ssdNvmeSizeMode === 'total' ? NVME_PER_DISK_MAX * NVME_MAX_DEVICES : NVME_PER_DISK_MAX
+		diskSizeCeiling(filter.ssdNvmeSizeMode, NVME_PER_DISK_MAX, NVME_MAX_DEVICES)
 	);
 	let sataSizeMax = $derived(
-		filter.ssdSataSizeMode === 'total' ? SATA_PER_DISK_MAX * SATA_MAX_DEVICES : SATA_PER_DISK_MAX
+		diskSizeCeiling(filter.ssdSataSizeMode, SATA_PER_DISK_MAX, SATA_MAX_DEVICES)
 	);
 	let hddSizeMax = $derived(
-		filter.hddSizeMode === 'total' ? HDD_PER_DISK_MAX * HDD_MAX_DEVICES : HDD_PER_DISK_MAX
+		diskSizeCeiling(filter.hddSizeMode, HDD_PER_DISK_MAX, HDD_MAX_DEVICES)
 	);
 
 	// Track previous size modes to detect changes and clamp values
@@ -177,7 +178,6 @@ import type { FilesizeArray, FilesizeObject } from 'filesize';
 				icon: 'success'
 			});
 		} else if (storedFilterValue) {
-			_hasStoredFilter = true;
 			Object.assign(filter, storedFilterValue);
 			addToast({
 				color: 'green',
@@ -296,12 +296,12 @@ function updateFilterFromUrl(newFilter: ServerFilter | null) {
 		// Update formatted sizes when filter changes
 		ramSizeLower = getFormattedMemorySize(filter.ramInternalSize[0]);
 		ramSizeUpper = getFormattedMemorySize(filter.ramInternalSize[1]);
-		ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0], 500);
-		ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1], 500);
-		ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0], 500);
-		ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1], 500);
-		hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], 500);
-		hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], 500);
+		ssdNvmeSizeLower = getFormattedDiskSize(filter.ssdNvmeInternalSize[0], DISK_UNIT_GB);
+		ssdNvmeSizeUpper = getFormattedDiskSize(filter.ssdNvmeInternalSize[1], DISK_UNIT_GB);
+		ssdSataSizeLower = getFormattedDiskSize(filter.ssdSataInternalSize[0], DISK_UNIT_GB);
+		ssdSataSizeUpper = getFormattedDiskSize(filter.ssdSataInternalSize[1], DISK_UNIT_GB);
+		hddSizeLower = getFormattedDiskSize(filter.hddInternalSize[0], DISK_UNIT_GB);
+		hddSizeUpper = getFormattedDiskSize(filter.hddInternalSize[1], DISK_UNIT_GB);
 	});
 </script>
 

@@ -4,12 +4,19 @@
  * `src/lib/api/shared/filter-conformance.test.ts` runs this exact SQL against
  * in-memory SQLite alongside the DuckDB frontend matcher).
  *
- * Deliberately dependency-free: keep it that way so both sides of the workspace
- * can import it.
+ * Dependencies are limited to `@server-radar/filter-spec`, which resolves from
+ * both the worker and the app toolchain — that is the point of the package. Do
+ * not add anything else: both sides of the workspace import this module, and the
+ * harness loads it in a plain Node context.
  */
+
+import { CITY_PREFIXES, DISK_UNIT_GB } from '@server-radar/filter-spec/constants';
 
 /** €1.19 in cents — the mandatory Hetzner IPv4 surcharge. */
 export const HETZNER_IPV4_COST_CENTS = 119;
+
+/** `'FSN', 'NBG', 'HEL'` — an SQL list literal built from the shared constant. */
+const CITY_PREFIX_SQL_LIST = CITY_PREFIXES.map((p) => `'${p}'`).join(', ');
 
 export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CENTS): string {
 	return `
@@ -102,10 +109,10 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 
 			-- Disk type filters (NVMe / SATA / HDD). Mirrors generateFilterQuery() in
 			-- src/lib/api/frontend/filter.ts EXACTLY — keep the two in sync.
-			--   unit       : 500 GB per slider step (getFormattedDiskSize(v, 500) in the UI)
-			--   total mode : <type>_size BETWEEN lo*500 AND hi*500
+			--   unit       : DISK_UNIT_GB per slider step (shared with the UI sliders)
+			--   total mode : <type>_size BETWEEN lo*unit AND hi*unit
 			--   per-disk   : <type>_count = 0 (empty array passes, like the frontend's
-			--               array_filter == array_length) OR every drive within [lo*500, hi*500]
+			--               array_filter == array_length) OR every drive within [lo*unit, hi*unit]
 			--   missing sizeMode/diskMode (pre-2026 alerts) -> 'per-disk' / 'and'
 			AND (
 				CASE
@@ -118,9 +125,9 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 									c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
 									AND (
 										CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdNvmeSizeMode'), 'per-disk') = 'total' THEN
-											(c.nvme_size >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.nvme_size <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500)
+											(c.nvme_size >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * ${DISK_UNIT_GB} AND c.nvme_size <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * ${DISK_UNIT_GB})
 										ELSE
-											(c.nvme_count = 0 OR (c.min_nvme_drive >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.max_nvme_drive <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500))
+											(c.nvme_count = 0 OR (c.min_nvme_drive >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * ${DISK_UNIT_GB} AND c.max_nvme_drive <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * ${DISK_UNIT_GB}))
 										END
 									)
 								)
@@ -130,9 +137,9 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 									c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
 									AND (
 										CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdSataSizeMode'), 'per-disk') = 'total' THEN
-											(c.sata_size >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.sata_size <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500)
+											(c.sata_size >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * ${DISK_UNIT_GB} AND c.sata_size <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * ${DISK_UNIT_GB})
 										ELSE
-											(c.sata_count = 0 OR (c.min_sata_drive >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.max_sata_drive <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500))
+											(c.sata_count = 0 OR (c.min_sata_drive >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * ${DISK_UNIT_GB} AND c.max_sata_drive <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * ${DISK_UNIT_GB}))
 										END
 									)
 								)
@@ -142,9 +149,9 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 									c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
 									AND (
 										CASE WHEN COALESCE(json_extract(pa.filter, '$.hddSizeMode'), 'per-disk') = 'total' THEN
-											(c.hdd_size >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.hdd_size <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500)
+											(c.hdd_size >= json_extract(pa.filter, '$.hddInternalSize[0]') * ${DISK_UNIT_GB} AND c.hdd_size <= json_extract(pa.filter, '$.hddInternalSize[1]') * ${DISK_UNIT_GB})
 										ELSE
-											(c.hdd_count = 0 OR (c.min_hdd_drive >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.max_hdd_drive <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500))
+											(c.hdd_count = 0 OR (c.min_hdd_drive >= json_extract(pa.filter, '$.hddInternalSize[0]') * ${DISK_UNIT_GB} AND c.max_hdd_drive <= json_extract(pa.filter, '$.hddInternalSize[1]') * ${DISK_UNIT_GB}))
 										END
 									)
 								)
@@ -155,9 +162,9 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 								c.nvme_count BETWEEN json_extract(pa.filter, '$.ssdNvmeCount[0]') AND json_extract(pa.filter, '$.ssdNvmeCount[1]')
 								AND (
 									CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdNvmeSizeMode'), 'per-disk') = 'total' THEN
-										(c.nvme_size >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.nvme_size <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500)
+										(c.nvme_size >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * ${DISK_UNIT_GB} AND c.nvme_size <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * ${DISK_UNIT_GB})
 									ELSE
-										(c.nvme_count = 0 OR (c.min_nvme_drive >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * 500 AND c.max_nvme_drive <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * 500))
+										(c.nvme_count = 0 OR (c.min_nvme_drive >= json_extract(pa.filter, '$.ssdNvmeInternalSize[0]') * ${DISK_UNIT_GB} AND c.max_nvme_drive <= json_extract(pa.filter, '$.ssdNvmeInternalSize[1]') * ${DISK_UNIT_GB}))
 									END
 								)
 							)
@@ -166,9 +173,9 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 								c.sata_count BETWEEN json_extract(pa.filter, '$.ssdSataCount[0]') AND json_extract(pa.filter, '$.ssdSataCount[1]')
 								AND (
 									CASE WHEN COALESCE(json_extract(pa.filter, '$.ssdSataSizeMode'), 'per-disk') = 'total' THEN
-										(c.sata_size >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.sata_size <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500)
+										(c.sata_size >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * ${DISK_UNIT_GB} AND c.sata_size <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * ${DISK_UNIT_GB})
 									ELSE
-										(c.sata_count = 0 OR (c.min_sata_drive >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * 500 AND c.max_sata_drive <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * 500))
+										(c.sata_count = 0 OR (c.min_sata_drive >= json_extract(pa.filter, '$.ssdSataInternalSize[0]') * ${DISK_UNIT_GB} AND c.max_sata_drive <= json_extract(pa.filter, '$.ssdSataInternalSize[1]') * ${DISK_UNIT_GB}))
 									END
 								)
 							)
@@ -177,9 +184,9 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 								c.hdd_count BETWEEN json_extract(pa.filter, '$.hddCount[0]') AND json_extract(pa.filter, '$.hddCount[1]')
 								AND (
 									CASE WHEN COALESCE(json_extract(pa.filter, '$.hddSizeMode'), 'per-disk') = 'total' THEN
-										(c.hdd_size >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.hdd_size <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500)
+										(c.hdd_size >= json_extract(pa.filter, '$.hddInternalSize[0]') * ${DISK_UNIT_GB} AND c.hdd_size <= json_extract(pa.filter, '$.hddInternalSize[1]') * ${DISK_UNIT_GB})
 									ELSE
-										(c.hdd_count = 0 OR (c.min_hdd_drive >= json_extract(pa.filter, '$.hddInternalSize[0]') * 500 AND c.max_hdd_drive <= json_extract(pa.filter, '$.hddInternalSize[1]') * 500))
+										(c.hdd_count = 0 OR (c.min_hdd_drive >= json_extract(pa.filter, '$.hddInternalSize[0]') * ${DISK_UNIT_GB} AND c.max_hdd_drive <= json_extract(pa.filter, '$.hddInternalSize[1]') * ${DISK_UNIT_GB}))
 									END
 								)
 							)
@@ -188,7 +195,7 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 
 			-- Selected Datacenters. Mirrors generateFilterQuery: a selection is either a
 			-- specific datacenter (exact match, e.g. 'FSN1-DC14') or a city prefix
-			-- ('FSN'/'NBG'/'HEL', matched with LIKE 'FSN%'). Exact IN would never match a
+			-- (CITY_PREFIXES, matched with LIKE 'FSN%'). Exact IN would never match a
 			-- city prefix, so city-level alerts would silently never fire.
 			AND (
 				json_extract(pa.filter, '$.selectedDatacenters') IS NULL
@@ -196,7 +203,7 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 				OR EXISTS (
 					SELECT 1 FROM json_each(pa.filter, '$.selectedDatacenters') AS dc
 					WHERE c.datacenter = dc.value
-						OR (dc.value IN ('FSN', 'NBG', 'HEL') AND c.datacenter LIKE dc.value || '%')
+						OR (dc.value IN (${CITY_PREFIX_SQL_LIST}) AND c.datacenter LIKE dc.value || '%')
 				)
 			)
 

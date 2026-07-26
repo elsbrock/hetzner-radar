@@ -4,6 +4,7 @@ import {
   defaultFilter,
   type ServerFilter,
 } from "@server-radar/filter-spec/types";
+import { DISK_UNIT_GB } from "@server-radar/filter-spec/constants";
 import { computeFilterRange, getInverseMemoryExp } from "./disksize";
 
 // The stored filter shape and its defaults live in the shared package so the
@@ -235,10 +236,14 @@ export function getHetznerLink(device: ServerConfiguration) {
   ];
 
   if (minDriveLength < Infinity) {
-    filterQ.push(`drives_size_from=${Math.floor(minDriveLength / 500) * 500}`);
+    filterQ.push(
+      `drives_size_from=${Math.floor(minDriveLength / DISK_UNIT_GB) * DISK_UNIT_GB}`,
+    );
   }
   if (maxDriveLength > 0) {
-    filterQ.push(`drives_size_to=${Math.floor(maxDriveLength / 500) * 500}`);
+    filterQ.push(
+      `drives_size_to=${Math.floor(maxDriveLength / DISK_UNIT_GB) * DISK_UNIT_GB}`,
+    );
   }
   if (driveTypes.length > 0) {
     filterQ.push(`driveType=${encodeURIComponent(driveTypes.join("+"))}`);

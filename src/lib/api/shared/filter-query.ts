@@ -6,11 +6,16 @@
  * (`filter-conformance.test.ts`) needs this function in a plain Node context,
  * and `$lib/api/frontend/dbapi` is not loadable there.
  *
- * Deliberately dependency-free apart from `sql-template-strings` and a type-only
- * import: keep it that way.
+ * Dependencies are limited to `sql-template-strings` and the shared filter spec —
+ * both resolve under plain Node, which is what the harness needs. Do not add
+ * anything that pulls in SvelteKit or the DuckDB connection helpers.
  */
 
 import type { ServerFilter } from "../../filter";
+import {
+  CITY_PREFIXES,
+  DISK_UNIT_GB,
+} from "@server-radar/filter-spec/constants";
 import SQL, { SQLStatement } from "sql-template-strings";
 
 export function generateFilterQuery(
@@ -58,12 +63,11 @@ export function generateFilterQuery(
   // datacenter filtering
   if (withDatacenters && filter.selectedDatacenters.length > 0) {
     // Separate city prefixes from specific datacenters
-    const cityPrefixes = ["FSN", "NBG", "HEL"];
     const selectedPrefixes = filter.selectedDatacenters.filter((d) =>
-      cityPrefixes.includes(d),
+      CITY_PREFIXES.includes(d),
     );
     const selectedSpecific = filter.selectedDatacenters.filter(
-      (d) => !cityPrefixes.includes(d),
+      (d) => !CITY_PREFIXES.includes(d),
     );
 
     const conditions: string[] = [];
@@ -146,12 +150,12 @@ export function generateFilterQuery(
     const clause = SQL`(nvme_count >= ${filter.ssdNvmeCount[0]} and nvme_count <= ${filter.ssdNvmeCount[1]}`;
     if (filter.ssdNvmeSizeMode === "total") {
       clause.append(
-        SQL` and nvme_size >= ${filter.ssdNvmeInternalSize[0] * 500} and nvme_size <= ${filter.ssdNvmeInternalSize[1] * 500}`,
+        SQL` and nvme_size >= ${filter.ssdNvmeInternalSize[0] * DISK_UNIT_GB} and nvme_size <= ${filter.ssdNvmeInternalSize[1] * DISK_UNIT_GB}`,
       );
     } else {
       // "per-disk"
       clause.append(
-        SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * 500} AND x <= ${filter.ssdNvmeInternalSize[1] * 500})) = array_length(nvme_drives)`,
+        SQL` and array_length(array_filter(nvme_drives, x -> x >= ${filter.ssdNvmeInternalSize[0] * DISK_UNIT_GB} AND x <= ${filter.ssdNvmeInternalSize[1] * DISK_UNIT_GB})) = array_length(nvme_drives)`,
       );
     }
     clause.append(SQL`)`);
@@ -165,11 +169,11 @@ export function generateFilterQuery(
     const clause = SQL`(sata_count >= ${filter.ssdSataCount[0]} and sata_count <= ${filter.ssdSataCount[1]}`;
     if (filter.ssdSataSizeMode === "total") {
       clause.append(
-        SQL` and sata_size >= ${filter.ssdSataInternalSize[0] * 500} and sata_size <= ${filter.ssdSataInternalSize[1] * 500}`,
+        SQL` and sata_size >= ${filter.ssdSataInternalSize[0] * DISK_UNIT_GB} and sata_size <= ${filter.ssdSataInternalSize[1] * DISK_UNIT_GB}`,
       );
     } else {
       clause.append(
-        SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * 500} AND x <= ${filter.ssdSataInternalSize[1] * 500})) = array_length(sata_drives)`,
+        SQL` and array_length(array_filter(sata_drives, x -> x >= ${filter.ssdSataInternalSize[0] * DISK_UNIT_GB} AND x <= ${filter.ssdSataInternalSize[1] * DISK_UNIT_GB})) = array_length(sata_drives)`,
       );
     }
     clause.append(SQL`)`);
@@ -183,11 +187,11 @@ export function generateFilterQuery(
     const clause = SQL`(hdd_count >= ${filter.hddCount[0]} and hdd_count <= ${filter.hddCount[1]}`;
     if (filter.hddSizeMode === "total") {
       clause.append(
-        SQL` and hdd_size >= ${filter.hddInternalSize[0] * 500} and hdd_size <= ${filter.hddInternalSize[1] * 500}`,
+        SQL` and hdd_size >= ${filter.hddInternalSize[0] * DISK_UNIT_GB} and hdd_size <= ${filter.hddInternalSize[1] * DISK_UNIT_GB}`,
       );
     } else {
       clause.append(
-        SQL` and array_length(array_filter(hdd_drives, x -> x >= ${filter.hddInternalSize[0] * 500} AND x <= ${filter.hddInternalSize[1] * 500})) = array_length(hdd_drives)`,
+        SQL` and array_length(array_filter(hdd_drives, x -> x >= ${filter.hddInternalSize[0] * DISK_UNIT_GB} AND x <= ${filter.hddInternalSize[1] * DISK_UNIT_GB})) = array_length(hdd_drives)`,
       );
     }
     clause.append(SQL`)`);
