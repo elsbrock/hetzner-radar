@@ -31,7 +31,6 @@
 	import { convertPrice } from '$lib/currency';
 	import { onMount } from 'svelte';
 
-	let _loading = $state(true);
 
 	onMount(() => {
 		initializeDB();
@@ -153,9 +152,6 @@
 	);
 
 	async function fetchData(db: AsyncDuckDB) {
-		let queryTime = performance.now();
-		_loading = true;
-
 		await withDbConnections(db, async (conn1, conn2, conn3, conn4, conn5) => {
 			try {
 				// Get the list of datacenters for each country
@@ -218,16 +214,8 @@
 					getVolumeByCPUModelStats(conn5, 'AMD', undefined, 7)
 				]);
 
-				// This section is no longer needed as we're now showing datacenter volumes by country
-				// instead of overall datacenter volumes
-
-				// No longer needed
-
-				queryTime = performance.now() - queryTime;
 			} catch (error) {
 				console.error('Error fetching data:', error);
-			} finally {
-				_loading = false;
 			}
 		});
 	}

@@ -10,7 +10,6 @@
 	import { invalidateAll, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	// import QuickStat from '$lib/components/QuickStat.svelte';
-	import { fade as _fade, slide as _slide } from 'svelte/transition';
 	import { formatRelativeTime, getAvailabilityRecency, jsonLdSafe } from '$lib/util';
 	import {
 		Table,

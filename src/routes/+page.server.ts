@@ -110,7 +110,7 @@ function mapAuctionToFeaturedServer(row: CurrentAuctionRow): FeaturedServer {
 }
 
 // Deduplicate by CPU, keeping the cheapest for each CPU model
-function dedupeByСpu(rows: CurrentAuctionRow[]): FeaturedServer[] {
+function dedupeByCpu(rows: CurrentAuctionRow[]): FeaturedServer[] {
   const seen = new Set<string>();
   const result: FeaturedServer[] = [];
 
@@ -220,7 +220,7 @@ export const load: PageServerLoad = async ({ platform }) => {
     ]);
 
     // Deduplicate by CPU to show variety (one per CPU model)
-    const featuredServers = dedupeByСpu(featuredServersRows);
+    const featuredServers = dedupeByCpu(featuredServersRows);
 
     // Ensure we return actual numbers, not null or undefined
     return {

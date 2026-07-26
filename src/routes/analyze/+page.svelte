@@ -60,7 +60,6 @@
 	import { Alert, Button, ButtonGroup, Input, InputAddon, Spinner, Tooltip } from 'flowbite-svelte';
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
-	import { slide as _slide } from 'svelte/transition';
 	// Import slide transition
 	import { browser } from '$app/environment';
 	import { db, dbInitProgress, initializeDB } from '../../stores/db';

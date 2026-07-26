@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount as _onMount } from 'svelte';
 
 	let { lineCount = 12 } = $props<{ lineCount?: number }>();
 	let isAnimating = $state(false);

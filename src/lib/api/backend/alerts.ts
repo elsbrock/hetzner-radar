@@ -220,7 +220,7 @@ export async function updateAlert(
     sql += " WHERE user_id = ? AND id = ?";
     params.push(userId, alertId);
 
-    const _result = await db
+    await db
       .prepare(sql)
       .bind(...params)
       .run();
@@ -241,7 +241,7 @@ export async function deleteAlert(
   userId: string,
 ): Promise<void> {
   try {
-    const _result = await db
+    await db
       .prepare("DELETE FROM price_alert WHERE user_id = ? AND id = ?")
       .bind(userId, alertId)
       .run();
