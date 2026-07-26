@@ -5,21 +5,48 @@
  */
 
 import type { CloudStatusData, LocationInfo, ServerTypeInfo } from './cloud-status-service';
+import { type AuctionImportResult, isAuctionImportFailure } from './auction-service';
+
+/** Storage entries whose key matches, for the verbose debug endpoints. */
+async function listStorageWhere(storage: DurableObjectStorage, matches: (key: string) => boolean): Promise<Record<string, unknown>> {
+	const entries = await storage.list();
+	const out: Record<string, unknown> = {};
+	for (const [key, value] of entries) {
+		if (matches(key)) out[key] = value;
+	}
+	return out;
+}
+
+/** Renders whatever `fetchAndImportAuctions` threw into a message for the response. */
+function describeImportFailure(thrown: unknown): string {
+	const inner = isAuctionImportFailure(thrown) ? thrown.error : thrown;
+	if (inner instanceof Error) return inner.message;
+	if (typeof inner === 'object' && inner !== null && 'message' in inner) {
+		return String((inner as { message: unknown }).message);
+	}
+	return String(inner);
+}
 
 export class HttpRouter {
 	private doId: string;
 	private storage: DurableObjectStorage;
 	private getCloudStatus: () => Promise<CloudStatusData>;
-	private triggerAuctionImport: () => Promise<unknown>;
+	private triggerAuctionImport: () => Promise<AuctionImportResult>;
 	private fetchIntervalMs: number;
 	private auctionImportIntervalMs: number;
 	private auctionApiUrl: string;
+
+	private jsonResponse(body: unknown): Response {
+		return new Response(JSON.stringify(body, null, 2), {
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
 
 	constructor(
 		doId: string,
 		storage: DurableObjectStorage,
 		getCloudStatus: () => Promise<CloudStatusData>,
-		triggerAuctionImport: () => Promise<unknown>,
+		triggerAuctionImport: () => Promise<AuctionImportResult>,
 		fetchIntervalMs: number,
 		auctionImportIntervalMs: number,
 		auctionApiUrl: string,
@@ -102,8 +129,8 @@ export class HttpRouter {
 			return new Response(
 				JSON.stringify({
 					success: false,
-					error: error?.error?.message || error?.message || String(error),
-					duration: error?.duration,
+					error: describeImportFailure(error),
+					duration: isAuctionImportFailure(error) ? error.duration : undefined,
 				}),
 				{
 					status: 500,
@@ -139,8 +166,7 @@ export class HttpRouter {
 			};
 
 			if (verbose) {
-				const allKeys = await this.storage.list();
-				debugInfo.storage = Object.fromEntries(allKeys);
+				return this.jsonResponse({ ...debugInfo, storage: Object.fromEntries(await this.storage.list()) });
 			}
 
 			return new Response(JSON.stringify(debugInfo, null, 2), {
@@ -201,14 +227,8 @@ export class HttpRouter {
 			};
 
 			if (verbose) {
-				const cloudKeys = await this.storage.list();
-				const cloudStorage = {};
-				for (const [key, value] of cloudKeys) {
-					if (key.includes('cloud') || key === 'lastUpdated') {
-						cloudStorage[key] = value;
-					}
-				}
-				debugInfo.storage = cloudStorage;
+				const storage = await listStorageWhere(this.storage, (k) => k.includes('cloud') || k === 'lastUpdated');
+				return this.jsonResponse({ ...debugInfo, storage });
 			}
 
 			return new Response(JSON.stringify(debugInfo, null, 2), {
@@ -257,14 +277,8 @@ export class HttpRouter {
 			};
 
 			if (verbose) {
-				const auctionKeys = await this.storage.list();
-				const auctionStorage = {};
-				for (const [key, value] of auctionKeys) {
-					if (key.includes('auction') || key === 'lastAuctionImport') {
-						auctionStorage[key] = value;
-					}
-				}
-				debugInfo.storage = auctionStorage;
+				const storage = await listStorageWhere(this.storage, (k) => k.includes('auction') || k === 'lastAuctionImport');
+				return this.jsonResponse({ ...debugInfo, storage });
 			}
 
 			return new Response(JSON.stringify(debugInfo, null, 2), {

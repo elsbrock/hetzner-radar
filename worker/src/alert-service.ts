@@ -129,8 +129,10 @@ export class AlertService {
 	 */
 	private async findMatchingAlerts(): Promise<MatchedAlertData[]> {
 		const matchStmt = this.db.prepare(this.MATCH_ALERTS_SQL);
-		const result = await matchStmt.all();
-		return result.results as MatchedAlertData[];
+		// Parameterize the row type rather than casting the result — the cast from
+		// Record<string, unknown>[] was not a legal narrowing.
+		const result = await matchStmt.all<MatchedAlertData>();
+		return result.results;
 	}
 
 	/**

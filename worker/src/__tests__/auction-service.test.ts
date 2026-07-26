@@ -151,11 +151,20 @@ describe('AuctionService', () => {
 
 			const result = await service.fetchAndImportAuctions();
 
+			// The no-valid-data path used to return only these four keys, so callers
+			// reading `fetched` or `timestamp` got undefined. It now satisfies the
+			// full AuctionImportResult contract.
 			expect(result).toEqual({
+				fetched: 0,
+				transformed: 0,
+				valid: 0,
+				invalid: 0,
 				processed: 0,
 				newAuctions: 0,
 				priceChanges: 0,
 				errors: 0,
+				timestamp: expect.any(String),
+				duration: expect.any(Number),
 			});
 
 			expect(mockDbServiceInstance.storeAuctionData).not.toHaveBeenCalled();
@@ -205,11 +214,19 @@ describe('AuctionService', () => {
 
 			const result = await service.fetchAndImportAuctions();
 
+			// Same contract as the empty-response case, but with the fetched and
+			// transformed counts preserved so the caller can see what was discarded.
 			expect(result).toEqual({
+				fetched: 1,
+				transformed: 1,
+				valid: 0,
+				invalid: 1,
 				processed: 0,
 				newAuctions: 0,
 				priceChanges: 0,
 				errors: 0,
+				timestamp: expect.any(String),
+				duration: expect.any(Number),
 			});
 
 			expect(mockDbServiceInstance.storeAuctionData).not.toHaveBeenCalled();

@@ -26,9 +26,9 @@ interface CloudAvailabilityEnv {
 
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
 
-export class CloudAvailabilityDO extends DurableObject {
-	ctx: DurableObjectState;
-	env: CloudAvailabilityEnv;
+// See the note in `auction-import-do.ts`: parameterizing Env lets the base class
+// declare `ctx`/`env` at the right types rather than being shadowed.
+export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 	private fetchIntervalMs: number;
 	private initializing: boolean = false;
 
@@ -42,8 +42,6 @@ export class CloudAvailabilityDO extends DurableObject {
 	constructor(ctx: DurableObjectState, env: CloudAvailabilityEnv) {
 		super(ctx, env);
 
-		this.ctx = ctx;
-		this.env = env;
 		this.fetchIntervalMs = env.FETCH_INTERVAL_MS ? parseInt(env.FETCH_INTERVAL_MS) : DEFAULT_FETCH_INTERVAL_MS;
 
 		// Initialize services

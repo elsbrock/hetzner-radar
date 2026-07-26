@@ -2,10 +2,14 @@
 	"compilerOptions": {
 		/* Visit https://aka.ms/tsconfig.json to read more about this file */
 
-		/* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-		"target": "es2021",
+		/* Set the JavaScript language version for emitted JavaScript and include compatible library declarations.
+		   es2022 rather than es2021 because the code uses `new Error(msg, { cause })`,
+		   which the es2021 lib does not declare — that mismatch accounted for four of
+		   the errors hidden behind the type-check ratchet. `module` was already es2022
+		   and the workerd runtime is well past it. */
+		"target": "es2022",
 		/* Specify a set of bundled library declaration files that describe the target runtime environment. */
-		"lib": ["es2021"],
+		"lib": ["es2022"],
 		/* Specify what JSX code is generated. */
 		"jsx": "react-jsx",
 

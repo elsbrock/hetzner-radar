@@ -9,7 +9,7 @@ import { AuctionDataTransformer } from './auction-data-transformer';
 import { AuctionDatabaseService } from './auction-db-service';
 import { buildSnapshot, SNAPSHOT_KEY } from './auction-snapshot';
 
-interface AuctionImportResult {
+export interface AuctionImportResult {
 	fetched: number;
 	transformed: number;
 	valid: number;
@@ -19,6 +19,24 @@ interface AuctionImportResult {
 	priceChanges: number;
 	errors: number;
 	timestamp: string;
+	/** Wall-clock duration of the import, ms. Surfaced by the debug endpoint. */
+	duration: number;
+}
+
+/**
+ * What `fetchAndImportAuctions` throws on failure.
+ *
+ * It is a plain object rather than an Error subclass, which is why callers have
+ * to narrow before reading it — `isAuctionImportFailure` exists so they can do
+ * that without indexing into `unknown`.
+ */
+export interface AuctionImportFailure {
+	error: unknown;
+	duration: number;
+}
+
+export function isAuctionImportFailure(value: unknown): value is AuctionImportFailure {
+	return typeof value === 'object' && value !== null && 'error' in value && 'duration' in value;
 }
 
 export class AuctionService {
@@ -97,7 +115,21 @@ export class AuctionService {
 
 			if (valid.length === 0) {
 				console.warn(`[AuctionService ${this.doId}] No valid auction data to import`);
-				return { processed: 0, newAuctions: 0, priceChanges: 0, errors: 0 };
+				// Every field is stated: this used to return only the four `stats`
+				// keys, so a caller reading `fetched` or `timestamp` on the
+				// no-valid-data path silently got `undefined`.
+				return {
+					fetched: rawServers.length,
+					transformed: transformedServers.length,
+					valid: 0,
+					invalid,
+					processed: 0,
+					newAuctions: 0,
+					priceChanges: 0,
+					errors: 0,
+					timestamp: new Date().toISOString(),
+					duration: Date.now() - startTime,
+				};
 			}
 
 			// Store in database
@@ -121,11 +153,23 @@ export class AuctionService {
 				timestamp: importTimestamp,
 			});
 
-			return { ...stats, duration, fetched: rawServers.length, transformed: transformedServers.length, valid: valid.length, invalid };
+			// `timestamp` was missing here, so the success path never returned the
+			// field its own type declares — and the debug endpoint reported it as
+			// undefined despite it being logged two lines above.
+			return {
+				...stats,
+				duration,
+				fetched: rawServers.length,
+				transformed: transformedServers.length,
+				valid: valid.length,
+				invalid,
+				timestamp: importTimestamp,
+			};
 		} catch (error) {
 			const duration = Date.now() - startTime;
 			console.error(`[AuctionService ${this.doId}] Auction import failed after ${duration}ms:`, error);
-			throw { error, duration };
+			const failure: AuctionImportFailure = { error, duration };
+			throw failure;
 		}
 	}
 }

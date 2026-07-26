@@ -26,9 +26,11 @@ interface AuctionImportEnv {
 const DEFAULT_AUCTION_IMPORT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const DEFAULT_HETZNER_AUCTION_API_URL = 'https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json';
 
-export class AuctionImportDO extends DurableObject {
-	ctx: DurableObjectState;
-	env: AuctionImportEnv;
+// `DurableObject` defaults its Env parameter to the generated `Cloudflare.Env`.
+// Passing the narrower binding set this DO actually uses means the base class
+// declares `ctx`/`env` at the right types, instead of the class shadowing them
+// with incompatible re-declarations.
+export class AuctionImportDO extends DurableObject<AuctionImportEnv> {
 	private auctionImportIntervalMs: number;
 	private hetznerAuctionApiUrl: string;
 	private initializing: boolean = false;
@@ -42,8 +44,6 @@ export class AuctionImportDO extends DurableObject {
 	constructor(ctx: DurableObjectState, env: AuctionImportEnv) {
 		super(ctx, env);
 
-		this.ctx = ctx;
-		this.env = env;
 		this.auctionImportIntervalMs = env.AUCTION_IMPORT_INTERVAL_MS
 			? parseInt(env.AUCTION_IMPORT_INTERVAL_MS)
 			: DEFAULT_AUCTION_IMPORT_INTERVAL_MS;

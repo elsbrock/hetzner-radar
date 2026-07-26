@@ -1,36 +1,24 @@
 {
 	/*
-	 * Type-check ratchet.
+	 * Type-check gate for CI (`npm run check`).
 	 *
-	 * `npm run check` used to be `echo 'Type checking temporarily disabled for CI'`,
+	 * History: this was once `echo 'Type checking temporarily disabled for CI'`,
 	 * so worker-tests.yml type-checked nothing at all. The root cause was a stale
 	 * tsconfig (workers-types v5 dropped the dated `/2023-07-01` subpath), not the
-	 * code — but by the time it was found, 261 errors had accumulated behind it.
+	 * code — but 261 errors had accumulated behind it by the time it was found. It
+	 * was then replaced by an explicit allowlist of the files that already passed.
 	 *
-	 * This config gates the files that are already clean, so they cannot regress.
-	 * The remainder is tracked in
-	 * docs/specs/filter-semantics-harmonization-2026-07.md; move a file here as
-	 * soon as it type-checks, and never move one out.
+	 * All 26 production errors are now fixed, so the allowlist is gone: this gates
+	 * everything under `src/` and excludes only the test mocks. That inversion is
+	 * the point — under an allowlist a newly added production file was ungated by
+	 * default, which is exactly how the gap re-opens.
+	 *
+	 * `src/__tests__` still reports ~236 errors, almost all in hand-rolled mocks
+	 * (unknown-typed fixtures, illegal casts, wrong `vi.mocked` arities). They are
+	 * tracked in docs/specs/tech-debt-2026-07.md; `npm run check:all` shows them.
+	 * Do not add production paths to `exclude`.
 	 */
 	"extends": "./tsconfig.json",
-	"include": [
-		"src/alert-matching-sql.ts",
-		"src/auction-data-transformer.ts",
-		"src/auction-db-service.ts",
-		"src/auction-snapshot.ts",
-		"src/cloud-alert-service.ts",
-		"src/cloud-notifications/cloud-discord-channel.ts",
-		"src/cloud-notifications/cloud-email-channel.ts",
-		"src/cloud-notifications/cloud-notification-channel.ts",
-		"src/cloud-notifications/cloud-webhook-channel.ts",
-		"src/cloud-notifications/cloud-notification-service.ts",
-		"src/cloud-status-service.ts",
-		"src/hetzner-auction-client.ts",
-		"src/notification-service.ts",
-		"src/notifications/alert-notification-service.ts",
-		"src/notifications/discord-channel.ts",
-		"src/notifications/email-channel.ts",
-		"src/notifications/notification-channel.ts",
-		"src/notifications/webhook-channel.ts"
-	]
+	"include": ["src/**/*.ts"],
+	"exclude": ["src/__tests__/**"]
 }

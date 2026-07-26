@@ -4,6 +4,26 @@
  * Handles querying Cloudflare Analytics Engine for historical cloud availability data
  */
 
+/**
+ * Envelope returned by the Analytics Engine SQL API.
+ *
+ * `fetch(...).json()` is typed `unknown`, so the shape has to be stated
+ * somewhere; stating it once here beats asserting at each access site.
+ */
+interface AnalyticsEngineResponse<Row> {
+	success: boolean;
+	errors?: unknown;
+	data?: Row[];
+}
+
+/** Row shape of the availability summary query (`blob1`/`blob2` are AE blob columns). */
+interface AnalyticsSummaryRow {
+	blob1: string;
+	blob2: string;
+	availableDataPoints: number;
+	totalDataPoints: number;
+}
+
 interface AnalyticsQueryOptions {
 	startDate: string; // ISO date string
 	endDate: string; // ISO date string
@@ -45,7 +65,9 @@ export class AnalyticsQueryService {
 		}
 
 		// Build SQL query based on options
-		const sql = this.buildQuery(startDate, endDate, serverTypeId, locationId, granularity, env);
+		// `buildQuery` takes five parameters; a sixth `env` argument was being
+		// passed and silently discarded.
+		const sql = this.buildQuery(startDate, endDate, serverTypeId, locationId, granularity);
 
 		console.log('[AnalyticsQueryService] Executing SQL query:', sql);
 
@@ -219,19 +241,16 @@ export class AnalyticsQueryService {
 				throw new Error(`Analytics Engine query failed: ${response.status} - ${errorText}`);
 			}
 
-			const result = await response.json();
+			// `response.json()` is `unknown`; state the envelope so `success`, `errors`
+			// and `data` are real properties rather than accesses on `unknown`.
+			const result = (await response.json()) as AnalyticsEngineResponse<AnalyticsSummaryRow>;
 
 			if (!result.success) {
 				throw new Error(`Analytics Engine query error: ${JSON.stringify(result.errors)}`);
 			}
 
-			return result.data.map((row: unknown) => {
-				const typedRow = row as {
-					blob1: string;
-					blob2: string;
-					availableDataPoints: number;
-					totalDataPoints: number;
-				};
+			return (result.data ?? []).map((row) => {
+				const typedRow = row;
 				return {
 					serverTypeId: parseInt(typedRow.blob1),
 					locationId: parseInt(typedRow.blob2),
