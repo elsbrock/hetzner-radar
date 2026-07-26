@@ -63,13 +63,14 @@
 	// Import slide transition
 	import { browser } from '$app/environment';
 	import { db, dbInitProgress, initializeDB } from '../../stores/db';
-
-	type SortField = 'price' | 'ram' | 'storage' | 'cpu_score' | 'cpu_multicore_score';
-	type GroupByField = 'none' | 'cpu_vendor' | 'cpu_model' | 'best_price'; // Updated type
-	type GroupedServerList = Array<{
-		groupName: string;
-		servers: ServerConfiguration[];
-	}>;
+	import {
+		buildDisplayList,
+		collectPrices,
+		countServers,
+		type GroupByField,
+		type GroupedServerList,
+		type SortField
+	} from './insights';
 
 	let { data } = $props<{ data: import('./$types').PageData }>();
 
@@ -96,10 +97,8 @@
 	let alertDialogOpen = $state(false);
 	let storedFilter: ServerFilterType | null = $state(null);
 
-let groupedDisplayList: GroupedServerList = $state([]);
 let isFilterCollapsed = $state(false);
 let mounted: boolean = $state(false);
-let processingList = $state(false);
 
 let filterIsIntersecting: boolean = $state(true);
 let resultsAreIntersecting: boolean = $state(false);
@@ -242,16 +241,28 @@ let isSmallScreen: boolean = $state(false);
 		return () => observer.disconnect();
 	});
 
-	// Effect to sync view state changes to URL
+	// Sync view state to the URL.
+	//
+	// The four values are combined into one derived key rather than assigned to
+	// four unused `_`-prefixed locals inside the effect. The key is then actually
+	// compared, so the dependency is real and the effect fires only when the view
+	// state genuinely changed — not on every unrelated re-run.
+	//
+	// `updateViewStateUrl` deliberately still reads the individual values itself:
+	// it also snapshots `window.location.href`, and must do that when the debounce
+	// fires rather than when the state changed, so it does not clobber the `filter`
+	// param that ServerFilter writes on its own debounce.
+	let viewState = $derived(`${groupByField}|${sortField}|${sortDirection}|${isFilterCollapsed}`);
+
+	// Plain let, not $state: written from the effect that reads it.
+	let lastSyncedViewState = '';
+
 	$effect(() => {
-		// Track dependencies explicitly
-		const _group = groupByField;
-		const _sort = sortField;
-		const _dir = sortDirection;
-		const _collapsed = isFilterCollapsed;
+		const state = viewState;
 
 		// Only update URL after initial mount (when lastViewStateUrl is set)
-		if (browser && lastViewStateUrl !== '') {
+		if (browser && lastViewStateUrl !== '' && state !== lastSyncedViewState) {
+			lastSyncedViewState = state;
 			debouncedUpdateViewStateUrl();
 		}
 	});
@@ -356,20 +367,7 @@ let isSmallScreen: boolean = $state(false);
 				serverPrices = serverPricesResult;
 				serverList = serverListResult;
 
-				// Update popularity value and convert it to a qualitative label
 				popularityValue = popularityResult;
-				if (popularityValue !== null) {
-					// Convert ratio to label based on thresholds
-					if (popularityValue > 1.2) {
-						popularityFormatted = 'High';
-					} else if (popularityValue >= 0.8) {
-						popularityFormatted = 'Normal';
-					} else {
-						popularityFormatted = 'Low';
-					}
-				} else {
-					popularityFormatted = 'Normal';
-				}
 				queryTime = performance.now() - queryStart;
 
 				// Refresh last update timestamp
@@ -401,245 +399,52 @@ let isSmallScreen: boolean = $state(false);
 		}
 	});
 
-	// --- Helper functions for grouping ---
-	function _calculateMedian(prices: number[]): number | null {
-		if (prices.length === 0) return null;
-		const sortedPrices = [...prices].sort((a, b) => a - b);
-		const mid = Math.floor(sortedPrices.length / 2);
-		return sortedPrices.length % 2 !== 0
-			? sortedPrices[mid]
-			: (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
-	}
-
-	function _calculatePercentile(prices: number[], percentile: number): number | null {
-		if (prices.length === 0) return null;
-		const sortedPrices = [...prices].sort((a, b) => a - b);
-		const index = (percentile / 100) * (sortedPrices.length - 1); // N-1 adjustment
-		if (Number.isInteger(index)) {
-			return sortedPrices[index];
-		} else {
-			const lowerIndex = Math.floor(index);
-			const upperIndex = Math.ceil(index);
-			// Handle edge case where upperIndex might be out of bounds if index is very close to length-1
-			if (upperIndex >= sortedPrices.length) return sortedPrices[lowerIndex];
-			// Linear interpolation
-			return (
-				sortedPrices[lowerIndex] +
-				(index - lowerIndex) * (sortedPrices[upperIndex] - sortedPrices[lowerIndex])
-			);
-		}
-	}
-	// --- End Helper functions ---
-
-	// Effect to filter, sort, and group the server list for display
-	$effect(() => {
-		// Capture dependencies for deferred processing
-		const currentServerList = serverList;
-		const currentPriceMin = priceMin;
-		const currentPriceMax = priceMax;
-		const currentSortField = sortField;
-		const currentSortDirection = sortDirection;
-		const currentGroupByField = groupByField;
-		const currentSettingsStore = $settingsStore;
-
-		// Show loading indicator
-		processingList = true;
-
-		// Defer work to allow browser to paint loading state
-		const timeoutId = setTimeout(() => {
-			let list = currentServerList;
-
-			// 1. Apply price filtering
-			const countryCode =
-				(currentSettingsStore?.vatSelection?.countryCode as keyof typeof vatOptions) ?? 'NET';
-			const selectedOption = countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET'];
-			const vatRate = selectedOption.rate;
-			const minPriceBeforeVat =
-				currentPriceMin !== undefined
-					? Math.round((currentPriceMin / (1 + vatRate)) * 100) / 100
-					: null;
-			const maxPriceBeforeVat =
-				currentPriceMax !== undefined
-					? Math.round((currentPriceMax / (1 + vatRate)) * 100) / 100
-					: null;
-
-			if (minPriceBeforeVat !== null || maxPriceBeforeVat !== null) {
-				list = list.filter((server) => {
-					const price = server.price ?? null;
-					if (price === null) return false;
-					const meetsMin = minPriceBeforeVat === null || price >= minPriceBeforeVat;
-					const meetsMax = maxPriceBeforeVat === null || price <= maxPriceBeforeVat;
-					return meetsMin && meetsMax;
-				});
-			}
-
-			// 2. Apply sorting (on a copy)
-			const listToSort = [...list];
-			listToSort.sort((a, b) => {
-				let valA: number | string | null = null;
-				let valB: number | string | null = null;
-
-				switch (currentSortField) {
-					case 'price':
-						valA = a.price ?? Infinity;
-						valB = b.price ?? Infinity;
-						break;
-					case 'ram':
-						valA = a.ram_size ?? 0;
-						valB = b.ram_size ?? 0;
-						break;
-					case 'storage': {
-						const totalStorageA = (a.nvme_size ?? 0) + (a.sata_size ?? 0) + (a.hdd_size ?? 0);
-						const totalStorageB = (b.nvme_size ?? 0) + (b.sata_size ?? 0) + (b.hdd_size ?? 0);
-						valA = totalStorageA;
-						valB = totalStorageB;
-						break;
-					}
-					case 'cpu_score':
-						valA = a.cpu_score ?? 0;
-						valB = b.cpu_score ?? 0;
-						break;
-					case 'cpu_multicore_score':
-						valA = a.cpu_multicore_score ?? 0;
-						valB = b.cpu_multicore_score ?? 0;
-						break;
-				}
-
-				// Handle nulls consistently based on sort direction
-				if (valA === Infinity && valB !== Infinity) return currentSortDirection === 'asc' ? 1 : -1;
-				if (valA !== Infinity && valB === Infinity) return currentSortDirection === 'asc' ? -1 : 1;
-				if (valA === 0 && valB !== 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score' || currentSortField === 'cpu_multicore_score'))
-					return currentSortDirection === 'asc' ? -1 : 1;
-				if (valA !== 0 && valB === 0 && (currentSortField === 'ram' || currentSortField === 'storage' || currentSortField === 'cpu_score' || currentSortField === 'cpu_multicore_score'))
-					return currentSortDirection === 'asc' ? 1 : -1;
-				if (valA === valB) return 0;
-
-				const comparison = (valA as number) < (valB as number) ? -1 : 1;
-				return currentSortDirection === 'asc' ? comparison : comparison * -1;
-			});
-
-			// 3. Apply grouping
-			let groupedResult: GroupedServerList = [];
-			// eslint-disable-next-line svelte/prefer-svelte-reactivity
-			const groups = new Map<string, { groupName: string; servers: ServerConfiguration[] }>();
-			const unknownVendorKey = '__unknown_vendor__';
-			const unknownModelKey = '__unknown_model__';
-			const unknownVendorName = 'Unknown Vendor';
-			const unknownModelName = 'Unknown Model';
-
-			switch (currentGroupByField) {
-				case 'none':
-					groupedResult = [{ groupName: 'All Servers', servers: listToSort }];
-					break;
-
-				case 'cpu_vendor':
-					listToSort.forEach((server) => {
-						let key: string;
-						let name: string;
-						if (server.cpu) {
-							const vendor = server.cpu.split(' ')[0];
-							if (vendor === 'Intel' || vendor === 'AMD') {
-								key = vendor;
-								name = vendor;
-							} else {
-								key = unknownVendorKey;
-								name = unknownVendorName;
-							}
-						} else {
-							key = unknownVendorKey;
-							name = unknownVendorName;
-						}
-
-						if (!groups.has(key)) {
-							groups.set(key, { groupName: name, servers: [] });
-						}
-						groups.get(key)!.servers.push(server);
-					});
-					groupedResult = Array.from(groups.values());
-					groupedResult.sort((a, b) => {
-						if (a.groupName === unknownVendorName) return 1;
-						if (b.groupName === unknownVendorName) return -1;
-						return a.groupName.localeCompare(b.groupName);
-					});
-					break;
-
-				case 'cpu_model':
-					listToSort.forEach((server) => {
-						const key = server.cpu ?? unknownModelKey;
-						const name = server.cpu ?? unknownModelName;
-
-						if (!groups.has(key)) {
-							groups.set(key, { groupName: name, servers: [] });
-						}
-						groups.get(key)!.servers.push(server);
-					});
-					groupedResult = Array.from(groups.values());
-					groupedResult.sort((a, b) => {
-						if (a.groupName === unknownModelName) return 1;
-						if (b.groupName === unknownModelName) return -1;
-						return a.groupName.localeCompare(b.groupName);
-					});
-					break;
-
-				case 'best_price': {
-					const bestPriceGroupName = 'Best Price';
-					const aboveBestPriceGroupName = 'Above Best Price';
-					const epsilon = 0.001;
-
-					groups.set(bestPriceGroupName, {
-						groupName: bestPriceGroupName,
-						servers: []
-					});
-					groups.set(aboveBestPriceGroupName, {
-						groupName: aboveBestPriceGroupName,
-						servers: []
-					});
-
-					listToSort.forEach((server) => {
-						if (server.markup_percentage !== null && Math.abs(server.markup_percentage) < epsilon) {
-							groups.get(bestPriceGroupName)!.servers.push(server);
-						} else {
-							groups.get(aboveBestPriceGroupName)!.servers.push(server);
-						}
-					});
-
-					groupedResult = Array.from(groups.values()).filter(
-						(groupData) => groupData.servers.length > 0
-					);
-
-					groupedResult.sort((a, b) => {
-						if (a.groupName === bestPriceGroupName) return -1;
-						if (b.groupName === bestPriceGroupName) return 1;
-						return 0;
-					});
-					break;
-				}
-			}
-
-			// Update the grouped display list state
-			groupedDisplayList = groupedResult;
-			processingList = false;
-		}, 10);
-
-		return () => clearTimeout(timeoutId);
+	// The filter/sort/group pipeline lives in ./insights.ts. It used to be a
+	// ~190-line $effect that copied its seven dependencies into locals and ran
+	// inside setTimeout(…, 10) before assigning groupedDisplayList — derivation
+	// spelled as a deferred side effect, so the list always trailed its inputs by
+	// at least a frame. As a $derived it is synchronous and unit-tested.
+	//
+	// _calculateMedian / _calculatePercentile went with it: both were dead,
+	// underscore-prefixed to pass lint.
+	let vatRate = $derived.by(() => {
+		const countryCode =
+			($settingsStore?.vatSelection?.countryCode as keyof typeof vatOptions) ?? 'NET';
+		return (countryCode in vatOptions ? vatOptions[countryCode] : vatOptions['NET']).rate;
 	});
 
-	// Derived state for total results count from grouped list
-	let totalResults = $derived(
-		groupedDisplayList.reduce((sum, group) => sum + group.servers.length, 0)
+	let groupedDisplayList: GroupedServerList = $derived(
+		buildDisplayList({
+			servers: serverList,
+			priceMin,
+			priceMax,
+			vatRate,
+			sortField,
+			sortDirection,
+			groupBy: groupByField
+		})
 	);
 
-	// Non-derived variables for QuickStats
-	let totalResultsValue = $state(0);
-	let _lowestPriceValue = $state<number | null>(null);
-	let _averagePriceValue = $state<number | null>(null);
-	let _priceRangeValue = $state<number | null>(null);
-	let availableAuctionsValue = $state(0);
+	// Derived state for total results count from grouped list
+	let totalResults = $derived(countServers(groupedDisplayList));
+
+	// Popularity comes from an async query, so it is genuine state. Everything else
+	// on the QuickStat row is derived from it or from groupedDisplayList — see below.
 	let popularityValue = $state<number | null>(1); // Default to 1 (neutral)
-	let lowestPriceFormatted = $state('N/A');
-	let averagePriceFormatted = $state('N/A');
-	let priceRangeFormatted = $state('N/A');
-	let popularityFormatted = $state('Normal');
+
+	let popularityFormatted = $derived(
+		popularityValue === null || (popularityValue >= 0.8 && popularityValue <= 1.2)
+			? 'Normal'
+			: popularityValue > 1.2
+				? 'High'
+				: 'Low'
+	);
+
+	let availableAuctionsValue = $derived(
+		Array.isArray(serverPrices) && serverPrices.length > 0
+			? (serverPrices[serverPrices.length - 1]?.count ?? 0)
+			: 0
+	);
 
 	// Derived state for UI flags (can remain derived)
 	let hasFilter = $derived(storedFilter !== null);
@@ -647,14 +452,6 @@ let isSmallScreen: boolean = $state(false);
 
 	// Hide chart when only showing standard servers (no historical price data for them)
 	let showOnlyStandard = $derived($filter?.showStandard && !$filter?.showAuction);
-
-	// Helper function to get filtered prices
-	function getFilteredPrices(): number[] {
-		return groupedDisplayList
-			.flatMap((group) => group.servers)
-			.map((server) => server.price)
-			.filter((price) => price !== null && price !== undefined) as number[];
-	}
 
 	// Format price with VAT and timeUnitPrice for display
 	let selectedTimeUnit = $derived((
@@ -690,65 +487,34 @@ let isSmallScreen: boolean = $state(false);
 		}
 	}
 
-	// Effect to update non-derived variables for QuickStats
-	$effect(() => {
-		// Calculate the actual values from derived state
-		const totalResultsVal = groupedDisplayList.reduce(
-			(sum, group) => sum + group.servers.length,
-			0
-		);
-		const lowestPriceVal = (() => {
-			const prices = getFilteredPrices();
-			return prices.length > 0 ? Math.min(...prices) : null;
-		})();
-		const averagePriceVal = (() => {
-			const prices = getFilteredPrices();
-			if (prices.length === 0) return null;
-			const sum = prices.reduce((acc, price) => acc + price, 0);
-			return prices.length > 0 ? sum / prices.length : null;
-		})();
-		const priceRangeVal = (() => {
-			const prices = getFilteredPrices();
-			if (prices.length === 0) return null;
-			const min = Math.min(...prices);
-			const max = Math.max(...prices);
-			if (Number.isNaN(min) || Number.isNaN(max)) return null;
-			const range = max - min;
-			return Number.isFinite(range) ? range : null;
-		})();
-		const availableAuctionsVal =
-			Array.isArray(serverPrices) && serverPrices.length > 0
-				? (serverPrices[serverPrices.length - 1]?.count ?? 0)
-				: 0;
+	// QuickStat figures. These were written from a $effect into $state that the
+	// comment called "non-derived variables" — including three `_`-prefixed values
+	// that were assigned and never read, and a totalResultsValue that duplicated
+	// totalResults. They are all pure functions of groupedDisplayList.
+	let displayedPrices = $derived(collectPrices(groupedDisplayList));
 
-		// Update total results
-		totalResultsValue = totalResultsVal;
+	let lowestPrice = $derived(
+		displayedPrices.length > 0 ? Math.min(...displayedPrices) : null
+	);
+	let averagePrice = $derived(
+		displayedPrices.length > 0
+			? displayedPrices.reduce((sum, price) => sum + price, 0) / displayedPrices.length
+			: null
+	);
+	let priceRange = $derived(
+		displayedPrices.length > 0
+			? Math.max(...displayedPrices) - Math.min(...displayedPrices)
+			: null
+	);
 
-		// Update available auctions
-		availableAuctionsValue = availableAuctionsVal;
+	/** Formats a statistic, falling back to 'N/A' for absent or non-finite values. */
+	function formatStat(value: number | null): string {
+		return value !== null && Number.isFinite(value) ? formatPrice(value) : 'N/A';
+	}
 
-		// Update price statistics
-		if (lowestPriceVal !== null && Number.isFinite(lowestPriceVal)) {
-			_lowestPriceValue = lowestPriceVal;
-			lowestPriceFormatted = formatPrice(lowestPriceVal);
-		} else {
-			lowestPriceFormatted = 'N/A';
-		}
-
-		if (averagePriceVal !== null && Number.isFinite(averagePriceVal)) {
-			_averagePriceValue = averagePriceVal;
-			averagePriceFormatted = formatPrice(averagePriceVal);
-		} else {
-			averagePriceFormatted = 'N/A';
-		}
-
-		if (priceRangeVal !== null && Number.isFinite(priceRangeVal)) {
-			_priceRangeValue = priceRangeVal;
-			priceRangeFormatted = formatPrice(priceRangeVal);
-		} else {
-			priceRangeFormatted = 'N/A';
-		}
-	});
+	let lowestPriceFormatted = $derived(formatStat(lowestPrice));
+	let averagePriceFormatted = $derived(formatStat(averagePrice));
+	let priceRangeFormatted = $derived(formatStat(priceRange));
 
 	// Ensure priceMin/Max are numbers when changed
 	function handlePriceMinChange(event: Event) {
@@ -1019,10 +785,10 @@ let isSmallScreen: boolean = $state(false);
 							data-testid="total-configurations"
 							icon={faFilter}
 							title="Total Configurations"
-							value={totalResultsValue}
+							value={totalResults}
 							subtitle="Available server configurations"
 							size="sm"
-							loading={processingList}
+							loading={loading}
 						/>
 
 						<!-- Available Auctions -->
@@ -1061,7 +827,7 @@ let isSmallScreen: boolean = $state(false);
 							subtitle="Most affordable option"
 							valueClass="text-green-600 dark:text-green-400"
 							size="sm"
-							loading={processingList}
+							loading={loading}
 						/>
 
 						<!-- Average Price -->
@@ -1071,7 +837,7 @@ let isSmallScreen: boolean = $state(false);
 							value={averagePriceFormatted}
 							subtitle="Across all configurations"
 							size="sm"
-							loading={processingList}
+							loading={loading}
 						/>
 
 						<!-- Price Range -->
@@ -1081,7 +847,7 @@ let isSmallScreen: boolean = $state(false);
 							value={priceRangeFormatted}
 							subtitle="Highest minus lowest price"
 							size="sm"
-							loading={processingList}
+							loading={loading}
 						/>
 					</div>
 
@@ -1159,7 +925,7 @@ let isSmallScreen: boolean = $state(false);
 
 							<!-- Show Server List -->
 							<div class="relative">
-								{#if processingList}
+								{#if loading}
 									<div class="pointer-events-none absolute inset-0 z-20 flex justify-center bg-white/60 pt-16 backdrop-blur-xs dark:bg-gray-900/60">
 										<div class="flex h-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
 											<Spinner size="4" />
