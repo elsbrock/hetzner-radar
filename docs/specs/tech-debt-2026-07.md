@@ -1,6 +1,6 @@
 # Tech debt & code professionalization — July 2026
 
-**Status:** in progress
+**Status:** complete; three follow-ups and three deferred items recorded below
 **Date:** 2026-07-26
 
 ## Intent
@@ -187,22 +187,57 @@ core is legitimate.
 
 ## Implementation steps
 
-- [ ] Write this spec
-- [ ] **Finding 0**: validate body + bind datacenter values in `/api/auctions`
-- [ ] **Finding 1**: delete the three stale boundary comments; move snapshot types
-      into `filter-spec`
-- [ ] **Finding 3**: fix the 26 worker production type errors; move all 7 files
-      into `tsconfig.check.json`
-- [ ] **Finding 2**: replace the six `filter-spec` bypass sites with imports
-- [ ] **Finding 4a**: remove the underscore-prefixed dead code; rename the
-      `dedupeByСpu` homoglyph (U+0421) in `routes/+page.server.ts:113`
-- [ ] **Finding 4b**: collapse `ServerFilter`'s three clamp effects into one
-      function; convert the formatting effect to `$derived`
-- [ ] **Finding 4c**: convert the analyze page's 190-line derivation effect to
-      `$derived`, extracted into `analyze/insights.ts` with tests (mirroring
-      `cloud-status/insights.ts` and `configurations/insights.ts`)
-- [ ] Final validation: `npm run check`, `npm run lint`, `npm run test`,
-      `npm run build`, plus `worker` check/test
+- [x] Write this spec
+- [x] **Finding 0**: validate body + bind datacenter values in `/api/auctions`.
+      Both forms bind (`LIKE ?` with `'FSN%'`, `= ?` for exact). 25 tests, incl. a
+      regression test asserting the payload cannot reach the SQL string. The
+      helpers moved to `$lib/api/backend/auction-match.ts` — SvelteKit restricts
+      `+server.ts` to HTTP-verb exports, which only `npm run build` catches.
+- [x] **Finding 1**: snapshot types moved to `@server-radar/filter-spec/snapshot`,
+      taken verbatim from the producer with field parity verified against both
+      former copies; the stale boundary comments are gone.
+- [x] **Finding 3**: all 26 worker production type errors fixed. Root causes, not
+      symptoms: `lib: es2021` did not declare `ErrorOptions` (4 errors from one
+      config line), both DOs shadowed `DurableObject`'s `ctx`/`env` instead of
+      parameterizing `Env` (6), and `http-router` took the import result as
+      `unknown` (9). Two real bugs surfaced — `auction-service`'s no-valid-data
+      path returned 4 of 9 declared fields, and its success path omitted
+      `timestamp` entirely. `tsconfig.check.json` now globs `src/**/*.ts` and
+      excludes only `src/__tests__`, so new production files are gated by default.
+- [x] **Finding 2**: all six bypass sites import from `filter-spec`.
+      `auction-data-transformer`'s NBG/FSN check is deliberately excluded — it maps
+      datacenter to _country_, so binding it to `CITY_PREFIXES` would break when a
+      city is added in a new country.
+- [x] **Finding 4a**: dead underscore code removed; `dedupeByСpu` renamed. Swept
+      `src/`, `worker/src/`, `packages/` and `scripts/` for Cyrillic/Greek
+      lookalikes in identifier positions — it was the only one.
+- [x] **Finding 4b**: `ServerFilter`'s three clamp effects collapsed to one
+      table-driven effect (it writes back to `filter`, so it stays an effect —
+      duplication was the problem, not the `$effect`); the eight formatting
+      assignments became `$derived`. 7 effects → 4.
+- [x] **Finding 4c**: pipeline extracted to `analyze/insights.ts` with 28 tests.
+      Proven behaviour-preserving by a differential test — 36,000 seeded cases
+      against the original comparator, zero divergence — which also showed four of
+      the original's special-case branches were no-ops, and corrected my wrong
+      assumption that a missing price sorts last descending (it sorts first).
+      1208 → 962 lines, 5 → 3 effects, 30 → 22 `$state`, 5 → 19 `$derived`.
+- [x] Final validation: app `check` 0/0 over 2806 files, `lint` 0 errors, 207
+      tests, `build` clean; worker gate clean, 252 tests, wrangler dry-run bundles.
+
+## Follow-ups this work surfaced
+
+- **`ServerConfiguration.cpu` is declared `string` but is nullable in practice.**
+  The grouping code has always defended against null (`server.cpu ?? …`) and the
+  rows come from DuckDB. `insights.test.ts` documents the mismatch at its fixture.
+  Fixing the type is a wider change than this spec's scope.
+- **`generateFilterQuery` interpolates datacenter names into its SQL** rather than
+  binding them (`filter-query.ts`, city-prefix and exact-match branches). Unlike
+  Finding 0 this is not a vulnerability — it runs in the browser against the
+  user's own DuckDB instance — but the golden snapshot pins the emitted SQL, so
+  converting it to bound parameters wants its own change with the snapshot updated
+  deliberately.
+- **`worker/src/__tests__` still reports ~236 type errors**, almost all in
+  hand-rolled mocks. `npm run check:all` shows them; the CI gate excludes them.
 
 ## Deferred, with the number that decides it
 
