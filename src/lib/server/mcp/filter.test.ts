@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultFilter } from "$lib/filter";
+import { UNBOUNDED } from "$lib/api/shared/filter-constants";
 import {
   buildServerFilter,
   netEurToStoredPrice,
@@ -77,9 +78,28 @@ describe("buildServerFilter", () => {
     });
   });
 
-  it("leaves upper bounds at the defaults", () => {
+  it("leaves an unstated maximum genuinely unbounded", () => {
+    // Previously these ceilings came from the UI slider maxima, which silently
+    // capped alerts the caller never capped: no disk criteria at all still meant
+    // "at most 22 TB of HDD". A slider ceiling is a display affordance; this
+    // value is a stored predicate the alert matcher evaluates.
     const filter = buildServerFilter({ min_ram_gb: 64 });
-    expect(filter.ramInternalSize[1]).toBe(defaultFilter.ramInternalSize[1]);
+    expect(filter.ramInternalSize[1]).toBe(UNBOUNDED.ramLog2);
+    expect(filter.ramInternalSize[1]).toBeGreaterThan(
+      defaultFilter.ramInternalSize[1],
+    );
+
+    const open = buildServerFilter({});
+    expect(open.hddInternalSize[1]).toBe(UNBOUNDED.diskSize);
+    expect(open.ssdNvmeInternalSize[1]).toBe(UNBOUNDED.diskSize);
+    expect(open.cpuCores[1]).toBe(UNBOUNDED.cores);
+  });
+
+  it("keeps drive-count ceilings at the real hardware limits", () => {
+    // Bay counts are physical, not a display artefact — leave them alone.
+    const open = buildServerFilter({});
+    expect(open.ssdNvmeCount[1]).toBe(defaultFilter.ssdNvmeCount[1]);
+    expect(open.hddCount[1]).toBe(defaultFilter.hddCount[1]);
   });
 
   it("allows both countries when no location is given", () => {

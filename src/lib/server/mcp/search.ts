@@ -16,6 +16,7 @@
  */
 
 import type { SnapshotAuction } from "./snapshot";
+import { CITY_PREFIXES } from "$lib/api/shared/filter-constants";
 
 export type SizeMode = "per-disk" | "total";
 export type DiskMode = "and" | "or";
@@ -100,7 +101,7 @@ export interface SearchOptions {
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 50;
 
-export const CITY_PREFIXES = ["FSN", "NBG", "HEL"];
+export { CITY_PREFIXES };
 export const LOCATIONS = ["Germany", "Finland"];
 
 function inRange(value: number, min?: number, max?: number): boolean {

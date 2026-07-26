@@ -19,10 +19,12 @@
  */
 
 import { defaultFilter, type ServerFilter } from "$lib/filter";
-import { CITY_PREFIXES, type AuctionQuery } from "./search";
-
-/** Disk size ranges in ServerFilter are expressed in units of 500 GB. */
-const DISK_UNIT_GB = 500;
+import {
+  CITY_PREFIXES,
+  DISK_UNIT_GB,
+  UNBOUNDED,
+} from "$lib/api/shared/filter-constants";
+import type { AuctionQuery } from "./search";
 
 /**
  * Permissive bounds, used whenever the caller did not constrain a dimension.
@@ -30,19 +32,20 @@ const DISK_UNIT_GB = 500;
  * Deliberately NOT `defaultFilter`'s values: those encode the UI's opinionated
  * starting position (e.g. `hddInternalSize` starts at 4, i.e. 2000 GB), which
  * would silently exclude servers the caller never asked to exclude. Upper bounds
- * do come from `defaultFilter` so the ranges stay inside what the UI sliders can
- * express.
+ * come from `UNBOUNDED` — see the note there on why a slider maximum is the
+ * wrong ceiling for a stored predicate.
+ *
+ * Drive *counts* keep the UI ceilings: those are genuine hardware limits (a
+ * server has at most 8 NVMe / 4 SATA / 15 HDD bays), not display artefacts.
  */
 const OPEN = {
-  cpuCores: [0, defaultFilter.cpuCores[1]] as [number, number],
-  cpuThreads: [0, defaultFilter.cpuThreads[1]] as [number, number],
-  ram: [0, defaultFilter.ramInternalSize[1]] as [number, number],
+  cpuCores: [0, UNBOUNDED.cores] as [number, number],
+  cpuThreads: [0, UNBOUNDED.threads] as [number, number],
+  ram: [0, UNBOUNDED.ramLog2] as [number, number],
+  diskSize: [0, UNBOUNDED.diskSize] as [number, number],
   nvmeCount: [0, defaultFilter.ssdNvmeCount[1]] as [number, number],
-  nvmeSize: [0, defaultFilter.ssdNvmeInternalSize[1]] as [number, number],
   sataCount: [0, defaultFilter.ssdSataCount[1]] as [number, number],
-  sataSize: [0, defaultFilter.ssdSataInternalSize[1]] as [number, number],
   hddCount: [0, defaultFilter.hddCount[1]] as [number, number],
-  hddSize: [0, defaultFilter.hddInternalSize[1]] as [number, number],
 };
 
 const gbToDiskUnits = (gb: number): number => gb / DISK_UNIT_GB;
@@ -73,6 +76,10 @@ function range(
  * them, so `JSON.stringify` is stable across calls. Do not reorder.
  */
 export function buildServerFilter(query: AuctionQuery): ServerFilter {
+  const nvmeSizeMode = query.nvme_size_mode ?? "total";
+  const sataSizeMode = query.sata_size_mode ?? "total";
+  const hddSizeMode = query.hdd_size_mode ?? "total";
+
   const locations = query.locations?.length
     ? query.locations.map((l) => l.toLowerCase())
     : query.location
@@ -129,7 +136,7 @@ export function buildServerFilter(query: AuctionQuery): ServerFilter {
     ssdNvmeInternalSize: range(
       query.min_nvme_size_gb,
       query.max_nvme_size_gb,
-      OPEN.nvmeSize,
+      OPEN.diskSize,
       gbToDiskUnits,
     ),
 
@@ -141,7 +148,7 @@ export function buildServerFilter(query: AuctionQuery): ServerFilter {
     ssdSataInternalSize: range(
       query.min_sata_size_gb,
       query.max_sata_size_gb,
-      OPEN.sataSize,
+      OPEN.diskSize,
       gbToDiskUnits,
     ),
 
@@ -149,13 +156,13 @@ export function buildServerFilter(query: AuctionQuery): ServerFilter {
     hddInternalSize: range(
       query.min_hdd_size_gb,
       query.max_hdd_size_gb,
-      OPEN.hddSize,
+      OPEN.diskSize,
       gbToDiskUnits,
     ),
 
-    ssdNvmeSizeMode: query.nvme_size_mode ?? "total",
-    ssdSataSizeMode: query.sata_size_mode ?? "total",
-    hddSizeMode: query.hdd_size_mode ?? "total",
+    ssdNvmeSizeMode: nvmeSizeMode,
+    ssdSataSizeMode: sataSizeMode,
+    hddSizeMode: hddSizeMode,
 
     diskMode: query.disk_mode ?? "and",
 
