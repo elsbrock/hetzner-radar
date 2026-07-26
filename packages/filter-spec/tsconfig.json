@@ -1,0 +1,24 @@
+{
+  /*
+   * Self-contained on purpose. Without a tsconfig here, a transform of these
+   * files walks up and finds the repo-root tsconfig, which `extends`
+   * .svelte-kit/tsconfig.json — a generated file that only exists after
+   * `svelte-kit sync`. The worker's CI job never runs that, so the lookup failed
+   * with TSCONFIG_ERROR there while passing locally.
+   *
+   * Do not add `extends`: this package is consumed by both the SvelteKit app and
+   * the Cloudflare worker, and must not depend on either one's setup.
+   */
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts"]
+}
