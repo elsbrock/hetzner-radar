@@ -1,6 +1,7 @@
 # Filter semantics harmonization
 
-**Status:** harness, package and fixes landed; IR staged (see Implementation steps)
+**Status:** complete, except the IR — which is deliberately left optional (see
+Recommendation)
 **Date:** 2026-07-26
 
 ## Intent
@@ -195,8 +196,9 @@ return false` — excludes, with an explicit comment defending it. Worker is the
 - [x] Golden snapshot pinning current per-filter behaviour, so a rewrite that
       changes both emitters together cannot regress unnoticed
 - [x] Restore worker type checking behind a ratchet (`tsconfig.check.json`)
-- [ ] **Remaining:** symbolic IR (`buildFilterIR`) + `emitDuckDb` / `emitSqlite`;
-      migrate `generateFilterQuery` and `MATCH_ALERTS_SQL` onto them
+- [ ] **Optional, deliberately not done:** symbolic IR (`buildFilterIR`) +
+      `emitDuckDb` / `emitSqlite`; migrate `generateFilterQuery` and
+      `MATCH_ALERTS_SQL` onto them. See the recommendation below before starting.
 
 ### Why the IR is staged separately
 
@@ -210,6 +212,30 @@ Note that the harness has already converted the failure mode from silent to loud
 Drift between the two engines now fails CI on the commit that introduces it,
 which was the actual danger. The IR removes the duplicated maintenance, which is
 a cost problem rather than a correctness one.
+
+### Recommendation: treat the IR as optional
+
+Having built the rest, the honest assessment is that the IR's payoff dropped
+once the harness landed, and it is no longer clearly worth its cost:
+
+- The correctness argument is spent. Drift fails CI on the commit that causes it.
+- It is a **two**-target generator, not three (see the correction above). A
+  compiler amortises across many backends; across two it trades ~150 lines of
+  direct, readable SQL in each place for ~500 lines of emitter indirection, and
+  the SQL is the thing a reader most wants to see plainly when debugging why an
+  alert did or did not fire.
+- The churn argument is weaker than it first looked: most of the 15 commits to
+  `frontend/filter.ts` in the last year touched `getPrices` / `getConfigurations`,
+  not the predicate builder.
+
+The case for still doing it is that every semantic change currently has to be
+made twice, in two dialects, by hand — the harness catches a mistake but does not
+save the work. That is a real ongoing tax, and it is the reason to reach for the
+IR if the filter schema starts moving again.
+
+Recommendation: leave the two matchers hand-written and guarded, and revisit the
+IR when a change actually needs making in both places. The design above is
+recorded so it can be picked up without re-deriving it.
 
 ## Finding E: unconstrained MCP alerts were silently capped
 
