@@ -12,9 +12,11 @@
 		/* Specify what module code is generated. */
 		"module": "es2022",
 		/* Specify how TypeScript looks up a file from a given module specifier. */
-		"moduleResolution": "node",
-		/* Specify type package names to be included without being referenced in a source file. */
-		"types": ["@cloudflare/workers-types/2023-07-01"],
+		"moduleResolution": "bundler",
+		/* Specify type package names to be included without being referenced in a source file.
+		   workers-types v5 dropped the dated subpaths (e.g. /2023-07-01); the bare
+		   package is the current entry point. */
+		"types": ["@cloudflare/workers-types"],
 		/* Enable importing .json files */
 		"resolveJsonModule": true,
 

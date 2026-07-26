@@ -6,6 +6,7 @@
  */
 
 import type {
+	AvailabilityChange,
 	CloudNotificationChannel,
 	CloudNotification,
 	CloudNotificationResult,

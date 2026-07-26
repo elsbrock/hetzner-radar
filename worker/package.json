@@ -10,7 +10,8 @@
 		"cf-typegen": "wrangler types",
 		"test": "vitest",
 		"test:coverage": "vitest --coverage",
-		"check": "echo 'Type checking temporarily disabled for CI'",
+		"check": "tsc --noEmit -p tsconfig.check.json",
+		"check:all": "tsc --noEmit",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},

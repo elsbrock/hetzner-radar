@@ -1,0 +1,36 @@
+{
+	/*
+	 * Type-check ratchet.
+	 *
+	 * `npm run check` used to be `echo 'Type checking temporarily disabled for CI'`,
+	 * so worker-tests.yml type-checked nothing at all. The root cause was a stale
+	 * tsconfig (workers-types v5 dropped the dated `/2023-07-01` subpath), not the
+	 * code — but by the time it was found, 261 errors had accumulated behind it.
+	 *
+	 * This config gates the files that are already clean, so they cannot regress.
+	 * The remainder is tracked in
+	 * docs/specs/filter-semantics-harmonization-2026-07.md; move a file here as
+	 * soon as it type-checks, and never move one out.
+	 */
+	"extends": "./tsconfig.json",
+	"include": [
+		"src/alert-matching-sql.ts",
+		"src/auction-data-transformer.ts",
+		"src/auction-db-service.ts",
+		"src/auction-snapshot.ts",
+		"src/cloud-alert-service.ts",
+		"src/cloud-notifications/cloud-discord-channel.ts",
+		"src/cloud-notifications/cloud-email-channel.ts",
+		"src/cloud-notifications/cloud-notification-channel.ts",
+		"src/cloud-notifications/cloud-webhook-channel.ts",
+		"src/cloud-notifications/cloud-notification-service.ts",
+		"src/cloud-status-service.ts",
+		"src/hetzner-auction-client.ts",
+		"src/notification-service.ts",
+		"src/notifications/alert-notification-service.ts",
+		"src/notifications/discord-channel.ts",
+		"src/notifications/email-channel.ts",
+		"src/notifications/notification-channel.ts",
+		"src/notifications/webhook-channel.ts"
+	]
+}

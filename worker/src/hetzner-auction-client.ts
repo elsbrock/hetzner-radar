@@ -112,15 +112,21 @@ export class HetznerAuctionClient {
 	 * Validates that a server object has all required fields
 	 */
 	static validateServer(server: unknown): server is HetznerAuctionServer {
+		// Narrow before reading properties: this is fed straight from the Hetzner
+		// API response, so a null or primitive would otherwise throw a TypeError
+		// here instead of being reported as invalid.
+		if (typeof server !== 'object' || server === null) return false;
+		const s = server as Record<string, unknown>;
+
 		return (
-			typeof server.id === 'number' &&
-			typeof server.cpu === 'string' &&
-			typeof server.cpu_count === 'number' &&
-			typeof server.price === 'number' &&
-			typeof server.datacenter === 'string' &&
-			Array.isArray(server.hdd_arr) &&
-			server.serverDiskData &&
-			typeof server.serverDiskData === 'object'
+			typeof s.id === 'number' &&
+			typeof s.cpu === 'string' &&
+			typeof s.cpu_count === 'number' &&
+			typeof s.price === 'number' &&
+			typeof s.datacenter === 'string' &&
+			Array.isArray(s.hdd_arr) &&
+			typeof s.serverDiskData === 'object' &&
+			s.serverDiskData !== null
 		);
 	}
 }
