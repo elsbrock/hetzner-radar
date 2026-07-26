@@ -273,9 +273,19 @@ function inline(sql: string, values: unknown[]): string {
 const arr = (a: number[]) => `[${a.join(", ")}]`;
 const sum = (a: number[]) => a.reduce((s, x) => s + x, 0);
 
+/** The slice of duckdb-wasm's Node build this harness uses. */
+interface DuckDbNodeModule {
+  createDuckDB(
+    bundles: unknown,
+    logger: unknown,
+    runtime: unknown,
+  ): Promise<{ instantiate(): Promise<void>; connect(): DuckConn }>;
+  VoidLogger: new () => unknown;
+  NODE_RUNTIME: unknown;
+}
+
 async function initDuck(): Promise<void> {
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const duckdb = require_(DUCKDB_NODE_ENTRY) as any;
+  const duckdb = require_(DUCKDB_NODE_ENTRY) as DuckDbNodeModule;
   const bundles = {
     mvp: {
       mainModule: path.join(DUCKDB_DIST, "duckdb-mvp.wasm"),
@@ -292,8 +302,7 @@ async function initDuck(): Promise<void> {
     duckdb.NODE_RUNTIME,
   );
   await db.instantiate();
-  duck = db.connect() as DuckConn;
-  /* eslint-enable @typescript-eslint/no-explicit-any */
+  duck = db.connect();
 
   duck.query(`
     CREATE TABLE server (
@@ -559,6 +568,7 @@ function toSnapshotAuction(s: ServerSpec, id: number): SnapshotAuction {
     information: [],
     seen: "2026-07-26T00:00:00Z",
     pricing: {
+      currency: "EUR",
       monthly_net: 50,
       ipv4_monthly: 1.19,
       setup_net: 0,

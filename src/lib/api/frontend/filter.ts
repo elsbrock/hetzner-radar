@@ -6,7 +6,7 @@ import { getData } from "$lib/api/frontend/dbapi";
 import { HETZNER_IPV4_COST_CENTS } from "$lib/constants";
 import type { ServerFilter } from "$lib/filter";
 import type { AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
-import SQL, { SQLStatement } from "sql-template-strings";
+import SQL from "sql-template-strings";
 
 // Moved to $lib/api/shared/filter-query so the conformance harness can import it
 // without the DuckDB connection helpers. Re-exported for existing call sites.
