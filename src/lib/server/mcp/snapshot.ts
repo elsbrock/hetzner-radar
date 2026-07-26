@@ -1,71 +1,26 @@
 /**
  * Reader for the auction snapshot published by the worker.
  *
- * The producer is `worker/src/auction-snapshot.ts`. These types are a
- * deliberate duplicate — this repo does not share code across the worker/app
- * workspace boundary (same pattern as `src/lib/api/backend/webhook.ts`). The
- * `version` field exists so drift surfaces as a logged mismatch rather than a
- * silent mis-parse.
+ * The producer is `worker/src/auction-snapshot.ts`. The payload shape itself
+ * lives in `@server-radar/filter-spec/snapshot` and is imported by both sides —
+ * it used to be hand-mirrored here, from a time when the repo could not share
+ * code across the worker/app workspace boundary. Re-exported below so existing
+ * `$lib/server/mcp/snapshot` importers keep working unchanged.
  */
 
-export const SNAPSHOT_VERSION = 1;
-export const SNAPSHOT_KEY = "snapshot:current";
+import {
+  SNAPSHOT_KEY,
+  SNAPSHOT_VERSION,
+  type AuctionSnapshot,
+  type SnapshotAuction,
+  type SnapshotPricing,
+} from "@server-radar/filter-spec/snapshot";
+
+export { SNAPSHOT_KEY, SNAPSHOT_VERSION };
+export type { AuctionSnapshot, SnapshotAuction, SnapshotPricing };
 
 /** How long a fetched snapshot is reused within an isolate. */
 const CACHE_TTL_MS = 5 * 60 * 1000;
-
-export interface SnapshotPricing {
-  currency: "EUR";
-  monthly_net: number;
-  ipv4_monthly: number;
-  setup_net: number;
-  total_monthly_net: number;
-  vat_included: false;
-  fixed_price: boolean;
-  next_reduce_at: string | null;
-}
-
-export interface SnapshotAuction {
-  id: number;
-  datacenter: string;
-  location: string;
-  cpu: string;
-  cpu_vendor: string;
-  cpu_count: number;
-  cpu_cores: number | null;
-  cpu_threads: number | null;
-  cpu_generation: string | null;
-  cpu_score: number | null;
-  cpu_multicore_score: number | null;
-  is_highio: boolean;
-  ram_size: number;
-  is_ecc: boolean;
-  nvme_count: number;
-  nvme_drives: number[];
-  nvme_size: number;
-  sata_count: number;
-  sata_drives: number[];
-  sata_size: number;
-  hdd_count: number;
-  hdd_drives: number[];
-  hdd_size: number;
-  with_inic: boolean;
-  with_hwr: boolean;
-  with_gpu: boolean;
-  with_rps: boolean;
-  traffic: string;
-  bandwidth: number;
-  information: string[];
-  seen: string;
-  pricing: SnapshotPricing;
-}
-
-export interface AuctionSnapshot {
-  version: number;
-  generated_at: string;
-  count: number;
-  auctions: SnapshotAuction[];
-}
 
 /**
  * Module-scope cache. Isolates are reused across requests on Workers, so in
