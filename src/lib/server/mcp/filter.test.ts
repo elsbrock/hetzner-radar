@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultFilter } from "$lib/filter";
-import { UNBOUNDED } from "$lib/api/shared/filter-constants";
+import { UNBOUNDED } from "@server-radar/filter-spec/constants";
 import {
   buildServerFilter,
   netEurToStoredPrice,

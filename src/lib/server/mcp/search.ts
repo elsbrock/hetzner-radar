@@ -16,7 +16,7 @@
  */
 
 import type { SnapshotAuction } from "./snapshot";
-import { CITY_PREFIXES } from "$lib/api/shared/filter-constants";
+import { CITY_PREFIXES } from "@server-radar/filter-spec/constants";
 
 export type SizeMode = "per-disk" | "total";
 export type DiskMode = "and" | "or";

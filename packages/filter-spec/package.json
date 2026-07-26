@@ -1,0 +1,13 @@
+{
+  "name": "@server-radar/filter-spec",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Single source of truth for server-filter matching semantics, shared by the SvelteKit app and the Cloudflare worker.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants": "./src/constants.ts",
+    "./types": "./src/types.ts",
+    "./ir": "./src/ir.ts"
+  }
+}

@@ -17,6 +17,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { AlertService } from '../alert-service';
+import { defaultFilter } from '@server-radar/filter-spec/types';
 
 // Pull the exact production query off an instance (private field; cast to read it).
 const MATCH_ALERTS_SQL = (
@@ -25,39 +26,8 @@ const MATCH_ALERTS_SQL = (
 	}
 ).MATCH_ALERTS_SQL;
 
-// Mirrors src/lib/filter.ts defaultFilter — a fully permissive filter.
-const defaultFilter = {
-	version: 1,
-	recentlySeen: true,
-	locationGermany: true,
-	locationFinland: true,
-	showAuction: true,
-	showStandard: false,
-	cpuCount: 1,
-	cpuIntel: true,
-	cpuAMD: true,
-	cpuCores: [0, 128],
-	cpuThreads: [0, 256],
-	ramInternalSize: [4, 10],
-	ssdNvmeCount: [0, 8],
-	ssdNvmeInternalSize: [0, 18],
-	ssdSataCount: [0, 4],
-	ssdSataInternalSize: [0, 14],
-	hddCount: [0, 15],
-	hddInternalSize: [4, 44],
-	ssdNvmeSizeMode: 'per-disk',
-	ssdSataSizeMode: 'per-disk',
-	hddSizeMode: 'per-disk',
-	diskMode: 'and',
-	selectedDatacenters: [] as string[],
-	selectedCpuModels: [] as string[],
-	extrasECC: null as boolean | null,
-	extrasINIC: null as boolean | null,
-	extrasHWR: null as boolean | null,
-	extrasGPU: null as boolean | null,
-	extrasRPS: null as boolean | null,
-};
-
+// The real defaultFilter, imported rather than copied: this file used to carry
+// a hand-maintained duplicate, which is precisely how the two sides drifted.
 type Filter = typeof defaultFilter & Record<string, unknown>;
 
 interface ServerSpec {

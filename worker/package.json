@@ -16,6 +16,7 @@
 		"format": "prettier --write ."
 	},
 	"dependencies": {
+		"@server-radar/filter-spec": "*",
 		"@else42/cf-worker-otel": "^0.2.0"
 	},
 	"devDependencies": {

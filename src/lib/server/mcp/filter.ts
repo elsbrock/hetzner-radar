@@ -23,7 +23,7 @@ import {
   CITY_PREFIXES,
   DISK_UNIT_GB,
   UNBOUNDED,
-} from "$lib/api/shared/filter-constants";
+} from "@server-radar/filter-spec/constants";
 import type { AuctionQuery } from "./search";
 
 /**
