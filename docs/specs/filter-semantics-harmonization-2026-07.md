@@ -10,8 +10,9 @@ three independent implementations, plus a fourth module that encodes into the
 shared filter format. They are kept in agreement by hand, via comments. They have
 drifted before, silently, and shipped user-visible bugs.
 
-This spec makes the agreement mechanical: **one predicate specification, three
-emitters**, with a conformance harness that fails CI when any two disagree.
+This spec makes the agreement mechanical: **one predicate specification, two SQL
+emitters**, with a conformance harness that fails CI when any two matchers
+disagree. (The original sketch said three emitters — see the correction below.)
 
 Explicit non-goal: unifying the _runtimes_. See "Why not one matcher" below.
 
@@ -112,22 +113,23 @@ The per-disk clause is the canonical example — three spellings of one fact:
 - TS: `drives.every(d => d >= lo && d <= hi)`
 
 Equivalent by `∀d ∈ D: lo ≤ d ≤ hi  ⟺  min(D) ≥ lo ∧ max(D) ≤ hi`, with empty `D`
-trivially true. Today that equivalence — including the empty-drive edge case — was
-reasoned out independently three times. In the IR it is one node,
-`allDrivesWithin`, reasoned once, rendered three ways.
+trivially true. Today that equivalence — including the empty-drive edge case — is
+reasoned out independently three times (the TS spelling belongs to MCP search,
+which keeps its own matcher). In the IR the two SQL spellings become one node,
+`allDrivesWithin`, reasoned once and rendered per engine.
 
 ### Package layout
 
-`worker/` cannot currently import from `src/` (zero cross-boundary imports
-today), which is _why_ the worker holds a copy. Root `package.json` already
-declares `workspaces`, so:
+`worker/` could not import from `src/` (zero cross-boundary imports), which is
+_why_ the worker held a copy. Root `package.json` already declared `workspaces`,
+so the package slots in directly:
 
 ```
 packages/filter-spec/
-  src/constants.ts   DISK_UNIT_GB, CITY_PREFIXES, default count ranges
-  src/filter.ts      ServerFilter + defaultFilter (moved here)
-  src/ir.ts          node types + buildFilterIR()
-  src/emit-duckdb.ts src/emit-sqlite.ts src/emit-predicate.ts
+  src/constants.ts   DISK_UNIT_GB, CITY_PREFIXES, UNBOUNDED, disk geometry
+  src/types.ts       ServerFilter + defaultFilter (moved here)
+  src/ir.ts          node types + buildFilterIR()          [not yet written]
+  src/emit-duckdb.ts src/emit-sqlite.ts                    [not yet written]
 ```
 
 `src/lib/filter.ts` re-exports `ServerFilter`/`defaultFilter` from the package so
