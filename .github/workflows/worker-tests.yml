@@ -5,11 +5,19 @@ on:
     branches: [main, develop]
     paths:
       - "worker/**"
+      # The worker imports @server-radar/filter-spec, so a change there can break
+      # these tests without touching worker/ at all.
+      - "packages/**"
+      - "package-lock.json"
       - ".github/workflows/worker-tests.yml"
   pull_request:
     branches: [main, develop]
     paths:
       - "worker/**"
+      # The worker imports @server-radar/filter-spec, so a change there can break
+      # these tests without touching worker/ at all.
+      - "packages/**"
+      - "package-lock.json"
       - ".github/workflows/worker-tests.yml"
 
 jobs:
