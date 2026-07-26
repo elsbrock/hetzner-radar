@@ -466,6 +466,25 @@ describe("filter conformance: DuckDB (frontend) vs SQLite (alert worker)", () =>
     // Guards against the suite silently shrinking to triviality.
     expect(SERVERS.length * FILTERS.length).toBeGreaterThan(400);
   });
+
+  /**
+   * Golden snapshot of what the matchers accept today.
+   *
+   * The agreement test above proves the two engines say the same thing as each
+   * other — but two engines can be changed together and stay agreed while both
+   * become wrong. That matters for the planned rewrite onto a shared predicate
+   * IR, where both emitters are replaced at once and the agreement check alone
+   * would not notice a uniform regression.
+   *
+   * Update this only alongside a deliberate, explained semantics change.
+   */
+  it("matches the recorded behaviour of every filter", () => {
+    const golden: Record<string, string[]> = {};
+    for (const [fname, f] of FILTERS) {
+      golden[fname] = [...duckMatches(f)].sort();
+    }
+    expect(golden).toMatchSnapshot();
+  });
 });
 
 /* ------------------------------------------------------- MCP conformance */
