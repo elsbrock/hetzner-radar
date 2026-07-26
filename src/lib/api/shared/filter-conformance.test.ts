@@ -208,36 +208,22 @@ const FILTERS: [string, ServerFilter][] = [
 /* ------------------------------------------------------- known divergences */
 
 /**
- * Documented, deliberate disagreements between the DuckDB and SQLite matchers,
- * pending resolution in the shared IR. Each entry must reproduce — a
- * divergence that stops firing fails the suite so this list cannot rot.
+ * Deliberate, documented disagreements between the DuckDB and SQLite matchers.
  *
- * See "Divergences found while writing this spec" in
+ * Empty, and worth keeping that way. Each entry must reproduce: a divergence
+ * that stops firing fails the suite, so a fix cannot leave a stale entry behind.
+ * Add one only for a disagreement that is genuinely intended, with the reason —
+ * anything else is drift and should be fixed instead.
+ *
+ * Divergences A (NULL cpu enrichment) and B (full-range gating) lived here until
+ * the worker was aligned with generateFilterQuery. See
  * docs/specs/filter-semantics-harmonization-2026-07.md.
  */
 const KNOWN_DIVERGENCES: {
   id: string;
   why: string;
   applies: (s: ServerSpec, f: ServerFilter) => boolean;
-}[] = [
-  {
-    id: "A:null-cpu-enrichment",
-    why: "worker passes servers with NULL cpu_cores/cpu_threads through a stated range; frontend's SQL NULL comparison excludes them",
-    applies: (s, f) =>
-      (s.cpu_cores === null || s.cpu_threads === null) &&
-      (f.cpuCores[0] > 0 ||
-        f.cpuCores[1] < 128 ||
-        f.cpuThreads[0] > 0 ||
-        f.cpuThreads[1] < 256),
-  },
-  {
-    id: "B:full-range-gating",
-    why: "frontend omits the cores/threads clause at full range; worker always applies it, so a >128-core server is excluded server-side",
-    applies: (s, f) =>
-      ((s.cpu_cores ?? 0) > f.cpuCores[1] && f.cpuCores[1] === 128) ||
-      ((s.cpu_threads ?? 0) > f.cpuThreads[1] && f.cpuThreads[1] === 256),
-  },
-];
+}[] = [];
 
 function knownDivergence(s: ServerSpec, f: ServerFilter): string | null {
   return KNOWN_DIVERGENCES.find((d) => d.applies(s, f))?.id ?? null;

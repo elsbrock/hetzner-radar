@@ -239,22 +239,37 @@ export function buildMatchAlertsSql(ipv4CostCents: number = HETZNER_IPV4_COST_CE
 				OR json_extract(pa.filter, '$.extrasRPS') = c.with_rps
 			)
 
-			-- CPU Cores
+			-- CPU Cores. Mirrors generateFilterQuery on two points that used to differ:
+			--   1. A full range means "no opinion" and the clause is skipped entirely.
+			--      Applying it regardless excluded servers reporting more cores than the
+			--      slider's ceiling.
+			--   2. Unenriched CPUs (cpu_cores IS NULL) do NOT satisfy a stated range.
+			--      SQL NULL comparison drops them frontend-side, and MCP rejects them
+			--      explicitly; passing them through here fired alerts for servers whose
+			--      core count nobody knows.
 			AND (
 				json_extract(pa.filter, '$.cpuCores') IS NULL
-				OR c.cpu_cores IS NULL
 				OR (
-					c.cpu_cores >= json_extract(pa.filter, '$.cpuCores[0]')
+					json_extract(pa.filter, '$.cpuCores[0]') = 0
+					AND json_extract(pa.filter, '$.cpuCores[1]') >= 128
+				)
+				OR (
+					c.cpu_cores IS NOT NULL
+					AND c.cpu_cores >= json_extract(pa.filter, '$.cpuCores[0]')
 					AND c.cpu_cores <= json_extract(pa.filter, '$.cpuCores[1]')
 				)
 			)
 
-			-- CPU Threads
+			-- CPU Threads. Same two rules as CPU Cores above; the full-range ceiling is 256.
 			AND (
 				json_extract(pa.filter, '$.cpuThreads') IS NULL
-				OR c.cpu_threads IS NULL
 				OR (
-					c.cpu_threads >= json_extract(pa.filter, '$.cpuThreads[0]')
+					json_extract(pa.filter, '$.cpuThreads[0]') = 0
+					AND json_extract(pa.filter, '$.cpuThreads[1]') >= 256
+				)
+				OR (
+					c.cpu_threads IS NOT NULL
+					AND c.cpu_threads >= json_extract(pa.filter, '$.cpuThreads[0]')
 					AND c.cpu_threads <= json_extract(pa.filter, '$.cpuThreads[1]')
 				)
 			)

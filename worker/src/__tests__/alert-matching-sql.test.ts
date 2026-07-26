@@ -285,17 +285,40 @@ describe('MATCH_ALERTS_SQL', () => {
 	});
 
 	describe('CPU cores / threads', () => {
-		it('cores: within range matches, outside does not, null is ignored', () => {
+		it('cores: within range matches, outside does not', () => {
 			const f = { cpuCores: [4, 8] };
 			expect(matches(f, { cpu_cores: 6 })).toBe(true);
 			expect(matches(f, { cpu_cores: 2 })).toBe(false);
 			expect(matches(f, { cpu_cores: 10 })).toBe(false);
-			expect(matches(f, { cpu_cores: null })).toBe(true); // unknown cores -> not excluded
 		});
+
+		// Unenriched CPUs do NOT satisfy a stated range. The frontend drops them via
+		// SQL NULL comparison and MCP rejects them explicitly; this used to pass them
+		// through, firing alerts for servers whose core count nobody knows.
+		it('cores: unknown core count does not satisfy a stated range', () => {
+			expect(matches({ cpuCores: [4, 8] }, { cpu_cores: null })).toBe(false);
+		});
+
+		// A full-range slider means "no opinion", so the clause is skipped entirely —
+		// mirroring generateFilterQuery. Applying it regardless excluded servers
+		// reporting more cores than the slider ceiling.
+		it('cores: a full range imposes no constraint at all', () => {
+			expect(matches({ cpuCores: [0, 128] }, { cpu_cores: 130 })).toBe(true);
+			expect(matches({ cpuCores: [0, 128] }, { cpu_cores: null })).toBe(true);
+		});
+
 		it('threads: within range matches, outside does not', () => {
 			const f = { cpuThreads: [8, 16] };
 			expect(matches(f, { cpu_threads: 12 })).toBe(true);
 			expect(matches(f, { cpu_threads: 4 })).toBe(false);
+		});
+
+		it('threads: unknown thread count does not satisfy a stated range', () => {
+			expect(matches({ cpuThreads: [8, 16] }, { cpu_threads: null })).toBe(false);
+		});
+
+		it('threads: a full range imposes no constraint at all', () => {
+			expect(matches({ cpuThreads: [0, 256] }, { cpu_threads: 260 })).toBe(true);
 		});
 	});
 
