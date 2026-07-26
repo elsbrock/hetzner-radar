@@ -1,6 +1,6 @@
 # Filter semantics harmonization
 
-**Status:** in progress
+**Status:** harness, package and fixes landed; IR staged (see Implementation steps)
 **Date:** 2026-07-26
 
 ## Intent
@@ -75,16 +75,33 @@ type Operand =
   | { src: "row"; column: string }; // an auction column
 ```
 
-| Operand  | DuckDB emitter   | TS emitter        | SQLite emitter                      |
-| -------- | ---------------- | ----------------- | ----------------------------------- |
-| `filter` | inlined literal  | closed-over value | `json_extract(pa.filter, '$.path')` |
-| `row`    | column reference | property access   | column reference                    |
+| Operand  | DuckDB emitter   | SQLite emitter                      |
+| -------- | ---------------- | ----------------------------------- |
+| `filter` | inlined literal  | `json_extract(pa.filter, '$.path')` |
+| `row`    | column reference | column reference                    |
 
 A `switch` node covers filter-value-dependent branching (`sizeMode`, `diskMode`,
-OR-mode activity tests). DuckDB and TS emitters **evaluate the discriminant at
-build time** and emit only the taken branch, reproducing today's compact output;
-the SQLite emitter renders a `CASE WHEN`. Identical semantics, all three cost
-profiles preserved.
+OR-mode activity tests). The DuckDB emitter **evaluates the discriminant at build
+time** and emits only the taken branch, reproducing today's compact output; the
+SQLite emitter renders a `CASE WHEN`. Identical semantics, both cost profiles
+preserved.
+
+### Correction: two emitters, not three
+
+The original sketch had a third emitter for MCP's `matchesQuery`. That is wrong.
+`matchesQuery` consumes `AuctionQuery`, which is a strictly **larger** schema than
+`ServerFilter` — it supports substring CPU match, total drive count across types,
+Geekbench multi-core score, and price, none of which `ServerFilter` can express
+(they are listed in `SEARCH_ONLY_KEYS` and deliberately stripped from the
+`create_alert` schema for exactly that reason). Routing MCP search through the IR
+would silently narrow search to what an alert can represent.
+
+So the IR covers the two implementations that genuinely are line-for-line
+reimplementations of one another — `generateFilterQuery` (DuckDB) and
+`MATCH_ALERTS_SQL` (SQLite). MCP search keeps its own matcher and is instead
+pinned by the second conformance pass, which compares `matchesQuery(auction, q)`
+against the filter `buildServerFilter(q)` produces for the same query. That
+catches encoder drift without constraining the search surface.
 
 ### Representation differences are declared once
 
@@ -161,17 +178,56 @@ return false` — excludes, with an explicit comment defending it. Worker is the
 
 ## Implementation steps
 
-- [ ] Write spec (this file)
-- [ ] Conformance harness: shared fixtures across DuckDB / SQLite / TS, pinning
-      current behavior and asserting agreement; divergences A/B quarantined as
-      documented-expected until the IR lands
-- [ ] `packages/filter-spec` workspace package: constants + `ServerFilter` moved,
-      re-exported from `$lib/filter`
-- [ ] Symbolic IR (`buildFilterIR`) covering every matched dimension
-- [ ] Three emitters; migrate `generateFilterQuery`, `MATCH_ALERTS_SQL`,
-      `matchesQuery` onto them, harness green at each step
-- [ ] Resolve divergences A and B in the IR; un-quarantine those harness cases
-- [ ] Re-enable worker type checking (`worker/package.json` `check` is currently
-      `echo 'Type checking temporarily disabled for CI'`, so `worker-tests.yml`
-      type-checks nothing)
-- [ ] Final validation: root + worker `check`, `lint`, `test`, `build`
+- [x] Write spec (this file)
+- [x] Extract both matchers into dependency-free modules so a harness can import
+      them side by side (`$lib/api/shared/filter-query`,
+      `worker/src/alert-matching-sql`)
+- [x] Conformance harness: 20 servers × 28 filters through DuckDB and SQLite,
+      plus MCP search vs. its alert encoding. Verified to catch the historical
+      250-vs-500 GB bug. Runs in CI via `frontend.yml`.
+- [x] Fix the MCP ceiling bug the harness surfaced (see finding E below)
+- [x] Resolve divergences A and B; `KNOWN_DIVERGENCES` is now empty
+- [x] `packages/filter-spec` workspace package: `ServerFilter`, `defaultFilter`
+      and the disk geometry constants, resolvable from both toolchains (verified
+      with a SvelteKit build and a wrangler dry-run bundle)
+- [x] Golden snapshot pinning current per-filter behaviour, so a rewrite that
+      changes both emitters together cannot regress unnoticed
+- [x] Restore worker type checking behind a ratchet (`tsconfig.check.json`)
+- [ ] **Remaining:** symbolic IR (`buildFilterIR`) + `emitDuckDb` / `emitSqlite`;
+      migrate `generateFilterQuery` and `MATCH_ALERTS_SQL` onto them
+
+### Why the IR is staged separately
+
+It is a rewrite of the SQL that fires production alerts, and it replaces both
+emitters simultaneously. That is safe only with the harness _and_ the golden
+snapshot in place — which is why they landed first. Both are now green, so the
+rewrite has a real acceptance criterion: `KNOWN_DIVERGENCES` stays empty and the
+snapshot does not move.
+
+Note that the harness has already converted the failure mode from silent to loud.
+Drift between the two engines now fails CI on the commit that introduces it,
+which was the actual danger. The IR removes the duplicated maintenance, which is
+a cost problem rather than a correctness one.
+
+## Finding E: unconstrained MCP alerts were silently capped
+
+Surfaced by the harness, fixed in `fix(mcp)`. `buildServerFilter` encoded "no
+maximum stated" as the UI slider ceiling. That ceiling is a display affordance,
+but the same number is the stored predicate the alert matcher evaluates — so an
+MCP-created alert with **no disk criteria at all** still meant "at most 9 TB
+NVMe / 7 TB SATA / 22 TB HDD / 128 cores", and never fired for larger servers.
+34 server × query combinations disagreed between search and alert.
+
+Unstated maxima now use explicit `UNBOUNDED` sentinels. Drive _counts_ keep the
+UI ceilings: bay counts are a real hardware limit, not a display artefact.
+
+## Remaining test debt
+
+- `worker`'s full type check reports 261 errors (35 in production source, 226 in
+  test mocks), gated behind `tsconfig.check.json` until fixed. `npm run check:all`
+  shows the full picture. The root cause was a stale `tsconfig` reference to a
+  workers-types subpath that v5 removed — not the code — but the placeholder
+  `echo` hid real breakage for however long it sat there.
+- The Playwright suite is still `workflow_dispatch`-only in `playwright.yml`, so
+  it does not gate PRs. Out of scope here; the conformance harness now covers the
+  filter semantics that suite was implicitly relied on for.
