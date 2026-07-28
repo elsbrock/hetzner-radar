@@ -6,6 +6,11 @@ interface HistoricalAvailabilityOptions {
   endDate: string;
   serverTypeId?: number;
   locationId?: number;
+  /**
+   * Still accepted from callers, but the worker ignores it: the underlying
+   * dataset stores availability *transitions*, and bucketing them loses the
+   * ordering needed to reconstruct the state over time.
+   */
   granularity?: "hour" | "day" | "week";
 }
 

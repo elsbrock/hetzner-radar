@@ -29,7 +29,32 @@ interface AnalyticsQueryOptions {
 	endDate: string; // ISO date string
 	serverTypeId?: number;
 	locationId?: number;
+	/**
+	 * Accepted for API compatibility but no longer used. The dataset holds
+	 * *transitions*, not samples, so bucketing them destroys the very ordering a
+	 * consumer needs to rebuild the availability step function — see
+	 * `queryAvailabilityHistory`.
+	 */
 	granularity?: 'hour' | 'day' | 'week';
+}
+
+/** Raw transition row as returned by the events query. */
+interface AnalyticsEventRow {
+	timestamp: string;
+	blob1: string;
+	blob2: string;
+	blob4?: string;
+	blob5?: string;
+	double1: number;
+}
+
+/** One row per (server type × location) carrying the state entering the window. */
+interface AnalyticsSeedRow {
+	blob1: string;
+	blob2: string;
+	serverTypeName?: string;
+	locationName?: string;
+	availability: number;
 }
 
 interface AvailabilityDataPoint {
@@ -40,7 +65,29 @@ interface AvailabilityDataPoint {
 	locationName: string;
 	available: boolean;
 	availabilityRate?: number; // For aggregated data
+	/**
+	 * True for the synthetic point that carries the state in effect at
+	 * `startDate` (the last real transition *before* the window). Consumers seed
+	 * their step function from it instead of guessing.
+	 */
+	seed?: boolean;
 }
+
+/**
+ * Upper bound on transition rows returned for a single history query.
+ *
+ * The dataset holds transitions only (~a handful per pair per day), so a 30d
+ * window for one location stays far below this. The cap exists so a pathological
+ * flapping period can't return an unbounded result set.
+ */
+const MAX_EVENT_ROWS = 10000;
+
+/**
+ * How far back to look for the transition that established the state entering
+ * the window. Analytics Engine retains three months, so this stays well inside
+ * retention while bounding the scan.
+ */
+const SEED_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
 
 export class AnalyticsQueryService {
 	constructor() {
@@ -48,11 +95,29 @@ export class AnalyticsQueryService {
 		// No authentication needed when using bindings
 	}
 
+	/**
+	 * Fetch the availability transition history for a window.
+	 *
+	 * `cloud_availability_v2` records *state changes only* (see
+	 * NotificationService.writeToAnalyticsEngine), so the result is a sparse edge
+	 * stream, not a sample stream. Two consequences drive this implementation:
+	 *
+	 * 1. **No time bucketing.** Aggregating edges per hour with `MAX(double1)`
+	 *    silently discards the "went unavailable" edge of any pair that flipped
+	 *    twice inside one bucket, so a short availability blip renders as
+	 *    "available ever since". Raw rows with their true timestamps are returned
+	 *    instead.
+	 * 2. **An explicit seed.** A consumer cannot infer the state entering the
+	 *    window from the window's own events (inverting the first event only works
+	 *    while edges strictly alternate). A second query resolves the last
+	 *    transition *before* `startDate` per pair and returns it as a synthetic
+	 *    point stamped at `startDate` with `seed: true`.
+	 */
 	async queryAvailabilityHistory(
 		options: AnalyticsQueryOptions,
 		env: { ANALYTICS_ENGINE: AnalyticsEngineDataset; CF_ACCOUNT_ID?: string; CF_BEARER_TOKEN?: string },
 	): Promise<AvailabilityDataPoint[]> {
-		const { startDate, endDate, serverTypeId, locationId, granularity = 'hour' } = options;
+		const { startDate, endDate, serverTypeId, locationId } = options;
 
 		// For now, we need to use the SQL API directly as the binding doesn't support SQL queries yet
 		// This requires CF_ACCOUNT_ID and CF_BEARER_TOKEN environment variables
@@ -64,22 +129,32 @@ export class AnalyticsQueryService {
 			return [];
 		}
 
-		// Build SQL query based on options
-		// `buildQuery` takes five parameters; a sixth `env` argument was being
-		// passed and silently discarded.
-		const sql = this.buildQuery(startDate, endDate, serverTypeId, locationId, granularity);
+		const credentials = { accountId: env.CF_ACCOUNT_ID, bearerToken: env.CF_BEARER_TOKEN };
 
+		// Independent queries — issue them together rather than paying two
+		// sequential round trips on every chart render.
+		const [seedRows, eventRows] = await Promise.all([
+			this.runQuery<AnalyticsSeedRow>(this.buildSeedQuery(startDate, serverTypeId, locationId), credentials),
+			this.runQuery<AnalyticsEventRow>(this.buildEventsQuery(startDate, endDate, serverTypeId, locationId), credentials),
+		]);
+
+		if (eventRows.length >= MAX_EVENT_ROWS) {
+			console.warn(`[AnalyticsQueryService] Event query hit the ${MAX_EVENT_ROWS} row cap; history may be truncated`);
+		}
+
+		return [...this.transformSeedRows(seedRows, startDate), ...this.transformEventRows(eventRows)];
+	}
+
+	/** POST a statement to the AE SQL API and return its `data` rows. */
+	private async runQuery<Row>(sql: string, credentials: { accountId: string; bearerToken: string }): Promise<Row[]> {
 		console.log('[AnalyticsQueryService] Executing SQL query:', sql);
 
 		try {
-			// Execute query via Analytics Engine SQL API
-			// The API expects the SQL query as plain text in the body
-			console.log('[AnalyticsQueryService] Sending SQL query as plain text to API');
-
-			const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`, {
+			// The API expects the SQL query as plain text in the body.
+			const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${credentials.accountId}/analytics_engine/sql`, {
 				method: 'POST',
 				headers: {
-					Authorization: `Bearer ${env.CF_BEARER_TOKEN}`,
+					Authorization: `Bearer ${credentials.bearerToken}`,
 				},
 				body: sql,
 			});
@@ -90,9 +165,7 @@ export class AnalyticsQueryService {
 			}
 
 			const responseText = await response.text();
-			console.log('[AnalyticsQueryService] Response received, parsing results');
 
-			// Parse the response - Analytics Engine SQL API returns JSON
 			let result;
 			try {
 				result = JSON.parse(responseText);
@@ -101,16 +174,16 @@ export class AnalyticsQueryService {
 				throw new Error(`Failed to parse Analytics Engine response: ${parseError}`, { cause: parseError });
 			}
 
-			// The response format may vary, let's handle different cases
-			const data = result.data || result.rows || result;
+			// AE returns `{ meta, data, rows }`; `rows` is a count, so only `data`
+			// (or a bare array) is a usable row set.
+			const data = Array.isArray(result) ? result : result?.data;
 
 			if (!Array.isArray(data)) {
 				console.error('[AnalyticsQueryService] Unexpected response format:', result);
 				return [];
 			}
 
-			// Transform the raw results into our data structure
-			return this.transformResults(data);
+			return data as Row[];
 		} catch (error) {
 			console.error('[AnalyticsQueryService] Query failed:', error);
 			throw error;
@@ -126,68 +199,88 @@ export class AnalyticsQueryService {
 		return isoDate.replace(/\.\d{3}Z$/, '').replace(/Z$/, '');
 	}
 
-	private buildQuery(
-		startDate: string,
-		endDate: string,
-		serverTypeId?: number,
-		locationId?: number,
-		granularity: 'hour' | 'day' | 'week' = 'hour',
-	): string {
-		// Base query components
-		const timeFormat = this.getTimeFormat(granularity);
-		const formattedStart = this.formatDateForAE(startDate);
-		const formattedEnd = this.formatDateForAE(endDate);
-		const whereConditions: string[] = [`timestamp >= toDateTime('${formattedStart}')`, `timestamp <= toDateTime('${formattedEnd}')`];
+	/** Narrow to a server type and/or location; both are stored as string blobs. */
+	private buildPairFilters(serverTypeId?: number, locationId?: number): string[] {
+		const filters: string[] = [];
 
 		if (serverTypeId !== undefined) {
-			whereConditions.push(`blob1 = '${serverTypeId}'`);
+			filters.push(`blob1 = '${serverTypeId}'`);
 		}
 
 		if (locationId !== undefined) {
-			whereConditions.push(`blob2 = '${locationId}'`);
+			filters.push(`blob2 = '${locationId}'`);
 		}
 
-		// Build the SQL query
-		// Use the dataset name as configured in wrangler.jsonc
-		const sql = `SELECT ${timeFormat} as time_bucket, blob1, blob2, blob4, blob5, MAX(double1) as availability FROM cloud_availability_v2 WHERE ${whereConditions.join(' AND ')} GROUP BY time_bucket, blob1, blob2, blob4, blob5 ORDER BY time_bucket DESC, blob1, blob2`;
-
-		return sql.trim();
+		return filters;
 	}
 
-	private getTimeFormat(granularity: 'hour' | 'day' | 'week'): string {
-		// Use Analytics Engine's toStartOfInterval function
-		switch (granularity) {
-			case 'hour':
-				return "toStartOfInterval(timestamp, INTERVAL '1' HOUR)";
-			case 'day':
-				return "toStartOfInterval(timestamp, INTERVAL '1' DAY)";
-			case 'week':
-				return "toStartOfInterval(timestamp, INTERVAL '1' WEEK)";
-			default:
-				return "toStartOfInterval(timestamp, INTERVAL '1' HOUR)";
-		}
+	/**
+	 * Every transition inside the window, oldest first, at full resolution.
+	 * Ascending order matters: consumers replay these as a step function, and the
+	 * row cap must truncate the *oldest* history rather than the newest.
+	 */
+	private buildEventsQuery(startDate: string, endDate: string, serverTypeId?: number, locationId?: number): string {
+		const whereConditions = [
+			`timestamp >= toDateTime('${this.formatDateForAE(startDate)}')`,
+			`timestamp <= toDateTime('${this.formatDateForAE(endDate)}')`,
+			...this.buildPairFilters(serverTypeId, locationId),
+		];
+
+		return `SELECT timestamp, blob1, blob2, blob4, blob5, double1 FROM cloud_availability_v2 WHERE ${whereConditions.join(
+			' AND ',
+		)} ORDER BY timestamp ASC LIMIT ${MAX_EVENT_ROWS}`;
 	}
 
-	private transformResults(rawData: unknown[]): AvailabilityDataPoint[] {
-		return rawData.map((row) => {
-			const typedRow = row as {
-				time_bucket: string;
-				blob1: string;
-				blob2: string;
-				blob4?: string;
-				blob5?: string;
-				availability: number;
-			};
-			return {
-				timestamp: typedRow.time_bucket,
-				serverTypeId: parseInt(typedRow.blob1),
-				locationId: parseInt(typedRow.blob2),
-				serverTypeName: typedRow.blob4 || `Server ${typedRow.blob1}`,
-				locationName: typedRow.blob5 || `Location ${typedRow.blob2}`,
-				available: typedRow.availability === 1,
-				availabilityRate: typedRow.availability,
-			};
-		});
+	/**
+	 * The last transition before the window per (server type × location), which is
+	 * the state the window opens in. `argMax(…, timestamp)` collapses each pair to
+	 * its most recent row, so this returns one row per pair regardless of how
+	 * heavily it flapped.
+	 *
+	 * A pair that has not changed state within `SEED_LOOKBACK_MS` yields no row;
+	 * that is not a gap but the definition of a stable pair, and the caller's live
+	 * snapshot already holds the answer.
+	 */
+	private buildSeedQuery(startDate: string, serverTypeId?: number, locationId?: number): string {
+		const seedStart = new Date(new Date(startDate).getTime() - SEED_LOOKBACK_MS).toISOString();
+		const whereConditions = [
+			`timestamp >= toDateTime('${this.formatDateForAE(seedStart)}')`,
+			`timestamp < toDateTime('${this.formatDateForAE(startDate)}')`,
+			...this.buildPairFilters(serverTypeId, locationId),
+		];
+
+		return `SELECT blob1, blob2, argMax(blob4, timestamp) as serverTypeName, argMax(blob5, timestamp) as locationName, argMax(double1, timestamp) as availability FROM cloud_availability_v2 WHERE ${whereConditions.join(
+			' AND ',
+		)} GROUP BY blob1, blob2`;
+	}
+
+	private transformEventRows(rows: AnalyticsEventRow[]): AvailabilityDataPoint[] {
+		return rows.map((row) => ({
+			timestamp: row.timestamp,
+			serverTypeId: parseInt(row.blob1),
+			locationId: parseInt(row.blob2),
+			serverTypeName: row.blob4 || `Server ${row.blob1}`,
+			locationName: row.blob5 || `Location ${row.blob2}`,
+			available: Number(row.double1) === 1,
+			availabilityRate: Number(row.double1),
+		}));
+	}
+
+	/**
+	 * Restamp each seed to the window start — its real timestamp lies outside the
+	 * window and would place the transition where nothing can render it.
+	 */
+	private transformSeedRows(rows: AnalyticsSeedRow[], startDate: string): AvailabilityDataPoint[] {
+		return rows.map((row) => ({
+			timestamp: startDate,
+			serverTypeId: parseInt(row.blob1),
+			locationId: parseInt(row.blob2),
+			serverTypeName: row.serverTypeName || `Server ${row.blob1}`,
+			locationName: row.locationName || `Location ${row.blob2}`,
+			available: Number(row.availability) === 1,
+			availabilityRate: Number(row.availability),
+			seed: true,
+		}));
 	}
 
 	/**

@@ -13,6 +13,7 @@
 	import 'chartjs-adapter-date-fns';
 	import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
 	import { onDestroy } from 'svelte';
+	import { bucketAvailability } from '$lib/availability-history';
 
 	Chart.register(MatrixController, MatrixElement, CategoryScale, TimeScale, LinearScale, Tooltip);
 
@@ -24,6 +25,12 @@
 		locationName: string;
 		available: boolean;
 		availabilityRate?: number;
+		/**
+		 * Marks the synthetic point carrying the state entering the window — the
+		 * last real transition before `startDate`, restamped to `startDate` by the
+		 * API. Seeds the step function; never a transition in its own right.
+		 */
+		seed?: boolean;
 	}
 
 	interface Props {
@@ -104,13 +111,7 @@
 	// Fixed number of columns for every horizon (24h/7d/30d) so the heatmap reads
 	// the same regardless of range; bucket size = horizon / BUCKET_COUNT.
 	const BUCKET_COUNT = 84;
-	// Always reconstruct availability state from at least this much transition
-	// history, even for short display windows. Without it a 24h/7d window can miss
-	// the transition that set the current state and seed the wrong value — which is
-	// why short ranges used to disagree with the 30d view.
-	const LOOKBACK_MS = 30 * 86_400_000;
 	const stepMs = $derived((endDate.getTime() - startDate.getTime()) / BUCKET_COUNT);
-	const fetchStartMs = $derived(Math.min(startDate.getTime(), endDate.getTime() - LOOKBACK_MS));
 	const nRows = $derived(rowLabels.length);
 	const nCols = $derived(bucketStarts.length);
 
@@ -160,18 +161,13 @@
 		error = null;
 
 		try {
-			// Always fetch hourly resolution over a wide LOOKBACK window (not just the
-			// display range). Hourly because the API pre-buckets with MAX(available)
-			// at the requested granularity — 'day' would destroy the sub-day detail we
-			// integrate into cells. Wide because availability state is reconstructed
-			// from transitions: a short display window can miss the transition that set
-			// the current state, so we always seed from ≥30d of history and then render
-			// only [startDate, endDate]. This keeps 24h/7d consistent with 30d.
+			// Just the display range: the API returns raw transitions at full
+			// resolution plus an explicit `seed` point carrying the state the window
+			// opens in, so there is no need to over-fetch history here and infer it.
 			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const params = new URLSearchParams({
-				startDate: new Date(fetchStartMs).toISOString(),
-				endDate: endDate.toISOString(),
-				granularity: 'hour'
+				startDate: startDate.toISOString(),
+				endDate: endDate.toISOString()
 			});
 
 			// `pair` narrows on both axes; the other modes narrow on one and fan the
@@ -223,8 +219,19 @@
 	// Rows that should appear for the current selection, derived from the
 	// supported/availability snapshot (not the event stream) so entities with no
 	// transitions in the window still render, seeded with their current state.
-	function expectedEntities(): { id: number; label: string; currentlyAvailable: boolean }[] {
-		const out: { id: number; label: string; currentlyAvailable: boolean }[] = [];
+	//
+	// `snapshotKnown` distinguishes "the snapshot says unavailable" from "the
+	// snapshot has nothing to say about this row" — both surface as
+	// `currentlyAvailable: false`, but only the former may override chart data.
+	interface ExpectedEntity {
+		id: number;
+		label: string;
+		currentlyAvailable: boolean;
+		snapshotKnown: boolean;
+	}
+
+	function expectedEntities(): ExpectedEntity[] {
+		const out: ExpectedEntity[] = [];
 		if (
 			viewMode === 'pair' &&
 			selectedLocationId !== undefined &&
@@ -235,53 +242,44 @@
 			out.push({
 				id: PAIR_ROW_ID,
 				label: `${st?.name ?? `Server ${selectedServerTypeId}`} · ${loc?.city ?? `Location ${selectedLocationId}`}`,
-				currentlyAvailable: (availability[selectedLocationId] || []).includes(selectedServerTypeId)
+				currentlyAvailable: (availability[selectedLocationId] || []).includes(selectedServerTypeId),
+				snapshotKnown: (supported[selectedLocationId] || []).includes(selectedServerTypeId)
 			});
 		} else if (viewMode === 'location' && selectedLocationId !== undefined) {
 			const currentlyAvailable = new Set(availability[selectedLocationId] || []);
 			for (const stId of supported[selectedLocationId] || []) {
 				const st = serverTypes.find((s) => s.id === stId);
 				if (!st) continue;
-				out.push({ id: stId, label: st.name, currentlyAvailable: currentlyAvailable.has(stId) });
+				out.push({
+					id: stId,
+					label: st.name,
+					currentlyAvailable: currentlyAvailable.has(stId),
+					// Enumerated from the supported matrix, so the snapshot covers it.
+					snapshotKnown: true
+				});
 			}
 		} else if (viewMode === 'serverType' && selectedServerTypeId !== undefined) {
 			for (const loc of locations) {
 				if (!(supported[loc.id] || []).includes(selectedServerTypeId)) continue;
 				const currentlyAvailable = (availability[loc.id] || []).includes(selectedServerTypeId);
-				out.push({ id: loc.id, label: loc.city, currentlyAvailable });
+				out.push({ id: loc.id, label: loc.city, currentlyAvailable, snapshotKnown: true });
 			}
 		}
 		return out;
 	}
 
-	// Fraction of [a, b) during which `changePoints` is in the available state.
-	function availableFraction(
-		changePoints: { t: number; up: boolean }[],
-		a: number,
-		b: number,
-		windowEnd: number
-	): number {
-		if (b <= a) return 0;
-		let up = 0;
-		for (let i = 0; i < changePoints.length; i++) {
-			if (!changePoints[i].up) continue;
-			const segStart = changePoints[i].t;
-			const segEnd = i + 1 < changePoints.length ? changePoints[i + 1].t : windowEnd;
-			up += Math.max(0, Math.min(segEnd, b) - Math.max(segStart, a));
-		}
-		return up / (b - a);
-	}
-
 	function buildMatrix(data: AvailabilityDataPoint[]) {
 		const starts = generateBucketStarts(); // display buckets over [start, end]
-		// Step function is seeded from the wide fetch window so the display window's
-		// entry state is established by real transitions, not the current snapshot.
-		const seedStart = fetchStartMs;
+		const seedStart = startDate.getTime();
 		const windowEnd = endDate.getTime();
 
-		// Group transition events by entity (server type or location).
+		// Group transition events by entity (server type or location). Seed points
+		// are held apart: they state the entry condition rather than a change, so
+		// they must not be replayed as transitions.
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const events = new Map<number, { t: number; up: boolean }[]>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const seeds = new Map<number, boolean>();
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const labelById = new Map<number, string>();
 		for (const point of data) {
@@ -309,6 +307,12 @@
 				labelById.set(id, label);
 			}
 			const up = point.available || (point.availabilityRate ?? 0) > 0;
+			if (point.seed) {
+				// In `pair` mode every point collapses onto PAIR_ROW_ID, and the query
+				// is already narrowed to that one pair, so there is exactly one seed.
+				seeds.set(id, up);
+				continue;
+			}
 			const t = Math.max(parseEventTimestamp(point.timestamp), seedStart);
 			(events.get(id) ?? events.set(id, []).get(id)!).push({ t, up });
 		}
@@ -317,10 +321,15 @@
 		// somehow isn't in the supported snapshot.
 		const expected = expectedEntities();
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const rows = new Map<number, { label: string; currentlyAvailable: boolean }>();
-		for (const e of expected) rows.set(e.id, { label: e.label, currentlyAvailable: e.currentlyAvailable });
+		const rows = new Map<number, { label: string; currentlyAvailable: boolean; snapshotKnown: boolean }>();
+		for (const e of expected)
+			rows.set(e.id, {
+				label: e.label,
+				currentlyAvailable: e.currentlyAvailable,
+				snapshotKnown: e.snapshotKnown
+			});
 		for (const [id, label] of labelById) {
-			if (!rows.has(id)) rows.set(id, { label, currentlyAvailable: false });
+			if (!rows.has(id)) rows.set(id, { label, currentlyAvailable: false, snapshotKnown: false });
 		}
 
 		const ordered = Array.from(rows.entries()).sort(([, a], [, b]) =>
@@ -331,20 +340,25 @@
 
 		const out: MatrixDatum[] = [];
 		for (const [id, row] of ordered) {
-			const evs = (events.get(id) ?? []).slice().sort((p, q) => p.t - q.t);
-			// State at the seed start: events are transitions, so invert the first
-			// one. With no events, fall back to the current snapshot.
-			const seed = evs.length > 0 ? !evs[0].up : row.currentlyAvailable;
-			const changePoints = [{ t: seedStart, up: seed }, ...evs];
+			const values = bucketAvailability({
+				buckets: starts,
+				stepMs,
+				seedStart,
+				windowEnd,
+				// State entering the window, in order of authority: the seed resolved
+				// from the last transition before the window; else — meaning the pair
+				// has not changed state within the seed lookback — the live snapshot,
+				// which is exactly that unchanged state. If neither is known, assume
+				// unavailable rather than inventing uptime.
+				seed: seeds.get(id) ?? (row.snapshotKnown ? row.currentlyAvailable : false),
+				events: events.get(id) ?? [],
+				// Only the live window can be checked against the live snapshot; older
+				// windows describe the past.
+				reconcileTo: isLiveWindow && row.snapshotKnown ? row.currentlyAvailable : null
+			});
 
-			for (let i = 0; i < starts.length; i++) {
-				const bStart = starts[i];
-				const bEnd = Math.min(bStart + stepMs, windowEnd);
-				out.push({
-					x: i,
-					y: row.label,
-					v: availableFraction(changePoints, bStart, bEnd, windowEnd)
-				});
+			for (let i = 0; i < values.length; i++) {
+				out.push({ x: i, y: row.label, v: values[i] });
 			}
 		}
 		bucketStarts = starts;
