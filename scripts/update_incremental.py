@@ -421,6 +421,97 @@ def enrich_cpu_data(conn, cpu_specs: dict):
     print(f"CPU enrichment: updated {enriched} distinct CPU models")
 
 
+def strip_trademarks(name: str) -> str:
+    """Drop (R)/(TM) symbols so a CPU reads the same as in the auction feed."""
+    import re
+    return re.sub(r'\s+', ' ', name.replace('®', '').replace('™', '')).strip()
+
+
+def format_ram(modules: list) -> str:
+    """Human-readable RAM description, e.g. '64 GB DDR4 ECC'."""
+    parts = []
+    for module in modules:
+        label = f"{module['Size']} {module['SizeUnit']}"
+        if module.get('Amount', 1) > 1:
+            label = f"{module['Amount']} x {label}"
+        for extra in (module.get('Generation'), module.get('Type')):
+            if extra:
+                label += f" {extra}"
+        parts.append(label)
+    return ', '.join(parts)
+
+
+def transform_standard_server(raw: dict) -> dict:
+    """Flatten one standard-server product into the shape import_standard_query reads.
+
+    Hetzner's server finder groups a product's hardware into `variations`, but
+    prices only the entry configuration: `price` equals `maxPrice` for every
+    product and no per-variation price is published. So only the base variation
+    - always the first, and the one matching filterData.ramMin - is imported;
+    pricing the upgraded variations off the base price would be a fabrication.
+    """
+    product = raw['product']
+    cpu_data = raw.get('cpuData') or {}
+    price_data = raw.get('priceData') or {}
+    filter_data = raw.get('filterData') or {}
+    details = raw.get('details') or {}
+
+    variations = raw.get('variations') or []
+    base = variations[0] if variations else {}
+    ram_modules = base.get('ram') or []
+    drives = base.get('drive') or []
+
+    disk_data = {'nvme': [], 'sata': [], 'hdd': [], 'general': []}
+    hdd_arr = []
+    for drive in drives:
+        # RealSize is GB for every drive type; Size/SizeUnit are the display form.
+        sizes = [drive['RealSize']] * drive['Amount']
+        bucket = {'NVME': 'nvme', 'SATA': 'sata', 'HDD': 'hdd'}.get((drive.get('Type') or '').upper())
+        if bucket:
+            disk_data[bucket].extend(sizes)
+        disk_data['general'].extend(sizes)
+        hdd_arr.append(f"{drive['Amount']} x {drive['Size']} {drive['SizeUnit']} {drive.get('Type') or 'Drive'}")
+
+    # Standard servers have no specials list of their own beyond IPv4; a GPU
+    # only shows up as a populated gpuData block.
+    specials = list(raw.get('specials') or [])
+    if raw.get('gpuData') and 'GPU' not in specials:
+        specials.append('GPU')
+
+    countries = {c['shortcode']: c['name'] for c in details.get('countries') or []}
+    datacenters = [
+        {
+            'datacenter': dc.get('datacenter') or key,
+            'name': dc.get('datacenter') or key,
+            'country': countries.get(dc.get('countryShortCode'), ''),
+            'country_shortcode': dc.get('countryShortCode') or '',
+        }
+        for key, dc in (details.get('datacenter') or {}).items()
+    ]
+
+    return {
+        'id': str(product['id']),
+        'name': raw['name'],
+        'cpu': strip_trademarks(cpu_data.get('cpu') or ''),
+        'cores': cpu_data.get('cores'),
+        'threads': cpu_data.get('threads'),
+        'cpu_generation': cpu_data.get('cpuGeneration'),
+        'ram': sum(module['Size'] * module.get('Amount', 1) for module in ram_modules),
+        'ram_hr': format_ram(ram_modules),
+        'is_ecc': bool(filter_data.get('ramEcc')),
+        'hdd_arr': hdd_arr,
+        'serverDiskData': disk_data,
+        # Includes the IPv4 address (the product key the feed prices is the
+        # server plus ROBOT_1266); the import SQL subtracts it again.
+        'price': price_data.get('price'),
+        'setup_price': price_data.get('setupPrice') or 0,
+        'Bandwidth': details.get('bandwidth'),
+        'traffic': details.get('traffic'),
+        'datacenter': datacenters,
+        'specials': specials,
+    }
+
+
 def transform_auction_server(raw: dict) -> dict:
     """Flatten one nested auction record into the shape import_auction_query reads.
 
@@ -485,6 +576,8 @@ def fetch_hetzner_data(url: str, output_path: str, label: str = "servers", trans
 
     # Extract server array
     servers = data.get('server', data) if isinstance(data, dict) else data
+    if not servers:
+        raise ValueError(f"Hetzner API returned no {label} ({url}) - refusing to import an empty feed")
     if transform is not None:
         servers = [transform(server) for server in servers]
     print(f"Fetched {len(servers)} {label} from API")
@@ -633,6 +726,12 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
         incoming_count = conn.execute("SELECT COUNT(*) FROM server_incoming").fetchone()[0]
         print(f"Incoming records: {incoming_count}")
 
+        # read_json() fills columns the feed no longer has with NULL rather than
+        # failing, so a reshaped feed turns into an import of nothing instead of
+        # an error. Fetching servers but importing none can only mean that.
+        if incoming_count == 0:
+            raise ValueError("Auction feed produced 0 importable records - the feed shape has likely changed")
+
         # Merge new data (only insert if not already exists for this day)
         print("Merging new data...")
         conn.execute(merge_query)
@@ -673,6 +772,11 @@ def update_database(db_path: str, auction_json_path: str, standard_json_path: st
 
             standard_count = conn.execute("SELECT COUNT(*) FROM server WHERE server_type = 'standard'").fetchone()[0]
             print(f"Standard servers imported: {standard_count}")
+
+            # Same silent-NULL trap as above, and the one that hid the standard
+            # import being dead for months: a reshaped feed unnests to no rows.
+            if standard_count == 0:
+                raise ValueError("Standard feed produced 0 importable records - the feed shape has likely changed")
 
         # Enrich all servers with CPU specs (cores, threads, generation, scores)
         print("\n--- Enriching CPU data ---")
@@ -753,7 +857,12 @@ def main():
             "auction servers",
             transform=transform_auction_server,
         )
-        fetch_hetzner_data(HETZNER_LIVE_API_URL, temp_standard_json, "standard servers")
+        fetch_hetzner_data(
+            HETZNER_LIVE_API_URL,
+            temp_standard_json,
+            "standard servers",
+            transform=transform_standard_server,
+        )
 
         # Update database incrementally
         update_database(db_path, temp_auction_json, temp_standard_json, retention_days)
