@@ -98,7 +98,7 @@ describe('buildSnapshot', () => {
 		expect(Array.isArray(auction.nvme_drives)).toBe(true);
 		expect(Array.isArray(auction.sata_drives)).toBe(true);
 		expect(Array.isArray(auction.hdd_drives)).toBe(true);
-		expect(auction.information).toEqual(['Special feature', 'Additional info']);
+		expect(auction.information).toEqual(['2 x RAM 16384 MB DDR4 ECC', 'Special feature', 'Additional info']);
 	});
 
 	it('tolerates malformed JSON in array columns rather than throwing', () => {

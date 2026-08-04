@@ -51,14 +51,14 @@ describe('AuctionDataTransformer', () => {
 			const transformed = result[0];
 
 			expect(transformed.id).toBe(12345);
-			expect(transformed.information).toBe('["Special feature","Additional info"]');
+			expect(transformed.information).toBe('["2 x RAM 16384 MB DDR4 ECC","Special feature","Additional info"]');
 			expect(transformed.datacenter).toBe('FSN1-DC14');
 			expect(transformed.location).toBe('Germany');
 			expect(transformed.cpu_vendor).toBe('Intel');
 			expect(transformed.cpu).toBe('Intel Xeon E5-2680v4');
 			expect(transformed.cpu_count).toBe(2);
 			expect(transformed.is_highio).toBe(false);
-			expect(transformed.ram).toBe('["32768 MB DDR4","2x 16384 MB"]');
+			expect(transformed.ram).toBe('["2 x RAM 16384 MB DDR4 ECC"]');
 			expect(transformed.ram_size).toBe(32768);
 			expect(transformed.is_ecc).toBe(true);
 			expect(transformed.nvme_count).toBe(0);
@@ -77,7 +77,7 @@ describe('AuctionDataTransformer', () => {
 			const transformed = result[0];
 
 			expect(transformed.id).toBe(67890);
-			expect(transformed.information).toBe(null);
+			expect(transformed.information).toBe('["1 x RAM 16384 MB DDR4"]');
 			expect(transformed.datacenter).toBe('NBG1-DC3');
 			expect(transformed.location).toBe('Germany');
 			expect(transformed.cpu_vendor).toBe('AMD');

@@ -6,7 +6,7 @@ declare namespace Cloudflare {
 		FETCH_INTERVAL_MS: '60000';
 		MAIN_APP_URL: 'https://radar.iodev.org';
 		AUCTION_IMPORT_INTERVAL_MS: '300000';
-		HETZNER_AUCTION_API_URL: 'https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json';
+		HETZNER_AUCTION_API_URL: 'https://www.hetzner.com/_resources/app/data/app/live_data_sb.json';
 		HETZNER_API_TOKEN: string;
 		CLOUD_STATUS_DO: DurableObjectNamespace<import('./src/index').CloudAvailabilityDO>;
 		AUCTION_IMPORT_DO: DurableObjectNamespace<import('./src/index').AuctionImportDO>;

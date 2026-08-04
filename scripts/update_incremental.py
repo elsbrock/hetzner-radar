@@ -21,7 +21,11 @@ import json
 import gzip
 from datetime import datetime
 
-HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json"
+# Hetzner retired the per-currency flat auction feeds (live_data_sb_EUR.json,
+# which 404s since 2026-08-04) and now serves a single nested document that
+# their own frontend flattens client-side. transform_auction_server() below
+# mirrors that mapping, so everything downstream keeps its historic field names.
+HETZNER_AUCTION_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_sb.json"
 HETZNER_LIVE_API_URL = "https://www.hetzner.com/_resources/app/data/app/live_data_en_EUR.json"
 
 # Minimum expected records to prevent uploading a corrupted/empty database.
@@ -417,7 +421,57 @@ def enrich_cpu_data(conn, cpu_specs: dict):
     print(f"CPU enrichment: updated {enriched} distinct CPU models")
 
 
-def fetch_hetzner_data(url: str, output_path: str, label: str = "servers") -> str:
+def transform_auction_server(raw: dict) -> dict:
+    """Flatten one nested auction record into the shape import_auction_query reads.
+
+    Mirrors the mapping Hetzner's own Serverbörse frontend applies to
+    live_data_sb.json, so the import SQL keeps working against the field names
+    the retired flat feed used to ship.
+    """
+    hardware = raw['Hardware']
+    details = raw['Details']
+    prices = raw['Prices']
+    timer = raw.get('Timer') or {}
+
+    cpu = hardware['CPU']
+    ram = hardware['RAM']
+    storage = hardware['Storage']
+    disks = storage.get('Details') or {}
+
+    information = details.get('Information') or []
+    specials = details.get('Specials') or []
+
+    return {
+        'id': raw['Id'],
+        'information': information,
+        'cpu': cpu['Name'],
+        'cpu_count': cpu['CoreCount'],
+        # The nested feed has no dedicated HighIO flag - it only ever shows up
+        # as a special now.
+        'is_highio': 'HighIO' in specials,
+        'traffic': details.get('Traffic'),
+        'bandwidth': details.get('Bandwidth'),
+        # The flat feed sent RAM as the human-readable description lines.
+        'ram': [line for line in information if 'RAM' in line],
+        'ram_size': ram['Size'],
+        'is_ecc': bool(ram.get('ecc')),
+        'price': prices['monthly']['EUR'],
+        'hdd_arr': storage.get('Disks') or [],
+        'serverDiskData': {
+            'nvme': disks.get('nvme') or [],
+            'sata': disks.get('sata') or [],
+            'hdd': disks.get('hdd') or [],
+            'general': disks.get('general') or [],
+        },
+        'datacenter': details['Datacenter']['Name'],
+        'specials': specials,
+        'fixed_price': bool(prices.get('fixed')),
+        'next_reduce_timestamp': timer.get('ReduceNextTimestamp', 0),
+        'next_reduce': timer.get('ReduceNext', 0),
+    }
+
+
+def fetch_hetzner_data(url: str, output_path: str, label: str = "servers", transform=None) -> str:
     """Fetch data from Hetzner API and save to temp file."""
     print(f"Fetching {label} from Hetzner API...")
 
@@ -431,6 +485,8 @@ def fetch_hetzner_data(url: str, output_path: str, label: str = "servers") -> st
 
     # Extract server array
     servers = data.get('server', data) if isinstance(data, dict) else data
+    if transform is not None:
+        servers = [transform(server) for server in servers]
     print(f"Fetched {len(servers)} {label} from API")
 
     # Save to temp file for DuckDB to read
@@ -691,7 +747,12 @@ def main():
             print(f"No existing database at {db_path}, will create new one")
 
         # Fetch fresh data from Hetzner
-        fetch_hetzner_data(HETZNER_AUCTION_API_URL, temp_auction_json, "auction servers")
+        fetch_hetzner_data(
+            HETZNER_AUCTION_API_URL,
+            temp_auction_json,
+            "auction servers",
+            transform=transform_auction_server,
+        )
         fetch_hetzner_data(HETZNER_LIVE_API_URL, temp_standard_json, "standard servers")
 
         # Update database incrementally

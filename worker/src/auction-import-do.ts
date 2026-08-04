@@ -24,7 +24,9 @@ interface AuctionImportEnv {
 }
 
 const DEFAULT_AUCTION_IMPORT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-const DEFAULT_HETZNER_AUCTION_API_URL = 'https://www.hetzner.com/_resources/app/data/app/live_data_sb_EUR.json';
+// The per-currency flat feeds (live_data_sb_EUR.json) were retired on
+// 2026-08-04; this nested document is what Hetzner serves now.
+const DEFAULT_HETZNER_AUCTION_API_URL = 'https://www.hetzner.com/_resources/app/data/app/live_data_sb.json';
 
 // `DurableObject` defaults its Env parameter to the generated `Cloudflare.Env`.
 // Passing the narrower binding set this DO actually uses means the base class

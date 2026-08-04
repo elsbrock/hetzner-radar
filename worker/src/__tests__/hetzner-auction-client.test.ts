@@ -9,6 +9,7 @@ import {
 	mockEmptyApiResponse,
 	mockInvalidApiResponse,
 	mockHetznerAuctionServer,
+	mockHetznerAuctionFeedServer,
 	mockInvalidHetznerServer,
 } from './fixtures/auction-data';
 
@@ -58,6 +59,31 @@ describe('HetznerAuctionClient', () => {
 
 			expect(result).toHaveLength(2);
 			expect(result[0]).toEqual(mockHetznerAuctionServer);
+		});
+
+		it('should flatten the nested feed records', async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: async () => JSON.parse(mockApiResponse),
+			});
+
+			const [server] = await client.fetchAuctionData();
+
+			// The feed nests hardware, pricing and timer data; everything
+			// downstream expects the flat field names the retired feed used.
+			expect(server.id).toBe(mockHetznerAuctionFeedServer.Id);
+			expect(server.cpu).toBe('Intel Xeon E5-2680v4');
+			expect(server.cpu_count).toBe(2);
+			expect(server.ram_size).toBe(32768);
+			expect(server.is_ecc).toBe(true);
+			expect(server.datacenter).toBe('FSN1-DC14');
+			expect(server.price).toBe(89.0);
+			expect(server.serverDiskData.sata).toEqual([240, 240, 8000, 8000, 8000, 8000]);
+			expect(server.next_reduce_timestamp).toBe(1640995200);
+			expect(server.next_reduce).toBe(3600);
+			expect(server.ip_price).toEqual({ Monthly: 1.7, Hourly: 0.0027, Amount: 1 });
+			expect(server.setup_price).toBe(0);
+			expect(HetznerAuctionClient.validateServer(server)).toBe(true);
 		});
 
 		it('should handle empty server response', async () => {
