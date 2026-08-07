@@ -41,7 +41,7 @@
 	bind:open={bannerStatus}
 	id={domId}
 	class="relative z-10 flex items-center justify-between bg-gray-100 px-2 py-1 dark:border-gray-700 dark:bg-gray-800"
-	closeClass="p-1"
+	classes={{ dismissable: 'p-1' }}
 >
 	<p class="flex items-center text-sm font-normal text-gray-500 dark:text-gray-400">
 		<span class="me-3 inline-flex rounded-full bg-gray-200 p-1 dark:bg-gray-700">

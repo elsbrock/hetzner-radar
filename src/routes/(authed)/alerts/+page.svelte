@@ -380,7 +380,7 @@
 		<!-- Tabs -->
 		<Tabs
 			tabStyle="underline"
-			contentClass="mt-6 p-0 rounded-none bg-transparent dark:bg-transparent"
+			classes={{ content: 'mt-6 p-0 rounded-none bg-transparent dark:bg-transparent' }}
 		>
 			<TabItem bind:open={priceAlertsTabOpen}>
 				{#snippet titleSlot()}

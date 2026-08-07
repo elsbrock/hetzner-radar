@@ -53,8 +53,7 @@
 			{#each faqItems as item (item.question)}
 				<AccordionItem
 					class="border-b border-gray-200 last:border-b-0 dark:border-gray-700"
-					headerClass="px-5"
-					contentClass="px-5"
+					classes={{ button: 'px-5', content: 'px-5' }}
 				>
 					{#snippet header()}
 						<span class="text-base font-semibold text-gray-800 dark:text-gray-100">

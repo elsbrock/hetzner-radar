@@ -198,7 +198,9 @@
 	<NavUl
 		slideParams={{ duration: 250, delay: 0 }}
 		class="order-1 w-full xl:block xl:w-auto xl:flex-1"
-		ulClass="flex flex-col p-4 mt-4 xl:flex-row xl:space-x-1 rtl:space-x-reverse xl:mt-0 xl:py-0 xl:text-sm xl:font-medium"
+		classes={{
+			ul: 'flex flex-col p-4 mt-4 xl:flex-row xl:space-x-1 rtl:space-x-reverse xl:mt-0 xl:py-0 xl:text-sm xl:font-medium'
+		}}
 		{activeUrl}
 	>
 		<NavLi href="/" data-testid="nav-link-home" class="bg-transparent!">
