@@ -83,6 +83,42 @@ export type TemporalStat = {
   x: number;
   y: number;
 };
+
+/**
+ * The days the crawler has observations for, as epoch seconds at UTC midnight.
+ *
+ * Every other stats query groups by day and therefore silently omits days it
+ * has no rows for. This is the reference set that tells apart "no listing
+ * matched" from "we were not looking" — see `buildDayGrid` in `$lib/chartSeries`.
+ */
+export async function getObservedDays(
+  conn: AsyncDuckDBConnection,
+): Promise<number[]> {
+  const query = SQL`
+		select distinct
+			EXTRACT(epoch FROM date_trunc('d', seen))::int as day
+		from
+			server
+		order by
+			day
+	`;
+  const result = await getData<{ day: number }>(conn, query);
+  return result.map((row) => row.day);
+}
+
+/*
+ * Per-unit price metrics exclude fixed-price (configurable) listings.
+ *
+ * Those listings carry the configurator's *menu* of drive options rather than
+ * one machine's drives — e.g. nvme_drives [512, 960, 1000, 1920, 2000, 3840,
+ * 7680, 15360] summing to 33 TB, the identical array appearing under several
+ * different CPUs. Dividing the price by that fictional capacity produces a
+ * minimum nobody can buy, and a minimum is exactly what these queries take:
+ * one such row sets the value for the whole day. `getSoldAuctionPriceStats`
+ * already filters them out for the same reason.
+ */
+const AUCTION_ONLY = "fixed_price = FALSE";
+
 export async function getRamPriceStats(
   conn: AsyncDuckDBConnection,
   withECC?: boolean,
@@ -96,15 +132,13 @@ export async function getRamPriceStats(
 				EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
 				price / ram_size as price_per_gb
 			from
-				server`;
-  if (withECC !== undefined || country) {
-    query.append(SQL` where 1 = 1`);
-    if (withECC !== undefined) {
-      query.append(SQL` and is_ecc = ${withECC}`);
-    }
-    if (country) {
-      query.append(SQL` and location = ${country}`);
-    }
+				server
+			where `.append(AUCTION_ONLY);
+  if (withECC !== undefined) {
+    query.append(SQL` and is_ecc = ${withECC}`);
+  }
+  if (country) {
+    query.append(SQL` and location = ${country}`);
   }
   query.append(SQL`
 		) group by
@@ -131,6 +165,7 @@ export async function getDiskPriceStats(
 					server
 				where
 					${diskType}_size > 0
+					and ${AUCTION_ONLY}
 			)
 			group by
 				x
@@ -141,6 +176,30 @@ export async function getDiskPriceStats(
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return getData<TemporalStat>(conn, query as any);
+}
+
+/**
+ * Daily minimum listing price across the whole auction.
+ *
+ * The "cheapest server" headline used to be `min(cheapest AMD, cheapest
+ * Intel)`, which silently drops anything `cpu_vendor` failed to classify —
+ * the column also holds `Intel®` and `2x` for a small tail of listings.
+ */
+export async function getMinPriceStats(
+  conn: AsyncDuckDBConnection,
+): Promise<TemporalStat[]> {
+  const query = SQL`
+		select
+			EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
+			min(price) as y
+		from
+			server
+		group by
+			x
+		order by
+			x
+	`;
+  return getData<TemporalStat>(conn, query);
 }
 
 export async function getGPUPriceStats(
@@ -246,6 +305,46 @@ export async function getVolumeByDatacenterStats(
 			x
 	`;
   return getData<TemporalStat>(conn, query);
+}
+
+/**
+ * Daily listing volume for every datacenter in a country, in one round trip.
+ *
+ * The per-datacenter variant above needs a `getDatacenterList` call plus one
+ * query per datacenter — 27 queries for Germany, each paying the full worker
+ * round trip and Arrow decode. This groups by datacenter instead.
+ */
+export async function getVolumeByCountryDatacenters(
+  conn: AsyncDuckDBConnection,
+  country: string,
+): Promise<{ [datacenter: string]: TemporalStat[] }> {
+  const query = SQL`
+		select
+			datacenter,
+			EXTRACT(epoch FROM date_trunc('d', seen))::int as x,
+			count(distinct id)::int as y
+		from
+			server
+		where
+			location = ${country}
+			and datacenter is not null
+			and datacenter != ''
+		group by
+			datacenter, x
+		order by
+			datacenter, x
+	`;
+
+  const rows = await getData<{ datacenter: string } & TemporalStat>(
+    conn,
+    query,
+  );
+
+  const result: { [datacenter: string]: TemporalStat[] } = {};
+  for (const { datacenter, x, y } of rows) {
+    (result[datacenter] ??= []).push({ x, y });
+  }
+  return result;
 }
 
 export async function getVolumeByDatacenterByCountryStats(

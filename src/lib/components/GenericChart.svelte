@@ -10,10 +10,30 @@
 	import 'chartjs-adapter-date-fns';
 	import merge from 'deepmerge';
 	import { onDestroy } from 'svelte';
+	import { fadeColor, seriesColor } from '$lib/chartSeries';
 
 	// --- Props ---
-	type InputDataPoint = { x: number; y: number };
-	type InputSeries = { name: string; data: InputDataPoint[]; fill?: boolean; color?: string };
+	// A null y is a genuine gap in the data, not a zero: the line breaks there.
+	type InputDataPoint = { x: number; y: number | null };
+	type InputSeries = {
+		name: string;
+		data: InputDataPoint[];
+		fill?: boolean;
+		color?: string;
+		/**
+		 * Palette slot to take the colour from, when two datasets belong to the
+		 * same metric (a raw series and its moving average) and must match.
+		 * Defaults to the dataset's own position.
+		 */
+		colorIndex?: number;
+		/** Opacity of the line. Used to recede a raw series under its average. */
+		alpha?: number;
+		/** Line width in px. */
+		width?: number;
+		dashed?: boolean;
+		/** Bezier tension. 0 (the default) draws what the data says. */
+		tension?: number;
+	};
 
 	let {
 		data = [], // Default value directly
@@ -79,7 +99,10 @@
 		const legendColor = isDarkMode ? '#ffffff' : '#000000';
 
 		const chartDatasets = data.map((series, index) => {
-			const color = series.color || getRandomColor();
+			// Colour follows the series' identity, not chance: regenerating it per
+			// effect run repainted the whole chart on every data or theme update.
+			const base = series.color || seriesColor(series.colorIndex ?? index, isDarkMode);
+			const color = series.alpha !== undefined ? fadeColor(base, series.alpha) : base;
 			const baseConfig = {
 				label: series.name,
 				data: series.data.map((d) => ({
@@ -94,17 +117,21 @@
 			if (type === 'line') {
 				return {
 					...baseConfig,
-					borderWidth: 3,
-					tension: 0.4, // Approximation for 'smooth' curve
+					borderWidth: series.width ?? 2,
+					borderDash: series.dashed ? [5, 4] : undefined,
+					tension: series.tension ?? 0,
 					pointRadius: 0, // Hide points by default
+					// Never draw across a null: a missing day is not a straight line
+					// between the days either side of it.
+					spanGaps: false,
 					fill: series.fill === true, // Use fill if specified
-					backgroundColor: series.fill === true ? addAlpha(color, 0.5) : undefined
+					backgroundColor: series.fill === true ? fadeColor(color, 0.5) : undefined
 				};
 			} else if (type === 'bar') {
 				const color = baseConfig.borderColor;
 				return {
 					...baseConfig,
-					backgroundColor: addAlpha(color, 0.7), // Semi-transparent fill
+					backgroundColor: fadeColor(color, 0.7), // Semi-transparent fill
 					borderWidth: 1,
 					borderRadius: 4, // Rounded corners on bars
 					barPercentage: 0.8, // Width of the bar relative to the category width
@@ -259,43 +286,6 @@
 		}
 	});
 
-	// --- Helper Functions ---
-	function getRandomColor(): string {
-		const letters = '0123456789ABCDEF';
-		let color = '#';
-		for (let i = 0; i < 6; i++) {
-			color += letters[Math.floor(Math.random() * 16)];
-		}
-		return color;
-	}
-
-	// Add alpha channel to a hex color
-	function addAlpha(color: string, opacity: number): string {
-		// If it's already an rgba color, return it
-		if (color.startsWith('rgba')) {
-			return color;
-		}
-
-		// Convert hex to rgb
-		let r = 0,
-			g = 0,
-			b = 0;
-
-		// 3 digits
-		if (color.length === 4) {
-			r = parseInt(color[1] + color[1], 16);
-			g = parseInt(color[2] + color[2], 16);
-			b = parseInt(color[3] + color[3], 16);
-		}
-		// 6 digits
-		else if (color.length === 7) {
-			r = parseInt(color.substring(1, 3), 16);
-			g = parseInt(color.substring(3, 5), 16);
-			b = parseInt(color.substring(5, 7), 16);
-		}
-
-		return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-	}
 </script>
 
 <!-- Use a canvas element for Chart.js -->
@@ -312,8 +302,12 @@
 		height: 100%;
 	}
 	canvas {
+		/*
+		 * Size is Chart.js's job: `responsive: true` writes the CSS size from the
+		 * container and the bitmap size from that times the device pixel ratio.
+		 * Forcing `width: 100% !important` here overrode the CSS half only, so the
+		 * bitmap and the box disagreed and the plot rendered scaled and clipped.
+		 */
 		display: block; /* Prevent extra space below canvas */
-		width: 100% !important; /* Ensure canvas fills container width */
-		height: 100% !important; /* Ensure canvas fills container height */
 	}
 </style>

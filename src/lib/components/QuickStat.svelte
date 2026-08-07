@@ -41,10 +41,17 @@
 >
 	<div class="flex items-center {size === 'sm' ? 'mb-1' : 'mb-2'}">
 		{#if icon}
-			<FontAwesomeIcon
-				{icon}
-				class="{size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} icon mr-2 text-orange-500"
-			/>
+			<!--
+				Keyed: FontAwesomeIcon renders its SVG once and does not swap it when
+				the icon prop changes, so a tile whose icon depends on the data (an
+				up/down trend arrow) stayed stuck on whatever it mounted with.
+			-->
+			{#key icon}
+				<FontAwesomeIcon
+					{icon}
+					class="{size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} icon mr-2 text-orange-500"
+				/>
+			{/key}
 		{/if}
 		<h3
 			class="{size === 'sm' ? 'text-xs' : 'text-sm'} font-semibold text-gray-700 dark:text-gray-300"
