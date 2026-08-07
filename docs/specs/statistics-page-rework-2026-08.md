@@ -143,17 +143,22 @@ the current view, and never regenerated per render.
 ### 5. Key-metric audit
 
 Reviewing the six tiles turned up six problems; the row is now five tiles.
-Figures below are from the local January 2026 snapshot; the live numbers differ
-but the structural problems do not.
 
-| Tile         | Verdict                                                               |
-| ------------ | --------------------------------------------------------------------- |
-| Price Index  | correct value, unreachable subtitle — relabelled                      |
-| 30-Day Trend | arrow stuck on mount, single-day endpoints — fixed, now smoothed      |
-| Lowest Price | leaked listings via the vendor buckets — now `min(price)`             |
-| AMD vs Intel | compared two unrelated machines — **dropped**                         |
-| ECC Premium  | sign-inverted vs its name, confounded by RAM size — **now Best €/GB** |
-| NVMe vs HDD  | 5× wrong from fixed-price contamination — fixed (1.1× → 6.2×)         |
+> **Correction (2026-08-07, after review against live data).** The first pass of
+> this audit was done against a stale local snapshot from January 2026. Three of
+> its findings do not hold on the live dataset, which was re-parsed when Hetzner
+> moved to the nested auction feed (013c5731). They are struck through below and
+> explained in "What the stale snapshot got wrong". The lesson is on the process,
+> not the metrics: **audit the live dataset, not `static/sb.duckdb.wasm`.**
+
+| Tile         | Verdict                                                                       |
+| ------------ | ----------------------------------------------------------------------------- |
+| Price Index  | ~~unreachable subtitle~~ — **wrong**, see correction; relabelled anyway       |
+| 30-Day Trend | arrow stuck on mount, single-day endpoints — fixed, now smoothed              |
+| Lowest Price | ~~leaked listings via the vendor buckets~~ — no longer live; still simplified |
+| AMD vs Intel | compared two unrelated machines — **dropped**                                 |
+| ECC Premium  | sign-inverted vs its name, confounded by RAM size — **now Best €/GB**         |
+| NVMe vs HDD  | ~~5× wrong from fixed-price contamination~~ — no longer live, see below       |
 
 **AMD vs Intel is gone.** It divided the cheapest AMD listing (€33) by the
 cheapest Intel one (€29) — different RAM, disks and CPU generations. It reported
@@ -167,16 +172,6 @@ ECC's minimum €/GB (€0.164 — a 256 GB Xeon E5-1650v3 at €42) against non
 _premium_. ECC machines simply carry more RAM; the number measured capacity, not
 error correction.
 
-**Fixed-price listings corrupt every per-unit price.** Hetzner's configurable
-offers store the configurator's drive _menu_ in `nvme_drives`, not one machine's
-drives: `[512, 960, 1000, 1920, 2000, 3840, 7680, 15360]` — 33 TB — appearing
-verbatim under two different CPUs on €37 and €44 listings, alongside a 45,720 GB
-`sata_size`. Since `getDiskPriceStats` takes a **minimum**, one such row sets the
-value for the entire day. Excluding `fixed_price = TRUE` moves the last day's
-NVMe minimum from €1.14/TB to €6.30/TB, and the NVMe-vs-HDD tile from 1.1× to
-6.2×. `getSoldAuctionPriceStats` already filtered these out; `getRamPriceStats`
-and `getDiskPriceStats` now do too.
-
 **The trend arrow never moved.** `FontAwesomeIcon` renders its SVG on mount and
 does not swap it when the `icon` prop changes, so the tile kept the `faArrowDown`
 it mounted with while the data was still empty — showing ↓ next to a red "+4.08%"
@@ -185,18 +180,37 @@ and the words "Prices rising". `QuickStat` now wraps the icon in `{#key icon}`.
 **The 30-day trend compared two raw days**, either of which could be an outlier.
 It now compares 7-day averages.
 
-**`cpu_vendor` is not a clean two-way split.** It holds `Intel` (60,555 rows),
-`AMD` (48,541), plus `Intel®` (77) and `2x` (4). "Lowest Price" was
-`min(cheapest AMD, cheapest Intel)`, so those 81 stragglers could never win it.
-It is now a plain `min(price)` via `getMinPriceStats`.
+### What the stale snapshot got wrong
 
-**The price index cannot exceed 1.0.** Over the snapshot's 90 days: min 0.951,
-max exactly 1.000, median 0.965, zero days above 1.0. The baseline is a _trailing_
-90-day median that includes the current row, and auction prices ratchet downward
-within a listing's life, so today's minimum is essentially always ≤ that median.
-The old subtitle ("Values > 1.0 = higher prices") described an unreachable state;
-it now reads "Today vs its rolling 90-day median. Lower = cheaper." Rebasing the
-index so it can swing both ways is a separate change — the metric, not the label.
+**The price index is not bounded at 1.0.** The claim was that a _trailing_ 90-day
+median baseline plus prices that only ratchet down puts today's minimum
+permanently at or below the baseline. The snapshot agreed — max exactly 1.000,
+zero of 90 days above it — but the reasoning was wrong and so was the conclusion.
+`config_daily_prices` groups by **configuration, not listing**: when the cheap
+listings of a config sell and only freshly-listed expensive ones remain, that
+config's daily minimum rises above its own trailing median. Nothing bounds it.
+
+Live, on 2026-08-07: index **1.118**, median 1.080 over 88 days, max 1.185, and
+**76 of 88 days above 1.0**. The original subtitle, "Values > 1.0 = higher
+prices", described the _common_ case. It is restored as "Above 1.0 = pricier than
+its 90-day median". The snapshot showed a falling market; the live one is rising.
+
+**`cpu_vendor` is clean on live data** — `Intel` and `AMD` only. The `Intel®` and
+`2x` buckets existed in the January snapshot and are gone since the nested-feed
+migration, so "Lowest Price" was not actually dropping listings in production.
+`getMinPriceStats` stays: expressing "the cheapest server" as `min(price)` rather
+than as the min of two vendor buckets is the right shape regardless, and it is
+one query instead of two.
+
+**The fixed-price contamination is gone on live data.** The menu-shaped drive
+arrays (`[512, 960, 1000, 1920, 2000, 3840, 7680, 15360]`, 33 TB, the same array
+under several CPUs) that set the whole day's per-TB minimum in the snapshot no
+longer appear: zero rows match on the live dataset. The `fixed_price = FALSE`
+filter added to `getRamPriceStats` and `getDiskPriceStats` therefore no longer
+removes junk. It changes the daily minimum on 5 of 88 days for NVMe, 1 of 88 for
+HDD, and 0 for RAM — and where it does bite it now discards a **real** offer
+(2026-08-07: a €72 Ryzen 5 3600 with 5 TB NVMe at €14.68/TB, replaced by
+€19.20/TB). See the open question below.
 
 ## Decisions & trade-offs
 

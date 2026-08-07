@@ -473,7 +473,7 @@
 				icon={faChartLine}
 				title="Price Index"
 				value={currentPriceIndex !== null ? currentPriceIndex.toFixed(3) : null}
-				subtitle="Today vs its rolling 90-day median. Lower = cheaper."
+				subtitle="Above 1.0 = pricier than its 90-day median"
 			/>
 
 			<QuickStat
