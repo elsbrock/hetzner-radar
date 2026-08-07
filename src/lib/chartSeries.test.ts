@@ -32,6 +32,20 @@ describe("buildDayGrid", () => {
   it("returns an empty grid for no data", () => {
     expect(buildDayGrid([])).toEqual({ days: [], observed: new Set() });
   });
+
+  it("ignores junk timestamps instead of stretching the grid to 1970", () => {
+    // A row whose date failed to parse arrives as 0; without the guard the
+    // grid spans twenty thousand days and the real data is one pixel wide.
+    const grid = buildDayGrid([0, day(0), Number.NaN, day(2)]);
+    expect(grid.days).toEqual([day(0), day(1), day(2)]);
+  });
+
+  it("returns an empty grid when every day is junk", () => {
+    expect(buildDayGrid([0, Number.NaN])).toEqual({
+      days: [],
+      observed: new Set(),
+    });
+  });
 });
 
 describe("alignSeries", () => {

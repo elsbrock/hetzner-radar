@@ -30,13 +30,19 @@ export type DayGrid = {
  * Input timestamps are epoch seconds at UTC midnight (`date_trunc('d', seen)`).
  */
 export function buildDayGrid(observedDays: number[]): DayGrid {
-  if (observedDays.length === 0) {
+  // Drop anything that is not a real timestamp before taking the extent. A
+  // single junk value ruins the whole grid rather than one point: a row whose
+  // date failed to parse arrives here as 0, and `Math.min` then stretches the
+  // grid back to 1970 — twenty thousand points, with the actual data crushed
+  // into the last pixel.
+  const valid = observedDays.filter((day) => Number.isFinite(day) && day > 0);
+  if (valid.length === 0) {
     return { days: [], observed: new Set() };
   }
 
-  const observed = new Set(observedDays);
-  const first = Math.min(...observedDays);
-  const last = Math.max(...observedDays);
+  const observed = new Set(valid);
+  const first = Math.min(...valid);
+  const last = Math.max(...valid);
 
   const days: number[] = [];
   for (let day = first; day <= last; day += DAY_SECONDS) {

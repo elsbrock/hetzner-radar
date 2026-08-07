@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { alignSeries, buildDayGrid, movingAverage } from '$lib/chartSeries';
 	import GenericChart from '$lib/components/GenericChart.svelte';
 	import PageHero from '$lib/components/PageHero.svelte';
 	import { defaultFilter, encodeFilter } from '$lib/filter';
@@ -71,16 +72,43 @@
 		return parts.join(' + ') || 'no storage';
 	}
 
-	const chartData = $derived([
-		{
-			name: 'Daily minimum',
-			data: history.map((p) => ({
-				x: new Date(p.day).getTime(),
+	const SERIES_COLOR = '#fb923c';
+	const AVERAGE_WINDOW = 7;
+
+	const chartData = $derived.by(() => {
+		// GenericChart takes epoch *seconds* and multiplies by 1000 itself; this
+		// used to hand it milliseconds, putting every tick tens of thousands of
+		// years into the future.
+		//
+		// `day` comes from SQLite's date(seen), which yields null for a row with an
+		// unparseable timestamp; skip those rather than let them become 1970.
+		const points = history
+			.map((p) => ({
+				x: Math.floor(new Date(p.day).getTime() / 1000),
 				y: Number(p.minPrice.toFixed(2))
-			})),
-			color: '#fb923c'
-		}
-	]);
+			}))
+			.filter((p) => Number.isFinite(p.x) && p.x > 0);
+
+		// The query groups by day, so a day with no listing for this CPU is simply
+		// absent. Put the series on a full daily grid so those days break the line
+		// instead of being joined by a straight segment that implies a price.
+		const raw = alignSeries(
+			points,
+			buildDayGrid(points.map((p) => p.x)),
+			'gap'
+		);
+
+		return [
+			{ name: 'Daily minimum', data: raw, color: SERIES_COLOR, alpha: 0.35, width: 1 },
+			{
+				name: `${AVERAGE_WINDOW}-day average`,
+				data: movingAverage(raw, AVERAGE_WINDOW),
+				color: SERIES_COLOR,
+				width: 2.5,
+				tension: 0.25
+			}
+		];
+	});
 
 	const chartOptions = $derived({
 		responsive: true,
@@ -95,8 +123,7 @@
 				beginAtZero: false,
 				title: { display: true, text: 'Min price (EUR/month)' }
 			}
-		},
-		plugins: { legend: { display: false } }
+		}
 	});
 
 	const breadcrumbJsonLd = $derived({
@@ -228,7 +255,7 @@
 				Daily minimum price across all listings featuring {cpu.displayName} (incl. €{(1.7).toFixed(2)} IPv4 cost, net).
 			</p>
 			<div class="h-72 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-				<GenericChart data={chartData} options={chartOptions} legendShow={false} />
+				<GenericChart data={chartData} options={chartOptions} />
 			</div>
 		</section>
 	{/if}

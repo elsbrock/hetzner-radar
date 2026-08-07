@@ -216,6 +216,23 @@ index so it can swing both ways is a separate change — the metric, not the lab
   chart draws what the data says, and a bezier through daily minima invents
   extrema on that page for the same reason it does here.
 
+### 6. `/servers/cpu/[slug]` gets the same treatment
+
+That page's 90-day history chart carried a live bug: it passed
+`new Date(p.day).getTime()` — **milliseconds** — to a component that multiplies
+by 1000, so every x sat ~56 million years out. The plot shape survived (a
+constant factor on a self-scaling axis) but the tick labels were nonsense
+month/day pairs from dates centuries apart, which is why they appeared to run
+backwards. It now passes epoch seconds, aligns onto a day grid so a day with no
+listing breaks the line, and draws the same faded-raw + 7-day-average pair.
+
+Chasing it surfaced a robustness hole in `buildDayGrid`: SQLite's `date(seen)`
+returns null for an unparseable timestamp, `new Date(null).getTime()` is `0`, and
+`Math.min` then stretched the grid back to 1970 — 20,673 points with the real
+data one pixel wide at the right edge. `buildDayGrid` now drops non-finite and
+non-positive days before taking the extent, so one bad row costs one point
+instead of the whole chart.
+
 ## Implementation steps
 
 - [x] `src/lib/chartSeries.ts`: `buildDayGrid`, `alignSeries`, `movingAverage`,
@@ -228,4 +245,6 @@ index so it can swing both ways is a separate change — the metric, not the lab
 - [x] Key-metric fixes: `{#key icon}` in `QuickStat`, `fixed_price` filter on the
       per-unit price queries, `getMinPriceStats`, smoothed trend, honest subtitles
 - [x] Drop the AMD-vs-Intel tile; replace ECC Premium with an absolute Best €/GB
+- [x] `/servers/cpu/[slug]`: epoch-seconds fix, gap breaks, average overlay;
+      `buildDayGrid` guards against junk timestamps
 - [x] `npm run check`, `npm run lint`, `npm run test`
