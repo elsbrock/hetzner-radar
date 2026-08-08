@@ -146,23 +146,46 @@ Requiring an account for cloud alerts is the friction that pushes people to
 scrape anonymously in the first place. Worth considering an unauthenticated
 webhook registration later; out of scope here.
 
-### 3. Rate-limit backstop
+### 3. Rate limiting
 
-Set generously — an abuse ceiling, not a bot deterrent. **60 requests/minute per
-IP** across `/cloud-status*` and `/api/cloud-status/*`, which is 10x the worst
-current poller and well clear of human burst behaviour.
+**Caching does not bound request count.** A Cache API hit still invokes the
+Worker and still bills a request — only Workers Static Assets bypass the Worker,
+and `/cloud-status` is dynamic. Caching cuts DO RPC and D1 work; it does nothing
+about invocation volume. Only a limit evaluated at the edge, before the Worker
+runs, does that.
 
-On exceeding it, return `429` with `Retry-After: 60` and a JSON body pointing at
-cloud alerts and the webhook docs — the 429 body is the highest-signal place to
-advertise the push path, since only the impolite ever see it.
+This decides the limiter: **Cloudflare `http_ratelimit` ruleset, not the Workers
+`RATE_LIMIT` binding.** The binding runs inside the Worker, so it would reject
+requests we have already paid for. The zone currently has no `http_ratelimit`
+ruleset (confirmed via API: *"could not find entrypoint ruleset in the
+http_ratelimit phase"*), so this is a new entrypoint — Pro-plan rule allowance
+still needs verifying (step 3.3), and if Pro turns out not to support it, the
+binding is a degraded fallback that fixes politeness but not cost.
 
-**Open question — which limiter.** The zone has no `http_ratelimit` ruleset
-(confirmed via API: *"could not find entrypoint ruleset in the http_ratelimit
-phase"*), and Cloudflare rate-limiting rule allowances on a Pro zone need
-checking before committing to that route. Fallback: the Workers rate-limit
-binding, already wired as `RATE_LIMIT` (3/60s) in `wrangler.toml` and currently
-used only by `src/lib/session.ts` — a second namespace with a 60/60 limit would
-work and keeps this in the app repo. Decide at implementation time.
+Thresholds are scoped per path group, because the two have different human
+profiles:
+
+| Paths | Limit | Rationale |
+|---|---|---|
+| `/cloud-status`, `/cloud-status/__data.json` | 10/min per IP | Page loads. A human reloading a status page >10x/min is not a real pattern. |
+| `/api/cloud-status/*` | 30/min per IP | Interactive — clicking cells fires history requests in bursts, and `+page.svelte:1361` calls `invalidateAll()`. |
+
+On breach: `429` with `Retry-After: 60` and a JSON body pointing at cloud alerts
+and the webhook envelope. **The 429 body is the highest-signal place in the whole
+design to advertise the push path** — headers get ignored, but a broken
+integration gets read and fixed, and only the impolite ever see it.
+
+**Staged rollout.** At 10/min the current pollers (~6/min) still pass. That is
+deliberate: ship discoverability and the limit together, give the existing
+watchers a grace period to find the webhook path, then tighten the page-load
+group to ~2/min once the docs have been live long enough to be findable. Landing
+at 2/min on day one would 429 people who have no idea an alternative exists,
+which is the hostile version of this change.
+
+A 60s window cannot distinguish a human burst from a sustained poller, which is
+why the thresholds sit above the current offenders rather than at the ~5/min it
+would take to catch them immediately. Longer averaging windows would separate
+the two cleanly but are not available on Pro.
 
 ## Decisions & trade-offs
 
@@ -175,8 +198,15 @@ work and keeps this in the app repo. Decide at implementation time.
   adds no staleness a user could observe.
 - **Cache API over KV** for now: per-colo rather than global, but no new write
   path in the DO and no snapshot versioning to maintain.
-- **Rate limit deliberately loose.** Catching the current pollers would mean a
-  ~5/min threshold, which would also catch real users.
+- **Limit at the edge, not in the Worker.** Cache API hits still bill an
+  invocation, so an in-Worker limiter bounds politeness but not cost.
+- **Thresholds start above the current offenders, then tighten.** Not because
+  6/min is acceptable — it is 6x oversampling against once-a-minute data — but
+  because 429-ing people before the alternative is documented is hostile. The
+  docs and the limit ship together; the tightening follows.
+- **Caching is still worth doing even with limits in place.** It protects the DO
+  and D1 path, cuts latency, and keeps the service healthy if the watcher
+  population grows.
 
 ## Implementation steps
 
@@ -193,14 +223,16 @@ work and keeps this in the app repo. Decide at implementation time.
 - [ ] 2.2 `static/robots.txt`: crawl-delay + pointer to the alerts docs
 - [ ] 2.3 Fix CTA copy at `+page.svelte:~1345` to mention webhooks
 - [ ] 2.4 Add a "Polling and automation" section to `/guide`
-- [ ] 3.1 Decide limiter (CF ruleset vs `RATE_LIMIT` binding), then implement
-      60/min with an informative 429 body
+- [ ] 3.1 Implement the 429 response body (cloud alerts + webhook envelope
+      pointer, `Retry-After: 60`) for the rate-limited paths
 
 **infra**
 
-- [ ] 3.2 If CF-side: add an `http_ratelimit` ruleset to
-      `terraform/cloudflare/rules.tf`
-- [ ] 3.3 Verify Pro-plan rate-limiting rule allowance before 3.2
+- [ ] 3.2 Add an `http_ratelimit` ruleset to `terraform/cloudflare/rules.tf`:
+      10/min on `/cloud-status`+`__data.json`, 30/min on `/api/cloud-status/*`
+- [ ] 3.3 Verify Pro-plan rate-limiting rule allowance before 3.2 — if
+      unsupported, fall back to the `RATE_LIMIT` binding and accept that it
+      bounds politeness but not invocation cost
 - [ ] 3.4 Set `early_hints = "off"` in `terraform/cloudflare/settings.tf:20` —
       the Worker already emits its own `Link` preload headers, and the phantom
       504s make the dashboard unreadable
@@ -209,6 +241,9 @@ work and keeps this in the app repo. Decide at implementation time.
 
 - [ ] 4.1 Re-run the analytics query a week after deploy; confirm origin-hitting
       requests drop from ~22k/day and that real-client 5xx stays at ~0
+- [ ] 4.4 Check 429 counts by client before tightening to 2/min — if the known
+      watchers have migrated to webhooks, tighten; if they have not, find out why
+      before making it harder for them
 - [ ] 4.2 Confirm `cf-cache-status` / Cache API hit rate on the status endpoints
 - [ ] 4.3 Confirm no authenticated user is ever served a cached anonymous payload
 
