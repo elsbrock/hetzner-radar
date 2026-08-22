@@ -3,7 +3,16 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ARM_SUSPECT_SINCE, findSuspectKeys, recoverLastSeen, repairLastSeen, type RecoveryEvent } from '../arm-last-seen-repair';
+import {
+	ARM_LAST_SEEN_REPAIR_FLAG,
+	ARM_SUSPECT_SINCE,
+	findSuspectKeys,
+	recoverLastSeen,
+	repairLastSeen,
+	runArmLastSeenRepair,
+	type RecoveryEvent,
+} from '../arm-last-seen-repair';
+import { createMockDurableObjectStorage } from './fixtures/database-mocks';
 import type { AvailabilityMatrix, LastSeenMatrix, ServerTypeInfo } from '../cloud-status-service';
 
 function serverType(id: number, name: string, architecture: string): ServerTypeInfo {
@@ -122,5 +131,129 @@ describe('repairLastSeen', () => {
 		repairLastSeen({ lastSeen, suspectKeys: ['1-93'], recovered: {} });
 
 		expect(lastSeen).toEqual({ '1-93': '2026-08-22T10:00:00.000Z' });
+	});
+});
+
+describe('recoverLastSeen, cax11 in the days before the cutoff', () => {
+	// cax11 was genuinely available 2026-08-13 → 2026-08-17 09:06, then the
+	// deprecated field started asserting availability at 09:27. The real end of
+	// that window is the answer; an earlier cutoff would rewrite it back to May.
+	const events: RecoveryEvent[] = [
+		{ timestamp: '2026-05-26 13:26:33', serverTypeId: 45, locationId: 1, available: false },
+		{ timestamp: '2026-08-13 09:27:44', serverTypeId: 45, locationId: 1, available: true },
+		{ timestamp: '2026-08-17 09:06:25', serverTypeId: 45, locationId: 1, available: false },
+		{ timestamp: '2026-08-17 09:27:31', serverTypeId: 45, locationId: 1, available: true },
+	];
+
+	it('should keep the genuine availability window that ended just before it', () => {
+		expect(recoverLastSeen(events)).toEqual({ '1-45': '2026-08-17T09:06:25.000Z' });
+	});
+});
+
+describe('runArmLastSeenRepair', () => {
+	const serverTypes = SERVER_TYPES;
+	const availability: AvailabilityMatrix = { 1: [22] };
+	const corruptedLastSeen: LastSeenMatrix = {
+		'1-93': '2026-08-20T10:00:00.000Z',
+		'1-95': '2026-08-20T10:00:00.000Z',
+		'1-22': '2026-08-20T10:00:00.000Z',
+	};
+
+	function deps(initial: Record<string, unknown>, history: Record<number, RecoveryEvent[]> = {}) {
+		const storage = createMockDurableObjectStorage(initial);
+		const queried: number[] = [];
+		return {
+			storage,
+			queried,
+			deps: {
+				storage,
+				queryHistory: async (serverTypeId: number) => {
+					queried.push(serverTypeId);
+					return history[serverTypeId] ?? [];
+				},
+			},
+		};
+	}
+
+	it('should repair suspect entries and record itself as done', async () => {
+		const { storage, deps: d } = deps(
+			{ lastSeenAvailable: corruptedLastSeen, serverTypes, availability },
+			{ 93: [{ timestamp: '2026-05-26 13:26:33', serverTypeId: 93, locationId: 1, available: false }] },
+		);
+
+		const outcome = await runArmLastSeenRepair(d);
+
+		expect(outcome).toEqual({ status: 'repaired', suspect: 2, recovered: 1, cleared: 1 });
+		expect(await storage.get('lastSeenAvailable')).toEqual({
+			'1-93': '2026-05-26T13:26:33.000Z', // recovered
+			'1-22': '2026-08-20T10:00:00.000Z', // x86, untouched
+			// '1-95' cleared: nothing within retention
+		});
+		expect(await storage.get(ARM_LAST_SEEN_REPAIR_FLAG)).toBe(true);
+	});
+
+	it('should do nothing once the flag is set', async () => {
+		const { queried, deps: d } = deps({
+			[ARM_LAST_SEEN_REPAIR_FLAG]: true,
+			lastSeenAvailable: corruptedLastSeen,
+			serverTypes,
+			availability,
+		});
+
+		expect(await runArmLastSeenRepair(d)).toEqual({ status: 'already-done' });
+		expect(queried).toEqual([]);
+	});
+
+	it('should not flag itself done when nothing is selectable yet', async () => {
+		// Before the endpoint migration lands the poller still reports ARM
+		// available, so nothing is suspect. Flagging here would retire the repair
+		// without it ever running.
+		const { storage, deps: d } = deps({
+			lastSeenAvailable: corruptedLastSeen,
+			serverTypes,
+			availability: { 1: [22, 93, 95] },
+		});
+
+		expect(await runArmLastSeenRepair(d)).toEqual({ status: 'nothing-to-repair' });
+		expect(await storage.get(ARM_LAST_SEEN_REPAIR_FLAG)).toBeUndefined();
+	});
+
+	it('should wait for a snapshot rather than repairing an empty matrix', async () => {
+		const { storage, deps: d } = deps({});
+
+		expect(await runArmLastSeenRepair(d)).toEqual({ status: 'no-snapshot' });
+		expect(await storage.get(ARM_LAST_SEEN_REPAIR_FLAG)).toBeUndefined();
+	});
+
+	it('should leave the matrix and the flag untouched when a query fails', async () => {
+		const storage = createMockDurableObjectStorage({ lastSeenAvailable: corruptedLastSeen, serverTypes, availability });
+
+		await expect(
+			runArmLastSeenRepair({
+				storage,
+				queryHistory: async () => {
+					throw new Error('Analytics Engine unavailable');
+				},
+			}),
+		).rejects.toThrow('Analytics Engine unavailable');
+
+		expect(await storage.get('lastSeenAvailable')).toEqual(corruptedLastSeen);
+		expect(await storage.get(ARM_LAST_SEEN_REPAIR_FLAG)).toBeUndefined();
+	});
+
+	it('should query once per ARM type, not once per pair', async () => {
+		const { queried, deps: d } = deps({
+			lastSeenAvailable: {
+				'1-93': '2026-08-20T10:00:00.000Z',
+				'2-93': '2026-08-20T10:00:00.000Z',
+				'3-93': '2026-08-20T10:00:00.000Z',
+			},
+			serverTypes,
+			availability: { 1: [], 2: [], 3: [] },
+		});
+
+		await runArmLastSeenRepair(d);
+
+		expect(queried).toEqual([93]);
 	});
 });

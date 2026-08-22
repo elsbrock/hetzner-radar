@@ -13,9 +13,20 @@
  * have not been available in months. This module rewrites those entries from
  * Analytics Engine, which still holds the genuine transitions.
  *
- * It is deliberately narrow and self-deleting: it touches only ARM pairs, only
- * entries stamped inside the suspect window, and runs once. Delete this module
- * (and its call site) once it has run in production.
+ * It is deliberately narrow: it touches only ARM pairs, only entries stamped
+ * inside the suspect window, and runs once.
+ *
+ * ---
+ *
+ * THIS MODULE IS DEAD CODE ONCE IT HAS RUN IN PRODUCTION.
+ *
+ * It repairs a fixed, historical corruption. The instant the storage flag
+ * `armLastSeenRepairV1` is set on the live Durable Object, every subsequent
+ * call is a no-op, and this file plus `CloudAvailabilityDO.repairArmLastSeen`
+ * and its `ensureInitialized` call site can be deleted outright. Confirm via
+ * the worker's `/debug` route, which lists the storage keys.
+ *
+ * Nothing enforces that, so it is stated here rather than left to be inferred.
  */
 
 import type { AvailabilityMatrix, LastSeenMatrix, ServerTypeInfo } from './cloud-status-service';
@@ -26,12 +37,24 @@ export const ARM_LAST_SEEN_REPAIR_FLAG = 'armLastSeenRepairV1';
 /**
  * When the deprecated field started claiming ARM availability.
  *
- * Inferred, not documented: it is the earliest ARM `available` transition in
- * the suspect run (cax11 in fsn1/nbg1, 2026-08-13). Nothing before it is
- * touched, so an over-wide guess costs accuracy only for genuinely stale
- * entries, never for correct ones.
+ * Hetzner does not document this, but the transition record pins it. All twelve
+ * ARM pairs flipped available at 2026-08-17 09:27:31, and twenty-one minutes
+ * earlier, at 09:06:25, the same field reported cax11 in fsn1 and nbg1
+ * *unavailable*. It could not have been asserting ARM availability before a
+ * moment when it was still denying it, so the fiction begins at 09:27:31.
+ *
+ * That also means the cax11 availability of 2026-08-13 → 2026-08-17 09:06 is
+ * genuine and must be preserved: it arrived in two locations an hour apart,
+ * which is stock moving, not a data source changing. An earlier cutoff would
+ * rewrite those two pairs from 2026-08-17 back to May and lose a real window.
+ *
+ * Do not widen this to catch more: the window is five days, and many x86 types
+ * legitimately flap inside it. The ARM restriction in `findSuspectKeys` is what
+ * keeps those from being "repaired" to an earlier date — verified 2026-08-22,
+ * twice, when the deprecated and current endpoints disagreed on exactly the
+ * twelve ARM pairs out of 114 compared.
  */
-export const ARM_SUSPECT_SINCE = '2026-08-13T00:00:00.000Z';
+export const ARM_SUSPECT_SINCE = '2026-08-17T09:27:00.000Z';
 
 export interface RepairInput {
 	/** The stored matrix, keyed `"locationId-serverTypeId"`. */
@@ -49,10 +72,14 @@ export interface RepairInput {
 /**
  * Replace each suspect entry with its recovered timestamp, or drop it.
  *
- * Dropping is deliberate. The UI renders a missing entry as "Never", which is
- * imprecise but honest about not knowing; leaving the bogus value in place
- * asserts the pair was available minutes ago, which is simply false and is the
- * thing being complained about.
+ * Dropping is a choice between two wrong answers, not a retreat to a right one.
+ * A missing entry renders as a grey "Never" — identical to ash and hil, where
+ * ARM has genuinely never been offered — so fsn1/nbg1/hel1 will claim ARM was
+ * never available there, when it was, in May. That is still preferable to
+ * asserting it was available minutes ago, which is both false and the specific
+ * complaint in #287, but it is not a neutral outcome and should not be
+ * described as one. Representing "unknown" as its own state would be better,
+ * and needs a UI decision this repair should not make.
  */
 export function repairLastSeen({ lastSeen, suspectKeys, recovered }: RepairInput): LastSeenMatrix {
 	const repaired = { ...lastSeen };
@@ -150,4 +177,72 @@ function parseEventTimestamp(timestamp: string): number {
 	if (!normalized.includes('T')) normalized = normalized.replace(' ', 'T');
 	if (!normalized.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(normalized)) normalized += 'Z';
 	return Date.parse(normalized);
+}
+
+/**
+ * The subset of `DurableObjectStorage` the repair needs, so it can be driven by
+ * a test double rather than a live Durable Object.
+ */
+export interface RepairStorage {
+	get<T>(key: string): Promise<T | undefined>;
+	put(key: string, value: unknown): Promise<void>;
+}
+
+export interface RepairDeps {
+	storage: RepairStorage;
+	/** Transitions for one server type across every location, within retention. */
+	queryHistory(serverTypeId: number): Promise<RecoveryEvent[]>;
+}
+
+export type RepairOutcome =
+	/** The flag is set; the repair has already run. */
+	| { status: 'already-done' }
+	/** Nothing has been polled yet, so there is no matrix to repair. */
+	| { status: 'no-snapshot' }
+	/**
+	 * No identifiable suspect entries. Deliberately does *not* set the flag:
+	 * before the endpoint migration lands, the poller still reports the affected
+	 * pairs as available and nothing is selectable, so recording "done" here
+	 * would retire the repair without it ever running.
+	 */
+	| { status: 'nothing-to-repair' }
+	| { status: 'repaired'; suspect: number; recovered: number; cleared: number };
+
+/**
+ * Run the one-off repair, at most once.
+ *
+ * Throws on a query or storage failure, leaving the flag unset and the stored
+ * matrix untouched, so the next boot retries. A wrong timestamp is recoverable;
+ * a half-written matrix is not.
+ */
+export async function runArmLastSeenRepair({ storage, queryHistory }: RepairDeps): Promise<RepairOutcome> {
+	if (await storage.get<boolean>(ARM_LAST_SEEN_REPAIR_FLAG)) return { status: 'already-done' };
+
+	const [lastSeen, serverTypes, availability] = await Promise.all([
+		storage.get<LastSeenMatrix>('lastSeenAvailable'),
+		storage.get<ServerTypeInfo[]>('serverTypes'),
+		storage.get<AvailabilityMatrix>('availability'),
+	]);
+
+	if (!lastSeen || !serverTypes || !availability) return { status: 'no-snapshot' };
+
+	const suspectKeys = findSuspectKeys(lastSeen, serverTypes, availability);
+	if (suspectKeys.length === 0) return { status: 'nothing-to-repair' };
+
+	// One query per ARM type covers every location it is offered in — four round
+	// trips rather than one per pair. Issued together; they are independent.
+	const armTypeIds = [...new Set(suspectKeys.map((key) => Number(key.slice(key.indexOf('-') + 1))))];
+	const histories = await Promise.all(armTypeIds.map((id) => queryHistory(id)));
+
+	const recovered = recoverLastSeen(histories.flat());
+	await storage.put('lastSeenAvailable', repairLastSeen({ lastSeen, suspectKeys, recovered }));
+	await storage.put(ARM_LAST_SEEN_REPAIR_FLAG, true);
+
+	const recoveredCount = suspectKeys.filter((key) => recovered[key]).length;
+	return {
+		status: 'repaired',
+		suspect: suspectKeys.length,
+		recovered: recoveredCount,
+		cleared: suspectKeys.length - recoveredCount,
+	};
 }
