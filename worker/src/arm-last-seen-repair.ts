@@ -222,8 +222,8 @@ export type RepairOutcome =
  * Run the one-off repair, at most once.
  *
  * Throws on a query or storage failure, leaving the flag unset and the stored
- * matrix untouched, so the next boot retries. A wrong timestamp is recoverable;
- * a half-written matrix is not.
+ * matrix untouched, so the next alarm retries. A wrong timestamp is
+ * recoverable; a half-written matrix is not.
  */
 export async function runArmLastSeenRepair({ storage, queryHistory }: RepairDeps): Promise<RepairOutcome> {
 	if (await storage.get<boolean>(ARM_LAST_SEEN_REPAIR_FLAG)) return { status: 'already-done' };
