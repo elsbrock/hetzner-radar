@@ -19,6 +19,7 @@ interface HetznerServerType {
 		unavailable_after: string;
 		announced: string;
 	} | null;
+	locations: HetznerServerTypeLocation[];
 }
 
 interface HetznerPaginationMeta {
@@ -48,16 +49,26 @@ interface HetznerLocation {
 	longitude: number;
 }
 
-interface HetznerDatacenter {
+/**
+ * Per-location availability of a server type, from `GET /v1/server_types`.
+ *
+ * `available` is Hetzner's current answer to "can this type be created here
+ * right now". Their wording is deliberately hedged — "only an indicator whether
+ * resources are currently available and is no guarantee" — so treat it as the
+ * best signal on offer, not a promise that an order will succeed.
+ *
+ * A location appearing in this list is what "supported" now means: the
+ * deprecated `datacenter.server_types.supported` has no direct successor.
+ */
+interface HetznerServerTypeLocation {
 	id: number;
 	name: string;
-	description: string;
-	location: HetznerLocation;
-	server_types: {
-		supported: number[];
-		available: number[];
-		available_for_migration: number[];
-	};
+	available: boolean;
+	recommended: boolean;
+	deprecation: {
+		unavailable_after: string;
+		announced: string;
+	} | null;
 }
 
 export interface LocationInfo {
@@ -168,16 +179,16 @@ export class CloudStatusService {
 					.join(', ')}`,
 			);
 
-			console.log(`[CloudStatusService ${this.doId}] Fetching datacenters...`);
-			const datacenters = await this.fetchPaginatedResource<HetznerDatacenter>({
-				path: 'datacenters',
-				dataKey: 'datacenters',
+			console.log(`[CloudStatusService ${this.doId}] Fetching locations...`);
+			const locations = await this.fetchPaginatedResource<HetznerLocation>({
+				path: 'locations',
+				dataKey: 'locations',
 				headers,
-				resourceName: 'datacenters',
+				resourceName: 'locations',
 			});
-			console.log(`[CloudStatusService ${this.doId}] Fetched ${datacenters.length} datacenters.`);
+			console.log(`[CloudStatusService ${this.doId}] Fetched ${locations.length} locations.`);
 
-			const processedData = this.processCloudData(serverTypes, datacenters);
+			const processedData = this.processCloudData(serverTypes, locations);
 
 			// Get previous availability for change detection
 			const previousAvailability = await this.storage.get<AvailabilityMatrix>('availability');
@@ -253,7 +264,18 @@ export class CloudStatusService {
 		return results;
 	}
 
-	private processCloudData(serverTypes: HetznerServerType[], datacenters: HetznerDatacenter[]) {
+	/**
+	 * Fold `/v1/server_types` and `/v1/locations` into the location-keyed
+	 * matrices the app renders.
+	 *
+	 * Availability is read from `server_type.locations[]`, which is Hetzner's
+	 * supported source since they deprecated `datacenter.server_types` on
+	 * 2026-04-01 — along with the guarantee that it stays accurate. It had
+	 * drifted: as of 2026-08-22 the deprecated field claimed every CAX type was
+	 * available in fsn1/nbg1/hel1 while `server_types` correctly reported all
+	 * twelve pairs unavailable, and it omitted cpx12 from `supported` entirely.
+	 */
+	private processCloudData(serverTypes: HetznerServerType[], locations: HetznerLocation[]) {
 		const processedServerTypes: ServerTypeInfo[] = serverTypes.map((st) => ({
 			id: st.id,
 			name: st.name,
@@ -270,38 +292,42 @@ export class CloudStatusService {
 		}));
 		processedServerTypes.sort((a, b) => a.name.localeCompare(b.name));
 
-		const processedLocationsMap = new Map<number, LocationInfo>();
-		const processedAvailability: AvailabilityMatrix = {};
-		const processedSupported: SupportMatrix = {};
+		const processedLocations: LocationInfo[] = locations.map((loc) => ({
+			id: loc.id,
+			name: loc.name,
+			city: loc.city,
+			country: loc.country,
+			latitude: loc.latitude,
+			longitude: loc.longitude,
+		}));
+		processedLocations.sort((a, b) => a.name.localeCompare(b.name));
 
-		for (const dc of datacenters) {
-			const locId = dc.location.id;
-
-			if (!processedLocationsMap.has(locId)) {
-				processedLocationsMap.set(locId, {
-					id: locId,
-					name: dc.location.name,
-					city: dc.location.city,
-					country: dc.location.country,
-					latitude: dc.location.latitude,
-					longitude: dc.location.longitude,
-				});
-			}
-
-			if (!processedAvailability[locId]) processedAvailability[locId] = [];
-			if (!processedSupported[locId]) processedSupported[locId] = [];
-
-			const currentAvailable = new Set(processedAvailability[locId]);
-			dc.server_types.available.forEach((serverId) => currentAvailable.add(serverId));
-			processedAvailability[locId] = Array.from(currentAvailable).sort((a, b) => a - b);
-
-			const currentSupported = new Set(processedSupported[locId]);
-			dc.server_types.supported.forEach((serverId) => currentSupported.add(serverId));
-			processedSupported[locId] = Array.from(currentSupported).sort((a, b) => a - b);
+		// Seed every known location so one offering nothing still renders as an
+		// empty column rather than disappearing from the grid.
+		const availableIds = new Map<number, Set<number>>();
+		const supportedIds = new Map<number, Set<number>>();
+		for (const loc of processedLocations) {
+			availableIds.set(loc.id, new Set());
+			supportedIds.set(loc.id, new Set());
 		}
 
-		const processedLocations: LocationInfo[] = Array.from(processedLocationsMap.values());
-		processedLocations.sort((a, b) => a.name.localeCompare(b.name));
+		for (const st of serverTypes) {
+			for (const loc of st.locations ?? []) {
+				// Keyed off the locations endpoint, so a type naming a location it did
+				// not return is skipped — nothing renders such a pair anyway.
+				supportedIds.get(loc.id)?.add(st.id);
+				if (loc.available) availableIds.get(loc.id)?.add(st.id);
+			}
+		}
+
+		const processedAvailability: AvailabilityMatrix = {};
+		const processedSupported: SupportMatrix = {};
+		for (const [locId, ids] of availableIds) {
+			processedAvailability[locId] = Array.from(ids).sort((a, b) => a - b);
+		}
+		for (const [locId, ids] of supportedIds) {
+			processedSupported[locId] = Array.from(ids).sort((a, b) => a - b);
+		}
 
 		return {
 			serverTypes: processedServerTypes,

@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CloudStatusService, type LastSeenMatrix } from '../cloud-status-service';
+import {
+	CloudStatusService,
+	type AvailabilityMatrix,
+	type LastSeenMatrix,
+	type LocationInfo,
+	type SupportMatrix,
+} from '../cloud-status-service';
 import { createMockDurableObjectStorage, type MockDurableObjectStorage } from './fixtures/database-mocks';
 import {
 	mockServerTypes,
@@ -12,7 +18,7 @@ import {
 	mockSupportMatrix,
 	mockLastSeenMatrix,
 	mockHetznerServerTypesResponse,
-	mockHetznerDatacentersResponse,
+	mockHetznerLocationsResponse,
 	mockHetznerServerTypesResponsePaginatedPage1,
 	mockHetznerServerTypesResponsePaginatedPage2,
 } from './fixtures/cloud-data';
@@ -86,7 +92,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const result = await service.fetchAndUpdateStatus();
@@ -104,7 +110,7 @@ describe('CloudStatusService', () => {
 			);
 			expect(mockFetch).toHaveBeenNthCalledWith(
 				2,
-				'https://api.hetzner.cloud/v1/datacenters?page=1&per_page=50',
+				'https://api.hetzner.cloud/v1/locations?page=1&per_page=50',
 				expect.objectContaining({
 					headers: expect.objectContaining({
 						Authorization: `Bearer ${testApiToken}`,
@@ -127,14 +133,14 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			await service.fetchAndUpdateStatus();
 
 			expect(mockFetch).toHaveBeenNthCalledWith(1, 'https://api.hetzner.cloud/v1/server_types?page=1&per_page=50', expect.anything());
 			expect(mockFetch).toHaveBeenNthCalledWith(2, 'https://api.hetzner.cloud/v1/server_types?page=2&per_page=50', expect.anything());
-			expect(mockFetch).toHaveBeenNthCalledWith(3, 'https://api.hetzner.cloud/v1/datacenters?page=1&per_page=50', expect.anything());
+			expect(mockFetch).toHaveBeenNthCalledWith(3, 'https://api.hetzner.cloud/v1/locations?page=1&per_page=50', expect.anything());
 		});
 
 		it('should throw error when API token is missing', async () => {
@@ -153,7 +159,7 @@ describe('CloudStatusService', () => {
 			await expect(service.fetchAndUpdateStatus()).rejects.toThrow('Failed to fetch server types: 401 Unauthorized');
 		});
 
-		it('should handle datacenters API errors', async () => {
+		it('should handle locations API errors', async () => {
 			mockFetch
 				.mockResolvedValueOnce({
 					ok: true,
@@ -165,7 +171,7 @@ describe('CloudStatusService', () => {
 					text: async () => 'Internal Server Error',
 				});
 
-			await expect(service.fetchAndUpdateStatus()).rejects.toThrow('Failed to fetch datacenters: 500 Internal Server Error');
+			await expect(service.fetchAndUpdateStatus()).rejects.toThrow('Failed to fetch locations: 500 Internal Server Error');
 		});
 
 		it('should store processed data correctly', async () => {
@@ -177,7 +183,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const putSpy = vi.spyOn(mockStorage, 'put');
@@ -237,7 +243,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			// Set up previous availability state
@@ -289,7 +295,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const changes = await service.fetchAndUpdateStatus();
@@ -306,7 +312,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const putSpy = vi.spyOn(mockStorage, 'put');
@@ -334,7 +340,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const existingLastSeen = {
@@ -368,7 +374,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const putSpy = vi.spyOn(mockStorage, 'put');
@@ -394,7 +400,7 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
 			const putSpy = vi.spyOn(mockStorage, 'put');
@@ -416,7 +422,54 @@ describe('CloudStatusService', () => {
 			}
 		});
 
-		it('should handle duplicate server types across datacenters', async () => {
+		it('should read availability from server_type.locations[].available', async () => {
+			// The deprecated datacenters endpoint drifted out of sync with reality
+			// (it claimed every CAX type was available while none could be created),
+			// so availability must come from the per-location flag on the type.
+			mockFetch
+				.mockResolvedValueOnce({ ok: true, json: async () => mockHetznerServerTypesResponse })
+				.mockResolvedValueOnce({ ok: true, json: async () => mockHetznerLocationsResponse });
+
+			const putSpy = vi.spyOn(mockStorage, 'put');
+			await service.fetchAndUpdateStatus();
+
+			const stored = putSpy.mock.calls[0][0] as { availability: AvailabilityMatrix; supported: SupportMatrix };
+
+			// cx11 available in nbg1+fsn1, cx21 in nbg1+hel1, cx31 in fsn1+hel1.
+			expect(stored.availability).toEqual({ 1: [1, 2], 2: [1, 3], 3: [2, 3] });
+			// Every type names every location, so all three are supported everywhere.
+			expect(stored.supported).toEqual({ 1: [1, 2, 3], 2: [1, 2, 3], 3: [1, 2, 3] });
+		});
+
+		it('should keep a location that offers nothing as an empty column', async () => {
+			const serverTypesNowhereAvailable = {
+				...mockHetznerServerTypesResponse,
+				server_types: mockHetznerServerTypesResponse.server_types.map((st) => ({
+					...st,
+					locations: st.locations.filter((loc) => loc.id !== 3),
+				})),
+			};
+
+			mockFetch
+				.mockResolvedValueOnce({ ok: true, json: async () => serverTypesNowhereAvailable })
+				.mockResolvedValueOnce({ ok: true, json: async () => mockHetznerLocationsResponse });
+
+			const putSpy = vi.spyOn(mockStorage, 'put');
+			await service.fetchAndUpdateStatus();
+
+			const stored = putSpy.mock.calls[0][0] as {
+				availability: AvailabilityMatrix;
+				supported: SupportMatrix;
+				locations: LocationInfo[];
+			};
+
+			// hel1 supports nothing now, but must not vanish from the grid.
+			expect(stored.locations.map((l) => l.name)).toContain('hel1');
+			expect(stored.availability[3]).toEqual([]);
+			expect(stored.supported[3]).toEqual([]);
+		});
+
+		it('should deduplicate and sort server type ids per location', async () => {
 			// Mock successful API responses
 			mockFetch
 				.mockResolvedValueOnce({
@@ -425,11 +478,9 @@ describe('CloudStatusService', () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerDatacentersResponse,
+					json: async () => mockHetznerLocationsResponse,
 				});
 
-			// The mock data has the same server types supported across multiple datacenters
-			// This tests that the deduplication works correctly
 			const putSpy = vi.spyOn(mockStorage, 'put');
 
 			await service.fetchAndUpdateStatus();

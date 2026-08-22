@@ -128,6 +128,12 @@ export const mockHetznerServerTypesResponse = {
 			category: 'regular_purpose',
 			architecture: 'x86',
 			deprecation: null,
+			// cx11: available in nbg1 + fsn1, supported everywhere.
+			locations: [
+				{ id: 1, name: 'nbg1', available: true, recommended: false, deprecation: null },
+				{ id: 2, name: 'fsn1', available: true, recommended: false, deprecation: null },
+				{ id: 3, name: 'hel1', available: false, recommended: false, deprecation: null },
+			],
 		},
 		{
 			id: 2,
@@ -141,6 +147,12 @@ export const mockHetznerServerTypesResponse = {
 			category: 'regular_purpose',
 			architecture: 'x86',
 			deprecation: null,
+			// cx21: available in nbg1 + hel1, supported everywhere.
+			locations: [
+				{ id: 1, name: 'nbg1', available: true, recommended: false, deprecation: null },
+				{ id: 2, name: 'fsn1', available: false, recommended: false, deprecation: null },
+				{ id: 3, name: 'hel1', available: true, recommended: false, deprecation: null },
+			],
 		},
 		{
 			id: 3,
@@ -157,6 +169,12 @@ export const mockHetznerServerTypesResponse = {
 				unavailable_after: '2024-12-31T23:59:59+00:00',
 				announced: '2023-12-01T00:00:00+00:00',
 			},
+			// cx31: available in fsn1 + hel1, supported everywhere.
+			locations: [
+				{ id: 1, name: 'nbg1', available: false, recommended: false, deprecation: null },
+				{ id: 2, name: 'fsn1', available: true, recommended: false, deprecation: null },
+				{ id: 3, name: 'hel1', available: true, recommended: false, deprecation: null },
+			],
 		},
 	],
 	meta: {
@@ -171,67 +189,37 @@ export const mockHetznerServerTypesResponse = {
 	},
 };
 
-export const mockHetznerDatacentersResponse = {
-	datacenters: [
+export const mockHetznerLocationsResponse = {
+	locations: [
 		{
 			id: 1,
-			name: 'nbg1-dc3',
-			description: 'Nuremberg 1 DC 3',
-			location: {
-				id: 1,
-				name: 'nbg1',
-				description: 'Nuremberg DC Park 1',
-				country: 'Germany',
-				city: 'Nuremberg',
-				latitude: 49.452102,
-				longitude: 11.076665,
-				network_zone: 'eu-central',
-			},
-			server_types: {
-				supported: [1, 2, 3],
-				available: [1, 2],
-				available_for_migration: [1, 2, 3],
-			},
+			name: 'nbg1',
+			description: 'Nuremberg DC Park 1',
+			country: 'Germany',
+			city: 'Nuremberg',
+			latitude: 49.452102,
+			longitude: 11.076665,
+			network_zone: 'eu-central',
 		},
 		{
 			id: 2,
-			name: 'fsn1-dc14',
-			description: 'Falkenstein 1 DC 14',
-			location: {
-				id: 2,
-				name: 'fsn1',
-				description: 'Falkenstein DC Park 1',
-				country: 'Germany',
-				city: 'Falkenstein',
-				latitude: 50.47612,
-				longitude: 12.370071,
-				network_zone: 'eu-central',
-			},
-			server_types: {
-				supported: [1, 2, 3],
-				available: [1, 3],
-				available_for_migration: [1, 2, 3],
-			},
+			name: 'fsn1',
+			description: 'Falkenstein DC Park 1',
+			country: 'Germany',
+			city: 'Falkenstein',
+			latitude: 50.47612,
+			longitude: 12.370071,
+			network_zone: 'eu-central',
 		},
 		{
 			id: 3,
-			name: 'hel1-dc2',
-			description: 'Helsinki 1 DC 2',
-			location: {
-				id: 3,
-				name: 'hel1',
-				description: 'Helsinki DC Park 1',
-				country: 'Finland',
-				city: 'Helsinki',
-				latitude: 60.169857,
-				longitude: 24.938379,
-				network_zone: 'eu-central',
-			},
-			server_types: {
-				supported: [1, 2, 3],
-				available: [2, 3],
-				available_for_migration: [1, 2, 3],
-			},
+			name: 'hel1',
+			description: 'Helsinki DC Park 1',
+			country: 'Finland',
+			city: 'Helsinki',
+			latitude: 60.169857,
+			longitude: 24.938379,
+			network_zone: 'eu-central',
 		},
 	],
 	meta: {
@@ -260,6 +248,7 @@ export const mockHetznerServerTypesResponsePaginatedPage1 = {
 			category: 'regular_purpose',
 			architecture: 'x86',
 			deprecation: null,
+			locations: [{ id: 1, name: 'nbg1', available: true, recommended: false, deprecation: null }],
 		},
 	],
 	meta: {
@@ -288,6 +277,7 @@ export const mockHetznerServerTypesResponsePaginatedPage2 = {
 			category: 'general_purpose',
 			architecture: 'x86',
 			deprecation: null,
+			locations: [{ id: 1, name: 'nbg1', available: false, recommended: false, deprecation: null }],
 		},
 	],
 	meta: {
