@@ -86,11 +86,17 @@ const MAX_EVENT_ROWS = 10000;
  * How far back to look for the transition that established the state entering
  * the window.
  *
- * This is Analytics Engine's full three-month retention, deliberately: a scarce
- * pair can sit in one state for months, and a shorter lookback silently reports
- * "no seed" for exactly those pairs. At 30 days, cax21/fsn1 — unavailable since
- * 2026-05-26 — produced no seed for a 30-day window, and the client fell back to
- * the live snapshot and painted the whole month available (#287).
+ * This is Analytics Engine's full retention, deliberately: a scarce pair can sit
+ * in one state for months, and a shorter lookback silently reports "no seed" for
+ * exactly those pairs. At 30 days, cax21/fsn1 — unavailable since 2026-05-26 —
+ * produced no seed for a 30-day window, and the client fell back to the live
+ * snapshot and painted the whole month available (#287).
+ *
+ * Retention is documented as "three months" rather than a day count, so 92 is
+ * the longest three consecutive calendar months (31 + 31 + 30) and never falls
+ * short of it. Scanning past retention costs nothing — there are no rows there —
+ * and the query is aggregated to one row per pair, so neither the response nor
+ * the bill grows with the range. Analytics Engine bills per query, not per row.
  *
  * A pair whose last change predates retention still yields no row; the client
  * resolves that case from the window's own first transition instead.
