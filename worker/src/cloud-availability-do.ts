@@ -27,7 +27,16 @@ interface CloudAvailabilityEnv {
 
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
 
-/** Analytics Engine's retention, the widest window the repair can recover from. */
+/**
+ * Analytics Engine's retention, and the widest window the repair can recover
+ * from. Asking for more is not merely unhelpful, it is measurably pointless:
+ * probed on 2026-08-22, queries for 120, 180, 365, and 730 days all returned
+ * the same 3,424 rows as a 92-day query, with nothing older than 92.5 days —
+ * well short of the 10,000-row cap, so a real boundary rather than truncation.
+ *
+ * A pair whose last transition predates that is unrecoverable, permanently. Its
+ * entry is cleared rather than left holding a false timestamp.
+ */
 const RECOVERY_LOOKBACK_MS = 92 * 24 * 60 * 60 * 1000;
 
 // See the note in `auction-import-do.ts`: parameterizing Env lets the base class
