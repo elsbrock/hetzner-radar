@@ -44,7 +44,6 @@ const RECOVERY_LOOKBACK_MS = 92 * 24 * 60 * 60 * 1000;
 export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 	private fetchIntervalMs: number;
 	private initializing: boolean = false;
-	private repairing: boolean = false;
 
 	// Services
 	private cloudStatusService: CloudStatusService;
@@ -105,12 +104,6 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 			const lastUpdated = await this.ctx.storage.get<string>('lastUpdated');
 			console.log(`[CloudAvailabilityDO ${this.ctx.id}] Last cloud status updated: ${lastUpdated || 'never'}`);
 
-			// Correct the timestamps the deprecated availability field left behind.
-			// Runs at most once, and never blocks the poll.
-			this.ctx.waitUntil(
-				this.repairArmLastSeen().catch((err) => console.error(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair failed:`, err)),
-			);
-
 			// Trigger initial fetch if needed
 			if (!lastUpdated) {
 				this.fetchCloudStatus().catch((err) =>
@@ -140,6 +133,13 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 
 		try {
 			await this.fetchCloudStatus(metrics);
+
+			// Correct the timestamps the deprecated availability field left behind.
+			// Runs at most once, after the poll has refreshed the snapshot it reads.
+			// Deliberately on the alarm rather than `ensureInitialized`: a state
+			// migration should not be triggered by whoever happens to load the page
+			// first. The alarm fires within a minute of deploy, in the background.
+			await this.repairArmLastSeen();
 		} catch (error) {
 			failed = true;
 			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Failed to update cloud status:`, error);
@@ -245,17 +245,11 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 	 * deprecated availability field — see `arm-last-seen-repair.ts`, which holds
 	 * the logic and the note on when this becomes dead code.
 	 *
-	 * Reached from `ensureInitialized`, so the trigger is whichever comes first
-	 * after a deploy: the poll alarm, or the first `getStatus()` RPC — that is, a
-	 * user opening /cloud-status. It runs under `waitUntil` either way, so it
-	 * never blocks that response.
+	 * Driven by the alarm, immediately after the poll that refreshes the snapshot
+	 * it reads. Never from a request path: this rewrites stored state, and which
+	 * user loads the page first should not decide when that happens.
 	 */
 	private async repairArmLastSeen(): Promise<void> {
-		// Mirrors `initializing`: two concurrent page loads can both clear the
-		// storage flag before either sets it, which would duplicate the queries.
-		if (this.repairing) return;
-		this.repairing = true;
-
 		try {
 			if (!this.env.CF_ACCOUNT_ID || !this.env.CF_BEARER_TOKEN) {
 				console.warn(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair needs Analytics Engine credentials; deferring.`);
@@ -281,8 +275,10 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 			} else {
 				console.log(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair: ${outcome.status}.`);
 			}
-		} finally {
-			this.repairing = false;
+		} catch (error) {
+			// Never let a repair failure fail the poll: the flag stays unset and the
+			// stored matrix untouched, so the next alarm retries.
+			console.error(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair failed:`, error);
 		}
 	}
 
