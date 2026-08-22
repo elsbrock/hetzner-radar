@@ -3,8 +3,9 @@
  *
  * Until #288 the poller read availability from `datacenter.server_types.
  * available`, which Hetzner deprecated on 2026-04-01 along with the guarantee
- * that it stays accurate. It drifted, and from 2026-08-13 it reported the CAX
- * (ARM) types as available in fsn1/nbg1/hel1 while they could not be created.
+ * that it stays accurate. It drifted, and from 2026-08-17 09:27:31 it reported
+ * all four CAX (ARM) types as available in fsn1/nbg1/hel1 while they could not
+ * be created (see `ARM_SUSPECT_SINCE` for how that instant is established).
  * Every poll in that window stamped `lastSeenAvailable` with "now", overwriting
  * the true timestamps — for most pairs, a date in May 2026.
  *
@@ -23,8 +24,13 @@
  * It repairs a fixed, historical corruption. The instant the storage flag
  * `armLastSeenRepairV1` is set on the live Durable Object, every subsequent
  * call is a no-op, and this file plus `CloudAvailabilityDO.repairArmLastSeen`
- * and its `ensureInitialized` call site can be deleted outright. Confirm via
- * the worker's `/debug` route, which lists the storage keys.
+ * and its call in `alarm()` can be deleted outright.
+ *
+ * Confirm from the worker log — `wrangler tail` — which reports either
+ * "Repaired N ARM last-seen entries" on the run that does the work, or
+ * "ARM last-seen repair: already-done" on every alarm after it. (The `/debug`
+ * route also lists the storage keys, but the worker sets `workers_dev: false`
+ * with no routes, so it is not reachable in production.)
  *
  * Nothing enforces that, so it is stated here rather than left to be inferred.
  */
