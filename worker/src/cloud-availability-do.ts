@@ -11,6 +11,8 @@ import { NotificationService } from './notification-service';
 import { CloudAlertService } from './cloud-alert-service';
 import { CloudNotificationService } from './cloud-notifications/cloud-notification-service';
 import { AnalyticsQueryService } from './analytics-query-service';
+import { ARM_LAST_SEEN_REPAIR_FLAG, findSuspectKeys, recoverLastSeen, repairLastSeen, type RecoveryEvent } from './arm-last-seen-repair';
+import type { AvailabilityMatrix, LastSeenMatrix, ServerTypeInfo } from './cloud-status-service';
 
 interface CloudAvailabilityEnv {
 	HETZNER_API_TOKEN: string;
@@ -25,6 +27,9 @@ interface CloudAvailabilityEnv {
 }
 
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
+
+/** Analytics Engine's retention, the widest window the repair can recover from. */
+const RECOVERY_LOOKBACK_MS = 92 * 24 * 60 * 60 * 1000;
 
 // See the note in `auction-import-do.ts`: parameterizing Env lets the base class
 // declare `ctx`/`env` at the right types rather than being shadowed.
@@ -90,6 +95,12 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 
 			const lastUpdated = await this.ctx.storage.get<string>('lastUpdated');
 			console.log(`[CloudAvailabilityDO ${this.ctx.id}] Last cloud status updated: ${lastUpdated || 'never'}`);
+
+			// Correct the timestamps the deprecated availability field left behind.
+			// Runs at most once, and never blocks the poll.
+			this.ctx.waitUntil(
+				this.repairArmLastSeen().catch((err) => console.error(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair failed:`, err)),
+			);
 
 			// Trigger initial fetch if needed
 			if (!lastUpdated) {
@@ -218,6 +229,65 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Error in getHistoricalAvailability RPC:`, error);
 			throw error;
 		}
+	}
+
+	/**
+	 * One-off repair of the `lastSeenAvailable` entries written from Hetzner's
+	 * deprecated availability field — see `arm-last-seen-repair.ts`. Remove this
+	 * method and its call once it has run in production.
+	 *
+	 * Any failure leaves the flag unset so the next boot retries, and leaves the
+	 * stored matrix untouched: a wrong timestamp is better than a lost one.
+	 */
+	private async repairArmLastSeen(): Promise<void> {
+		if (await this.ctx.storage.get<boolean>(ARM_LAST_SEEN_REPAIR_FLAG)) return;
+
+		if (!this.env.CF_ACCOUNT_ID || !this.env.CF_BEARER_TOKEN) {
+			console.warn(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair needs Analytics Engine credentials; deferring.`);
+			return;
+		}
+
+		const [lastSeen, serverTypes, availability] = await Promise.all([
+			this.ctx.storage.get<LastSeenMatrix>('lastSeenAvailable'),
+			this.ctx.storage.get<ServerTypeInfo[]>('serverTypes'),
+			this.ctx.storage.get<AvailabilityMatrix>('availability'),
+		]);
+
+		// Nothing polled yet — there is no matrix to repair, and the first poll
+		// will write correct values anyway.
+		if (!lastSeen || !serverTypes || !availability) return;
+
+		const suspectKeys = findSuspectKeys(lastSeen, serverTypes, availability);
+
+		// Deliberately no flag here. Suspect entries are only identifiable once the
+		// poller reads the authoritative endpoint (#288) and starts reporting the
+		// affected pairs as unavailable; before that this finds nothing, and
+		// recording "done" would retire the repair without it ever running.
+		// Re-checking is three storage reads and no Analytics Engine traffic.
+		if (suspectKeys.length === 0) return;
+
+		// One query per ARM type covers every location it is offered in, which is
+		// four round trips rather than one per pair.
+		const armTypeIds = [...new Set(suspectKeys.map((key) => Number(key.slice(key.indexOf('-') + 1))))];
+		const endDate = new Date().toISOString();
+		const startDate = new Date(Date.now() - RECOVERY_LOOKBACK_MS).toISOString();
+
+		const events: RecoveryEvent[] = [];
+		for (const serverTypeId of armTypeIds) {
+			const history = await this.getHistoricalAvailability({ startDate, endDate, serverTypeId });
+			events.push(...(history.data as RecoveryEvent[]));
+		}
+
+		const recovered = recoverLastSeen(events);
+		const repaired = repairLastSeen({ lastSeen, suspectKeys, recovered });
+
+		await this.ctx.storage.put('lastSeenAvailable', repaired);
+		await this.ctx.storage.put(ARM_LAST_SEEN_REPAIR_FLAG, true);
+
+		console.log(
+			`[CloudAvailabilityDO ${this.ctx.id}] Repaired ${suspectKeys.length} ARM last-seen entries ` +
+				`(${Object.keys(recovered).length} recovered from Analytics Engine, ${suspectKeys.length - Object.keys(recovered).length} cleared as unknown).`,
+		);
 	}
 
 	private async fetchCloudStatus(metrics?: ReturnType<typeof createMetrics>): Promise<void> {
