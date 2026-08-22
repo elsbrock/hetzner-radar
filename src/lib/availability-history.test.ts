@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { availableFraction, bucketAvailability } from "./availability-history";
+import {
+  availableFraction,
+  bucketAvailability,
+  resolveSeed,
+} from "./availability-history";
 
 const HOUR = 3_600_000;
 
@@ -50,6 +54,69 @@ describe("availableFraction", () => {
       { t: 0.7 * HOUR, up: false },
     ];
     expect(availableFraction(points, 0, HOUR, windowEnd)).toBeCloseTo(0.3, 10);
+  });
+});
+
+describe("resolveSeed", () => {
+  it("should prefer the transition resolved from before the window", () => {
+    expect(
+      resolveSeed({
+        fromHistory: false,
+        firstEvent: { t: 0, up: false },
+        fromSnapshot: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("should invert the first in-window transition when no seed was found", () => {
+    // cax21/fsn1: unavailable since May, so the seed query found nothing within
+    // its lookback, and the only event in the 30d window is "became available".
+    // Trusting the snapshot here painted the whole month green (#287).
+    expect(
+      resolveSeed({
+        firstEvent: { t: 1_000, up: true },
+        fromSnapshot: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("should fall back to the snapshot only for a window with no transitions", () => {
+    expect(resolveSeed({ fromSnapshot: true })).toBe(true);
+    expect(resolveSeed({ fromSnapshot: false })).toBe(false);
+  });
+
+  it("should assume unavailable when nothing is known", () => {
+    expect(resolveSeed({})).toBe(false);
+    expect(resolveSeed({ fromSnapshot: null })).toBe(false);
+  });
+});
+
+describe("a window whose seed predates Analytics Engine retention", () => {
+  it("should stay unavailable until the transition that made it available", () => {
+    // The #287 shape: a 30-day window over a pair that went unavailable months
+    // earlier (so the seed query returns nothing) and became available a third
+    // of the way in. Everything before that transition must read unavailable.
+    const stepMs = HOUR;
+    const seedStart = 0;
+    const windowEnd = 30 * HOUR;
+    const becameAvailable = 10 * HOUR;
+
+    const values = bucketAvailability({
+      buckets: buckets(seedStart, stepMs, 30),
+      stepMs,
+      seedStart,
+      windowEnd,
+      seed: resolveSeed({
+        fromHistory: undefined,
+        firstEvent: { t: becameAvailable, up: true },
+        fromSnapshot: true, // the live snapshot: available *now*
+      }),
+      events: [{ t: becameAvailable, up: true }],
+      reconcileTo: true,
+    });
+
+    expect(values.slice(0, 10)).toEqual(Array(10).fill(0));
+    expect(values.slice(10)).toEqual(Array(20).fill(1));
   });
 });
 

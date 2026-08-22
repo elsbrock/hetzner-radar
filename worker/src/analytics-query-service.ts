@@ -84,10 +84,18 @@ const MAX_EVENT_ROWS = 10000;
 
 /**
  * How far back to look for the transition that established the state entering
- * the window. Analytics Engine retains three months, so this stays well inside
- * retention while bounding the scan.
+ * the window.
+ *
+ * This is Analytics Engine's full three-month retention, deliberately: a scarce
+ * pair can sit in one state for months, and a shorter lookback silently reports
+ * "no seed" for exactly those pairs. At 30 days, cax21/fsn1 — unavailable since
+ * 2026-05-26 — produced no seed for a 30-day window, and the client fell back to
+ * the live snapshot and painted the whole month available (#287).
+ *
+ * A pair whose last change predates retention still yields no row; the client
+ * resolves that case from the window's own first transition instead.
  */
-const SEED_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
+const SEED_LOOKBACK_MS = 92 * 24 * 60 * 60 * 1000;
 
 export class AnalyticsQueryService {
 	constructor() {
@@ -107,11 +115,11 @@ export class AnalyticsQueryService {
 	 *    twice inside one bucket, so a short availability blip renders as
 	 *    "available ever since". Raw rows with their true timestamps are returned
 	 *    instead.
-	 * 2. **An explicit seed.** A consumer cannot infer the state entering the
-	 *    window from the window's own events (inverting the first event only works
-	 *    while edges strictly alternate). A second query resolves the last
-	 *    transition *before* `startDate` per pair and returns it as a synthetic
-	 *    point stamped at `startDate` with `seed: true`.
+	 * 2. **An explicit seed.** The state entering the window comes from outside
+	 *    it, so a second query resolves the last transition *before* `startDate`
+	 *    per pair and returns it as a synthetic point stamped at `startDate` with
+	 *    `seed: true`. It looks back across the whole retention window, since a
+	 *    scarce pair can hold one state for months.
 	 */
 	async queryAvailabilityHistory(
 		options: AnalyticsQueryOptions,

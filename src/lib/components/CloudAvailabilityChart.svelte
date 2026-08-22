@@ -13,7 +13,7 @@
 	import 'chartjs-adapter-date-fns';
 	import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
 	import { onDestroy } from 'svelte';
-	import { bucketAvailability } from '$lib/availability-history';
+	import { bucketAvailability, resolveSeed } from '$lib/availability-history';
 
 	Chart.register(MatrixController, MatrixElement, CategoryScale, TimeScale, LinearScale, Tooltip);
 
@@ -340,18 +340,18 @@
 
 		const out: MatrixDatum[] = [];
 		for (const [id, row] of ordered) {
+			const rowEvents = (events.get(id) ?? []).slice().sort((p, q) => p.t - q.t);
 			const values = bucketAvailability({
 				buckets: starts,
 				stepMs,
 				seedStart,
 				windowEnd,
-				// State entering the window, in order of authority: the seed resolved
-				// from the last transition before the window; else — meaning the pair
-				// has not changed state within the seed lookback — the live snapshot,
-				// which is exactly that unchanged state. If neither is known, assume
-				// unavailable rather than inventing uptime.
-				seed: seeds.get(id) ?? (row.snapshotKnown ? row.currentlyAvailable : false),
-				events: events.get(id) ?? [],
+				seed: resolveSeed({
+					fromHistory: seeds.get(id),
+					firstEvent: rowEvents[0],
+					fromSnapshot: row.snapshotKnown ? row.currentlyAvailable : null
+				}),
+				events: rowEvents,
 				// Only the live window can be checked against the live snapshot; older
 				// windows describe the past.
 				reconcileTo: isLiveWindow && row.snapshotKnown ? row.currentlyAvailable : null

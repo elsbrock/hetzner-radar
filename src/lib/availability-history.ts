@@ -6,8 +6,8 @@
  * means replaying those edges as a step function rather than reading samples.
  * The subtleties that make this worth isolating (and testing):
  *
- * - the state entering the window comes from outside it, so it must be supplied
- *   rather than guessed from the window's own first edge;
+ * - the state entering the window comes from outside it, so it has to be
+ *   resolved deliberately (see `resolveSeed`) rather than assumed;
  * - a bucket is usually only partly available, so cells carry an occupancy
  *   fraction rather than a boolean.
  */
@@ -39,6 +39,45 @@ export interface BucketAvailabilityOptions {
    * consistent with a snapshot in either state and is left as measured.
    */
   reconcileTo?: boolean | null;
+}
+
+export interface SeedResolutionOptions {
+  /**
+   * State established by the last transition *before* the window, when the
+   * history query found one. Authoritative whenever it is present.
+   */
+  fromHistory?: boolean;
+  /**
+   * Earliest transition inside the window, if the window holds any.
+   */
+  firstEvent?: AvailabilityChangePoint;
+  /**
+   * State from the live snapshot, or `null` when no snapshot covers this row
+   * (or the window being rendered is not the live one).
+   */
+  fromSnapshot?: boolean | null;
+}
+
+/**
+ * The state a window opens in, in descending order of authority.
+ *
+ * 1. The transition resolved from before the window — it says so directly.
+ * 2. Otherwise the inverse of the window's first transition. The dataset holds
+ *    only genuine state *changes*, so "the first thing that happened here was
+ *    becoming available" can only mean the window opened unavailable.
+ * 3. Otherwise the live snapshot. With no transition either side of the window
+ *    boundary, nothing has changed and the snapshot is exactly that unchanged
+ *    state. This is the *last* resort: reaching for it while the window does
+ *    hold transitions paints the state *after* them across everything before,
+ *    which is how a pair unavailable since May rendered as available all month.
+ * 4. Otherwise unavailable, rather than inventing uptime.
+ */
+export function resolveSeed(options: SeedResolutionOptions): boolean {
+  const { fromHistory, firstEvent, fromSnapshot = null } = options;
+
+  if (fromHistory !== undefined) return fromHistory;
+  if (firstEvent) return !firstEvent.up;
+  return fromSnapshot ?? false;
 }
 
 /**
