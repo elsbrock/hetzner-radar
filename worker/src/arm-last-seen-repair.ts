@@ -80,6 +80,10 @@ export interface RepairInput {
  * complaint in #287, but it is not a neutral outcome and should not be
  * described as one. Representing "unknown" as its own state would be better,
  * and needs a UI decision this repair should not make.
+ *
+ * Either way the cell self-corrects the moment the pair is next in stock:
+ * `updateLastSeenTimestamps` stamps every available pair on every poll. This
+ * repair is worth the remaining duration of the outage, no more.
  */
 export function repairLastSeen({ lastSeen, suspectKeys, recovered }: RepairInput): LastSeenMatrix {
 	const repaired = { ...lastSeen };
