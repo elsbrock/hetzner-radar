@@ -43,10 +43,10 @@ export interface BucketAvailabilityOptions {
 
 export interface SeedResolutionOptions {
   /**
-   * State established by the last transition *before* the window, when the
-   * history query found one. Authoritative whenever it is present.
+   * State established by the last transition *before* the window, or `null`
+   * when the history query found none. Authoritative whenever it is present.
    */
-  fromHistory?: boolean;
+  fromHistory?: boolean | null;
   /**
    * Earliest transition inside the window, if the window holds any.
    */
@@ -65,6 +65,13 @@ export interface SeedResolutionOptions {
  * 2. Otherwise the inverse of the window's first transition. The dataset holds
  *    only genuine state *changes*, so "the first thing that happened here was
  *    becoming available" can only mean the window opened unavailable.
+ *
+ *    This is the inference 4ad2595 removed, reinstated as a *fallback* rather
+ *    than the primary mechanism. Its caveat still stands: it holds only while
+ *    edges strictly alternate. `detectChanges` compares sets, so they should —
+ *    but the Analytics Engine write swallows failures, and a dropped edge would
+ *    leave two in the same direction and invert this the wrong way. A grounded
+ *    guess still beats reaching for the snapshot, which fails outright (#287).
  * 3. Otherwise the live snapshot. With no transition either side of the window
  *    boundary, nothing has changed and the snapshot is exactly that unchanged
  *    state. This is the *last* resort: reaching for it while the window does
@@ -73,9 +80,9 @@ export interface SeedResolutionOptions {
  * 4. Otherwise unavailable, rather than inventing uptime.
  */
 export function resolveSeed(options: SeedResolutionOptions): boolean {
-  const { fromHistory, firstEvent, fromSnapshot = null } = options;
+  const { fromHistory = null, firstEvent, fromSnapshot = null } = options;
 
-  if (fromHistory !== undefined) return fromHistory;
+  if (fromHistory !== null) return fromHistory;
   if (firstEvent) return !firstEvent.up;
   return fromSnapshot ?? false;
 }

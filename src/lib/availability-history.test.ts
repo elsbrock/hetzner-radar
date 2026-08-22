@@ -89,6 +89,17 @@ describe("resolveSeed", () => {
     expect(resolveSeed({})).toBe(false);
     expect(resolveSeed({ fromSnapshot: null })).toBe(false);
   });
+
+  it("should treat a null resolved transition as absent, not as unavailable", () => {
+    // `fromHistory` follows the module's `boolean | null` idiom, so null means
+    // "the query found nothing" and must fall through rather than seed false.
+    expect(
+      resolveSeed({
+        fromHistory: null,
+        firstEvent: { t: 1_000, up: false },
+      }),
+    ).toBe(true);
+  });
 });
 
 describe("a window whose seed predates Analytics Engine retention", () => {
