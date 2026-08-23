@@ -224,20 +224,28 @@ export const actions: Actions = {
     }
 
     try {
-      const success = await sendTestWebhookNotification(webhookUrl);
+      const result = await sendTestWebhookNotification(webhookUrl);
 
-      if (success) {
+      if (result.success) {
         return {
           success: true,
           message: "Test notification sent successfully! Check your endpoint.",
         };
-      } else {
-        return {
-          success: false,
-          error:
-            "Failed to send test notification. Please check your webhook URL.",
-        };
       }
+
+      // Report what the endpoint actually said. "Check your webhook URL" is
+      // wrong and unactionable when the URL is fine and the endpoint rejected
+      // the request.
+      const detail = result.status
+        ? `${result.status}${result.reason ? ` — ${result.reason}` : ""}`
+        : result.reason;
+
+      return {
+        success: false,
+        error: detail
+          ? `Endpoint rejected the test: ${detail}`
+          : "Failed to send test notification. Please check your webhook URL.",
+      };
     } catch (err) {
       console.error("Error sending test webhook notification:", err);
       return {

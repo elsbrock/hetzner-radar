@@ -57,11 +57,28 @@ function createTestRequest(webhookUrl: string): WebhookRequest {
 }
 
 /**
+ * Outcome of a test send. Carries the endpoint's own status and response text
+ * so the UI can say *why* it failed — a bare boolean turned every failure into
+ * "check your webhook URL", which is useless when the URL is fine and the
+ * endpoint is rejecting the request (rate limit, auth, unsupported format).
+ */
+export interface TestWebhookResult {
+  success: boolean;
+  /** HTTP status, when we got a response at all. */
+  status?: number;
+  /** Short human-readable reason, safe to show the user. */
+  reason?: string;
+}
+
+/** Response bodies can be arbitrarily large; only the head is ever useful here. */
+const MAX_REASON_BODY = 200;
+
+/**
  * Sends a test notification, formatted for whatever endpoint the user configured.
  */
 export async function sendTestWebhookNotification(
   webhookUrl: string,
-): Promise<boolean> {
+): Promise<TestWebhookResult> {
   const request = createTestRequest(webhookUrl);
 
   try {
@@ -72,15 +89,30 @@ export async function sendTestWebhookNotification(
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
-    if (!response.ok) {
-      console.error(
-        `Webhook returned status ${response.status}: ${response.statusText}`,
-      );
+    if (response.ok) {
+      return { success: true, status: response.status };
     }
 
-    return response.ok;
+    let body = "";
+    try {
+      body = (await response.text()).trim().slice(0, MAX_REASON_BODY);
+    } catch {
+      // Body is optional context; a failure to read it must not mask the status.
+    }
+
+    console.error(
+      `Webhook returned status ${response.status}: ${response.statusText} ${body}`,
+    );
+
+    return {
+      success: false,
+      status: response.status,
+      reason: body || response.statusText || `HTTP ${response.status}`,
+    };
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error("Failed to send webhook notification:", error);
-    return false;
+
+    return { success: false, reason: message };
   }
 }
