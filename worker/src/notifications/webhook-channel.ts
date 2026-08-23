@@ -2,10 +2,14 @@
  * Generic Webhook Notification Channel
  *
  * Sends alert notifications as a JSON POST to a user-provided endpoint.
- * The payload is a stable, versioned contract — see docs/specs/webhook-alerts-2026-07.md.
+ * The payload is a stable, versioned contract.
+ *
+ * ntfy URLs are the one exception: they get ntfy's native wire format instead,
+ * because the JSON envelope is unusable there. See ./ntfy.
  */
 
 import type { NotificationChannel, AlertInfo, AlertNotification, NotificationResult } from './notification-channel';
+import { isNtfyUrl, buildNtfyRequest, type NtfyMessage, type WebhookRequest } from './ntfy';
 
 export interface WebhookPayload {
 	event: 'price_alert.triggered';
@@ -30,6 +34,7 @@ export interface WebhookPayload {
 }
 
 const REQUEST_TIMEOUT_MS = 10_000;
+const USER_AGENT = 'ServerRadar-Webhook/1.0 (+https://radar.iodev.org)';
 
 export class WebhookChannel implements NotificationChannel {
 	readonly name = 'webhook';
@@ -51,8 +56,8 @@ export class WebhookChannel implements NotificationChannel {
 				};
 			}
 
-			const payload = this.createPayload(notification);
-			const success = await this.postPayload(notification.alert.webhook_url!, payload);
+			const webhookUrl = notification.alert.webhook_url!;
+			const success = await this.post(webhookUrl, this.createRequest(webhookUrl, notification));
 
 			return {
 				channel: this.name,
@@ -71,6 +76,21 @@ export class WebhookChannel implements NotificationChannel {
 				timestamp,
 			};
 		}
+	}
+
+	/** Picks the wire format for the destination: ntfy's, or our JSON envelope. */
+	private createRequest(webhookUrl: string, notification: AlertNotification): WebhookRequest {
+		if (isNtfyUrl(webhookUrl)) {
+			return buildNtfyRequest(this.createNtfyMessage(notification));
+		}
+
+		return {
+			body: JSON.stringify(this.createPayload(notification)),
+			headers: {
+				'Content-Type': 'application/json',
+				'User-Agent': USER_AGENT,
+			},
+		};
 	}
 
 	private createPayload(notification: AlertNotification): WebhookPayload {
@@ -99,17 +119,32 @@ export class WebhookChannel implements NotificationChannel {
 		};
 	}
 
-	private async postPayload(webhookUrl: string, payload: WebhookPayload): Promise<boolean> {
+	/**
+	 * A one-line summary rather than the auction list: ntfy renders the body as
+	 * the notification text, and anything past ~4 KB becomes a file attachment.
+	 */
+	private createNtfyMessage(notification: AlertNotification): NtfyMessage {
+		const { alert, triggerPrice, matchedAuctions } = notification;
+		const count = matchedAuctions.length;
+
+		return {
+			title: `Price alert: ${alert.name}`,
+			message:
+				`${count} matching server${count === 1 ? '' : 's'} from €${triggerPrice.toFixed(2)} ` +
+				`(target €${alert.price.toFixed(2)}, incl. ${alert.vat_rate}% VAT)`,
+			click: `https://radar.iodev.org/alerts?view=${alert.id}`,
+			tags: ['moneybag'],
+		};
+	}
+
+	private async post(webhookUrl: string, request: WebhookRequest): Promise<boolean> {
 		try {
 			console.log(`[WebhookChannel] Sending webhook to: ${webhookUrl.substring(0, 50)}...`);
 
 			const response = await fetch(webhookUrl, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'User-Agent': 'ServerRadar-Webhook/1.0 (+https://radar.iodev.org)',
-				},
-				body: JSON.stringify(payload),
+				headers: request.headers,
+				body: request.body,
 				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 			});
 

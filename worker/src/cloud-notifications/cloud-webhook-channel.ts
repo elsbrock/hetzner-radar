@@ -3,10 +3,11 @@
  *
  * Sends cloud availability notifications as a JSON POST to a user-provided
  * endpoint. Shares the envelope shape (event/version) with the price-alert
- * webhook — see docs/specs/webhook-alerts-2026-07.md.
+ * webhook, and the same ntfy exception — see ../notifications/ntfy.
  */
 
-import type { CloudNotificationChannel, CloudNotification, CloudNotificationResult } from './cloud-notification-channel';
+import type { CloudNotificationChannel, CloudNotification, CloudNotificationResult, CloudAlertMatch } from './cloud-notification-channel';
+import { isNtfyUrl, buildNtfyRequest, type NtfyMessage, type WebhookRequest } from '../notifications/ntfy';
 
 export interface CloudWebhookPayload {
 	event: 'cloud_alert.triggered';
@@ -31,6 +32,8 @@ export interface CloudWebhookPayload {
 }
 
 const REQUEST_TIMEOUT_MS = 10_000;
+const USER_AGENT = 'ServerRadar-Webhook/1.0 (+https://radar.iodev.org)';
+const CLOUD_STATUS_URL = 'https://radar.iodev.org/alerts?tab=cloud-alerts';
 
 export class CloudWebhookChannel implements CloudNotificationChannel {
 	readonly name = 'cloud-webhook';
@@ -54,8 +57,8 @@ export class CloudWebhookChannel implements CloudNotificationChannel {
 				};
 			}
 
-			const payload = this.createPayload(notification);
-			const success = await this.postPayload(notification.user.webhook_url!, payload);
+			const webhookUrl = notification.user.webhook_url!;
+			const success = await this.post(webhookUrl, this.createRequest(webhookUrl, notification));
 
 			return {
 				channel: this.name,
@@ -80,6 +83,41 @@ export class CloudWebhookChannel implements CloudNotificationChannel {
 		}
 	}
 
+	/** Picks the wire format for the destination: ntfy's, or our JSON envelope. */
+	private createRequest(webhookUrl: string, notification: CloudNotification): WebhookRequest {
+		if (isNtfyUrl(webhookUrl)) {
+			return buildNtfyRequest(this.createNtfyMessage(notification.matches));
+		}
+
+		return {
+			body: JSON.stringify(this.createPayload(notification)),
+			headers: {
+				'Content-Type': 'application/json',
+				'User-Agent': USER_AGENT,
+			},
+		};
+	}
+
+	/**
+	 * One line per change, mirroring the Discord wording. A single change gets a
+	 * specific title; a batch gets a count, since ntfy shows only one heading.
+	 */
+	private createNtfyMessage(matches: CloudAlertMatch[]): NtfyMessage {
+		const lines = matches.map(({ change }) => {
+			const action = change.eventType === 'available' ? 'is now available' : 'is no longer available';
+			return `${change.serverTypeName} ${action} in ${change.locationName}`;
+		});
+
+		const title = matches.length === 1 ? 'Cloud availability' : `Cloud availability: ${matches.length} changes`;
+
+		return {
+			title,
+			message: lines.join('\n'),
+			click: CLOUD_STATUS_URL,
+			tags: ['cloud'],
+		};
+	}
+
 	private createPayload(notification: CloudNotification): CloudWebhookPayload {
 		return {
 			event: 'cloud_alert.triggered',
@@ -99,22 +137,19 @@ export class CloudWebhookChannel implements CloudNotificationChannel {
 				},
 				eventType: change.eventType,
 			})),
-			url: 'https://radar.iodev.org/alerts?tab=cloud-alerts',
+			url: CLOUD_STATUS_URL,
 			triggeredAt: new Date().toISOString(),
 		};
 	}
 
-	private async postPayload(webhookUrl: string, payload: CloudWebhookPayload): Promise<boolean> {
+	private async post(webhookUrl: string, request: WebhookRequest): Promise<boolean> {
 		try {
 			console.log(`[CloudWebhookChannel] Sending webhook to: ${webhookUrl.substring(0, 50)}...`);
 
 			const response = await fetch(webhookUrl, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'User-Agent': 'ServerRadar-Webhook/1.0 (+https://radar.iodev.org)',
-				},
-				body: JSON.stringify(payload),
+				headers: request.headers,
+				body: request.body,
 				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 			});
 

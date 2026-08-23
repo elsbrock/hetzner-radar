@@ -259,8 +259,9 @@
 							>
 						</div>
 						<p class="ml-7 text-sm text-gray-500 dark:text-gray-400">
-							A JSON payload sent via HTTP POST to your own endpoint — ideal for home automation,
-							ntfy, or custom bots. Must be a public HTTPS URL.
+							A JSON payload sent via HTTP POST to your own endpoint — ideal for home automation
+							or custom bots. Must be a public HTTPS URL. ntfy.sh topic URLs are detected
+							automatically and sent as native ntfy notifications instead.
 						</p>
 						<div class="ml-7 flex gap-2">
 							<Input

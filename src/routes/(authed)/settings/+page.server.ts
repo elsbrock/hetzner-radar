@@ -20,10 +20,7 @@ import {
   sendDiscordNotification,
   createTestDiscordEmbed,
 } from "$lib/api/backend/discord";
-import {
-  sendWebhookNotification,
-  createTestWebhookPayload,
-} from "$lib/api/backend/webhook";
+import { sendTestWebhookNotification } from "$lib/api/backend/webhook";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async (event) => {
@@ -208,10 +205,7 @@ export const actions: Actions = {
     }
 
     try {
-      const success = await sendWebhookNotification(
-        user.webhook_url,
-        createTestWebhookPayload(),
-      );
+      const success = await sendTestWebhookNotification(user.webhook_url);
 
       if (success) {
         return {

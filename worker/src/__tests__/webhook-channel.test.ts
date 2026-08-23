@@ -93,6 +93,43 @@ describe('WebhookChannel', () => {
 			expect(result.error).toBe('Webhook request failed');
 		});
 
+		it('should send ntfy.sh URLs as a native ntfy notification, not the JSON envelope', async () => {
+			mockFetch.mockResolvedValueOnce({ ok: true, status: 200 });
+
+			const ntfyUrl = 'https://ntfy.sh/my-server-alerts';
+			const result = await channel.send({
+				...webhookNotification,
+				alert: { ...mockAlertInfoWebhookOnly, webhook_url: ntfyUrl },
+			});
+
+			expect(result.success).toBe(true);
+
+			const [url, init] = mockFetch.mock.calls[0];
+			expect(url).toBe(ntfyUrl);
+			expect(init.headers['Content-Type']).toBe('text/plain; charset=utf-8');
+			expect(init.headers['X-Title']).toBe(`Price alert: ${mockAlertInfoWebhookOnly.name}`);
+			expect(init.headers['X-Click']).toBe(`https://radar.iodev.org/alerts?view=${mockAlertInfoWebhookOnly.id}`);
+			expect(init.headers['X-Tags']).toBe('moneybag');
+
+			// The body is the human-readable message, not JSON — ntfy turns bodies
+			// over ~4 KB into a file attachment.
+			expect(() => JSON.parse(init.body)).toThrow();
+			expect(init.body).toContain(`target €${mockAlertInfoWebhookOnly.price.toFixed(2)}`);
+		});
+
+		it('should keep sending the JSON envelope to non-ntfy hosts', async () => {
+			mockFetch.mockResolvedValueOnce({ ok: true, status: 200 });
+
+			await channel.send({
+				...webhookNotification,
+				alert: { ...mockAlertInfoWebhookOnly, webhook_url: 'https://ntfy.example.com/alerts' },
+			});
+
+			const init = mockFetch.mock.calls[0][1];
+			expect(init.headers['Content-Type']).toBe('application/json');
+			expect(JSON.parse(init.body).event).toBe('price_alert.triggered');
+		});
+
 		it('should not send when the channel is disabled for the alert', async () => {
 			const result = await channel.send(mockAlertNotification);
 

@@ -140,7 +140,7 @@ the point of contact:
 - Fix the on-page CTA copy to mention webhooks alongside email and Discord.
 - A short "Polling and automation" section in `/guide`: state the once-a-minute
   refresh, ask for ≤1 req/min, and link cloud alerts + the `cloud_alert.triggered`
-  webhook envelope (documented in `webhook-alerts-2026-07.md`).
+  webhook envelope (see `worker/src/notifications/webhook-channel.ts`).
 
 Requiring an account for cloud alerts is the friction that pushes people to
 scrape anonymously in the first place. Worth considering an unauthenticated
