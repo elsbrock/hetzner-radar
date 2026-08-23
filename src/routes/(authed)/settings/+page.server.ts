@@ -196,16 +196,35 @@ export const actions: Actions = {
       return error(500, { message: "Database connection error." });
     }
 
-    const user = await getUser(db, event.locals.user.id.toString());
-    if (!user || !user.webhook_url) {
+    // The Test button lives in the same form as the URL input, so test the URL
+    // the user is currently looking at and fall back to the stored one. Reading
+    // only the stored value meant pasting a URL and hitting Test silently
+    // probed the previously saved endpoint, or failed as "not configured".
+    const submittedUrl = (await event.request.formData())
+      .get("webhook_url")
+      ?.toString()
+      .trim();
+
+    const webhookUrl =
+      submittedUrl ||
+      (await getUser(db, event.locals.user.id.toString()))?.webhook_url;
+
+    if (!webhookUrl) {
       return {
         success: false,
         error: "No webhook URL configured. Please add one first.",
       };
     }
 
+    if (!validateWebhookUrl(webhookUrl)) {
+      return {
+        success: false,
+        error: "Invalid webhook URL. Please provide a public HTTPS endpoint.",
+      };
+    }
+
     try {
-      const success = await sendTestWebhookNotification(user.webhook_url);
+      const success = await sendTestWebhookNotification(webhookUrl);
 
       if (success) {
         return {
