@@ -11,6 +11,7 @@ import { NotificationService } from './notification-service';
 import { CloudAlertService } from './cloud-alert-service';
 import { CloudNotificationService } from './cloud-notifications/cloud-notification-service';
 import { AnalyticsQueryService } from './analytics-query-service';
+import { runArmLastSeenRepair, type RecoveryEvent } from './arm-last-seen-repair';
 
 interface CloudAvailabilityEnv {
 	HETZNER_API_TOKEN: string;
@@ -25,6 +26,18 @@ interface CloudAvailabilityEnv {
 }
 
 const DEFAULT_FETCH_INTERVAL_MS = 60 * 1000; // 1 minute
+
+/**
+ * Analytics Engine's retention, and the widest window the repair can recover
+ * from. Asking for more is not merely unhelpful, it is measurably pointless:
+ * probed on 2026-08-22, queries for 120, 180, 365, and 730 days all returned
+ * the same 3,424 rows as a 92-day query, with nothing older than 92.5 days —
+ * well short of the 10,000-row cap, so a real boundary rather than truncation.
+ *
+ * A pair whose last transition predates that is unrecoverable, permanently. Its
+ * entry is cleared rather than left holding a false timestamp.
+ */
+const RECOVERY_LOOKBACK_MS = 92 * 24 * 60 * 60 * 1000;
 
 // See the note in `auction-import-do.ts`: parameterizing Env lets the base class
 // declare `ctx`/`env` at the right types rather than being shadowed.
@@ -120,6 +133,13 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 
 		try {
 			await this.fetchCloudStatus(metrics);
+
+			// Correct the timestamps the deprecated availability field left behind.
+			// Runs at most once, after the poll has refreshed the snapshot it reads.
+			// Deliberately on the alarm rather than `ensureInitialized`: a state
+			// migration should not be triggered by whoever happens to load the page
+			// first. The alarm fires within a minute of deploy, in the background.
+			await this.repairArmLastSeen();
 		} catch (error) {
 			failed = true;
 			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Failed to update cloud status:`, error);
@@ -217,6 +237,48 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 		} catch (error) {
 			console.error(`[CloudAvailabilityDO ${this.ctx.id}] Error in getHistoricalAvailability RPC:`, error);
 			throw error;
+		}
+	}
+
+	/**
+	 * One-off repair of the `lastSeenAvailable` entries written from Hetzner's
+	 * deprecated availability field — see `arm-last-seen-repair.ts`, which holds
+	 * the logic and the note on when this becomes dead code.
+	 *
+	 * Driven by the alarm, immediately after the poll that refreshes the snapshot
+	 * it reads. Never from a request path: this rewrites stored state, and which
+	 * user loads the page first should not decide when that happens.
+	 */
+	private async repairArmLastSeen(): Promise<void> {
+		try {
+			if (!this.env.CF_ACCOUNT_ID || !this.env.CF_BEARER_TOKEN) {
+				console.warn(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair needs Analytics Engine credentials; deferring.`);
+				return;
+			}
+
+			const endDate = new Date().toISOString();
+			const startDate = new Date(Date.now() - RECOVERY_LOOKBACK_MS).toISOString();
+
+			const outcome = await runArmLastSeenRepair({
+				storage: this.ctx.storage,
+				queryHistory: async (serverTypeId) => {
+					const history = await this.getHistoricalAvailability({ startDate, endDate, serverTypeId });
+					return history.data as RecoveryEvent[];
+				},
+			});
+
+			if (outcome.status === 'repaired') {
+				console.log(
+					`[CloudAvailabilityDO ${this.ctx.id}] Repaired ${outcome.suspect} ARM last-seen entries ` +
+						`(${outcome.recovered} recovered from Analytics Engine, ${outcome.cleared} cleared as unknown).`,
+				);
+			} else {
+				console.log(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair: ${outcome.status}.`);
+			}
+		} catch (error) {
+			// Never let a repair failure fail the poll: the flag stays unset and the
+			// stored matrix untouched, so the next alarm retries.
+			console.error(`[CloudAvailabilityDO ${this.ctx.id}] ARM last-seen repair failed:`, error);
 		}
 	}
 
