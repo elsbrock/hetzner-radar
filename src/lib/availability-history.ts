@@ -6,8 +6,8 @@
  * means replaying those edges as a step function rather than reading samples.
  * The subtleties that make this worth isolating (and testing):
  *
- * - the state entering the window comes from outside it, so it must be supplied
- *   rather than guessed from the window's own first edge;
+ * - the state entering the window comes from outside it, so it has to be
+ *   resolved deliberately (see `resolveSeed`) rather than assumed;
  * - a bucket is usually only partly available, so cells carry an occupancy
  *   fraction rather than a boolean.
  */
@@ -39,6 +39,52 @@ export interface BucketAvailabilityOptions {
    * consistent with a snapshot in either state and is left as measured.
    */
   reconcileTo?: boolean | null;
+}
+
+export interface SeedResolutionOptions {
+  /**
+   * State established by the last transition *before* the window, or `null`
+   * when the history query found none. Authoritative whenever it is present.
+   */
+  fromHistory?: boolean | null;
+  /**
+   * Earliest transition inside the window, if the window holds any.
+   */
+  firstEvent?: AvailabilityChangePoint;
+  /**
+   * State from the live snapshot, or `null` when no snapshot covers this row
+   * (or the window being rendered is not the live one).
+   */
+  fromSnapshot?: boolean | null;
+}
+
+/**
+ * The state a window opens in, in descending order of authority.
+ *
+ * 1. The transition resolved from before the window — it says so directly.
+ * 2. Otherwise the inverse of the window's first transition. The dataset holds
+ *    only genuine state *changes*, so "the first thing that happened here was
+ *    becoming available" can only mean the window opened unavailable.
+ *
+ *    This is the inference 4ad2595 removed, reinstated as a *fallback* rather
+ *    than the primary mechanism. Its caveat still stands: it holds only while
+ *    edges strictly alternate. `detectChanges` compares sets, so they should —
+ *    but the Analytics Engine write swallows failures, and a dropped edge would
+ *    leave two in the same direction and invert this the wrong way. A grounded
+ *    guess still beats reaching for the snapshot, which fails outright (#287).
+ * 3. Otherwise the live snapshot. With no transition either side of the window
+ *    boundary, nothing has changed and the snapshot is exactly that unchanged
+ *    state. This is the *last* resort: reaching for it while the window does
+ *    hold transitions paints the state *after* them across everything before,
+ *    which is how a pair unavailable since May rendered as available all month.
+ * 4. Otherwise unavailable, rather than inventing uptime.
+ */
+export function resolveSeed(options: SeedResolutionOptions): boolean {
+  const { fromHistory = null, firstEvent, fromSnapshot = null } = options;
+
+  if (fromHistory !== null) return fromHistory;
+  if (firstEvent) return !firstEvent.up;
+  return fromSnapshot ?? false;
 }
 
 /**

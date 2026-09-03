@@ -13,7 +13,7 @@
 	import 'chartjs-adapter-date-fns';
 	import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
 	import { onDestroy } from 'svelte';
-	import { bucketAvailability } from '$lib/availability-history';
+	import { bucketAvailability, resolveSeed } from '$lib/availability-history';
 
 	Chart.register(MatrixController, MatrixElement, CategoryScale, TimeScale, LinearScale, Tooltip);
 
@@ -340,18 +340,32 @@
 
 		const out: MatrixDatum[] = [];
 		for (const [id, row] of ordered) {
+			const rowEvents = events.get(id) ?? [];
+			// Scanned rather than sorted: `bucketAvailability` sorts its own copy, and
+			// its contract says events need not arrive ordered, so picking `[0]` would
+			// couple the seed to a guarantee the module disclaims.
+			let firstEvent: { t: number; up: boolean } | undefined;
+			for (const e of rowEvents) if (!firstEvent || e.t < firstEvent.t) firstEvent = e;
+
 			const values = bucketAvailability({
 				buckets: starts,
 				stepMs,
 				seedStart,
 				windowEnd,
-				// State entering the window, in order of authority: the seed resolved
-				// from the last transition before the window; else — meaning the pair
-				// has not changed state within the seed lookback — the live snapshot,
-				// which is exactly that unchanged state. If neither is known, assume
-				// unavailable rather than inventing uptime.
-				seed: seeds.get(id) ?? (row.snapshotKnown ? row.currentlyAvailable : false),
-				events: events.get(id) ?? [],
+				seed: resolveSeed({
+					fromHistory: seeds.get(id) ?? null,
+					firstEvent,
+					// Not gated on `isLiveWindow`, unlike `reconcileTo` below. This is
+					// only reached when the dataset held nothing at all across the seed
+					// lookback *and* the window, so both remaining options are guesses:
+					// the snapshot, or "unavailable". A pair that actually changed would
+					// have left edges, so the snapshot is the better-calibrated one — a
+					// stable, long-available type would otherwise render solid red across
+					// a paged-back window. The honest fix is to render "unknown" as its
+					// own state, which needs a legend decision, not a seeding rule.
+					fromSnapshot: row.snapshotKnown ? row.currentlyAvailable : null
+				}),
+				events: rowEvents,
 				// Only the live window can be checked against the live snapshot; older
 				// windows describe the past.
 				reconcileTo: isLiveWindow && row.snapshotKnown ? row.currentlyAvailable : null
