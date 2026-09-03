@@ -246,12 +246,15 @@ describe('CloudStatusService', () => {
 					json: async () => mockHetznerLocationsResponse,
 				});
 
-			// Set up previous availability state
+			// Set up previous availability state, computed under the current
+			// algorithm version — otherwise the version-mismatch guard treats it as
+			// stale (pre-migration) state and skips diffing.
 			await mockStorage.put('availability', {
 				1: [1], // nbg1 only had cx11 before
 				2: [1, 2, 3], // fsn1 had all before
 				3: [2], // hel1 only had cx21 before
 			});
+			await mockStorage.put('availabilityAlgorithmVersion', 2);
 
 			const changes = await service.fetchAndUpdateStatus();
 
@@ -297,6 +300,34 @@ describe('CloudStatusService', () => {
 					ok: true,
 					json: async () => mockHetznerLocationsResponse,
 				});
+
+			const changes = await service.fetchAndUpdateStatus();
+
+			expect(changes).toEqual([]);
+		});
+
+		it('should skip change detection when stored availability predates the current algorithm version', async () => {
+			// Mock successful API responses
+			mockFetch
+				.mockResolvedValueOnce({
+					ok: true,
+					json: async () => mockHetznerServerTypesResponse,
+				})
+				.mockResolvedValueOnce({
+					ok: true,
+					json: async () => mockHetznerLocationsResponse,
+				});
+
+			// Previous availability exists, but with no algorithm version recorded
+			// (as if written before the version was introduced) — e.g. by the old
+			// datacenter.server_types-based algorithm, which disagreed with the
+			// current one on several pairs. Diffing against it would report that
+			// disagreement as real availability changes.
+			await mockStorage.put('availability', {
+				1: [], // nbg1 previously reported nothing available
+				2: [], // fsn1 previously reported nothing available
+				3: [], // hel1 previously reported nothing available
+			});
 
 			const changes = await service.fetchAndUpdateStatus();
 
@@ -470,11 +501,26 @@ describe('CloudStatusService', () => {
 		});
 
 		it('should deduplicate and sort server type ids per location', async () => {
-			// Mock successful API responses
+			// A server type naming the same location twice in its `locations[]`
+			// array is the actual source of duplicates this logic must survive.
+			const responseWithDuplicateLocationEntry = {
+				...mockHetznerServerTypesResponse,
+				server_types: [
+					{
+						...mockHetznerServerTypesResponse.server_types[0],
+						locations: [
+							{ id: 1, name: 'nbg1', available: true, recommended: false, deprecation: null },
+							{ id: 1, name: 'nbg1', available: true, recommended: false, deprecation: null },
+						],
+					},
+					...mockHetznerServerTypesResponse.server_types.slice(1),
+				],
+			};
+
 			mockFetch
 				.mockResolvedValueOnce({
 					ok: true,
-					json: async () => mockHetznerServerTypesResponse,
+					json: async () => responseWithDuplicateLocationEntry,
 				})
 				.mockResolvedValueOnce({
 					ok: true,
@@ -488,7 +534,11 @@ describe('CloudStatusService', () => {
 			const storedData = putSpy.mock.calls[0][0] as { lastSeenAvailable: LastSeenMatrix };
 			const availability = storedData.availability;
 
-			// Each location should have sorted unique server type IDs
+			// nbg1 (location 1) must count server type 1 exactly once despite the
+			// duplicate entry.
+			expect(availability[1].filter((id) => id === 1)).toEqual([1]);
+
+			// Every location should have sorted unique server type IDs.
 			Object.values(availability).forEach((serverTypeIds: unknown) => {
 				expect(Array.isArray(serverTypeIds)).toBe(true);
 				expect(serverTypeIds).toEqual([...new Set(serverTypeIds)].sort((a, b) => a - b));
