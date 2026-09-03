@@ -102,9 +102,9 @@ describe('AnalyticsQueryService', () => {
 			const sql = seedSql();
 			expect(sql).toContain('argMax(double1, timestamp) as availability');
 			expect(sql).toContain('GROUP BY blob1, blob2');
-			// Strictly before the window start, looking back 30 days.
+			// Strictly before the window start, looking back 92 days (Analytics Engine's retention).
 			expect(sql).toContain("timestamp < toDateTime('2026-07-01T00:00:00')");
-			expect(sql).toContain("timestamp >= toDateTime('2026-06-01T00:00:00')");
+			expect(sql).toContain("timestamp >= toDateTime('2026-03-31T00:00:00')");
 		});
 
 		it('should mark seed points and stamp them at the window start', async () => {
