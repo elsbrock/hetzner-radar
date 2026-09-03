@@ -19,6 +19,7 @@ interface HetznerServerType {
 		unavailable_after: string;
 		announced: string;
 	} | null;
+	locations: HetznerServerTypeLocation[];
 }
 
 interface HetznerPaginationMeta {
@@ -48,16 +49,26 @@ interface HetznerLocation {
 	longitude: number;
 }
 
-interface HetznerDatacenter {
+/**
+ * Per-location availability of a server type, from `GET /v1/server_types`.
+ *
+ * `available` is Hetzner's current answer to "can this type be created here
+ * right now". Their wording is deliberately hedged — "only an indicator whether
+ * resources are currently available and is no guarantee" — so treat it as the
+ * best signal on offer, not a promise that an order will succeed.
+ *
+ * A location appearing in this list is what "supported" now means: the
+ * deprecated `datacenter.server_types.supported` has no direct successor.
+ */
+interface HetznerServerTypeLocation {
 	id: number;
 	name: string;
-	description: string;
-	location: HetznerLocation;
-	server_types: {
-		supported: number[];
-		available: number[];
-		available_for_migration: number[];
-	};
+	available: boolean;
+	recommended: boolean;
+	deprecation: {
+		unavailable_after: string;
+		announced: string;
+	} | null;
 }
 
 export interface LocationInfo {
@@ -107,6 +118,16 @@ export interface AvailabilityChange {
 }
 
 const HETZNER_API_BASE = 'https://api.hetzner.cloud/v1';
+
+/**
+ * Bumped whenever the availability source or algorithm changes shape (e.g.
+ * the `datacenter.server_types` -> `server_type.locations` migration). A
+ * mismatch on the stored version means `previousAvailability` was computed
+ * by different logic than the current run, so it is not a meaningful basis
+ * for change detection — diffing against it would report the algorithm
+ * switch itself as real availability changes.
+ */
+const AVAILABILITY_ALGORITHM_VERSION = 2;
 
 export class CloudStatusService {
 	private apiToken: string;
@@ -168,19 +189,23 @@ export class CloudStatusService {
 					.join(', ')}`,
 			);
 
-			console.log(`[CloudStatusService ${this.doId}] Fetching datacenters...`);
-			const datacenters = await this.fetchPaginatedResource<HetznerDatacenter>({
-				path: 'datacenters',
-				dataKey: 'datacenters',
+			console.log(`[CloudStatusService ${this.doId}] Fetching locations...`);
+			const locations = await this.fetchPaginatedResource<HetznerLocation>({
+				path: 'locations',
+				dataKey: 'locations',
 				headers,
-				resourceName: 'datacenters',
+				resourceName: 'locations',
 			});
-			console.log(`[CloudStatusService ${this.doId}] Fetched ${datacenters.length} datacenters.`);
+			console.log(`[CloudStatusService ${this.doId}] Fetched ${locations.length} locations.`);
 
-			const processedData = this.processCloudData(serverTypes, datacenters);
+			const processedData = this.processCloudData(serverTypes, locations);
 
-			// Get previous availability for change detection
-			const previousAvailability = await this.storage.get<AvailabilityMatrix>('availability');
+			// Get previous availability for change detection, along with the
+			// algorithm version it was computed under.
+			const [previousAvailability, previousAlgorithmVersion] = await Promise.all([
+				this.storage.get<AvailabilityMatrix>('availability'),
+				this.storage.get<number>('availabilityAlgorithmVersion'),
+			]);
 
 			// Update last seen availability timestamps
 			const updatedLastSeen = await this.updateLastSeenTimestamps(processedData.availability);
@@ -194,12 +219,17 @@ export class CloudStatusService {
 				supported: processedData.supported,
 				lastUpdated: updateTimestamp,
 				lastSeenAvailable: updatedLastSeen,
+				availabilityAlgorithmVersion: AVAILABILITY_ALGORITHM_VERSION,
 			});
 
-			// Return changes for handling by the main class
-			const changes = previousAvailability
-				? this.detectChanges(previousAvailability, processedData.availability, processedData.serverTypes, processedData.locations)
-				: [];
+			// Return changes for handling by the main class. Skip detection across
+			// an algorithm version change: the stored `previousAvailability` was
+			// computed differently and diffing against it would surface the
+			// migration itself as availability changes.
+			const changes =
+				previousAvailability && previousAlgorithmVersion === AVAILABILITY_ALGORITHM_VERSION
+					? this.detectChanges(previousAvailability, processedData.availability, processedData.serverTypes, processedData.locations)
+					: [];
 
 			console.log(`[CloudStatusService ${this.doId}] Data stored successfully at ${updateTimestamp}.`);
 			return changes;
@@ -253,7 +283,18 @@ export class CloudStatusService {
 		return results;
 	}
 
-	private processCloudData(serverTypes: HetznerServerType[], datacenters: HetznerDatacenter[]) {
+	/**
+	 * Fold `/v1/server_types` and `/v1/locations` into the location-keyed
+	 * matrices the app renders.
+	 *
+	 * Availability is read from `server_type.locations[]`, which is Hetzner's
+	 * supported source since they deprecated `datacenter.server_types` on
+	 * 2026-04-01 — along with the guarantee that it stays accurate. It had
+	 * drifted: as of 2026-08-22 the deprecated field claimed every CAX type was
+	 * available in fsn1/nbg1/hel1 while `server_types` correctly reported all
+	 * twelve pairs unavailable, and it omitted cpx12 from `supported` entirely.
+	 */
+	private processCloudData(serverTypes: HetznerServerType[], locations: HetznerLocation[]) {
 		const processedServerTypes: ServerTypeInfo[] = serverTypes.map((st) => ({
 			id: st.id,
 			name: st.name,
@@ -270,38 +311,58 @@ export class CloudStatusService {
 		}));
 		processedServerTypes.sort((a, b) => a.name.localeCompare(b.name));
 
+		// Dedup by id: fetchPaginatedResource concatenates pages verbatim, so a
+		// location shifting across a page boundary between two page requests
+		// would otherwise produce a duplicate id, which breaks Svelte's keyed
+		// `{#each ... (location.id)}` blocks on the cloud-status page.
 		const processedLocationsMap = new Map<number, LocationInfo>();
-		const processedAvailability: AvailabilityMatrix = {};
-		const processedSupported: SupportMatrix = {};
-
-		for (const dc of datacenters) {
-			const locId = dc.location.id;
-
-			if (!processedLocationsMap.has(locId)) {
-				processedLocationsMap.set(locId, {
-					id: locId,
-					name: dc.location.name,
-					city: dc.location.city,
-					country: dc.location.country,
-					latitude: dc.location.latitude,
-					longitude: dc.location.longitude,
-				});
-			}
-
-			if (!processedAvailability[locId]) processedAvailability[locId] = [];
-			if (!processedSupported[locId]) processedSupported[locId] = [];
-
-			const currentAvailable = new Set(processedAvailability[locId]);
-			dc.server_types.available.forEach((serverId) => currentAvailable.add(serverId));
-			processedAvailability[locId] = Array.from(currentAvailable).sort((a, b) => a - b);
-
-			const currentSupported = new Set(processedSupported[locId]);
-			dc.server_types.supported.forEach((serverId) => currentSupported.add(serverId));
-			processedSupported[locId] = Array.from(currentSupported).sort((a, b) => a - b);
+		for (const loc of locations) {
+			processedLocationsMap.set(loc.id, {
+				id: loc.id,
+				name: loc.name,
+				city: loc.city,
+				country: loc.country,
+				latitude: loc.latitude,
+				longitude: loc.longitude,
+			});
 		}
-
 		const processedLocations: LocationInfo[] = Array.from(processedLocationsMap.values());
 		processedLocations.sort((a, b) => a.name.localeCompare(b.name));
+
+		// Seed every known location so one offering nothing still renders as an
+		// empty column rather than disappearing from the grid.
+		const availableIds = new Map<number, Set<number>>();
+		const supportedIds = new Map<number, Set<number>>();
+		for (const loc of processedLocations) {
+			availableIds.set(loc.id, new Set());
+			supportedIds.set(loc.id, new Set());
+		}
+
+		for (const st of serverTypes) {
+			for (const loc of st.locations ?? []) {
+				// Keyed off the locations endpoint, so a type naming a location it did
+				// not return has nowhere to record it. That should not happen — log it
+				// so a real disagreement between the two endpoints is visible instead
+				// of silently vanishing from both matrices.
+				if (!supportedIds.has(loc.id)) {
+					console.warn(
+						`[CloudStatusService ${this.doId}] Server type ${st.name} (${st.id}) references location ${loc.name} (${loc.id}), which was not returned by /v1/locations. Skipping this pairing.`,
+					);
+					continue;
+				}
+				supportedIds.get(loc.id)!.add(st.id);
+				if (loc.available) availableIds.get(loc.id)!.add(st.id);
+			}
+		}
+
+		const processedAvailability: AvailabilityMatrix = {};
+		const processedSupported: SupportMatrix = {};
+		for (const [locId, ids] of availableIds) {
+			processedAvailability[locId] = Array.from(ids).sort((a, b) => a - b);
+		}
+		for (const [locId, ids] of supportedIds) {
+			processedSupported[locId] = Array.from(ids).sort((a, b) => a - b);
+		}
 
 		return {
 			serverTypes: processedServerTypes,

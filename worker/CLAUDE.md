@@ -56,6 +56,26 @@ src/
 - **NotificationService**: Handles change notifications and analytics
 - **HttpRouter**: Routes HTTP requests to appropriate handlers
 
+### Which Hetzner endpoints are authoritative
+
+`CloudStatusService` reads cloud availability from **`GET /v1/server_types`**, using
+`server_type.locations[]` — `available` for the availability matrix, and mere presence in the list
+for the supported matrix. Location metadata (city, country, coordinates) comes from
+**`GET /v1/locations`**.
+
+We read these rather than `GET /v1/datacenters` because Hetzner deprecated
+`datacenter.server_types.{supported, available, available_for_migration}` on 2026-04-01, stating the
+fields are "no longer guaranteed" to be accurate, and deprecated the endpoint itself on 2026-06-02;
+it returns `410 Gone` after 2026-10-01.
+
+The inaccuracy was not hypothetical. On 2026-08-22 the deprecated field reported all four CAX (ARM)
+types as available in fsn1/nbg1/hel1 while `/v1/server_types` reported all twelve pairs unavailable,
+and it omitted `cpx12` from `supported` altogether (#287).
+
+Note that even the current field is a hint: Hetzner describes it as "only an indicator whether
+resources are currently available and is no guarantee". A creation attempt returning `412
+resource_unavailable` is the only ground truth, and we do not make one.
+
 ## Configuration
 
 ### Environment Variables (wrangler.jsonc)
