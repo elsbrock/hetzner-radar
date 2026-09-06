@@ -67,7 +67,7 @@
     "validator": "13.15.35",
     "vite": "8.1.4",
     "vite-plugin-remove-console": "2.2.0",
-    "vitest": "4.1.10"
+    "vitest": "5.0.0"
   },
   "type": "module",
   "dependencies": {
