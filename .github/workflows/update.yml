@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -33,7 +33,7 @@ jobs:
           command: r2 object get server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           # Pin wrangler so a future version can't silently change command defaults.
-          wranglerVersion: "4.101.0"
+          wranglerVersion: "4.131.1"
         continue-on-error: true # First run won't have existing DB
 
       - name: Verify downloaded database
@@ -60,7 +60,7 @@ jobs:
           # Keep a rolling backup - overwrites previous backup each time
           command: r2 object put server-radar/sb.duckdb.backup -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          wranglerVersion: "4.101.0"
+          wranglerVersion: "4.131.1"
         continue-on-error: true # Don't fail if backup fails
 
       - name: Deploy DB to R2
@@ -69,7 +69,7 @@ jobs:
         with:
           command: r2 object put server-radar/sb.duckdb -f static/sb.duckdb.wasm -J eu --remote
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          wranglerVersion: "4.101.0"
+          wranglerVersion: "4.131.1"
 
   notify_failure:
     runs-on: ubuntu-latest
