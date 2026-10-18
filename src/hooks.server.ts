@@ -101,7 +101,18 @@ const forceConsentHandle: Handle = async ({ event, resolve }) => {
 export async function handleError({ error, event }) {
   const errorId = crypto.randomUUID();
 
-  console.error("unhandled error", event, error, errorId);
+  // Never log `event` itself: it carries platform.env (every secret) and
+  // the request cookies.
+  console.error(
+    "unhandled error",
+    {
+      method: event.request.method,
+      path: event.url.pathname,
+      route: event.route.id,
+    },
+    error,
+    errorId,
+  );
 
   return {
     message:
