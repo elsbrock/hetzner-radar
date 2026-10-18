@@ -72,7 +72,7 @@ describe('CloudNotificationService', () => {
 	let mockGetUserById: vi.Mock;
 
 	const mockEmailConfig = {
-		apiKey: 'test-key',
+		binding: { send: vi.fn().mockResolvedValue({ messageId: 'm1' }) },
 		fromName: 'Cloud Radar',
 		fromEmail: 'cloud@test.com',
 	};

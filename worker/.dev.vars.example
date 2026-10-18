@@ -25,9 +25,6 @@ CF_BEARER_TOKEN=
 # Internal key used when the worker calls back into the app.
 API_KEY=
 
-# Email delivery for alert notifications (ForwardEmail). Unset = no emails sent.
-FORWARDEMAIL_API_KEY=
-
 # --- Tracing (optional) -----------------------------------------------------
 # OpenTelemetry export. Unset = tracing disabled, which is fine locally.
 OTLP_ENDPOINT=

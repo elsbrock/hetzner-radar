@@ -13,32 +13,24 @@ global.fetch = mockFetch;
 
 describe('EmailChannel', () => {
 	let emailChannel: EmailChannel;
-	const mockConfig: EmailChannelConfig = {
-		apiKey: 'test-api-key',
-		fromName: 'Server Radar',
-		fromEmail: 'alerts@radar.iodev.org',
-		apiUrl: 'https://api.forwardemail.net/v1/emails',
-	};
+	let mockSend: ReturnType<typeof vi.fn>;
+	let mockConfig: EmailChannelConfig;
 
 	beforeEach(() => {
-		emailChannel = new EmailChannel(mockConfig);
 		vi.clearAllMocks();
+		mockSend = vi.fn().mockResolvedValue({ messageId: 'm1' });
+		mockConfig = {
+			binding: { send: mockSend },
+			fromName: 'Server Radar',
+			fromEmail: 'alerts@radar.iodev.org',
+		};
+		emailChannel = new EmailChannel(mockConfig);
 	});
 
 	describe('constructor', () => {
-		it('should initialize with default API URL when not provided', () => {
-			const configWithoutUrl: Partial<EmailChannelConfig> = { ...mockConfig };
-			delete configWithoutUrl.apiUrl;
-
-			const channel = new EmailChannel(configWithoutUrl);
-			expect(channel).toBeInstanceOf(EmailChannel);
-			expect(channel.name).toBe('email');
-		});
-
-		it('should use custom API URL when provided', () => {
-			const customConfig = { ...mockConfig, apiUrl: 'https://custom.api.com' };
-			const channel = new EmailChannel(customConfig);
-			expect(channel).toBeInstanceOf(EmailChannel);
+		it('should initialize correctly', () => {
+			expect(emailChannel).toBeInstanceOf(EmailChannel);
+			expect(emailChannel.name).toBe('email');
 		});
 	});
 
@@ -69,12 +61,7 @@ describe('EmailChannel', () => {
 	});
 
 	describe('send', () => {
-		it('should send email successfully with correct format', async () => {
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				status: 200,
-			});
-
+		it('should send email successfully via the binding', async () => {
 			const result = await emailChannel.send(mockAlertNotification);
 
 			expect(result).toEqual({
@@ -82,53 +69,26 @@ describe('EmailChannel', () => {
 				success: true,
 				timestamp: expect.any(String),
 			});
-
-			// Verify fetch was called with correct parameters
-			expect(mockFetch).toHaveBeenCalledWith(
-				mockConfig.apiUrl,
-				expect.objectContaining({
-					method: 'POST',
-					headers: expect.objectContaining({
-						Authorization: expect.stringContaining('Basic'),
-						'Content-Type': 'application/x-www-form-urlencoded',
-					}),
-					body: expect.any(URLSearchParams),
-				}),
-			);
-
-			// Verify Authorization header contains base64 encoded API key
-			const authHeader = mockFetch.mock.calls[0][1].headers.Authorization;
-			expect(authHeader).toMatch(/^Basic [A-Za-z0-9+/]+=*$/);
+			expect(mockSend).toHaveBeenCalledTimes(1);
 		});
 
-		it('should format email body correctly', async () => {
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				status: 200,
-			});
-
+		it('should format email message correctly', async () => {
 			await emailChannel.send(mockAlertNotification);
 
-			const requestBody = mockFetch.mock.calls[0][1].body as URLSearchParams;
+			const message = mockSend.mock.calls[0][0];
 
-			expect(requestBody.get('from')).toBe('"Server Radar" <alerts@radar.iodev.org>');
-			expect(requestBody.get('to')).toBe(mockAlertInfo.email);
-			expect(requestBody.get('subject')).toBe('Price Alert: Target Price Reached');
+			expect(message.from).toEqual({ name: 'Server Radar', email: 'alerts@radar.iodev.org' });
+			expect(message.to).toBe(mockAlertInfo.email);
+			expect(message.subject).toBe('Price Alert: Target Price Reached');
 
-			const emailText = requestBody.get('text');
-			expect(emailText).toContain(mockAlertInfo.name);
-			expect(emailText).toContain(mockAlertInfo.price.toFixed(2));
-			expect(emailText).toContain(mockAlertNotification.triggerPrice.toFixed(2));
-			expect(emailText).toContain(`${mockAlertInfo.vat_rate}% VAT`);
-			expect(emailText).toContain('https://radar.iodev.org/alerts?view=1');
+			expect(message.text).toContain(mockAlertInfo.name);
+			expect(message.text).toContain(mockAlertInfo.price.toFixed(2));
+			expect(message.text).toContain(mockAlertNotification.triggerPrice.toFixed(2));
+			expect(message.text).toContain(`${mockAlertInfo.vat_rate}% VAT`);
+			expect(message.text).toContain('https://radar.iodev.org/alerts?view=1');
 		});
 
 		it('should include IPv4 cost in email when applicable', async () => {
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				status: 200,
-			});
-
 			const notificationWithIpv4 = {
 				...mockAlertNotification,
 				alert: { ...mockAlertInfo, includes_ipv4_cost: true },
@@ -136,37 +96,18 @@ describe('EmailChannel', () => {
 
 			await emailChannel.send(notificationWithIpv4);
 
-			const requestBody = mockFetch.mock.calls[0][1].body as URLSearchParams;
-			const emailText = requestBody.get('text');
-			expect(emailText).toContain('and IPv4 cost');
+			expect(mockSend.mock.calls[0][0].text).toContain('and IPv4 cost');
 		});
 
-		it('should handle email API errors gracefully', async () => {
-			mockFetch.mockResolvedValueOnce({
-				ok: false,
-				status: 400,
-				text: async () => 'Invalid email address',
-			});
+		it('should handle binding errors gracefully', async () => {
+			mockSend.mockRejectedValueOnce(new Error('Sender not allowed'));
 
 			const result = await emailChannel.send(mockAlertNotification);
 
 			expect(result).toEqual({
 				channel: 'email',
 				success: false,
-				error: 'Email API error: 400 - Invalid email address',
-				timestamp: expect.any(String),
-			});
-		});
-
-		it('should handle network errors gracefully', async () => {
-			mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-			const result = await emailChannel.send(mockAlertNotification);
-
-			expect(result).toEqual({
-				channel: 'email',
-				success: false,
-				error: 'Network error',
+				error: 'Sender not allowed',
 				timestamp: expect.any(String),
 			});
 		});
@@ -186,42 +127,21 @@ describe('EmailChannel', () => {
 				timestamp: expect.any(String),
 			});
 
-			expect(mockFetch).not.toHaveBeenCalled();
+			expect(mockSend).not.toHaveBeenCalled();
 		});
 
-		it('should format from field correctly with name', async () => {
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				status: 200,
-			});
-
-			await emailChannel.send(mockAlertNotification);
-
-			const requestBody = mockFetch.mock.calls[0][1].body as URLSearchParams;
-			expect(requestBody.get('from')).toBe('"Server Radar" <alerts@radar.iodev.org>');
-		});
-
-		it('should format from field correctly without name', async () => {
-			const configWithoutName: Partial<EmailChannelConfig> = { ...mockConfig };
-			delete configWithoutName.fromName;
-
-			const channelWithoutName = new EmailChannel(configWithoutName);
-
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				status: 200,
-			});
+		it('should use a bare from address when no name is configured', async () => {
+			const channelWithoutName = new EmailChannel({ ...mockConfig, fromName: '' });
 
 			await channelWithoutName.send(mockAlertNotification);
 
-			const requestBody = mockFetch.mock.calls[0][1].body as URLSearchParams;
-			expect(requestBody.get('from')).toBe('alerts@radar.iodev.org');
+			expect(mockSend.mock.calls[0][0].from).toBe('alerts@radar.iodev.org');
 		});
 
 		it('should log errors appropriately', async () => {
-			const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			mockFetch.mockRejectedValueOnce(new Error('API timeout'));
+			mockSend.mockRejectedValueOnce(new Error('API timeout'));
 
 			await emailChannel.send(mockAlertNotification);
 

@@ -86,7 +86,7 @@ The alert system has been redesigned with a worker-based architecture for improv
 
 **Notification Channels:**
 
-- **Email**: Primary notification method using ForwardEmail API
+- **Email**: Primary notification method via Cloudflare Email Sending
 - **Discord**: Optional webhook-based notifications with rich embeds
 - **Extensible Design**: Channel-based architecture allows easy addition of new notification methods (SMS, Slack, etc.)
 
@@ -163,9 +163,9 @@ The worker handles multiple functions including auction data fetching, cloud ava
 HETZNER_API_TOKEN=your_hetzner_api_token_here
 # this is an internal API key used when notifying the backend
 API_KEY=your_api_key_here
-# API key for ForwardEmail service (for alert notifications)
-FORWARDEMAIL_API_KEY=your_forwardemail_api_key_here
 ```
+
+Alert emails are sent through the Cloudflare Email Sending `send_email` binding (`EMAIL`). No secret is needed; when the binding is absent locally, mail is skipped.
 
 2. Install dependencies for the worker:
 

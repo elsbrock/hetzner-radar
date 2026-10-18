@@ -1,16 +1,27 @@
 /**
  * Email Notification Channel
  *
- * Sends alert notifications via email using ForwardEmail API
+ * Sends alert notifications via Cloudflare Email Sending
  */
 
 import type { NotificationChannel, AlertInfo, AlertNotification, NotificationResult } from './notification-channel';
 
+/** Structural type of the Cloudflare Email Sending `send_email` binding. */
+export interface EmailBinding {
+	send(message: {
+		from: string | { name: string; email: string };
+		to: string;
+		subject: string;
+		text?: string;
+		html?: string;
+		headers?: Record<string, string>;
+	}): Promise<{ messageId: string }>;
+}
+
 export interface EmailChannelConfig {
-	apiKey: string;
+	binding: EmailBinding;
 	fromName: string;
 	fromEmail: string;
-	apiUrl?: string;
 }
 
 export class EmailChannel implements NotificationChannel {
@@ -18,10 +29,7 @@ export class EmailChannel implements NotificationChannel {
 	private config: EmailChannelConfig;
 
 	constructor(config: EmailChannelConfig) {
-		this.config = {
-			apiUrl: 'https://api.forwardemail.net/v1/emails',
-			...config,
-		};
+		this.config = config;
 	}
 
 	isEnabled(alert: AlertInfo): boolean {
@@ -95,29 +103,12 @@ https://radar.iodev.org/
 	}
 
 	private async sendEmail(to: string, subject: string, text: string): Promise<void> {
-		const fromField = this.config.fromName ? `"${this.config.fromName}" <${this.config.fromEmail}>` : this.config.fromEmail;
-
-		const body = new URLSearchParams();
-		body.append('from', fromField);
-		body.append('to', to);
-		body.append('subject', subject);
-		body.append('text', text);
-
-		// Construct Basic Auth header
-		const credentials = btoa(this.config.apiKey + ':');
-
-		const response = await fetch(this.config.apiUrl!, {
-			method: 'POST',
-			headers: {
-				Authorization: `Basic ${credentials}`,
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body,
+		const { binding, fromName, fromEmail } = this.config;
+		await binding.send({
+			from: fromName ? { name: fromName, email: fromEmail } : fromEmail,
+			to,
+			subject,
+			text,
 		});
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			throw new Error(`Email API error: ${response.status} - ${errorText}`);
-		}
 	}
 }

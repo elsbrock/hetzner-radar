@@ -60,7 +60,7 @@ vi.mock('../notifications/webhook-channel', () => ({
 describe('AlertNotificationService', () => {
 	let service: AlertNotificationService;
 	const mockEmailConfig = {
-		apiKey: 'test-key',
+		binding: { send: vi.fn().mockResolvedValue({ messageId: 'm1' }) },
 		fromName: 'Test Radar',
 		fromEmail: 'alerts@test.com',
 	};

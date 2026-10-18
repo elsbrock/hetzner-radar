@@ -10,13 +10,14 @@ import { AuctionService } from './auction-service';
 import { NotificationService } from './notification-service';
 import { AlertService } from './alert-service';
 import { AlertNotificationService } from './notifications/alert-notification-service';
+import type { EmailBinding } from './notifications/email-channel';
 
 interface AuctionImportEnv {
 	DB: D1Database;
 	AUCTION_IMPORT_INTERVAL_MS?: string;
 	HETZNER_AUCTION_API_URL?: string;
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
-	FORWARDEMAIL_API_KEY?: string;
+	EMAIL?: EmailBinding;
 	OTLP_ENDPOINT?: string;
 	OTLP_AUTH_TOKEN?: string;
 	/** Auction snapshot consumed by the public MCP server. */
@@ -57,9 +58,9 @@ export class AuctionImportDO extends DurableObject<AuctionImportEnv> {
 
 		// Initialize alert notification service
 		this.alertNotificationService = new AlertNotificationService({
-			email: env.FORWARDEMAIL_API_KEY
+			email: env.EMAIL
 				? {
-						apiKey: env.FORWARDEMAIL_API_KEY,
+						binding: env.EMAIL,
 						fromName: 'Server Radar',
 						fromEmail: 'no-reply@radar.iodev.org',
 					}
@@ -195,7 +196,7 @@ export class AuctionImportDO extends DurableObject<AuctionImportEnv> {
 		console.log(`  - ANALYTICS_ENGINE: ${this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING'}`);
 		console.log(`  - AUCTION_IMPORT_INTERVAL_MS: ${this.auctionImportIntervalMs}ms`);
 		console.log(`  - HETZNER_AUCTION_API_URL: ${this.hetznerAuctionApiUrl}`);
-		console.log(`  - FORWARDEMAIL_API_KEY: ${this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING'}`);
+		console.log(`  - EMAIL binding: ${this.env.EMAIL ? 'Present' : 'MISSING'}`);
 		console.log(`  - Alert notification channels: ${this.alertNotificationService.getChannels().join(', ')}`);
 	}
 }

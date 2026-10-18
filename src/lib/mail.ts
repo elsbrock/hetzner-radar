@@ -6,6 +6,18 @@ type PlatformEnv = App.Platform extends { env?: infer E }
   ? E
   : Record<string, never>;
 
+/** Structural type of the Cloudflare Email Sending `send_email` binding. */
+export interface EmailBinding {
+  send(message: {
+    from: string | { name: string; email: string };
+    to: string;
+    subject: string;
+    text?: string;
+    html?: string;
+    headers?: Record<string, string>;
+  }): Promise<{ messageId: string }>;
+}
+
 interface MailOptions {
   from: {
     name: string;
@@ -24,45 +36,25 @@ export async function sendMail(
     console.log(JSON.stringify(mailOptions, undefined, 2));
   }
 
-  if (!env?.FORWARDEMAIL_API_KEY) {
-    console.warn(
-      "FORWARDEMAIL_API_KEY is not configured; skipping email send.",
-    );
+  if (!env?.EMAIL) {
+    console.warn("EMAIL binding is not configured; skipping email send.");
     if (!dev) {
       throw new Error("Email service is not configured.");
     }
     return;
   }
   const { from, to, subject, text } = mailOptions;
-  const fromField =
-    from.name && from.name.trim()
-      ? `"${from.name}" <${from.email}>`
-      : from.email;
 
-  const body = new URLSearchParams();
-  body.append("from", fromField);
-  body.append("to", to);
-  body.append("subject", subject);
-  body.append("text", text);
-
-  // Construct Basic Auth header: username is API key, password is empty string
-  const credentials =
-    typeof btoa === "function"
-      ? btoa(`${env.FORWARDEMAIL_API_KEY}:`)
-      : Buffer.from(`${env.FORWARDEMAIL_API_KEY}:`).toString("base64");
-
-  const response = await fetch("https://api.forwardemail.net/v1/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Failed to send email:", response.status, errorText);
-    throw new Error(`Failed to send email: ${response.status}`);
+  try {
+    await env.EMAIL.send({
+      from: from.name && from.name.trim() ? from : from.email,
+      to,
+      subject,
+      text,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Failed to send email:", message);
+    throw new Error(`Failed to send email: ${message}`);
   }
 }

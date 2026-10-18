@@ -11,12 +11,13 @@ import { NotificationService } from './notification-service';
 import { CloudAlertService } from './cloud-alert-service';
 import { CloudNotificationService } from './cloud-notifications/cloud-notification-service';
 import { AnalyticsQueryService } from './analytics-query-service';
+import type { EmailBinding } from './notifications/email-channel';
 
 interface CloudAvailabilityEnv {
 	HETZNER_API_TOKEN: string;
 	FETCH_INTERVAL_MS?: string;
 	ANALYTICS_ENGINE?: AnalyticsEngineDataset;
-	FORWARDEMAIL_API_KEY?: string;
+	EMAIL?: EmailBinding;
 	DB: D1Database;
 	CF_ACCOUNT_ID?: string;
 	CF_BEARER_TOKEN?: string;
@@ -50,9 +51,9 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 
 		// Initialize cloud alert notification service
 		this.cloudNotificationService = new CloudNotificationService({
-			email: env.FORWARDEMAIL_API_KEY
+			email: env.EMAIL
 				? {
-						apiKey: env.FORWARDEMAIL_API_KEY,
+						binding: env.EMAIL,
 						fromName: 'Server Radar',
 						fromEmail: 'no-reply@radar.iodev.org',
 					}
@@ -257,7 +258,7 @@ export class CloudAvailabilityDO extends DurableObject<CloudAvailabilityEnv> {
 		console.log(`[CloudAvailabilityDO ${this.ctx.id}] Environment variables check:`);
 		console.log(`  - HETZNER_API_TOKEN: ${this.env.HETZNER_API_TOKEN ? 'Present' : 'MISSING'}`);
 		console.log(`  - ANALYTICS_ENGINE: ${this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING'}`);
-		console.log(`  - FORWARDEMAIL_API_KEY: ${this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING'}`);
+		console.log(`  - EMAIL binding: ${this.env.EMAIL ? 'Present' : 'MISSING'}`);
 		console.log(`  - DB: ${this.env.DB ? 'Present' : 'MISSING'}`);
 		console.log(`  - CF_ACCOUNT_ID: ${this.env.CF_ACCOUNT_ID ? 'Present' : 'MISSING'}`);
 		console.log(`  - CF_BEARER_TOKEN: ${this.env.CF_BEARER_TOKEN ? 'Present' : 'MISSING'}`);

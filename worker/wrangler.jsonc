@@ -24,6 +24,11 @@
 			"tag": "v2",
 		},
 	],
+	// Cloudflare Email Sending. Senders are pinned; recipients are
+	// deliberately unrestricted so alert mail reaches any user.
+	"send_email": [
+		{ "name": "EMAIL", "allowed_sender_addresses": ["no-reply@radar.iodev.org", "mail@radar.iodev.org"] },
+	],
 	"durable_objects": {
 		"bindings": [
 			{
@@ -92,7 +97,6 @@
 	 *
 	 * Required secrets (set via `wrangler secret put`):
 	 * - HETZNER_API_TOKEN: Token for Hetzner Cloud API access
-	 * - FORWARDEMAIL_API_KEY: API key for ForwardEmail service (alert notifications)
 	 */
 	/**
 	 * Static Assets

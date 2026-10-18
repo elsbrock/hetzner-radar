@@ -1,16 +1,16 @@
 /**
  * Cloud Email Notification Channel
  *
- * Sends cloud availability notifications via email using ForwardEmail API
+ * Sends cloud availability notifications via Cloudflare Email Sending
  */
 
+import type { EmailBinding } from '../notifications/email-channel';
 import type { CloudNotificationChannel, CloudNotification, CloudNotificationResult, CloudAlertMatch } from './cloud-notification-channel';
 
 export interface CloudEmailChannelConfig {
-	apiKey: string;
+	binding: EmailBinding;
 	fromName: string;
 	fromEmail: string;
-	apiUrl?: string;
 }
 
 export class CloudEmailChannel implements CloudNotificationChannel {
@@ -18,10 +18,7 @@ export class CloudEmailChannel implements CloudNotificationChannel {
 	private config: CloudEmailChannelConfig;
 
 	constructor(config: CloudEmailChannelConfig) {
-		this.config = {
-			apiUrl: 'https://api.forwardemail.net/v1/emails',
-			...config,
-		};
+		this.config = config;
 	}
 
 	isEnabled(notification: CloudNotification): boolean {
@@ -125,29 +122,12 @@ To manage your alerts, visit: https://radar.iodev.org/alerts`;
 	}
 
 	private async sendEmail(to: string, subject: string, text: string): Promise<void> {
-		const fromField = this.config.fromName ? `"${this.config.fromName}" <${this.config.fromEmail}>` : this.config.fromEmail;
-
-		const body = new URLSearchParams();
-		body.append('from', fromField);
-		body.append('to', to);
-		body.append('subject', subject);
-		body.append('text', text);
-
-		// Construct Basic Auth header
-		const credentials = btoa(this.config.apiKey + ':');
-
-		const response = await fetch(this.config.apiUrl!, {
-			method: 'POST',
-			headers: {
-				Authorization: `Basic ${credentials}`,
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body,
+		const { binding, fromName, fromEmail } = this.config;
+		await binding.send({
+			from: fromName ? { name: fromName, email: fromEmail } : fromEmail,
+			to,
+			subject,
+			text,
 		});
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			throw new Error(`Email API error: ${response.status} - ${errorText}`);
-		}
 	}
 }

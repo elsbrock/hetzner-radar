@@ -82,7 +82,8 @@ declare global {
     RADAR_WORKER?: RadarWorkerService;
     /** Auction snapshot published by the worker; read by /mcp. */
     SNAPSHOT?: SnapshotNamespace;
-    FORWARDEMAIL_API_KEY?: string;
+    /** Cloudflare Email Sending (`send_email` binding). */
+    EMAIL?: import("$lib/mail").EmailBinding;
     BETTER_AUTH_SECRET?: string;
     BETTER_AUTH_URL?: string;
     VITE_BUILD_STAMP?: string;

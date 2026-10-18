@@ -7,13 +7,15 @@
  *
  * Required secrets (set via wrangler secret put):
  * - HETZNER_API_TOKEN: Token for accessing Hetzner Cloud API
- * - FORWARDEMAIL_API_KEY: API key for email notifications
  *
  * Environment variables (set in wrangler.jsonc):
  * - MAIN_APP_URL: URL of the main application (e.g., https://radar.iodev.org)
  * - FETCH_INTERVAL_MS: How often to check Hetzner Cloud API (default: 60000ms)
  * - AUCTION_IMPORT_INTERVAL_MS: How often to import auction data (default: 300000ms)
  * - HETZNER_AUCTION_API_URL: URL for Hetzner auction API (default: Hetzner's live data endpoint)
+ *
+ * Email bindings:
+ * - EMAIL: Cloudflare Email Sending (send_email) for alert notifications
  *
  * Database bindings:
  * - DB: D1 database for storing auction data (auctions and current_auctions tables)
@@ -23,6 +25,7 @@ import { WorkerEntrypoint } from 'cloudflare:workers';
 import { createMetrics } from '@else42/cf-worker-otel';
 import { CloudAvailabilityDO } from './cloud-availability-do';
 import { AuctionImportDO } from './auction-import-do';
+import type { EmailBinding } from './notifications/email-channel';
 
 interface Env {
 	CLOUD_STATUS_DO: DurableObjectNamespace<CloudAvailabilityDO>;
@@ -31,7 +34,7 @@ interface Env {
 	FETCH_INTERVAL_MS?: string;
 	ANALYTICS_ENGINE: AnalyticsEngineDataset;
 	MAIN_APP_URL?: string;
-	FORWARDEMAIL_API_KEY?: string;
+	EMAIL?: EmailBinding;
 	DB: D1Database;
 	AUCTION_IMPORT_INTERVAL_MS?: string;
 	HETZNER_AUCTION_API_URL?: string;
@@ -220,7 +223,7 @@ Combined:
 								DB: this.env.DB ? 'Present' : 'MISSING',
 								ANALYTICS_ENGINE: this.env.ANALYTICS_ENGINE ? 'Present' : 'MISSING',
 								MAIN_APP_URL: this.env.MAIN_APP_URL || 'Not set',
-								FORWARDEMAIL_API_KEY: this.env.FORWARDEMAIL_API_KEY ? 'Present' : 'MISSING',
+								EMAIL: this.env.EMAIL ? 'Present' : 'MISSING',
 							},
 						},
 					},

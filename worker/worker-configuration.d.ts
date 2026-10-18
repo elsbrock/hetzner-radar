@@ -12,6 +12,7 @@ declare namespace Cloudflare {
 		AUCTION_IMPORT_DO: DurableObjectNamespace<import('./src/index').AuctionImportDO>;
 		DB: D1Database;
 		ANALYTICS_ENGINE: AnalyticsEngineDataset;
+		EMAIL: SendEmail;
 	}
 }
 interface Env extends Cloudflare.Env {}
