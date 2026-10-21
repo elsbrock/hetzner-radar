@@ -13,7 +13,7 @@
 		CZ: { name: 'Czech Republic', rate: 0.21, flag: '🇨🇿' },
 		DK: { name: 'Denmark', rate: 0.25, flag: '🇩🇰' },
 		EE: { name: 'Estonia', rate: 0.22, flag: '🇪🇪' },
-		FI: { name: 'Finland', rate: 0.24, flag: '🇫🇮' },
+		FI: { name: 'Finland', rate: 0.255, flag: '🇫🇮' },
 		FR: { name: 'France', rate: 0.2, flag: '🇫🇷' },
 		DE: { name: 'Germany', rate: 0.19, flag: '🇩🇪' },
 		GR: { name: 'Greece', rate: 0.24, flag: '🇬🇷' },
@@ -51,14 +51,14 @@
 	// Helper to format the option text - updated for brevity
 	function formatOptionText(flag: string, name: string, rate: number): string {
 		if (rate > 0) {
-			return `${flag} ${(rate * 100).toFixed(0)}%`; // e.g., 🇩🇪 19%
+			return `${flag} ${+(rate * 100).toFixed(1)}%`; // e.g., 🇩🇪 19%
 		}
 		return `${flag} 0% (others)`; // e.g., 💼 Net
 	}
 
 	function handleVatChange() {
 		const selectedOption = vatOptions[selectedCountryCode as keyof typeof vatOptions];
-		const ratePercentage = selectedOption ? Math.round(selectedOption.rate * 100) : 0; // Calculate integer percentage
+		const ratePercentage = selectedOption ? Math.round(selectedOption.rate * 1000) / 10 : 0;
 
 		// Update both country code selection and the calculated rate in the store
 		settingsStore.updateSetting('vatSelection', { countryCode: selectedCountryCode });

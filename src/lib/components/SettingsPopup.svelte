@@ -47,7 +47,7 @@
 		const countryCode = (event.target as HTMLSelectElement).value;
 		const option = vatOptions[countryCode as keyof typeof vatOptions];
 		settingsStore.updateSetting('vatSelection', { countryCode });
-		settingsStore.updateSetting('currentVatRate', option ? Math.round(option.rate * 100) : 0);
+		settingsStore.updateSetting('currentVatRate', option ? Math.round(option.rate * 1000) / 10 : 0);
 	}
 </script>
 
@@ -134,7 +134,7 @@
 						<option value={code}>
 							{option.flag}
 							{#if option.rate > 0}
-								{(option.rate * 100).toFixed(0)}%
+								{+(option.rate * 100).toFixed(1)}%
 							{:else}
 								0%
 							{/if}

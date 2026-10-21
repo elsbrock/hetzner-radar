@@ -128,7 +128,7 @@ export const actions: Actions = {
     }
 
     // Validate vatRate
-    const vatRateNum = parseInt(vatRateStr, 10);
+    const vatRateNum = parseFloat(vatRateStr);
     if (isNaN(vatRateNum)) {
       // Return specific error for vatRate if it's invalid
       return fail(400, {

@@ -52,7 +52,7 @@
 	);
 	let selectedOption = $derived(vatOptions[validKey]);
 	let vatSuffix = $derived(
-		selectedOption.rate > 0 ? `(incl. ${(selectedOption.rate * 100).toFixed(0)}% VAT)` : '(net)'
+		selectedOption.rate > 0 ? `(incl. ${+(selectedOption.rate * 100).toFixed(1)}% VAT)` : '(net)'
 	);
 
 	// Price formatting function for tooltips and axes
