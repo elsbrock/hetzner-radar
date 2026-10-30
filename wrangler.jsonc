@@ -40,7 +40,13 @@
   // Cloudflare Email Sending. Senders are pinned; recipients are
   // deliberately unrestricted so alert mail reaches any user.
   "send_email": [
-    { "name": "EMAIL", "allowed_sender_addresses": ["no-reply@radar.iodev.org", "mail@radar.iodev.org"] },
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": [
+        "no-reply@radar.iodev.org",
+        "mail@radar.iodev.org",
+      ],
+    },
   ],
   "services": [
     {
@@ -88,7 +94,13 @@
       // Cloudflare Email Sending. Senders are pinned; recipients are
       // deliberately unrestricted so alert mail reaches any user.
       "send_email": [
-        { "name": "EMAIL", "allowed_sender_addresses": ["no-reply@radar.iodev.org", "mail@radar.iodev.org"] },
+        {
+          "name": "EMAIL",
+          "allowed_sender_addresses": [
+            "no-reply@radar.iodev.org",
+            "mail@radar.iodev.org",
+          ],
+        },
       ],
       // Environments do not inherit top-level bindings, so this is repeated.
       "kv_namespaces": [
