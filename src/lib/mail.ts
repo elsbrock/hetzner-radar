@@ -55,6 +55,6 @@ export async function sendMail(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Failed to send email:", message);
-    throw new Error(`Failed to send email: ${message}`);
+    throw new Error(`Failed to send email: ${message}`, { cause: error });
   }
 }
