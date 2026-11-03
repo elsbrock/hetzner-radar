@@ -88,7 +88,7 @@ View the matched auctions directly:
 
   https://radar.iodev.org/alerts?view=${alert.id}
 
-Please note that Server Radar may notice prices with a delay of up to 60
+Please note that Server Radar may notice prices with a delay of up to 5
 minutes and the server you are looking for may not be available anymore.
 
 Fingers crossed!
