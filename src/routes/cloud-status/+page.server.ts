@@ -50,7 +50,10 @@ interface LoadOutput {
 export const load: PageServerLoad = async ({
   platform,
   locals,
+  depends,
 }): Promise<LoadOutput> => {
+  depends("app:cloud-status");
+
   const env = platform?.env;
   const radarWorker = env?.RADAR_WORKER;
 

@@ -7,7 +7,7 @@
 	import CloudAlertModal from '$lib/components/CloudAlertModal.svelte';
 	import type { CloudAvailabilityAlert } from '$lib/api/backend/cloud-alerts';
 	import CloudAvailabilityChart from '$lib/components/CloudAvailabilityChart.svelte';
-	import { invalidateAll, goto } from '$app/navigation';
+	import { invalidate, invalidateAll, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	// import QuickStat from '$lib/components/QuickStat.svelte';
 	import { formatRelativeTime, getAvailabilityRecency, jsonLdSafe } from '$lib/util';
@@ -811,6 +811,45 @@
 		currentTileLayer = null;
 	});
 
+	// Keep an open tab current: availability windows can close within minutes.
+	const REFRESH_INTERVAL_MS = 60_000;
+	let lastRefreshAt = Date.now();
+	let refreshing = false;
+
+	async function refreshStatus() {
+		if (refreshing || document.hidden) return;
+		refreshing = true;
+		try {
+			// A failed invalidate swaps this page for an error screen, or reloads into
+			// the browser's offline page, so only refresh when the site is reachable.
+			const probe = await fetch('/robots.txt', { method: 'HEAD', cache: 'no-store' });
+			if (!probe.ok) return;
+			lastRefreshAt = Date.now();
+			await invalidate('app:cloud-status');
+		} catch {
+			// Offline: the next tick tries again.
+		} finally {
+			refreshing = false;
+		}
+	}
+
+	$effect(() => {
+		const timer = setInterval(refreshStatus, REFRESH_INTERVAL_MS);
+		const onVisibilityChange = () => {
+			if (Date.now() - lastRefreshAt >= REFRESH_INTERVAL_MS) refreshStatus();
+		};
+		document.addEventListener('visibilitychange', onVisibilityChange);
+		return () => {
+			clearInterval(timer);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+		};
+	});
+
+	// Same URL shape as the Create buttons on hetzner.com's own pricing pages.
+	function consoleCreateUrl(serverType: string, location: string): string {
+		return `https://console.hetzner.com/create/server?type=${serverType}&useIPv4=true&useIPv6=false&usePrivateNet=false&location=${location}`;
+	}
+
 	// JSON-LD: BreadcrumbList + Dataset describing what the page actually shows.
 	const locationCount = $derived(data.statusData?.locations?.length ?? 0);
 	const serverTypeCount = $derived(data.statusData?.serverTypes?.length ?? 0);
@@ -934,7 +973,7 @@
 
 <PageHero
 	title="Hetzner Cloud availability"
-	tagline="Live stock for every Hetzner Cloud server type in every location, refreshed once a minute. Click any type, location or cell for its availability history."
+	tagline="Hetzner's reported availability for every Cloud server type in every location, refreshed once a minute. Click any type, location or cell for its availability history."
 	breadcrumbs={[
 		{ label: 'Home', href: '/' },
 		{ label: 'Cloud Status' }
@@ -1190,6 +1229,17 @@
 																>
 																	{@render statusCell(status, lastSeenText, lastSeenColor, location.city, lastSeenTitle)}
 																</button>
+																{#if status === 'available'}
+																	<a
+																		href={consoleCreateUrl(serverType.name, location.name)}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																		class="block pb-2 text-xs whitespace-nowrap text-orange-600 underline-offset-2 hover:underline dark:text-orange-400"
+																		aria-label="Try creating {serverType.name.toUpperCase()} in {location.city} in the Hetzner Console"
+																	>
+																		Try in Console
+																	</a>
+																{/if}
 															{:else}
 																<div id={cellId} class="flex flex-col items-center gap-1 px-1 py-3">
 																	{@render statusCell(status, lastSeenText, lastSeenColor, location.city, lastSeenTitle)}

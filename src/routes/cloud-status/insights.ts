@@ -13,7 +13,7 @@ import type { CloudStatusData } from "./+page.server";
 const MAX_INSIGHTS = 4;
 
 export const SUPPORTED_VS_AVAILABLE_NOTE =
-  "“Supported” means Hetzner offers the type at that location; “available” means it is in stock right now. A supported type that is out of stock usually returns within hours.";
+  "“Supported” means Hetzner offers the type at that location; “available” means Hetzner's API reports it as available there right now, which Hetzner describes as an indicator rather than a guarantee. hetzner.com's pricing pages can still say “not available” when this says available, so confirm in the Console. A supported type that is out of stock usually returns within hours.";
 
 function list(items: string[]): string {
   if (items.length === 0) return "";
