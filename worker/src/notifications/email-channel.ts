@@ -96,8 +96,7 @@ Fingers crossed!
 Cheers,
 Server Radar
 --
-https://radar.iodev.org/
-    `;
+https://radar.iodev.org/`;
 
 		return { subject, text };
 	}

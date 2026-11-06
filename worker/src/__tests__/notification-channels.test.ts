@@ -99,6 +99,14 @@ describe('EmailChannel', () => {
 			expect(mockSend.mock.calls[0][0].text).toContain('and IPv4 cost');
 		});
 
+		// Cloudflare's DKIM signer keeps a whitespace-only last line in the relaxed
+		// body hash; receivers drop it, so the signature fails ("body has been altered").
+		it('should not end the body with trailing whitespace', async () => {
+			await emailChannel.send(mockAlertNotification);
+
+			expect(mockSend.mock.calls[0][0].text).not.toMatch(/[ \t]\s*$/);
+		});
+
 		it('should handle binding errors gracefully', async () => {
 			mockSend.mockRejectedValueOnce(new Error('Sender not allowed'));
 
